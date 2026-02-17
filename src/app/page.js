@@ -695,21 +695,31 @@ const RVOL_REGIME = (rvol) => {
 };
 
 function PrepLogEntry({ entry }) {
-  const [logData, setLogData] = useState(null);
-  const [checkinData, setCheckinData] = useState(null);
+  const [data, setData] = useState(null);
+  const [loaded, setLoaded] = useState(false);
   const [open, setOpen] = useState(false);
-  const load = async () => {
-    if (!logData) {
-      const d = await loadData(entry.key, null);
-      setLogData(d);
-      const ch = await loadData(`checkin-${entry.date}`, null);
-      if (ch) setCheckinData(ch);
+  const gc = (g) => g === "GREEN" ? "#10B981" : g === "AMBER" ? "#F48C06" : g === "RED" ? "#E94560" : "rgba(255,255,255,0.3)";
+
+  const handleClick = async () => {
+    if (!loaded) {
+      try {
+        let prepD = null, checkinD = null, reviewD = null;
+        try { const r = await storage.get(entry.key); if (r?.value) prepD = JSON.parse(r.value); } catch {}
+        try { const r = await storage.get(`checkin-${entry.date}`); if (r?.value) checkinD = JSON.parse(r.value); } catch {}
+        try { const r = await storage.get(`review-${entry.date}-${entry.instrument}`); if (r?.value) reviewD = JSON.parse(r.value); } catch {}
+        setData({ prep: prepD, checkin: checkinD, review: reviewD });
+      } catch { setData({ prep: null, checkin: null, review: null }); }
+      setLoaded(true);
     }
     setOpen(o => !o);
   };
-  const gc = (g) => g === "GREEN" ? "#10B981" : g === "AMBER" ? "#F48C06" : g === "RED" ? "#E94560" : "rgba(255,255,255,0.3)";
+
+  const p = data?.prep;
+  const ch = data?.checkin;
+  const rv = data?.review;
+
   return (
-    <Card style={{ marginBottom: 12, cursor: "pointer" }} onClick={load}>
+    <Card style={{ marginBottom: 12, cursor: "pointer" }} onClick={handleClick}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.6)" }}>{formatDate(entry.date)}</span>
@@ -717,19 +727,41 @@ function PrepLogEntry({ entry }) {
         </div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.2)", transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>▼</div>
       </div>
-      {open && logData && <div onClick={e => e.stopPropagation()} style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.8 }}>
-        {checkinData && <div style={{ marginBottom: 10, paddingBottom: 10, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-          {checkinData.whoopSleep && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Whoop:</span> Sleep {checkinData.whoopSleep}% · Recovery {checkinData.whoopRecovery}% {checkinData.whoopGate && <span style={{ color: gc(checkinData.whoopGate), fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700 }}>{checkinData.whoopGate}</span>}</div>}
-          {checkinData.mentalScores && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Mental:</span> Awareness {checkinData.mentalScores[0]}/5 · Connected {checkinData.mentalScores[1]}/5</div>}
+      {open && loaded && <div onClick={e => e.stopPropagation()} style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.9 }}>
+
+        {/* MENTAL CHECK-IN */}
+        {ch && <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 1.5, color: "rgba(255,255,255,0.25)", fontWeight: 600, marginBottom: 6 }}>CHECK-IN</div>
+          {ch.whoopSleep && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Whoop:</span> Sleep {ch.whoopSleep}% · Recovery {ch.whoopRecovery}% {ch.whoopGate && <span style={{ color: gc(ch.whoopGate), fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700 }}> {ch.whoopGate}</span>}</div>}
+          {ch.mentalScores && (ch.mentalScores[0] > 0 || ch.mentalScores[1] > 0) && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Mental:</span> Awareness {ch.mentalScores[0]}/5 · Connected {ch.mentalScores[1]}/5</div>}
+          {ch.otherChecks && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Ready:</span> {["Hydrated","Exercised","Meditated"].filter((_, i) => ch.otherChecks[i]).join(", ") || "None"}</div>}
+          {ch.schemaScores && Math.max(...ch.schemaScores) > 0 && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Schemas:</span> {ch.schemaScores.join(" · ")}</div>}
         </div>}
-        {logData.vix && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>VIX:</span> {logData.vix} {VIX_REGIME(logData.vix) && <span style={{ color: VIX_REGIME(logData.vix).color, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700 }}>{VIX_REGIME(logData.vix).label}</span>}</div>}
-        {logData.rvol && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>RVOL:</span> {logData.rvol} {RVOL_REGIME(logData.rvol) && <span style={{ color: RVOL_REGIME(logData.rvol).color, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700 }}>{RVOL_REGIME(logData.rvol).label}</span>}</div>}
-        {logData.adr && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>ADR:</span> {logData.adr}</div>}
-        {logData.emasW && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>EMA W/D:</span> {logData.emasW} / {logData.emasD || "—"}</div>}
-        {logData.weeklyCandle && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>PA W/D:</span> {logData.weeklyCandle} / {logData.priorDaily || "—"}</div>}
-        {logData.auctionDirection && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Auction:</span> {logData.auctionDirection} {logData.auctionConviction && `(${logData.auctionConviction})`}</div>}
-        {logData.sessionFocus && <div style={{ marginTop: 6 }}><span style={{ color: "rgba(255,255,255,0.3)" }}>Focus:</span> {logData.sessionFocus}</div>}
-        {logData.scenarioA && <div style={{ marginTop: 6 }}><span style={{ color: "#10B981", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700 }}>A</span> <span style={{ color: "rgba(255,255,255,0.35)" }}>{logData.scenarioA.substring(0, 100)}{logData.scenarioA.length > 100 ? "..." : ""}</span></div>}
+
+        {/* PREP DATA */}
+        {p && <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 1.5, color: "rgba(255,255,255,0.25)", fontWeight: 600, marginBottom: 6 }}>PREP</div>
+          {p.vix && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>VIX:</span> {p.vix} {VIX_REGIME(p.vix) && <span style={{ color: VIX_REGIME(p.vix).color, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700 }}>{VIX_REGIME(p.vix).label}</span>}</div>}
+          {p.rvol && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>RVOL:</span> {p.rvol} {RVOL_REGIME(p.rvol) && <span style={{ color: RVOL_REGIME(p.rvol).color, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700 }}>{RVOL_REGIME(p.rvol).label}</span>}</div>}
+          {p.adr && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>ADR:</span> {p.adr}</div>}
+          {p.emasW && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>EMA W/D:</span> {p.emasW} / {p.emasD || "—"}</div>}
+          {p.weeklyCandle && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>PA W/D:</span> {p.weeklyCandle} / {p.priorDaily || "—"}</div>}
+          {p.auctionDirection && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Auction:</span> {p.auctionDirection} {p.auctionConviction && `(${p.auctionConviction})`}</div>}
+          {p.sessionFocus && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Focus:</span> {p.sessionFocus}</div>}
+          {p.scenarioA && <div><span style={{ color: "#10B981", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700 }}>A</span> {p.scenarioA.substring(0, 100)}{p.scenarioA.length > 100 ? "..." : ""}</div>}
+        </div>}
+
+        {/* REVIEW DATA */}
+        {rv && <div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 1.5, color: "rgba(255,255,255,0.25)", fontWeight: 600, marginBottom: 6 }}>REVIEW</div>
+          {rv.focusRating > 0 && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Focus Rating:</span> <span style={{ color: rv.focusRating >= 4 ? "#10B981" : rv.focusRating >= 2 ? "#F48C06" : "#E94560", fontWeight: 700 }}>{rv.focusRating}/5</span></div>}
+          {(rv.postEmotional > 0 || rv.postDecision > 0 || rv.postPhysical > 0) && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Post-Mental:</span> Emotion {rv.postEmotional}/5 · Decision {rv.postDecision}/5 · Physical {rv.postPhysical}/5</div>}
+          {rv.misreads?.length > 0 && <div><span style={{ color: "#E94560" }}>Misread:</span> {rv.misreads.join(", ")}</div>}
+          {rv.biggestLesson && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Lesson:</span> {rv.biggestLesson}</div>}
+          {rv.tomorrowWill && <div><span style={{ color: "#10B981" }}>Tomorrow:</span> {rv.tomorrowWill}</div>}
+        </div>}
+
+        {!p && !ch && !rv && <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 13 }}>No data found for this entry.</div>}
       </div>}
     </Card>
   );
@@ -769,6 +801,7 @@ function MarketPrep({ onBack }) {
   const [prepSaved, setPrepSaved] = useState(false);
   const [prevAdrs, setPrevAdrs] = useState([]);
   const [prevFocus, setPrevFocus] = useState("");
+  const [prevLessons, setPrevLessons] = useState(null);
   const [savedInstruments, setSavedInstruments] = useState([]);
   const [prepLog, setPrepLog] = useState([]);
 
@@ -821,6 +854,14 @@ function MarketPrep({ onBack }) {
       const dk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
       const prev = await loadData(prepKey(inst, dk), null);
       if (prev?.sessionFocus) { setPrevFocus(prev.sessionFocus); break; }
+    }
+    // Load previous day's review lessons
+    setPrevLessons(null);
+    for (let i = 1; i <= 7; i++) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const dk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+      const rv = await loadData(`review-${dk}-${inst}`, null);
+      if (rv && (rv.biggestLesson || rv.tomorrowWill)) { setPrevLessons({ date: dk, lesson: rv.biggestLesson, tomorrow: rv.tomorrowWill }); break; }
     }
   };
 
@@ -1150,6 +1191,19 @@ function MarketPrep({ onBack }) {
               </div>
             ))}
           </Card>
+
+          {/* PREVIOUS LESSONS */}
+          {prevLessons && <div style={{ background: "rgba(16,185,129,0.06)", borderRadius: 16, padding: 18, marginBottom: 18, borderLeft: "3px solid rgba(16,185,129,0.4)" }}>
+            <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "rgba(16,185,129,0.5)", letterSpacing: 1.5, fontWeight: 600, marginBottom: 10 }}>LESSONS FROM {formatDate(prevLessons.date).toUpperCase()}</div>
+            {prevLessons.lesson && <div style={{ marginBottom: 8 }}>
+              <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "rgba(255,255,255,0.3)", letterSpacing: 1 }}>LESSON</span>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, marginTop: 4 }}>{prevLessons.lesson}</div>
+            </div>}
+            {prevLessons.tomorrow && <div>
+              <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "rgba(255,255,255,0.3)", letterSpacing: 1 }}>COMMITTED TO</span>
+              <div style={{ fontSize: 14, color: "#10B981", lineHeight: 1.6, marginTop: 4 }}>{prevLessons.tomorrow}</div>
+            </div>}
+          </div>}
 
           {/* SESSION FOCUS */}
           <Card style={{ marginBottom: 18 }}>
