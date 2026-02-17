@@ -811,6 +811,8 @@ function MarketPrep({ onBack }) {
   const [prevLessons, setPrevLessons] = useState(null);
   const [savedInstruments, setSavedInstruments] = useState([]);
   const [prepLog, setPrepLog] = useState([]);
+  const [logSelected, setLogSelected] = useState(null); // { date, instrument, key }
+  const [logData, setLogData] = useState(null); // { prep, checkin, review }
 
   // Session Review state
   const [review, setReview] = useState({
@@ -923,6 +925,16 @@ function MarketPrep({ onBack }) {
     else { setReview({ focusRating:0, scenarioAResult:"", scenarioBResult:"", scenarioCResult:"", scenarioATraded:"", scenarioBTraded:"", scenarioCTraded:"", scenarioAWhyNot:"", scenarioBWhyNot:"", scenarioCWhyNot:"", rulesTrend:"", rulesTopBottom:"", rulesCste:"", rulesRisk:"", rulesConsol:"", rulesDLL:"", rulesTrendNote:"", rulesTopBottomNote:"", rulesCsteNote:"", rulesRiskNote:"", rulesConsolNote:"", rulesDLLNote:"", postEmotional:0, postDecision:0, postPhysical:0, misreads:[], misreadNote:"", biggestLesson:"", tomorrowWill:"" }); setReviewSaved(false); }
     const rp = await loadData(prepKey(inst, todayKey()), null);
     if (rp) setReviewPrepData(rp);
+  };
+
+  const loadLogEntry = async (entry) => {
+    if (logSelected?.key === entry.key) { setLogSelected(null); setLogData(null); return; }
+    setLogSelected(entry);
+    setLogData(null);
+    const prepD = await loadData(entry.key, null);
+    const checkinD = await loadData(`checkin-${entry.date}`, null);
+    const reviewD = await loadData(`review-${entry.date}-${entry.instrument}`, null);
+    setLogData({ prep: prepD, checkin: checkinD, review: reviewD });
   };
 
   const switchInstrument = async (inst) => { setInstrument(inst); setPrevFocus(""); await loadPrepForInstrument(inst); await loadReviewForInstrument(inst); };
@@ -1375,9 +1387,64 @@ function MarketPrep({ onBack }) {
         {/* PREP LOG TAB */}
         {tab === "log" && <div style={{ animation: "fadeIn 0.3s ease" }}>
           <SectionLabel text="Prep History" />
-          {prepLog.length === 0 ? <Card style={{ textAlign:"center", padding:52 }}><div style={{ fontSize:40, marginBottom:14, opacity:0.3 }}>◫</div><div style={{ color:"rgba(255,255,255,0.25)", fontSize:16 }}>No preps logged yet.</div></Card> : prepLog.map((entry, i) => (
-            <PrepLogEntry key={i} entry={entry} />
-          ))}
+          {prepLog.length === 0 ? <Card style={{ textAlign:"center", padding:52 }}><div style={{ fontSize:40, marginBottom:14, opacity:0.3 }}>◫</div><div style={{ color:"rgba(255,255,255,0.25)", fontSize:16 }}>No preps logged yet.</div></Card> : <>
+            <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:22 }}>
+              {prepLog.map((entry, i) => <button key={i} onClick={() => loadLogEntry(entry)} style={{
+                padding:"10px 16px", borderRadius:12, cursor:"pointer",
+                border: logSelected?.key === entry.key ? "1px solid rgba(45,212,191,0.4)" : "1px solid rgba(255,255,255,0.06)",
+                background: logSelected?.key === entry.key ? "rgba(45,212,191,0.1)" : "rgba(255,255,255,0.03)",
+                fontSize:12, fontFamily:"'JetBrains Mono', monospace",
+                fontWeight: logSelected?.key === entry.key ? 700 : 400,
+                color: logSelected?.key === entry.key ? "#2DD4BF" : "rgba(255,255,255,0.35)",
+              }}>{formatDate(entry.date)} <span style={{ color:"#2DD4BF", fontWeight:700, marginLeft:6 }}>{entry.instrument}</span></button>)}
+            </div>
+
+            {logSelected && !logData && <Card style={{ textAlign:"center", padding:30 }}><div style={{ color:"rgba(255,255,255,0.25)", fontFamily:"'JetBrains Mono', monospace", fontSize:12 }}>Loading...</div></Card>}
+
+            {logSelected && logData && <div>
+              {/* CHECK-IN */}
+              {logData.checkin && <Card style={{ marginBottom:14 }}>
+                <SectionLabel text="Check-In" color="#4361EE" />
+                <div style={{ fontSize:15, color:"rgba(255,255,255,0.5)", lineHeight:2.2 }}>
+                  {logData.checkin.whoopSleep && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Whoop:</strong> Sleep {logData.checkin.whoopSleep}% · Recovery {logData.checkin.whoopRecovery}% {logData.checkin.whoopGate && <span style={{ color:gateColor(logData.checkin.whoopGate), fontFamily:"'JetBrains Mono', monospace", fontWeight:700, marginLeft:10 }}>{logData.checkin.whoopGate}</span>}</div>}
+                  {logData.checkin.mentalScores && (logData.checkin.mentalScores[0] > 0 || logData.checkin.mentalScores[1] > 0) && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Mental:</strong> Awareness {logData.checkin.mentalScores[0]}/5 · Connected {logData.checkin.mentalScores[1]}/5</div>}
+                  {logData.checkin.otherChecks && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Ready:</strong> {["Hydrated","Exercised","Meditated"].filter((_, i) => logData.checkin.otherChecks[i]).join(", ") || "None"}</div>}
+                  {logData.checkin.schemaScores && Math.max(...logData.checkin.schemaScores) > 0 && <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}><strong style={{ color:"rgba(255,255,255,0.7)" }}>Schema Scores:</strong>{logData.checkin.schemaScores.map((s,i) => <span key={i} style={{ fontFamily:"'JetBrains Mono', monospace", fontWeight:700, color:s>5?"#E94560":s>3?"#F48C06":"#10B981" }}>{s}</span>)}</div>}
+                </div>
+              </Card>}
+
+              {/* PREP */}
+              {logData.prep && <Card style={{ marginBottom:14 }}>
+                <SectionLabel text="Prep" color="#2DD4BF" />
+                <div style={{ fontSize:15, color:"rgba(255,255,255,0.5)", lineHeight:2.2 }}>
+                  {logData.prep.vix && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>VIX:</strong> {logData.prep.vix} {VIX_REGIME(logData.prep.vix) && <span style={{ color:VIX_REGIME(logData.prep.vix).color, fontFamily:"'JetBrains Mono', monospace", fontWeight:700, marginLeft:10 }}>{VIX_REGIME(logData.prep.vix).label}</span>}</div>}
+                  {logData.prep.rvol && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>RVOL:</strong> {logData.prep.rvol} {RVOL_REGIME(logData.prep.rvol) && <span style={{ color:RVOL_REGIME(logData.prep.rvol).color, fontFamily:"'JetBrains Mono', monospace", fontWeight:700, marginLeft:10 }}>{RVOL_REGIME(logData.prep.rvol).label}</span>}</div>}
+                  {logData.prep.adr && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>ADR:</strong> {logData.prep.adr}</div>}
+                  {logData.prep.emasW && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Trend:</strong> W: {logData.prep.emasW} / D: {logData.prep.emasD || "—"}</div>}
+                  {logData.prep.weeklyCandle && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Price Action:</strong> W: {logData.prep.weeklyCandle} / D: {logData.prep.priorDaily || "—"}</div>}
+                  {logData.prep.auctionDirection && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Auction:</strong> {logData.prep.auctionDirection} {logData.prep.auctionConviction && `(${logData.prep.auctionConviction})`} {logData.prep.openVsValue && `· Open: ${logData.prep.openVsValue}`}</div>}
+                  {logData.prep.sessionFocus && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Focus:</strong> {logData.prep.sessionFocus}</div>}
+                  {logData.prep.scenarioA && <div style={{ marginTop:4 }}><span style={{ color:"#10B981", fontFamily:"'JetBrains Mono', monospace", fontSize:11, fontWeight:700 }}>A</span> <span style={{ color:"rgba(255,255,255,0.4)" }}>{logData.prep.scenarioA}</span></div>}
+                  {logData.prep.scenarioB && <div><span style={{ color:"#F48C06", fontFamily:"'JetBrains Mono', monospace", fontSize:11, fontWeight:700 }}>B</span> <span style={{ color:"rgba(255,255,255,0.4)" }}>{logData.prep.scenarioB}</span></div>}
+                  {logData.prep.scenarioC && <div><span style={{ color:"#E94560", fontFamily:"'JetBrains Mono', monospace", fontSize:11, fontWeight:700 }}>C</span> <span style={{ color:"rgba(255,255,255,0.4)" }}>{logData.prep.scenarioC}</span></div>}
+                </div>
+              </Card>}
+
+              {/* REVIEW */}
+              {logData.review && <Card style={{ marginBottom:14 }}>
+                <SectionLabel text="Review" color="#F48C06" />
+                <div style={{ fontSize:15, color:"rgba(255,255,255,0.5)", lineHeight:2.2 }}>
+                  {logData.review.focusRating > 0 && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Focus Rating:</strong> <span style={{ color:logData.review.focusRating>=4?"#10B981":logData.review.focusRating>=2?"#F48C06":"#E94560", fontFamily:"'JetBrains Mono', monospace", fontWeight:700 }}>{logData.review.focusRating}/5</span></div>}
+                  {(logData.review.postEmotional > 0 || logData.review.postDecision > 0 || logData.review.postPhysical > 0) && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Post-Mental:</strong> Emotion {logData.review.postEmotional}/5 · Decision {logData.review.postDecision}/5 · Physical {logData.review.postPhysical}/5</div>}
+                  {logData.review.misreads?.length > 0 && <div><strong style={{ color:"#E94560" }}>Misread:</strong> {logData.review.misreads.join(", ")}</div>}
+                  {logData.review.biggestLesson && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Lesson:</strong> {logData.review.biggestLesson}</div>}
+                  {logData.review.tomorrowWill && <div><strong style={{ color:"#10B981" }}>Tomorrow:</strong> {logData.review.tomorrowWill}</div>}
+                </div>
+              </Card>}
+
+              {!logData.prep && !logData.checkin && !logData.review && <Card style={{ textAlign:"center", padding:30 }}><div style={{ color:"rgba(255,255,255,0.25)", fontSize:14 }}>No data found for this date.</div></Card>}
+            </div>}
+          </>}
         </div>}
       </div>
     </div>
