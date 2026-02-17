@@ -696,8 +696,18 @@ const RVOL_REGIME = (rvol) => {
 
 function PrepLogEntry({ entry }) {
   const [logData, setLogData] = useState(null);
+  const [checkinData, setCheckinData] = useState(null);
   const [open, setOpen] = useState(false);
-  const load = async () => { if (!logData) { const d = await loadData(entry.key, null); setLogData(d); } setOpen(!open); };
+  const load = async () => {
+    if (!logData) {
+      const d = await loadData(entry.key, null);
+      setLogData(d);
+      const ch = await loadData(`checkin-${entry.date}`, null);
+      if (ch) setCheckinData(ch);
+    }
+    setOpen(o => !o);
+  };
+  const gc = (g) => g === "GREEN" ? "#10B981" : g === "AMBER" ? "#F48C06" : g === "RED" ? "#E94560" : "rgba(255,255,255,0.3)";
   return (
     <Card style={{ marginBottom: 12, cursor: "pointer" }} onClick={load}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -708,13 +718,18 @@ function PrepLogEntry({ entry }) {
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.2)", transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>▼</div>
       </div>
       {open && logData && <div onClick={e => e.stopPropagation()} style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.8 }}>
+        {checkinData && <div style={{ marginBottom: 10, paddingBottom: 10, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+          {checkinData.whoopSleep && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Whoop:</span> Sleep {checkinData.whoopSleep}% · Recovery {checkinData.whoopRecovery}% {checkinData.whoopGate && <span style={{ color: gc(checkinData.whoopGate), fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700 }}>{checkinData.whoopGate}</span>}</div>}
+          {checkinData.mentalScores && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Mental:</span> Awareness {checkinData.mentalScores[0]}/5 · Connected {checkinData.mentalScores[1]}/5</div>}
+        </div>}
         {logData.vix && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>VIX:</span> {logData.vix} {VIX_REGIME(logData.vix) && <span style={{ color: VIX_REGIME(logData.vix).color, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700 }}>{VIX_REGIME(logData.vix).label}</span>}</div>}
         {logData.rvol && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>RVOL:</span> {logData.rvol} {RVOL_REGIME(logData.rvol) && <span style={{ color: RVOL_REGIME(logData.rvol).color, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700 }}>{RVOL_REGIME(logData.rvol).label}</span>}</div>}
         {logData.adr && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>ADR:</span> {logData.adr}</div>}
         {logData.emasW && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>EMA W/D:</span> {logData.emasW} / {logData.emasD || "—"}</div>}
         {logData.weeklyCandle && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>PA W/D:</span> {logData.weeklyCandle} / {logData.priorDaily || "—"}</div>}
+        {logData.auctionDirection && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Auction:</span> {logData.auctionDirection} {logData.auctionConviction && `(${logData.auctionConviction})`}</div>}
         {logData.sessionFocus && <div style={{ marginTop: 6 }}><span style={{ color: "rgba(255,255,255,0.3)" }}>Focus:</span> {logData.sessionFocus}</div>}
-        {logData.scenarioA && <div style={{ marginTop: 6 }}><span style={{ color: "#10B981", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700 }}>A</span> <span style={{ color: "rgba(255,255,255,0.35)" }}>{logData.scenarioA.substring(0, 80)}{logData.scenarioA.length > 80 ? "..." : ""}</span></div>}
+        {logData.scenarioA && <div style={{ marginTop: 6 }}><span style={{ color: "#10B981", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700 }}>A</span> <span style={{ color: "rgba(255,255,255,0.35)" }}>{logData.scenarioA.substring(0, 100)}{logData.scenarioA.length > 100 ? "..." : ""}</span></div>}
       </div>}
     </Card>
   );
@@ -726,7 +741,8 @@ function MarketPrep({ onBack }) {
 
   // Check-in state (moved from MentalGame)
   const [ws, setWs] = useState(""); const [wr, setWr] = useState("");
-  const [oc, setOc] = useState([false, false]); const [ss, setSs] = useState([0,0,0,0,0]); const [cs, setCs] = useState(false);
+  const [ms, setMs] = useState([0, 0]); // [selfAwareness, connectedness] 1-5
+  const [oc, setOc] = useState([false, false, false]); const [ss, setSs] = useState([0,0,0,0,0]); const [cs, setCs] = useState(false);
   const wg = getWhoopGate(ws, wr);
   const maxS = Math.max(...ss); const sg = maxS>5?"RED":maxS>3?"AMBER":"GREEN";
   const go = {GREEN:0,AMBER:1,RED:2}; const fg = !wg ? sg : go[wg]>go[sg] ? wg : sg;
@@ -739,11 +755,11 @@ function MarketPrep({ onBack }) {
     news: "", adr: "", rvol: "", vix: "",
     weeklyCandle: "", priorDaily: "", emasW: "", emasD: "",
     profilePriorDay: false, profileDevDay: false, profilePriorWeek: false, profileDevWeek: false, sdLevels: false,
-    ema4h1h: "", pa4h1h: "", singlePrints: "", rotationFactor: "",
+    ema4h1h: "", pa4h1h: "", singlePrints: "", anomaly: "", rotationFactor: "",
     auctionDirection: "", auctionConviction: "", openVsValue: "",
     scenarioA: "", scenarioB: "", scenarioC: "",
     sessionFocus: "",
-    simDeactivated: false, bracket: false, miniMicro: false, accountsUnlocked: false,
+    simDeactivated: false, bracket: false, miniMicro: false, accountsUnlocked: false, lagCheck: false,
   });
   const [prepSaved, setPrepSaved] = useState(false);
   const [prevAdrs, setPrevAdrs] = useState([]);
@@ -760,10 +776,10 @@ function MarketPrep({ onBack }) {
     if (p) { setPrep(p); setPrepSaved(true); } else {
       setPrep({ news:"", adr:"", rvol:"", vix:"", weeklyCandle:"", priorDaily:"", emasW:"", emasD:"",
         profilePriorDay:false, profileDevDay:false, profilePriorWeek:false, profileDevWeek:false, sdLevels:false,
-        ema4h1h:"", pa4h1h:"", singlePrints:"", rotationFactor:"",
+        ema4h1h:"", pa4h1h:"", singlePrints:"", anomaly:"", rotationFactor:"",
         auctionDirection:"", auctionConviction:"", openVsValue:"",
         scenarioA:"", scenarioB:"", scenarioC:"", sessionFocus:"",
-        simDeactivated:false, bracket:false, miniMicro:false, accountsUnlocked:false });
+        simDeactivated:false, bracket:false, miniMicro:false, accountsUnlocked:false, lagCheck:false });
       setPrepSaved(false);
     }
     // Load previous ADRs for this instrument
@@ -787,7 +803,7 @@ function MarketPrep({ onBack }) {
   useEffect(() => { (async () => {
     const k = todayKey();
     const ch = await loadData(`checkin-${k}`, null);
-    if (ch) { setWs(ch.whoopSleep||""); setWr(ch.whoopRecovery||""); setOc(ch.otherChecks||[false,false]); setSs(ch.schemaScores||[0,0,0,0,0]); setCs(true); }
+    if (ch) { setWs(ch.whoopSleep||""); setWr(ch.whoopRecovery||""); setMs(ch.mentalScores||[0,0]); setOc(ch.otherChecks||[false,false,false]); setSs(ch.schemaScores||[0,0,0,0,0]); setCs(true); }
     await loadPrepForInstrument("NQ");
     // Find all saved instruments for today
     try {
@@ -813,7 +829,7 @@ function MarketPrep({ onBack }) {
     setLoading(false);
   })(); }, []);
 
-  const saveCheckin = async () => { await saveData(`checkin-${todayKey()}`, { whoopSleep:ws, whoopRecovery:wr, otherChecks:oc, schemaScores:ss, whoopGate:wg, timestamp:new Date().toISOString() }); setCs(true); };
+  const saveCheckin = async () => { await saveData(`checkin-${todayKey()}`, { whoopSleep:ws, whoopRecovery:wr, mentalScores:ms, otherChecks:oc, schemaScores:ss, whoopGate:wg, timestamp:new Date().toISOString() }); setCs(true); };
   const savePrep = async () => {
     await saveData(prepKey(instrument), { ...prep, instrument, timestamp:new Date().toISOString() });
     setPrepSaved(true);
@@ -889,7 +905,27 @@ function MarketPrep({ onBack }) {
             </div>
             <div style={{ background:"rgba(255,255,255,0.03)", borderRadius:12, padding:14, fontSize:12, color:"rgba(255,255,255,0.25)", lineHeight:2, fontFamily:"'JetBrains Mono', monospace" }}><div><span style={{color:"#10B981"}}>●</span> Sleep ≥80% + Recovery ≥70% → Full Size</div><div><span style={{color:"#F48C06"}}>●</span> Sleep 70–79% or Recovery 55–69% → Half Size</div><div><span style={{color:"#E94560"}}>●</span> Sleep &lt;70% or Recovery &lt;55% → No Trade</div></div>
           </Card>
-          <Card style={{ marginBottom:18 }}><SectionLabel text="Readiness" color="rgba(255,255,255,0.25)" />{["Eaten properly & hydrated","Exercised or moved today"].map((item,i) => <div key={i} onClick={()=>{const n=[...oc];n[i]=!n[i];setOc(n);setCs(false);}} style={{display:"flex",alignItems:"center",gap:16,padding:"14px 0",borderBottom:i===0?"1px solid rgba(255,255,255,0.04)":"none",cursor:"pointer",fontSize:16,color:oc[i]?"#10B981":"rgba(255,255,255,0.5)",userSelect:"none"}}><div style={{width:28,height:28,borderRadius:9,flexShrink:0,border:oc[i]?"none":"2px solid rgba(255,255,255,0.12)",background:oc[i]?"linear-gradient(135deg, #10B981, #059669)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#fff"}}>{oc[i]?"✓":""}</div>{item}</div>)}</Card>
+          <Card style={{ marginBottom:18 }}>
+            <SectionLabel text="Mental Check-In" color="#4361EE" />
+            {[["Self Awareness","How aware are you of your current mental state?",0],["Connectedness","How connected do you feel to your emotions/body?",1]].map(([label,desc,idx]) => {
+              const v = ms[idx]; const color = v >= 4 ? "#10B981" : v >= 2 ? "#F48C06" : v > 0 ? "#E94560" : "rgba(255,255,255,0.15)";
+              return <div key={idx} style={{ marginBottom: 18 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                  <span style={{ fontSize:15, color:"rgba(255,255,255,0.6)", fontWeight:600 }}>{label}</span>
+                  <span style={{ fontFamily:"'JetBrains Mono', monospace", fontWeight:700, fontSize:22, color, width:36, textAlign:"center" }}>{v || "—"}</span>
+                </div>
+                <div style={{ fontSize:12, color:"rgba(255,255,255,0.25)", marginBottom:10 }}>{desc}</div>
+                <div style={{ display:"flex", gap:8 }}>
+                  {[1,2,3,4,5].map(n => <button key={n} onClick={() => { const nm = [...ms]; nm[idx] = ms[idx] === n ? 0 : n; setMs(nm); setCs(false); }} style={{
+                    flex:1, padding:"12px 0", borderRadius:10, border: v === n ? `1px solid ${color}` : "1px solid rgba(255,255,255,0.06)",
+                    background: v === n ? `${color}15` : "rgba(255,255,255,0.03)", color: v === n ? color : "rgba(255,255,255,0.3)",
+                    fontSize:16, fontWeight: v === n ? 700 : 500, cursor:"pointer", fontFamily:"'JetBrains Mono', monospace",
+                  }}>{n}</button>)}
+                </div>
+              </div>;
+            })}
+          </Card>
+          <Card style={{ marginBottom:18 }}><SectionLabel text="Readiness" color="rgba(255,255,255,0.25)" />{["Eaten properly & hydrated","Exercised or moved today","Meditated today (5+ min)"].map((item,i) => <div key={i} onClick={()=>{const n=[...oc];n[i]=!n[i];setOc(n);setCs(false);}} style={{display:"flex",alignItems:"center",gap:16,padding:"14px 0",borderBottom:i<2?"1px solid rgba(255,255,255,0.04)":"none",cursor:"pointer",fontSize:16,color:oc[i]?"#10B981":"rgba(255,255,255,0.5)",userSelect:"none"}}><div style={{width:28,height:28,borderRadius:9,flexShrink:0,border:oc[i]?"none":"2px solid rgba(255,255,255,0.12)",background:oc[i]?"linear-gradient(135deg, #10B981, #059669)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#fff"}}>{oc[i]?"✓":""}</div>{item}</div>)}</Card>
           <Card style={{ marginBottom:18 }}><SectionLabel text="Emotional Baseline" color="#4361EE" /><p style={{fontSize:14,color:"rgba(255,255,255,0.25)",marginBottom:22,lineHeight:1.6}}>Score ≥5 means significantly lower threshold for schema activation.</p>
             {CHECKIN_QUESTIONS.map((item,i) => { const v=ss[i]; const color=v>5?"#E94560":v>3?"#F48C06":"#10B981"; return <div key={i} style={{marginBottom:22}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><span style={{fontSize:15,color:"rgba(255,255,255,0.6)",flex:1}}>{item.q}</span><span style={{fontFamily:"'JetBrains Mono', monospace",fontSize:11,color:"rgba(255,255,255,0.2)",marginRight:14,letterSpacing:1}}>{item.schema}</span><span style={{fontFamily:"'JetBrains Mono', monospace",fontWeight:700,fontSize:22,color,width:40,textAlign:"center"}}>{v}</span></div><div style={{position:"relative"}}><div style={{position:"absolute",top:"50%",left:0,right:0,height:5,borderRadius:3,background:"rgba(255,255,255,0.06)",transform:"translateY(-50%)"}} /><div style={{position:"absolute",top:"50%",left:0,width:`${v*10}%`,height:5,borderRadius:3,background:color,transform:"translateY(-50%)",transition:"all 0.15s"}} /><input type="range" min={0} max={10} value={v} onChange={e=>{const n=[...ss];n[i]=parseInt(e.target.value);setSs(n);setCs(false);}} style={{width:"100%",background:"transparent",position:"relative",zIndex:2,WebkitAppearance:"none",appearance:"none",height:24}} /></div></div>; })}
             <div style={{background:fgc.g,borderRadius:18,padding:28,textAlign:"center",border:`1px solid ${fgc.c}33`,marginTop:28}}><div style={{fontSize:40,marginBottom:6,filter:`drop-shadow(0 0 12px ${fgc.c})`,color:fgc.c}}>{fgc.i}</div><div style={{fontFamily:"'JetBrains Mono', monospace",fontWeight:700,fontSize:36,color:fgc.c,letterSpacing:4}}>{fg}</div><div style={{fontFamily:"'JetBrains Mono', monospace",fontWeight:600,fontSize:12,color:fgc.c,marginTop:6,letterSpacing:2,opacity:0.8}}>{fgc.l}</div><div style={{fontSize:15,color:"rgba(255,255,255,0.45)",marginTop:12}}>{fgc.m}</div>{dp.length>0&&<div style={{fontSize:12,color:"rgba(255,255,255,0.25)",marginTop:10,fontFamily:"'JetBrains Mono', monospace"}}>Driven by: {dp.join(" + ")}</div>}</div>
@@ -1002,6 +1038,7 @@ function MarketPrep({ onBack }) {
             <SelectField label="4H/1H 9EMA" value={prep.ema4h1h} options={["Bullish","Bearish","Neutral"]} onChange={v => up("ema4h1h", v)} />
             <SelectField label="4H/1H Price Action" value={prep.pa4h1h} options={["Bullish","Bearish","Neutral"]} onChange={v => up("pa4h1h", v)} />
             <SelectField label="Single Prints" value={prep.singlePrints} options={["Yes","No"]} onChange={v => up("singlePrints", v)} />
+            <SelectField label="Anomaly?" value={prep.anomaly} options={["Poor High/Low","Excess","Naked POC","None"]} onChange={v => up("anomaly", v)} />
             <SelectField label="Session Rotation Factor" value={prep.rotationFactor} options={["Pushing Up","Pushing Down","Neutral"]} onChange={v => up("rotationFactor", v)} />
           </Card>
 
@@ -1071,6 +1108,7 @@ function MarketPrep({ onBack }) {
             <Checkbox label="Bracket Set" checked={prep.bracket} onChange={v => up("bracket", v)} />
             <Checkbox label="MINI / Micro Selected" checked={prep.miniMicro} onChange={v => up("miniMicro", v)} />
             <Checkbox label="Accounts Unlocked" checked={prep.accountsUnlocked} onChange={v => up("accountsUnlocked", v)} />
+            <Checkbox label="Lag Check" checked={prep.lagCheck} onChange={v => up("lagCheck", v)} />
           </Card>
 
           <SaveButton saved={prepSaved} onClick={savePrep} label={`Save Prep (${instrument})`} />
