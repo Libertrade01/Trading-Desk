@@ -698,20 +698,22 @@ function PrepLogEntry({ entry }) {
   const [data, setData] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const gc = (g) => g === "GREEN" ? "#10B981" : g === "AMBER" ? "#F48C06" : g === "RED" ? "#E94560" : "rgba(255,255,255,0.3)";
 
   const handleClick = async () => {
-    if (!loaded) {
-      try {
-        let prepD = null, checkinD = null, reviewD = null;
-        try { const r = await storage.get(entry.key); if (r?.value) prepD = JSON.parse(r.value); } catch {}
-        try { const r = await storage.get(`checkin-${entry.date}`); if (r?.value) checkinD = JSON.parse(r.value); } catch {}
-        try { const r = await storage.get(`review-${entry.date}-${entry.instrument}`); if (r?.value) reviewD = JSON.parse(r.value); } catch {}
-        setData({ prep: prepD, checkin: checkinD, review: reviewD });
-      } catch { setData({ prep: null, checkin: null, review: null }); }
+    if (!loaded && !loading) {
+      setOpen(true);
+      setLoading(true);
+      const prepD = await loadData(entry.key, null);
+      const checkinD = await loadData(`checkin-${entry.date}`, null);
+      const reviewD = await loadData(`review-${entry.date}-${entry.instrument}`, null);
+      setData({ prep: prepD, checkin: checkinD, review: reviewD });
       setLoaded(true);
+      setLoading(false);
+    } else {
+      setOpen(o => !o);
     }
-    setOpen(o => !o);
   };
 
   const p = data?.prep;
@@ -727,7 +729,11 @@ function PrepLogEntry({ entry }) {
         </div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.2)", transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>▼</div>
       </div>
-      {open && loaded && <div onClick={e => e.stopPropagation()} style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.9 }}>
+      {open && <div onClick={e => e.stopPropagation()} style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.9 }}>
+
+        {loading && <div style={{ color: "rgba(255,255,255,0.25)", fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>Loading...</div>}
+
+        {loaded && <>
 
         {/* MENTAL CHECK-IN */}
         {ch && <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
@@ -761,7 +767,8 @@ function PrepLogEntry({ entry }) {
           {rv.tomorrowWill && <div><span style={{ color: "#10B981" }}>Tomorrow:</span> {rv.tomorrowWill}</div>}
         </div>}
 
-        {!p && !ch && !rv && <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 13 }}>No data found for this entry.</div>}
+        {!p && !ch && !rv && <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 13 }}>No data found.</div>}
+        </>}
       </div>}
     </Card>
   );
