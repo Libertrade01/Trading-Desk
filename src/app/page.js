@@ -745,9 +745,13 @@ function MarketPrep({ onBack }) {
   const [oc, setOc] = useState([false, false, false]); const [ss, setSs] = useState([0,0,0,0,0]); const [cs, setCs] = useState(false);
   const wg = getWhoopGate(ws, wr);
   const maxS = Math.max(...ss); const sg = maxS>5?"RED":maxS>3?"AMBER":"GREEN";
-  const go = {GREEN:0,AMBER:1,RED:2}; const fg = !wg ? sg : go[wg]>go[sg] ? wg : sg;
+  const minMs = ms[0] > 0 && ms[1] > 0 ? Math.min(ms[0], ms[1]) : 0;
+  const mg = minMs === 0 ? null : minMs <= 1 ? "RED" : minMs <= 3 ? "AMBER" : "GREEN";
+  const go = {GREEN:0,AMBER:1,RED:2};
+  const gates = [wg, sg, mg].filter(Boolean);
+  const fg = gates.length === 0 ? "GREEN" : gates.reduce((worst, g) => go[g] > go[worst] ? g : worst, "GREEN");
   const gc = {GREEN:{c:"#10B981",g:"rgba(16,185,129,0.12)",l:"FULL SIZE",m:"All systems go. Execute CSTE plan.",i:"●"},AMBER:{c:"#F48C06",g:"rgba(244,140,6,0.12)",l:"HALF SIZE",m:"A+ setups only. Reduced size.",i:"◐"},RED:{c:"#E94560",g:"rgba(233,69,96,0.12)",l:"NO TRADE",m:"Walk away. Protect capital & progress.",i:"○"}};
-  const fgc = gc[fg]; const dp = []; if(wg&&wg!=="GREEN") dp.push(`Whoop: ${wg}`); if(sg!=="GREEN") dp.push(`Schemas: ${sg}`);
+  const fgc = gc[fg]; const dp = []; if(wg&&wg!=="GREEN") dp.push(`Whoop: ${wg}`); if(sg!=="GREEN") dp.push(`Schemas: ${sg}`); if(mg&&mg!=="GREEN") dp.push(`Mental: ${mg}`);
 
   // Instrument & prep state
   const [instrument, setInstrument] = useState("NQ");
@@ -755,9 +759,10 @@ function MarketPrep({ onBack }) {
     news: "", adr: "", rvol: "", vix: "",
     weeklyCandle: "", priorDaily: "", emasW: "", emasD: "",
     profilePriorDay: false, profileDevDay: false, profilePriorWeek: false, profileDevWeek: false, sdLevels: false,
-    ema4h1h: "", pa4h1h: "", singlePrints: "", anomaly: "", rotationFactor: "",
+    ema4h1h: "", pa4h1h: "", singlePrints: "", anomaly: [], rotationFactor: "",
     auctionDirection: "", auctionConviction: "", openVsValue: "",
     scenarioA: "", scenarioB: "", scenarioC: "",
+    invalidA: "", invalidB: "", invalidC: "",
     sessionFocus: "",
     simDeactivated: false, bracket: false, miniMicro: false, accountsUnlocked: false, lagCheck: false,
   });
@@ -766,6 +771,23 @@ function MarketPrep({ onBack }) {
   const [prevFocus, setPrevFocus] = useState("");
   const [savedInstruments, setSavedInstruments] = useState([]);
   const [prepLog, setPrepLog] = useState([]);
+
+  // Session Review state
+  const [review, setReview] = useState({
+    focusRating: 0,
+    scenarioAResult: "", scenarioBResult: "", scenarioCResult: "",
+    scenarioATraded: "", scenarioBTraded: "", scenarioCTraded: "",
+    scenarioAWhyNot: "", scenarioBWhyNot: "", scenarioCWhyNot: "",
+    rulesTrend: "", rulesTopBottom: "", rulesCste: "", rulesRisk: "", rulesConsol: "", rulesDLL: "",
+    rulesTrendNote: "", rulesTopBottomNote: "", rulesCsteNote: "", rulesRiskNote: "", rulesConsolNote: "", rulesDLLNote: "",
+    postEmotional: 0, postDecision: 0, postPhysical: 0,
+    misreads: [], misreadNote: "",
+    biggestLesson: "", tomorrowWill: "",
+  });
+  const [reviewSaved, setReviewSaved] = useState(false);
+  const [reviewPrepData, setReviewPrepData] = useState(null);
+
+  const ur = (k, v) => { setReview(r => ({...r, [k]: v})); setReviewSaved(false); };
 
   const up = (k, v) => { setPrep(p => ({...p, [k]: v})); setPrepSaved(false); };
   const prepKey = (inst, date) => `prep-${date || todayKey()}-${inst || instrument}`;
@@ -776,9 +798,11 @@ function MarketPrep({ onBack }) {
     if (p) { setPrep(p); setPrepSaved(true); } else {
       setPrep({ news:"", adr:"", rvol:"", vix:"", weeklyCandle:"", priorDaily:"", emasW:"", emasD:"",
         profilePriorDay:false, profileDevDay:false, profilePriorWeek:false, profileDevWeek:false, sdLevels:false,
-        ema4h1h:"", pa4h1h:"", singlePrints:"", anomaly:"", rotationFactor:"",
+        ema4h1h:"", pa4h1h:"", singlePrints:"", anomaly:[], rotationFactor:"",
         auctionDirection:"", auctionConviction:"", openVsValue:"",
-        scenarioA:"", scenarioB:"", scenarioC:"", sessionFocus:"",
+        scenarioA:"", scenarioB:"", scenarioC:"",
+        invalidA:"", invalidB:"", invalidC:"",
+        sessionFocus:"",
         simDeactivated:false, bracket:false, miniMicro:false, accountsUnlocked:false, lagCheck:false });
       setPrepSaved(false);
     }
@@ -826,6 +850,12 @@ function MarketPrep({ onBack }) {
       } catch {}
     }
     setPrepLog(log);
+    // Load review
+    const rv = await loadData(`review-${k}-${instrument || "NQ"}`, null);
+    if (rv) { setReview(rv); setReviewSaved(true); }
+    // Load prep data for review tab
+    const rp = await loadData(prepKey("NQ", k), null);
+    if (rp) setReviewPrepData(rp);
     setLoading(false);
   })(); }, []);
 
@@ -835,8 +865,19 @@ function MarketPrep({ onBack }) {
     setPrepSaved(true);
     if (!savedInstruments.includes(instrument)) setSavedInstruments([...savedInstruments, instrument]);
   };
+  const saveReview = async () => {
+    await saveData(`review-${todayKey()}-${instrument}`, { ...review, instrument, timestamp:new Date().toISOString() });
+    setReviewSaved(true);
+  };
+  const loadReviewForInstrument = async (inst) => {
+    const rv = await loadData(`review-${todayKey()}-${inst}`, null);
+    if (rv) { setReview(rv); setReviewSaved(true); }
+    else { setReview({ focusRating:0, scenarioAResult:"", scenarioBResult:"", scenarioCResult:"", scenarioATraded:"", scenarioBTraded:"", scenarioCTraded:"", scenarioAWhyNot:"", scenarioBWhyNot:"", scenarioCWhyNot:"", rulesTrend:"", rulesTopBottom:"", rulesCste:"", rulesRisk:"", rulesConsol:"", rulesDLL:"", rulesTrendNote:"", rulesTopBottomNote:"", rulesCsteNote:"", rulesRiskNote:"", rulesConsolNote:"", rulesDLLNote:"", postEmotional:0, postDecision:0, postPhysical:0, misreads:[], misreadNote:"", biggestLesson:"", tomorrowWill:"" }); setReviewSaved(false); }
+    const rp = await loadData(prepKey(inst, todayKey()), null);
+    if (rp) setReviewPrepData(rp);
+  };
 
-  const switchInstrument = async (inst) => { setInstrument(inst); setPrevFocus(""); await loadPrepForInstrument(inst); };
+  const switchInstrument = async (inst) => { setInstrument(inst); setPrevFocus(""); await loadPrepForInstrument(inst); await loadReviewForInstrument(inst); };
 
   const vixR = VIX_REGIME(prep.vix);
   const rvolR = RVOL_REGIME(prep.rvol);
@@ -844,7 +885,7 @@ function MarketPrep({ onBack }) {
 
   if (loading) return <div style={{ display:"flex", justifyContent:"center", alignItems:"center", height:"100vh", color:"rgba(255,255,255,0.3)" }}>Loading...</div>;
 
-  const tabs = [{id:"checkin",label:"Mental Check-In",icon:"◉"},{id:"prep",label:"Pre-Market Prep",icon:"◎"},{id:"log",label:"Log",icon:"◫"}];
+  const tabs = [{id:"checkin",label:"Check-In",icon:"◉"},{id:"prep",label:"Prep",icon:"◎"},{id:"review",label:"Review",icon:"◈"},{id:"log",label:"Log",icon:"◫"}];
 
   const SelectField = ({ label, value, options, onChange }) => (
     <div style={{ marginBottom: 16 }}>
@@ -1038,7 +1079,29 @@ function MarketPrep({ onBack }) {
             <SelectField label="4H/1H 9EMA" value={prep.ema4h1h} options={["Bullish","Bearish","Neutral"]} onChange={v => up("ema4h1h", v)} />
             <SelectField label="4H/1H Price Action" value={prep.pa4h1h} options={["Bullish","Bearish","Neutral"]} onChange={v => up("pa4h1h", v)} />
             <SelectField label="Single Prints" value={prep.singlePrints} options={["Yes","No"]} onChange={v => up("singlePrints", v)} />
-            <SelectField label="Anomaly?" value={prep.anomaly} options={["Poor High/Low","Excess","Naked POC","None"]} onChange={v => up("anomaly", v)} />
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 8 }}>Anomaly?</label>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {["Poor High/Low","Excess","Naked POC","None"].map(o => {
+                  const anomalies = Array.isArray(prep.anomaly) ? prep.anomaly : prep.anomaly ? [prep.anomaly] : [];
+                  const isSelected = anomalies.includes(o);
+                  const toggle = () => {
+                    if (o === "None") { up("anomaly", isSelected ? [] : ["None"]); }
+                    else {
+                      let next = isSelected ? anomalies.filter(a => a !== o) : [...anomalies.filter(a => a !== "None"), o];
+                      up("anomaly", next);
+                    }
+                  };
+                  return <button key={o} onClick={toggle} style={{
+                    flex: 1, minWidth: "22%", padding: "12px 8px", borderRadius: 12,
+                    border: `1px solid ${isSelected ? (o === "None" ? "rgba(255,255,255,0.15)" : "rgba(244,140,6,0.4)") : "rgba(255,255,255,0.06)"}`,
+                    background: isSelected ? (o === "None" ? "rgba(255,255,255,0.05)" : "rgba(244,140,6,0.1)") : "rgba(255,255,255,0.03)",
+                    color: isSelected ? (o === "None" ? "rgba(255,255,255,0.6)" : "#F48C06") : "rgba(255,255,255,0.3)",
+                    fontSize: 12, fontWeight: isSelected ? 700 : 500, cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s",
+                  }}>{o}</button>;
+                })}
+              </div>
+            </div>
             <SelectField label="Session Rotation Factor" value={prep.rotationFactor} options={["Pushing Up","Pushing Down","Neutral"]} onChange={v => up("rotationFactor", v)} />
           </Card>
 
@@ -1074,15 +1137,16 @@ function MarketPrep({ onBack }) {
           <Card style={{ marginBottom: 18 }}>
             <SectionLabel text="Session Scenarios" color="#F48C06" />
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", marginBottom: 16, lineHeight: 1.6 }}>Plan your response to multiple outcomes before the session starts.</p>
-            {[["A", "Primary scenario (base case)", prep.scenarioA, "scenarioA", "#10B981"],
-              ["B", "Alternate scenario", prep.scenarioB, "scenarioB", "#F48C06"],
-              ["C", "No trade / trap scenario", prep.scenarioC, "scenarioC", "#E94560"]].map(([letter, label, value, key, color]) => (
+            {[["A", "Primary scenario (base case)", prep.scenarioA, "scenarioA", prep.invalidA, "invalidA", "#10B981"],
+              ["B", "Alternate scenario", prep.scenarioB, "scenarioB", prep.invalidB, "invalidB", "#F48C06"],
+              ["C", "No trade / trap scenario", prep.scenarioC, "scenarioC", prep.invalidC, "invalidC", "#E94560"]].map(([letter, label, value, key, invalidValue, invalidKey, color]) => (
               <div key={key} style={{ marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
                   <div style={{ width: 28, height: 28, borderRadius: 8, background: `${color}15`, border: `1px solid ${color}33`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 700, color }}>{letter}</div>
                   <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>{label}</span>
                 </div>
                 <textarea value={value} onChange={e => up(key, e.target.value)} placeholder={`Direction, key levels, what to watch for, how to act...`} rows={4} style={{ width:"100%", padding:14, borderRadius:14, border:`1px solid ${value ? `${color}33` : "rgba(255,255,255,0.08)"}`, background: value ? `${color}06` : "rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.7)", fontSize:15, fontFamily:"inherit", resize:"vertical", boxSizing:"border-box", lineHeight: 1.7 }} />
+                <input type="text" value={invalidValue || ""} onChange={e => up(invalidKey, e.target.value)} placeholder="Invalidated if..." style={{ width:"100%", padding:"10px 14px", borderRadius:10, border:`1px solid ${invalidValue ? `${color}22` : "rgba(255,255,255,0.06)"}`, background: invalidValue ? `${color}04` : "rgba(255,255,255,0.02)", color:"rgba(255,255,255,0.5)", fontSize:13, fontFamily:"'JetBrains Mono', monospace", boxSizing:"border-box", marginTop:6 }} />
               </div>
             ))}
           </Card>
@@ -1112,6 +1176,139 @@ function MarketPrep({ onBack }) {
           </Card>
 
           <SaveButton saved={prepSaved} onClick={savePrep} label={`Save Prep (${instrument})`} />
+        </div>}
+
+        {/* SESSION REVIEW TAB */}
+        {tab === "review" && <div style={{ animation: "fadeIn 0.3s ease" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}><SectionLabel text="Session Review" /><span style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:12, color:"rgba(255,255,255,0.2)" }}>{todayKey()} · {instrument}</span></div>
+
+          {/* SESSION FOCUS RATING */}
+          <Card style={{ marginBottom: 18 }}>
+            <SectionLabel text="Session Focus" color="#2DD4BF" />
+            {(reviewPrepData?.sessionFocus || prep.sessionFocus) ? (
+              <div style={{ background: "rgba(45,212,191,0.06)", borderRadius: 12, padding: "12px 16px", border: "1px solid rgba(45,212,191,0.15)", marginBottom: 14 }}>
+                <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "rgba(255,255,255,0.25)", letterSpacing: 1, marginBottom: 4 }}>TODAY'S FOCUS</div>
+                <div style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>{reviewPrepData?.sessionFocus || prep.sessionFocus}</div>
+              </div>
+            ) : <p style={{ fontSize: 13, color: "rgba(255,255,255,0.2)", marginBottom: 14 }}>No session focus set in prep.</p>}
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 10 }}>How well did you stick to this focus?</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {[1,2,3,4,5].map(n => { const color = n >= 4 ? "#10B981" : n >= 2 ? "#F48C06" : "#E94560"; return <button key={n} onClick={() => ur("focusRating", review.focusRating === n ? 0 : n)} style={{ flex:1, padding:"14px 0", borderRadius:12, border: review.focusRating === n ? `1px solid ${color}` : "1px solid rgba(255,255,255,0.06)", background: review.focusRating === n ? `${color}15` : "rgba(255,255,255,0.03)", color: review.focusRating === n ? color : "rgba(255,255,255,0.3)", fontSize:18, fontWeight: review.focusRating === n ? 700 : 500, cursor:"pointer", fontFamily:"'JetBrains Mono', monospace" }}>{n}</button>; })}
+            </div>
+          </Card>
+
+          {/* SCENARIO REVIEW */}
+          <Card style={{ marginBottom: 18 }}>
+            <SectionLabel text="Scenario Review" color="#F48C06" />
+            {[["A", reviewPrepData?.scenarioA || prep.scenarioA, reviewPrepData?.invalidA || prep.invalidA, "scenarioAResult", "scenarioATraded", "scenarioAWhyNot", "#10B981"],
+              ["B", reviewPrepData?.scenarioB || prep.scenarioB, reviewPrepData?.invalidB || prep.invalidB, "scenarioBResult", "scenarioBTraded", "scenarioBWhyNot", "#F48C06"],
+              ["C", reviewPrepData?.scenarioC || prep.scenarioC, reviewPrepData?.invalidC || prep.invalidC, "scenarioCResult", "scenarioCTraded", "scenarioCWhyNot", "#E94560"]].map(([letter, scenario, invalidation, resultKey, tradedKey, whyNotKey, color]) => {
+              if (!scenario) return null;
+              return (
+                <div key={letter} style={{ marginBottom: 18, paddingBottom: 18, borderBottom: letter !== "C" ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 10 }}>
+                    <div style={{ width: 24, height: 24, borderRadius: 7, background: `${color}15`, border: `1px solid ${color}33`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 700, color, flexShrink: 0, marginTop: 2 }}>{letter}</div>
+                    <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>{scenario.substring(0, 150)}{scenario.length > 150 ? "..." : ""}</div>
+                  </div>
+                  {invalidation && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: "'JetBrains Mono', monospace", marginBottom: 10, marginLeft: 34 }}>Invalidated if: {invalidation}</div>}
+                  <div style={{ marginLeft: 34 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.35)", marginBottom: 6 }}>Did this play out?</div>
+                    <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                      {["Played Out","Partially","Didn't Play Out"].map(o => <button key={o} onClick={() => ur(resultKey, review[resultKey] === o ? "" : o)} style={{ flex:1, padding:"10px 6px", borderRadius:10, border: `1px solid ${review[resultKey] === o ? (o === "Played Out" ? "rgba(16,185,129,0.4)" : o === "Partially" ? "rgba(244,140,6,0.4)" : "rgba(233,69,96,0.4)") : "rgba(255,255,255,0.06)"}`, background: review[resultKey] === o ? (o === "Played Out" ? "rgba(16,185,129,0.1)" : o === "Partially" ? "rgba(244,140,6,0.1)" : "rgba(233,69,96,0.1)") : "rgba(255,255,255,0.03)", color: review[resultKey] === o ? (o === "Played Out" ? "#10B981" : o === "Partially" ? "#F48C06" : "#E94560") : "rgba(255,255,255,0.3)", fontSize:11, fontWeight: review[resultKey] === o ? 700 : 500, cursor:"pointer", fontFamily:"inherit" }}>{o}</button>)}
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.35)", marginBottom: 6 }}>Did you trade it?</div>
+                    <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+                      {["Yes","No","N/A"].map(o => <button key={o} onClick={() => ur(tradedKey, review[tradedKey] === o ? "" : o)} style={{ flex:1, padding:"10px 6px", borderRadius:10, border: `1px solid ${review[tradedKey] === o ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.06)"}`, background: review[tradedKey] === o ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)", color: review[tradedKey] === o ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.3)", fontSize:11, fontWeight: review[tradedKey] === o ? 700 : 500, cursor:"pointer", fontFamily:"inherit" }}>{o}</button>)}
+                    </div>
+                    {review[tradedKey] === "No" && <input type="text" value={review[whyNotKey] || ""} onChange={e => ur(whyNotKey, e.target.value)} placeholder="Why not?" style={{ width:"100%", padding:"10px 14px", borderRadius:10, border:"1px solid rgba(255,255,255,0.06)", background:"rgba(255,255,255,0.03)", color:"rgba(255,255,255,0.5)", fontSize:13, fontFamily:"inherit", boxSizing:"border-box", marginTop:4 }} />}
+                  </div>
+                </div>
+              );
+            })}
+          </Card>
+
+          {/* POST-SESSION MENTAL CHECK */}
+          <Card style={{ marginBottom: 18 }}>
+            <SectionLabel text="Post-Session Mental Check" color="#A855F7" />
+            {[["postEmotional", "Emotional Regulation", "How well did you manage stress and tilt?"],
+              ["postDecision", "Decision Quality", "Were your decisions clear and process-driven?"],
+              ["postPhysical", "Physical State", "Energy level and nervous system regulation?"]].map(([key, label, desc]) => {
+              const v = review[key]; const color = v >= 4 ? "#10B981" : v >= 2 ? "#F48C06" : v > 0 ? "#E94560" : "rgba(255,255,255,0.15)";
+              return <div key={key} style={{ marginBottom: 18 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                  <span style={{ fontSize:15, color:"rgba(255,255,255,0.6)", fontWeight:600 }}>{label}</span>
+                  <span style={{ fontFamily:"'JetBrains Mono', monospace", fontWeight:700, fontSize:22, color, width:36, textAlign:"center" }}>{v || "—"}</span>
+                </div>
+                <div style={{ fontSize:12, color:"rgba(255,255,255,0.25)", marginBottom:10 }}>{desc}</div>
+                <div style={{ display:"flex", gap:8 }}>
+                  {[1,2,3,4,5].map(n => <button key={n} onClick={() => ur(key, review[key] === n ? 0 : n)} style={{
+                    flex:1, padding:"12px 0", borderRadius:10, border: v === n ? `1px solid ${color}` : "1px solid rgba(255,255,255,0.06)",
+                    background: v === n ? `${color}15` : "rgba(255,255,255,0.03)", color: v === n ? color : "rgba(255,255,255,0.3)",
+                    fontSize:16, fontWeight: v === n ? 700 : 500, cursor:"pointer", fontFamily:"'JetBrains Mono', monospace",
+                  }}>{n}</button>)}
+                </div>
+              </div>;
+            })}
+          </Card>
+
+          {/* RULE COMPLIANCE */}
+          <Card style={{ marginBottom: 18 }}>
+            <SectionLabel text="Rule Compliance" color="#4361EE" />
+            {[["rulesTrend", "rulesTrendNote", "Traded with Trend / Tape"],
+              ["rulesTopBottom", "rulesTopBottomNote", "Avoided picking tops/bottoms"],
+              ["rulesCste", "rulesCsteNote", "Every trade had CSTE plan"],
+              ["rulesRisk", "rulesRiskNote", "Risks defined — no impulsive entries"],
+              ["rulesConsol", "rulesConsolNote", "Avoided entering during consolidation"],
+              ["rulesDLL", "rulesDLLNote", "DLL Respected"]].map(([key, noteKey, label]) => (
+              <div key={key} style={{ marginBottom: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>{label}</span>
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {["Yes","No","N/A"].map(o => <button key={o} onClick={() => ur(key, review[key] === o ? "" : o)} style={{ flex:1, padding:"10px 6px", borderRadius:10, border: `1px solid ${review[key] === o ? (o === "Yes" ? "rgba(16,185,129,0.4)" : o === "No" ? "rgba(233,69,96,0.4)" : "rgba(255,255,255,0.15)") : "rgba(255,255,255,0.06)"}`, background: review[key] === o ? (o === "Yes" ? "rgba(16,185,129,0.1)" : o === "No" ? "rgba(233,69,96,0.1)" : "rgba(255,255,255,0.05)") : "rgba(255,255,255,0.03)", color: review[key] === o ? (o === "Yes" ? "#10B981" : o === "No" ? "#E94560" : "rgba(255,255,255,0.6)") : "rgba(255,255,255,0.3)", fontSize:12, fontWeight: review[key] === o ? 700 : 500, cursor:"pointer", fontFamily:"inherit" }}>{o}</button>)}
+                </div>
+                {review[key] === "No" && <input type="text" value={review[noteKey] || ""} onChange={e => ur(noteKey, e.target.value)} placeholder="What happened?" style={{ width:"100%", padding:"10px 14px", borderRadius:10, border:"1px solid rgba(233,69,96,0.2)", background:"rgba(233,69,96,0.04)", color:"rgba(255,255,255,0.5)", fontSize:13, fontFamily:"inherit", boxSizing:"border-box", marginTop:6 }} />}
+              </div>
+            ))}
+          </Card>
+
+          {/* FUNDAMENTALS MISREAD */}
+          <Card style={{ marginBottom: 18 }}>
+            <SectionLabel text="Fundamentals Misread" color="#E94560" />
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", marginBottom: 14, lineHeight: 1.6 }}>What did the market tell you that you missed or misread?</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {["Trend / Bias","Volume Profile (rotational vs imbalance)","Orderflow (delta/tape)","Volatility/Sizing Misread (VIX/RVOL)","MGI Levels (misread market decision)"].map(item => {
+                const misreads = review.misreads || [];
+                const checked = misreads.includes(item);
+                return <div key={item} onClick={() => { const next = checked ? misreads.filter(m => m !== item) : [...misreads, item]; ur("misreads", next); }} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 14px", borderRadius:12, cursor:"pointer", background: checked ? "rgba(233,69,96,0.08)" : "rgba(255,255,255,0.03)", border: checked ? "1px solid rgba(233,69,96,0.25)" : "1px solid rgba(255,255,255,0.06)", transition:"all 0.2s" }}>
+                  <div style={{ width:22, height:22, borderRadius:6, flexShrink:0, border: checked ? "none" : "2px solid rgba(255,255,255,0.1)", background: checked ? "#E94560" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, color:"#fff" }}>{checked ? "✓" : ""}</div>
+                  <span style={{ fontSize:14, color: checked ? "#E94560" : "rgba(255,255,255,0.45)" }}>{item}</span>
+                </div>;
+              })}
+            </div>
+            {(review.misreads || []).length > 0 && <textarea value={review.misreadNote || ""} onChange={e => ur("misreadNote", e.target.value)} placeholder="What specifically was misread and what should you have seen?" rows={2} style={{ width:"100%", padding:14, borderRadius:14, border:"1px solid rgba(233,69,96,0.15)", background:"rgba(233,69,96,0.04)", color:"rgba(255,255,255,0.7)", fontSize:15, fontFamily:"inherit", resize:"vertical", boxSizing:"border-box", marginTop:12 }} />}
+          </Card>
+
+          {/* BIGGEST LESSON & TOMORROW */}
+          <Card style={{ marginBottom: 18 }}>
+            <SectionLabel text="Lessons" color="#10B981" />
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 8 }}>Biggest lesson from today</label>
+              <textarea value={review.biggestLesson} onChange={e => ur("biggestLesson", e.target.value)} placeholder='e.g. "Today I was influenced by price and disregarded my plan and bias."' rows={2} style={{ width:"100%", padding:14, borderRadius:14, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.7)", fontSize:15, fontFamily:"inherit", resize:"vertical", boxSizing:"border-box", lineHeight:1.7 }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 8 }}>Tomorrow I will...</label>
+              <textarea value={review.tomorrowWill} onChange={e => ur("tomorrowWill", e.target.value)} placeholder='e.g. "Have a clear invalidation to plan/bias and see price as opportunity until invalidation."' rows={2} style={{ width:"100%", padding:14, borderRadius:14, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.7)", fontSize:15, fontFamily:"inherit", resize:"vertical", boxSizing:"border-box", lineHeight:1.7 }} />
+            </div>
+          </Card>
+
+          {/* WIND DOWN */}
+          <div style={{ background: "rgba(168,85,247,0.06)", borderRadius: 16, padding: 18, marginBottom: 18, borderLeft: "3px solid rgba(168,85,247,0.4)" }}>
+            <div style={{ fontSize: 13, color: "#A855F7", fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, letterSpacing: 1, marginBottom: 8 }}>WIND DOWN</div>
+            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", lineHeight: 1.8 }}>Step away from charts. 10 minutes meditation or a walk outside before reviewing P&L. Let the session settle before drawing conclusions.</div>
+          </div>
+
+          <SaveButton saved={reviewSaved} onClick={saveReview} label={`Save Review (${instrument})`} />
         </div>}
 
         {/* PREP LOG TAB */}
