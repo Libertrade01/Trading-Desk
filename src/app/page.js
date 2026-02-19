@@ -156,7 +156,8 @@ async function saveData(key, value) { try { await storage.set(key, JSON.stringif
 function todayKey() { return new Date().toISOString().split("T")[0]; }
 function weekKey() { const d = new Date(); const s = new Date(d); s.setDate(d.getDate() - d.getDay() + 1); return `week-${s.toISOString().split("T")[0]}`; }
 function formatDate(d) { const parts = d.split("-"); const dt = new Date(parts[0], parts[1]-1, parts[2]); return dt.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }); }
-function getWhoopGate(sl, re) { const s = parseFloat(sl), r = parseFloat(re); if (isNaN(s)||isNaN(r)) return null; if (s<70||r<55) return "RED"; if (s>=80&&r>=70) return "GREEN"; return "AMBER"; }
+function getWhoopGate(sl, re) { const s = parseFloat(sl), r = parseFloat(re); if (isNaN(s)||isNaN(r)) return null; if (s<70||r<30) return "RED"; if (s>=80) return "GREEN"; return "AMBER"; }
+function recoveryWarning(re) { const r = parseFloat(re); if (isNaN(r)) return null; if (r >= 70) return null; if (r < 30) return null; return true; }
 function gateColor(g) { return g==="GREEN"?"#10B981":g==="AMBER"?"#F48C06":g==="RED"?"#E94560":"rgba(255,255,255,0.2)"; }
 
 // ═══════════════════════════════════════════════════════════
@@ -211,6 +212,7 @@ function LandingPage({ onNavigate }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <NavCard onClick={() => onNavigate("prep")} gradient="linear-gradient(180deg, #F48C06, #10B981, #4361EE)" tag="SESSION PREPARATION" title="Market Prep" desc="Mental check-in, pre-market analysis, scenarios and session focus." />
         <NavCard onClick={() => onNavigate("playbook")} gradient="linear-gradient(180deg, #2DD4BF, #10B981, #F48C06)" tag="TRADE EXECUTION" title="Playbook" desc="Setups, execution framework, risk framing and trigger confirmation." />
+        <NavCard onClick={() => onNavigate("review")} gradient="linear-gradient(180deg, #A855F7, #4361EE, #2DD4BF)" tag="WEEKLY REVIEW" title="Review" desc="Weekly performance review, lessons, activations and discipline tracking." />
         <NavCard onClick={() => onNavigate("mental")} gradient="linear-gradient(180deg, #E94560, #4361EE, #F48C06)" tag="SCHEMA AWARENESS" title="Mental Game" desc="Schema tracking, DLL circuit breaker, activation logs and reviews." />
         <NavCard onClick={() => onNavigate("fundamentals")} gradient="linear-gradient(180deg, #10B981, #4361EE, #A855F7)" tag="MARKET KNOWLEDGE" title="Market Fundamentals" desc="Auction Market Theory, value and price relationships, balance, imbalance and failed auctions." />
       </div>
@@ -507,6 +509,346 @@ function RuleDiagram({ num }) {
 // ═══════════════════════════════════════════════════════════
 // MARKET FUNDAMENTALS
 // ═══════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════
+// WEEKLY REVIEW
+// ═══════════════════════════════════════════════════════════
+
+function getWeekDates(offset = 0) {
+  const now = new Date();
+  const day = now.getDay();
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + mondayOffset + (offset * 7));
+  const days = [];
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    days.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`);
+  }
+  return days;
+}
+
+function weekLabel(dates) {
+  if (!dates || dates.length === 0) return "";
+  const fmt = d => { const p = d.split("-"); return `${p[2]}/${p[1]}`; };
+  return `${fmt(dates[0])} - ${fmt(dates[4])}`;
+}
+
+function WeeklyReview({ onBack }) {
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null);
+  const [ack, setAck] = useState({ activations: {}, lessons: {} });
+  const [ackSaved, setAckSaved] = useState(false);
+  const [takeaway, setTakeaway] = useState("");
+  const [takeawaySaved, setTakeawaySaved] = useState(false);
+
+  const dates = getWeekDates(weekOffset);
+  const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+
+      // Load all days in parallel - checkins + activations + find review keys
+      const dayPromises = dates.map(async (dk) => {
+        const [checkin, activations, reviewKeys] = await Promise.all([
+          loadData(`checkin-${dk}`, null),
+          loadData(`activations-${dk}`, []),
+          storage.list(`review-${dk}-`).then(r => r?.keys || []).catch(() => []),
+        ]);
+        // Load first found review if any key exists
+        let review = null;
+        if (reviewKeys.length > 0) {
+          review = await loadData(reviewKeys[0], null);
+        }
+        return { date: dk, checkin, activations, review };
+      });
+
+      const [days, savedAck, savedTakeaway] = await Promise.all([
+        Promise.all(dayPromises),
+        loadData(`weekly-ack-${dates[0]}`, { activations: {}, lessons: {} }),
+        loadData(`weekly-takeaway-${dates[0]}`, null),
+      ]);
+
+      setData({ days });
+      setAck(savedAck);
+      setAckSaved(true);
+      if (savedTakeaway) { setTakeaway(savedTakeaway.text || ""); setTakeawaySaved(true); }
+      else { setTakeaway(""); setTakeawaySaved(false); }
+      setLoading(false);
+    })();
+  }, [weekOffset]);
+
+  const saveAck = async (newAck) => {
+    setAck(newAck);
+    setAckSaved(false);
+    await saveData(`weekly-ack-${dates[0]}`, newAck);
+    setAckSaved(true);
+  };
+
+  const saveTakeawayFn = async () => {
+    await saveData(`weekly-takeaway-${dates[0]}`, { text: takeaway, timestamp: new Date().toISOString() });
+    setTakeawaySaved(true);
+  };
+
+  const toggleAckActivation = (dayIdx, actIdx) => {
+    const key = `${dayIdx}-${actIdx}`;
+    const newAck = { ...ack, activations: { ...ack.activations, [key]: !ack.activations[key] } };
+    saveAck(newAck);
+  };
+
+  const toggleAckLesson = (dayIdx) => {
+    const newAck = { ...ack, lessons: { ...ack.lessons, [dayIdx]: !ack.lessons[dayIdx] } };
+    saveAck(newAck);
+  };
+
+  if (loading) return <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ fontFamily: "'JetBrains Mono', monospace", color: "rgba(255,255,255,0.2)", fontSize: 14 }}>Loading week...</div></div>;
+
+  // Aggregate data
+  const whoopDays = data.days.filter(d => d.checkin);
+  const avgSleep = whoopDays.length > 0 ? Math.round(whoopDays.reduce((s,d) => s + parseFloat(d.checkin.whoopSleep || 0), 0) / whoopDays.length) : null;
+  const avgRecovery = whoopDays.length > 0 ? Math.round(whoopDays.reduce((s,d) => s + parseFloat(d.checkin.whoopRecovery || 0), 0) / whoopDays.length) : null;
+  const mentalDays = whoopDays.filter(d => d.checkin.mentalScores && d.checkin.mentalScores[0] > 0);
+  const avgAwareness = mentalDays.length > 0 ? (mentalDays.reduce((s,d) => s + d.checkin.mentalScores[0], 0) / mentalDays.length).toFixed(1) : null;
+  const avgConnected = mentalDays.length > 0 ? (mentalDays.reduce((s,d) => s + d.checkin.mentalScores[1], 0) / mentalDays.length).toFixed(1) : null;
+
+  // Schema flags (any question > 4)
+  const schemaFlags = [];
+  const schemaNames = ["Am I trying to prove something?", "Am I avoiding out of fear?", "Do I feel not good enough?", "Am I overcomplicating?", "Do I feel the need to be right?"];
+  data.days.forEach((d, di) => {
+    if (!d.checkin?.schemaScores) return;
+    d.checkin.schemaScores.forEach((score, si) => {
+      if (score > 4) schemaFlags.push({ day: dayNames[di], date: d.date, question: schemaNames[si], score, dayIdx: di });
+    });
+  });
+
+  // Post-session mental checks for flagged days
+  const flaggedDayIndices = [...new Set(schemaFlags.map(f => f.dayIdx))];
+
+  // All activations
+  const allActivations = [];
+  data.days.forEach((d, di) => {
+    if (d.activations?.length > 0) {
+      d.activations.forEach((a, ai) => allActivations.push({ ...a, dayIdx: di, actIdx: ai, day: dayNames[di], date: d.date }));
+    }
+  });
+
+  // Plays review
+  const allPlays = [];
+  data.days.forEach((d, di) => {
+    if (!d.review) return;
+    [["Bullish Play 1","bull1","bull1Invalid","bull1Result","bull1Traded","bull1WhyNot","#10B981"],
+     ["Bullish Play 2","bull2","bull2Invalid","bull2Result","bull2Traded","bull2WhyNot","#10B981"],
+     ["Bearish Play 1","bear1","bear1Invalid","bear1Result","bear1Traded","bear1WhyNot","#E94560"],
+     ["Bearish Play 2","bear2","bear2Invalid","bear2Result","bear2Traded","bear2WhyNot","#E94560"]
+    ].forEach(([label, sKey, iKey, rKey, tKey, wKey, color]) => {
+      const result = d.review[rKey];
+      const traded = d.review[tKey];
+      if (result || traded) {
+        allPlays.push({ label, day: dayNames[di], date: d.date, result, traded, whyNot: d.review[wKey], color });
+      }
+    });
+  });
+  const untradedPlays = allPlays.filter(p => p.traded === "No");
+  const tradedPlays = allPlays.filter(p => p.traded === "Yes");
+
+  // Rule compliance
+  const ruleKeys = [["rulesTrend","Traded with Trend / Tape"],["rulesMarketCond","Traded inline with market condition"],["rulesTopBottom","Avoided Picking Tops and Bottoms"],["rulesPlays","Trades from Pre Defined Plays"],["rulesExecution","Execution Model Followed"],["rulesConsol","Avoided Entering During Consolidation"],["rulesDLL","DLL Respected"]];
+  const ruleSummary = ruleKeys.map(([key, label]) => {
+    let followed = 0, broke = 0, na = 0;
+    data.days.forEach(d => {
+      if (!d.review) return;
+      const v = d.review[key];
+      if (v === "Followed") followed++;
+      else if (v === "Broke") broke++;
+      else na++;
+    });
+    return { label, followed, broke, total: followed + broke };
+  });
+
+  // Lessons
+  const allLessons = [];
+  data.days.forEach((d, di) => {
+    if (!d.review) return;
+    if (d.review.biggestLesson || d.review.tomorrowWill) {
+      allLessons.push({ dayIdx: di, day: dayNames[di], date: d.date, lesson: d.review.biggestLesson, tomorrow: d.review.tomorrowWill });
+    }
+  });
+
+  const StatBox = ({ label, value, sub, color }) => (
+    <div style={{ flex: 1, background: "rgba(255,255,255,0.03)", borderRadius: 14, padding: "14px 16px", textAlign: "center" }}>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 24, fontWeight: 700, color: color || "rgba(255,255,255,0.6)" }}>{value ?? "..."}</div>
+      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 4, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 0.5 }}>{label}</div>
+      {sub && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>{sub}</div>}
+    </div>
+  );
+
+  const CheckRow = ({ checked, onToggle, children }) => (
+    <div style={{ display: "flex", gap: 12, padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.04)", alignItems: "flex-start" }}>
+      <div onClick={onToggle} style={{ width: 22, height: 22, borderRadius: 6, border: checked ? "1px solid rgba(45,212,191,0.4)" : "1px solid rgba(255,255,255,0.1)", background: checked ? "rgba(45,212,191,0.12)" : "rgba(255,255,255,0.03)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, marginTop: 2, transition: "all 0.2s", fontSize: 12, color: "#2DD4BF" }}>{checked ? "✓" : ""}</div>
+      <div style={{ flex: 1, opacity: checked ? 0.4 : 1, transition: "opacity 0.2s" }}>{children}</div>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight: "100vh", padding: "40px 20px 100px" }}>
+      <BackButton onClick={onBack} />
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 4, color: "rgba(168,85,247,0.5)", fontWeight: 600 }}>WEEKLY REVIEW</div>
+      <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5, marginTop: 6, marginBottom: 8, color: "rgba(255,255,255,0.85)" }}>Review</div>
+
+      {/* Week Selector */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
+        <button onClick={() => setWeekOffset(weekOffset - 1)} style={{ padding: "10px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.4)", fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>←</button>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>{weekLabel(dates)}</div>
+          {weekOffset === 0 && <div style={{ fontSize: 11, color: "rgba(45,212,191,0.5)", fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>Current Week</div>}
+        </div>
+        <button onClick={() => setWeekOffset(Math.min(weekOffset + 1, 0))} style={{ padding: "10px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", color: weekOffset < 0 ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.1)", fontSize: 14, cursor: weekOffset < 0 ? "pointer" : "default", fontFamily: "inherit" }}>→</button>
+      </div>
+
+      {/* SECTION 1: BODY & MIND */}
+      <Card style={{ marginBottom: 18 }}>
+        <SectionLabel text="Body & Mind" />
+        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+          <StatBox label="Avg Sleep" value={avgSleep ? `${avgSleep}%` : null} color={avgSleep >= 80 ? "#10B981" : avgSleep >= 70 ? "#F48C06" : avgSleep ? "#E94560" : null} />
+          <StatBox label="Avg Recovery" value={avgRecovery ? `${avgRecovery}%` : null} color={avgRecovery >= 70 ? "#10B981" : avgRecovery >= 30 ? "#F48C06" : avgRecovery ? "#E94560" : null} />
+        </div>
+        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+          <StatBox label="Awareness" value={avgAwareness} sub="avg / 5" color={parseFloat(avgAwareness) >= 4 ? "#10B981" : parseFloat(avgAwareness) >= 3 ? "#F48C06" : avgAwareness ? "#E94560" : null} />
+          <StatBox label="Connected" value={avgConnected} sub="avg / 5" color={parseFloat(avgConnected) >= 4 ? "#10B981" : parseFloat(avgConnected) >= 3 ? "#F48C06" : avgConnected ? "#E94560" : null} />
+        </div>
+        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "rgba(255,255,255,0.2)", textAlign: "center" }}>{whoopDays.length} of 5 days logged</div>
+      </Card>
+
+      {/* SCHEMA FLAGS */}
+      {schemaFlags.length > 0 && <Card style={{ marginBottom: 18 }}>
+        <SectionLabel text="Schema Flags" color="#E94560" />
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 14, lineHeight: 1.6 }}>Baseline scores above 4 this week.</div>
+        {schemaFlags.map((f, i) => (
+          <div key={i} style={{ padding: "10px 0", borderBottom: i < schemaFlags.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none", fontSize: 14 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ color: "rgba(255,255,255,0.5)" }}><span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)" }}>{f.day}</span> {f.question}</span>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 16, color: "#E94560" }}>{f.score}</span>
+            </div>
+          </div>
+        ))}
+        {/* Post-session mental for flagged days */}
+        {flaggedDayIndices.map(di => {
+          const d = data.days[di];
+          if (!d.review) return null;
+          const { postEmotional, postDecision, postPhysical } = d.review;
+          if (!postEmotional && !postDecision && !postPhysical) return null;
+          return (
+            <div key={di} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: "12px 16px", marginTop: 10, fontSize: 13 }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 6 }}>{dayNames[di]} POST-SESSION</div>
+              <div style={{ display: "flex", gap: 16, color: "rgba(255,255,255,0.5)" }}>
+                {postEmotional > 0 && <span>Emotional: <strong style={{ color: postEmotional >= 4 ? "#10B981" : postEmotional >= 3 ? "#F48C06" : "#E94560" }}>{postEmotional}/5</strong></span>}
+                {postDecision > 0 && <span>Decision: <strong style={{ color: postDecision >= 4 ? "#10B981" : postDecision >= 3 ? "#F48C06" : "#E94560" }}>{postDecision}/5</strong></span>}
+                {postPhysical > 0 && <span>Physical: <strong style={{ color: postPhysical >= 4 ? "#10B981" : postPhysical >= 3 ? "#F48C06" : "#E94560" }}>{postPhysical}/5</strong></span>}
+              </div>
+            </div>
+          );
+        })}
+      </Card>}
+
+      {/* SECTION 2: ACTIVATIONS */}
+      <Card style={{ marginBottom: 18 }}>
+        <SectionLabel text={`Activations (${allActivations.length})`} />
+        {allActivations.length === 0 ? (
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.2)", textAlign: "center", padding: 20 }}>No activations this week.</div>
+        ) : allActivations.map((a, i) => (
+          <CheckRow key={i} checked={!!ack.activations[`${a.dayIdx}-${a.actIdx}`]} onToggle={() => toggleAckActivation(a.dayIdx, a.actIdx)}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)" }}>{a.day} {a.time || ""}</span>
+              <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, background: a.outcome === "Followed plan" ? "rgba(16,185,129,0.12)" : "rgba(233,69,96,0.12)", color: a.outcome === "Followed plan" ? "#10B981" : "#E94560" }}>{a.outcome || "?"}</span>
+            </div>
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}><strong style={{ color: "rgba(255,255,255,0.6)" }}>{a.schema}</strong>: {a.feeling}</div>
+            {a.interrupt && <div style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", fontStyle: "italic", marginTop: 4 }}>"{a.interrupt}"</div>}
+          </CheckRow>
+        ))}
+      </Card>
+
+      {/* SECTION 3: PLAYS */}
+      <Card style={{ marginBottom: 18 }}>
+        <SectionLabel text="Play Review" />
+
+        {untradedPlays.length > 0 && <>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 1.5, color: "rgba(233,69,96,0.6)", fontWeight: 600, marginBottom: 10, marginTop: 8 }}>PLAYS NOT TRADED</div>
+          {untradedPlays.map((p, i) => (
+            <div key={i} style={{ padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)", fontSize: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <span style={{ width: 6, height: 6, borderRadius: 3, background: p.color, flexShrink: 0 }} />
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{p.day}</span>
+                <span style={{ color: "rgba(255,255,255,0.5)" }}>{p.label}</span>
+                {p.result && <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, background: p.result === "Played Out" ? "rgba(16,185,129,0.1)" : "rgba(244,140,6,0.1)", color: p.result === "Played Out" ? "#10B981" : "#F48C06", fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>{p.result}</span>}
+              </div>
+              {p.whyNot && <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginLeft: 14 }}>Why not: {p.whyNot}</div>}
+            </div>
+          ))}
+        </>}
+
+        {tradedPlays.length > 0 && <>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 1.5, color: "rgba(16,185,129,0.6)", fontWeight: 600, marginBottom: 10, marginTop: untradedPlays.length > 0 ? 18 : 8 }}>PLAYS TRADED</div>
+          {tradedPlays.map((p, i) => (
+            <div key={i} style={{ padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)", fontSize: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ width: 6, height: 6, borderRadius: 3, background: p.color, flexShrink: 0 }} />
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{p.day}</span>
+                <span style={{ color: "rgba(255,255,255,0.5)" }}>{p.label}</span>
+                {p.result && <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, background: p.result === "Played Out" ? "rgba(16,185,129,0.1)" : p.result === "Partially" ? "rgba(244,140,6,0.1)" : "rgba(233,69,96,0.1)", color: p.result === "Played Out" ? "#10B981" : p.result === "Partially" ? "#F48C06" : "#E94560", fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>{p.result}</span>}
+              </div>
+            </div>
+          ))}
+        </>}
+
+        {allPlays.length === 0 && <div style={{ fontSize: 14, color: "rgba(255,255,255,0.2)", textAlign: "center", padding: 20 }}>No plays reviewed this week.</div>}
+      </Card>
+
+      {/* SECTION 4: DISCIPLINE */}
+      <Card style={{ marginBottom: 18 }}>
+        <SectionLabel text="Discipline" />
+
+        {/* Rule Compliance */}
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 1.5, color: "rgba(255,255,255,0.3)", fontWeight: 600, marginBottom: 12 }}>RULE COMPLIANCE</div>
+        {ruleSummary.map((r, i) => (
+          <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < ruleSummary.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+            <span style={{ fontSize: 14, color: "rgba(255,255,255,0.45)" }}>{r.label}</span>
+            <div style={{ display: "flex", gap: 12, fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}>
+              {r.followed > 0 && <span style={{ color: "#10B981", fontWeight: 600 }}>{r.followed}✓</span>}
+              {r.broke > 0 && <span style={{ color: "#E94560", fontWeight: 600 }}>{r.broke}✗</span>}
+              {r.total === 0 && <span style={{ color: "rgba(255,255,255,0.15)" }}>...</span>}
+            </div>
+          </div>
+        ))}
+
+      </Card>
+
+      {/* SECTION 5: LESSONS */}
+      <Card style={{ marginBottom: 18 }}>
+        <SectionLabel text={`Lessons (${allLessons.length})`} />
+        {allLessons.length === 0 ? (
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.2)", textAlign: "center", padding: 20 }}>No lessons recorded this week.</div>
+        ) : allLessons.map((l, i) => (
+          <CheckRow key={i} checked={!!ack.lessons[l.dayIdx]} onToggle={() => toggleAckLesson(l.dayIdx)}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", marginBottom: 4 }}>{l.day}</div>
+            {l.lesson && <div style={{ fontSize: 14, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, marginBottom: 4 }}>{l.lesson}</div>}
+            {l.tomorrow && <div style={{ fontSize: 13, color: "rgba(16,185,129,0.6)", fontStyle: "italic" }}>Tomorrow: {l.tomorrow}</div>}
+          </CheckRow>
+        ))}
+      </Card>
+
+      {/* SECTION 6: WEEKLY TAKEAWAY */}
+      <Card style={{ marginBottom: 18 }}>
+        <SectionLabel text="Weekly Takeaway" />
+        <textarea value={takeaway} onChange={e => { setTakeaway(e.target.value); setTakeawaySaved(false); }} placeholder="What is the key takeaway from this week? What patterns emerged? What will you carry into next week?" rows={5} style={{ width: "100%", padding: 16, borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.7)", fontSize: 15, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box", lineHeight: 1.7 }} />
+        <SaveButton saved={takeawaySaved} onClick={saveTakeawayFn} label="Save Takeaway" />
+      </Card>
+
+    </div>
+  );
+}
 
 // ═══════════════════════════════════════════════════════════
 // PLAYBOOK
@@ -915,7 +1257,7 @@ function PrepLogEntry({ entry }) {
           {p.weeklyCandle && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>PA W/D:</span> {p.weeklyCandle} / {p.priorDaily || "—"}</div>}
           {p.auctionDirection && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Auction:</span> {p.auctionDirection} {p.auctionConviction && `(${p.auctionConviction})`}</div>}
           {p.sessionFocus && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Focus:</span> {p.sessionFocus}</div>}
-          {p.scenarioA && <div><span style={{ color: "#10B981", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700 }}>A</span> {p.scenarioA.substring(0, 100)}{p.scenarioA.length > 100 ? "..." : ""}</div>}
+          {p.bull1 && <div><span style={{ color: "#10B981", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700 }}>Bull 1</span> {p.bull1.substring(0, 100)}{p.bull1.length > 100 ? "..." : ""}</div>}
         </div>}
 
         {/* REVIEW DATA */}
@@ -923,7 +1265,6 @@ function PrepLogEntry({ entry }) {
           <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 1.5, color: "rgba(255,255,255,0.25)", fontWeight: 600, marginBottom: 6 }}>REVIEW</div>
           {rv.focusRating > 0 && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Focus Rating:</span> <span style={{ color: rv.focusRating >= 4 ? "#10B981" : rv.focusRating >= 2 ? "#F48C06" : "#E94560", fontWeight: 700 }}>{rv.focusRating}/5</span></div>}
           {(rv.postEmotional > 0 || rv.postDecision > 0 || rv.postPhysical > 0) && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Post-Mental:</span> Emotion {rv.postEmotional}/5 · Decision {rv.postDecision}/5 · Physical {rv.postPhysical}/5</div>}
-          {rv.misreads?.length > 0 && <div><span style={{ color: "#E94560" }}>Misread:</span> {rv.misreads.join(", ")}</div>}
           {rv.biggestLesson && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Lesson:</span> {rv.biggestLesson}</div>}
           {rv.tomorrowWill && <div><span style={{ color: "#10B981" }}>Tomorrow:</span> {rv.tomorrowWill}</div>}
         </div>}
@@ -962,8 +1303,8 @@ function MarketPrep({ onBack }) {
     profilePriorDay: false, profileDevDay: false, profilePriorWeek: false, profileDevWeek: false, sdLevels: false,
     ema4h1h: "", pa4h1h: "", singlePrints: "", anomaly: [], rotationFactor: "",
     auctionDirection: "", auctionConviction: "", openVsValue: "",
-    scenarioA: "", scenarioB: "", scenarioC: "",
-    invalidA: "", invalidB: "", invalidC: "",
+    bull1: "", bull1Invalid: "", bull2: "", bull2Invalid: "",
+    bear1: "", bear1Invalid: "", bear2: "", bear2Invalid: "",
     sessionFocus: "",
     simDeactivated: false, bracket: false, miniMicro: false, accountsUnlocked: false, lagCheck: false,
   });
@@ -973,19 +1314,20 @@ function MarketPrep({ onBack }) {
   const [prevLessons, setPrevLessons] = useState(null);
   const [savedInstruments, setSavedInstruments] = useState([]);
   const [prepLog, setPrepLog] = useState([]);
+  const [logLoaded, setLogLoaded] = useState(false);
   const [logSelected, setLogSelected] = useState(null); // { date, instrument, key }
   const [logData, setLogData] = useState(null); // { prep, checkin, review }
 
   // Session Review state
   const [review, setReview] = useState({
     focusRating: 0,
-    scenarioAResult: "", scenarioBResult: "", scenarioCResult: "",
-    scenarioATraded: "", scenarioBTraded: "", scenarioCTraded: "",
-    scenarioAWhyNot: "", scenarioBWhyNot: "", scenarioCWhyNot: "",
-    rulesTrend: "", rulesTopBottom: "", rulesCste: "", rulesRisk: "", rulesConsol: "", rulesDLL: "",
-    rulesTrendNote: "", rulesTopBottomNote: "", rulesCsteNote: "", rulesRiskNote: "", rulesConsolNote: "", rulesDLLNote: "",
+    bull1Result: "", bull1Traded: "", bull1WhyNot: "",
+    bull2Result: "", bull2Traded: "", bull2WhyNot: "",
+    bear1Result: "", bear1Traded: "", bear1WhyNot: "",
+    bear2Result: "", bear2Traded: "", bear2WhyNot: "",
+    rulesTrend: "", rulesMarketCond: "", rulesTopBottom: "", rulesPlays: "", rulesExecution: "", rulesConsol: "", rulesDLL: "",
+    rulesTrendNote: "", rulesMarketCondNote: "", rulesTopBottomNote: "", rulesPlaysNote: "", rulesExecutionNote: "", rulesConsolNote: "", rulesDLLNote: "",
     postEmotional: 0, postDecision: 0, postPhysical: 0,
-    misreads: [], misreadNote: "",
     biggestLesson: "", tomorrowWill: "",
   });
   const [reviewSaved, setReviewSaved] = useState(false);
@@ -998,77 +1340,76 @@ function MarketPrep({ onBack }) {
 
   const loadPrepForInstrument = async (inst) => {
     const k = todayKey();
-    const p = await loadData(prepKey(inst, k), null);
-    if (p) { setPrep(p); setPrepSaved(true); } else {
+    // Build all date keys we'll need (today + 7 previous days)
+    const prevDates = [];
+    for (let i = 1; i <= 7; i++) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      prevDates.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`);
+    }
+
+    // Load today's prep + all previous preps + all previous reviews in ONE parallel batch
+    const [todayPrep, ...prevResults] = await Promise.all([
+      loadData(prepKey(inst, k), null),
+      ...prevDates.map(dk => loadData(prepKey(inst, dk), null)),
+      ...prevDates.map(dk => loadData(`review-${dk}-${inst}`, null)),
+    ]);
+
+    // Set today's prep
+    if (todayPrep) { setPrep(todayPrep); setPrepSaved(true); } else {
       setPrep({ news:"", adr:"", rvol:"", vix:"", weeklyCandle:"", priorDaily:"", emasW:"", emasD:"",
         profilePriorDay:false, profileDevDay:false, profilePriorWeek:false, profileDevWeek:false, sdLevels:false,
         ema4h1h:"", pa4h1h:"", singlePrints:"", anomaly:[], rotationFactor:"",
         auctionDirection:"", auctionConviction:"", openVsValue:"",
-        scenarioA:"", scenarioB:"", scenarioC:"",
-        invalidA:"", invalidB:"", invalidC:"",
+        bull1:"", bull1Invalid:"", bull2:"", bull2Invalid:"",
+        bear1:"", bear1Invalid:"", bear2:"", bear2Invalid:"",
         sessionFocus:"",
         simDeactivated:false, bracket:false, miniMicro:false, accountsUnlocked:false, lagCheck:false });
       setPrepSaved(false);
     }
-    // Load previous ADRs for this instrument
+
+    // Extract previous preps (indices 0-6) and reviews (indices 7-13)
+    const prevPreps = prevResults.slice(0, 7);
+    const prevReviews = prevResults.slice(7, 14);
+
+    // ADR from previous 5 days
     const adrs = [];
-    for (let i = 1; i <= 5; i++) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const dk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-      const prev = await loadData(prepKey(inst, dk), null);
-      if (prev?.adr) adrs.push({ date: dk, adr: parseFloat(prev.adr) });
-    }
+    for (let i = 0; i < 5; i++) { if (prevPreps[i]?.adr) adrs.push({ date: prevDates[i], adr: parseFloat(prevPreps[i].adr) }); }
     setPrevAdrs(adrs);
-    // Load previous session focus for this instrument
-    for (let i = 1; i <= 7; i++) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const dk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-      const prev = await loadData(prepKey(inst, dk), null);
-      if (prev?.sessionFocus) { setPrevFocus(prev.sessionFocus); break; }
-    }
-    // Load previous day's review lessons
+
+    // Previous session focus (first found)
+    setPrevFocus("");
+    for (let i = 0; i < 7; i++) { if (prevPreps[i]?.sessionFocus) { setPrevFocus(prevPreps[i].sessionFocus); break; } }
+
+    // Previous day's lessons (first found)
     setPrevLessons(null);
-    for (let i = 1; i <= 7; i++) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const dk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-      const rv = await loadData(`review-${dk}-${inst}`, null);
-      if (rv && (rv.biggestLesson || rv.tomorrowWill)) { setPrevLessons({ date: dk, lesson: rv.biggestLesson, tomorrow: rv.tomorrowWill }); break; }
+    for (let i = 0; i < 7; i++) {
+      const rv = prevReviews[i];
+      if (rv && (rv.biggestLesson || rv.tomorrowWill)) { setPrevLessons({ date: prevDates[i], lesson: rv.biggestLesson, tomorrow: rv.tomorrowWill }); break; }
     }
   };
 
   useEffect(() => { (async () => {
     const k = todayKey();
-    const ch = await loadData(`checkin-${k}`, null);
+    // Load check-in and prep in parallel (the two things needed for first screen)
+    const [ch] = await Promise.all([
+      loadData(`checkin-${k}`, null),
+      loadPrepForInstrument("NQ"),
+    ]);
     if (ch) { setWs(ch.whoopSleep||""); setWr(ch.whoopRecovery||""); setMs(ch.mentalScores||[0,0]); setOc(ch.otherChecks||[false,false,false]); setSs(ch.schemaScores||[0,0,0,0,0]); setCs(true); }
-    await loadPrepForInstrument("NQ");
-    // Find all saved instruments for today
-    try {
-      const keys = await storage.list(`prep-${k}-`);
-      if (keys?.keys) setSavedInstruments(keys.keys.map(k => k.split("-").pop()));
-    } catch {}
-    // Load prep log (last 14 days)
-    const log = [];
-    for (let i = 0; i <= 14; i++) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const dk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-      try {
-        const keys = await storage.list(`prep-${dk}-`);
-        if (keys?.keys?.length > 0) {
-          for (const key of keys.keys) {
-            const inst = key.split("-").pop();
-            log.push({ date: dk, instrument: inst, key });
-          }
-        }
-      } catch {}
-    }
-    setPrepLog(log);
-    // Load review
-    const rv = await loadData(`review-${k}-${instrument || "NQ"}`, null);
-    if (rv) { setReview(rv); setReviewSaved(true); }
-    // Load prep data for review tab
-    const rp = await loadData(prepKey("NQ", k), null);
-    if (rp) setReviewPrepData(rp);
     setLoading(false);
+    // Load review + instruments + log in background (non-blocking)
+    (async () => {
+      const [rv, rp] = await Promise.all([
+        loadData(`review-${k}-${instrument || "NQ"}`, null),
+        loadData(prepKey("NQ", k), null),
+      ]);
+      if (rv) { setReview(rv); setReviewSaved(true); }
+      if (rp) setReviewPrepData(rp);
+      try {
+        const keys = await storage.list(`prep-${k}-`);
+        if (keys?.keys) setSavedInstruments(keys.keys.map(k => k.split("-").pop()));
+      } catch {}
+    })();
   })(); }, []);
 
   const saveCheckin = async () => { await saveData(`checkin-${todayKey()}`, { whoopSleep:ws, whoopRecovery:wr, mentalScores:ms, otherChecks:oc, schemaScores:ss, whoopGate:wg, timestamp:new Date().toISOString() }); setCs(true); };
@@ -1084,7 +1425,7 @@ function MarketPrep({ onBack }) {
   const loadReviewForInstrument = async (inst) => {
     const rv = await loadData(`review-${todayKey()}-${inst}`, null);
     if (rv) { setReview(rv); setReviewSaved(true); }
-    else { setReview({ focusRating:0, scenarioAResult:"", scenarioBResult:"", scenarioCResult:"", scenarioATraded:"", scenarioBTraded:"", scenarioCTraded:"", scenarioAWhyNot:"", scenarioBWhyNot:"", scenarioCWhyNot:"", rulesTrend:"", rulesTopBottom:"", rulesCste:"", rulesRisk:"", rulesConsol:"", rulesDLL:"", rulesTrendNote:"", rulesTopBottomNote:"", rulesCsteNote:"", rulesRiskNote:"", rulesConsolNote:"", rulesDLLNote:"", postEmotional:0, postDecision:0, postPhysical:0, misreads:[], misreadNote:"", biggestLesson:"", tomorrowWill:"" }); setReviewSaved(false); }
+    else { setReview({ focusRating:0, bull1Result:"", bull1Traded:"", bull1WhyNot:"", bull2Result:"", bull2Traded:"", bull2WhyNot:"", bear1Result:"", bear1Traded:"", bear1WhyNot:"", bear2Result:"", bear2Traded:"", bear2WhyNot:"", rulesTrend:"", rulesMarketCond:"", rulesTopBottom:"", rulesPlays:"", rulesExecution:"", rulesConsol:"", rulesDLL:"", rulesTrendNote:"", rulesMarketCondNote:"", rulesTopBottomNote:"", rulesPlaysNote:"", rulesExecutionNote:"", rulesConsolNote:"", rulesDLLNote:"", postEmotional:0, postDecision:0, postPhysical:0, biggestLesson:"", tomorrowWill:"" }); setReviewSaved(false); }
     const rp = await loadData(prepKey(inst, todayKey()), null);
     if (rp) setReviewPrepData(rp);
   };
@@ -1108,6 +1449,27 @@ function MarketPrep({ onBack }) {
   if (loading) return <div style={{ display:"flex", justifyContent:"center", alignItems:"center", height:"100vh", color:"rgba(255,255,255,0.3)" }}>Loading...</div>;
 
   const tabs = [{id:"checkin",label:"Check-In",icon:"◉"},{id:"prep",label:"Prep",icon:"◎"},{id:"review",label:"Review",icon:"◈"},{id:"log",label:"Log",icon:"◫"}];
+
+  const handleTabSwitch = (id) => {
+    setTab(id);
+    if (id === "log" && !logLoaded) {
+      setLogLoaded(true);
+      (async () => {
+        const log = [];
+        const promises = [];
+        for (let i = 0; i <= 14; i++) {
+          const d = new Date(); d.setDate(d.getDate() - i);
+          const dk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+          promises.push(storage.list(`prep-${dk}-`).then(keys => {
+            if (keys?.keys?.length > 0) for (const key of keys.keys) log.push({ date: dk, instrument: key.split("-").pop(), key });
+          }).catch(() => {}));
+        }
+        await Promise.all(promises);
+        log.sort((a,b) => b.date.localeCompare(a.date));
+        setPrepLog(log);
+      })();
+    }
+  };
 
   const SelectField = ({ label, value, options, onChange }) => (
     <div style={{ marginBottom: 16 }}>
@@ -1146,7 +1508,7 @@ function MarketPrep({ onBack }) {
         </div>
         <div style={{ display: "flex", gap: 6, marginBottom: 24 }}>
           {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{
+            <button key={t.id} onClick={() => handleTabSwitch(t.id)} style={{
               flex: 1, padding: "14px 8px", border: "none", borderRadius: 14, cursor: "pointer",
               background: tab === t.id ? "rgba(45,212,191,0.15)" : "rgba(255,255,255,0.03)",
               color: tab === t.id ? "#2DD4BF" : "rgba(255,255,255,0.3)",
@@ -1220,7 +1582,8 @@ function MarketPrep({ onBack }) {
             <div style={{ display:"flex", gap:14, marginBottom:18 }}>
               {[["Sleep Score",ws,v=>{setWs(v);setCs(false);}],["Recovery Score",wr,v=>{setWr(v);setCs(false);}]].map(([l,v,fn]) => <div key={l} style={{flex:1}}><label style={{fontSize:12,fontWeight:600,color:"rgba(255,255,255,0.4)",display:"block",marginBottom:8}}>{l}</label><div style={{position:"relative"}}><input type="number" min={0} max={100} value={v} onChange={e=>fn(e.target.value)} placeholder="—" style={{width:"100%",padding:"16px 44px 16px 16px",borderRadius:14,border:`1px solid ${v?`${gateColor(wg)}44`:"rgba(255,255,255,0.08)"}`,fontSize:26,fontFamily:"'JetBrains Mono', monospace",fontWeight:700,background:v?`${gateColor(wg)}08`:"rgba(255,255,255,0.04)",color:v?gateColor(wg):"rgba(255,255,255,0.3)",boxSizing:"border-box",outline:"none",textAlign:"center"}} /><span style={{position:"absolute",right:16,top:"50%",transform:"translateY(-50%)",fontSize:15,color:"rgba(255,255,255,0.2)",fontFamily:"'JetBrains Mono', monospace"}}>%</span></div></div>)}
             </div>
-            <div style={{ background:"rgba(255,255,255,0.03)", borderRadius:12, padding:14, fontSize:12, color:"rgba(255,255,255,0.25)", lineHeight:2, fontFamily:"'JetBrains Mono', monospace" }}><div><span style={{color:"#10B981"}}>●</span> Sleep ≥80% + Recovery ≥70% → Full Size</div><div><span style={{color:"#F48C06"}}>●</span> Sleep 70–79% or Recovery 55–69% → Half Size</div><div><span style={{color:"#E94560"}}>●</span> Sleep &lt;70% or Recovery &lt;55% → No Trade</div></div>
+            <div style={{ background:"rgba(255,255,255,0.03)", borderRadius:12, padding:14, fontSize:12, color:"rgba(255,255,255,0.25)", lineHeight:2, fontFamily:"'JetBrains Mono', monospace" }}><div><span style={{color:"#10B981"}}>●</span> Sleep ≥80% → Full Size</div><div><span style={{color:"#F48C06"}}>●</span> Sleep 70–79% → Half Size</div><div><span style={{color:"#E94560"}}>●</span> Sleep &lt;70% or Recovery &lt;30% → No Trade</div></div>
+            {recoveryWarning(wr) && <div style={{ background:"rgba(244,140,6,0.06)", borderRadius:12, padding:"12px 14px", marginTop:10, border:"1px solid rgba(244,140,6,0.15)", fontSize:13, color:"rgba(244,140,6,0.7)", lineHeight:1.6 }}>Recovery is low. Minimise intense screen time today and prioritise recovering.</div>}
           </Card>
           <Card style={{ marginBottom:18 }}>
             <SectionLabel text="Mental Check-In" color="#4361EE" />
@@ -1313,6 +1676,7 @@ function MarketPrep({ onBack }) {
               <div><span style={{color:"#F48C06"}}>●</span> 60–85 Quiet · trade small and selective</div>
               <div><span style={{color:"#10B981"}}>●</span> 85–120 Active · run your playbook</div>
               <div><span style={{color:"#E94560"}}>●</span> &gt;120 Hot · A-setups only, adjust size</div>
+              <div style={{ marginTop:10, paddingTop:8, borderTop:"1px solid rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.25)", fontStyle:"italic", fontFamily:"inherit" }}>The market does not need high RVOL to grind all day. Low RVOL can still trend.</div>
             </div>
           </Card>
 
@@ -1411,20 +1775,23 @@ function MarketPrep({ onBack }) {
 
           {/* SCENARIOS */}
           <Card style={{ marginBottom: 18 }}>
-            <SectionLabel text="Session Scenarios" color="#F48C06" />
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", marginBottom: 16, lineHeight: 1.6 }}>Plan your response to multiple outcomes before the session starts.</p>
-            {[["A", "Primary scenario (base case)", prep.scenarioA, "scenarioA", prep.invalidA, "invalidA", "#10B981"],
-              ["B", "Alternate scenario", prep.scenarioB, "scenarioB", prep.invalidB, "invalidB", "#F48C06"],
-              ["C", "No trade / trap scenario", prep.scenarioC, "scenarioC", prep.invalidC, "invalidC", "#E94560"]].map(([letter, label, value, key, invalidValue, invalidKey, color]) => (
-              <div key={key} style={{ marginBottom: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 8, background: `${color}15`, border: `1px solid ${color}33`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 700, color }}>{letter}</div>
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>{label}</span>
+            <SectionLabel text="Session Plays" />
+            {[["Bullish", "#10B981", [["bull1", "bull1Invalid", "Bullish Play 1"], ["bull2", "bull2Invalid", "Bullish Play 2"]]],
+              ["Bearish", "#E94560", [["bear1", "bear1Invalid", "Bearish Play 1"], ["bear2", "bear2Invalid", "Bearish Play 2"]]]].map(([direction, color, plays]) => (
+              <div key={direction} style={{ marginBottom: 20 }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 1.5, color, fontWeight: 600, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ width: 12, height: 2, background: color, borderRadius: 1 }} />{direction.toUpperCase()}
                 </div>
-                <textarea value={value} onChange={e => up(key, e.target.value)} placeholder={`Direction, key levels, what to watch for, how to act...`} rows={4} style={{ width:"100%", padding:14, borderRadius:14, border:`1px solid ${value ? `${color}33` : "rgba(255,255,255,0.08)"}`, background: value ? `${color}06` : "rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.7)", fontSize:15, fontFamily:"inherit", resize:"vertical", boxSizing:"border-box", lineHeight: 1.7 }} />
-                <input type="text" value={invalidValue || ""} onChange={e => up(invalidKey, e.target.value)} placeholder="Invalidated if..." style={{ width:"100%", padding:"10px 14px", borderRadius:10, border:`1px solid ${invalidValue ? `${color}22` : "rgba(255,255,255,0.06)"}`, background: invalidValue ? `${color}04` : "rgba(255,255,255,0.02)", color:"rgba(255,255,255,0.5)", fontSize:13, fontFamily:"'JetBrains Mono', monospace", boxSizing:"border-box", marginTop:6 }} />
+                {plays.map(([key, invalidKey, label]) => (
+                  <div key={key} style={{ marginBottom: 12 }}>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.35)", display: "block", marginBottom: 6 }}>{label}</label>
+                    <textarea value={prep[key] || ""} onChange={e => up(key, e.target.value)} placeholder="Key levels, conditions, how to act..." rows={3} style={{ width:"100%", padding:14, borderRadius:14, border: prep[key] ? `1px solid ${color}22` : "1px solid rgba(255,255,255,0.08)", background: prep[key] ? `${color}04` : "rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.7)", fontSize:15, fontFamily:"inherit", resize:"vertical", boxSizing:"border-box", lineHeight: 1.7 }} />
+                    <input type="text" value={prep[invalidKey] || ""} onChange={e => up(invalidKey, e.target.value)} placeholder="Invalidation:" style={{ width:"100%", padding:"10px 14px", borderRadius:10, border: prep[invalidKey] ? `1px solid ${color}15` : "1px solid rgba(255,255,255,0.06)", background: prep[invalidKey] ? `${color}03` : "rgba(255,255,255,0.02)", color:"rgba(255,255,255,0.5)", fontSize:13, fontFamily:"'JetBrains Mono', monospace", boxSizing:"border-box", marginTop:6 }} />
+                  </div>
+                ))}
               </div>
             ))}
+            <div style={{ background:"rgba(255,255,255,0.03)", borderRadius:12, padding:"12px 16px", border:"1px solid rgba(255,255,255,0.06)", fontSize:13, color:"rgba(255,255,255,0.3)", fontStyle:"italic", lineHeight:1.7 }}>My edge is at the extremes. No trades in the middle of the range, wait for price to reach my levels.</div>
           </Card>
 
           {/* PREVIOUS LESSONS */}
@@ -1488,19 +1855,23 @@ function MarketPrep({ onBack }) {
 
           {/* SCENARIO REVIEW */}
           <Card style={{ marginBottom: 18 }}>
-            <SectionLabel text="Scenario Review" color="#F48C06" />
-            {[["A", reviewPrepData?.scenarioA || prep.scenarioA, reviewPrepData?.invalidA || prep.invalidA, "scenarioAResult", "scenarioATraded", "scenarioAWhyNot", "#10B981"],
-              ["B", reviewPrepData?.scenarioB || prep.scenarioB, reviewPrepData?.invalidB || prep.invalidB, "scenarioBResult", "scenarioBTraded", "scenarioBWhyNot", "#F48C06"],
-              ["C", reviewPrepData?.scenarioC || prep.scenarioC, reviewPrepData?.invalidC || prep.invalidC, "scenarioCResult", "scenarioCTraded", "scenarioCWhyNot", "#E94560"]].map(([letter, scenario, invalidation, resultKey, tradedKey, whyNotKey, color]) => {
+            <SectionLabel text="Play Review" />
+            {[["Bullish Play 1", "bull1", "bull1Invalid", "bull1Result", "bull1Traded", "bull1WhyNot", "#10B981"],
+              ["Bullish Play 2", "bull2", "bull2Invalid", "bull2Result", "bull2Traded", "bull2WhyNot", "#10B981"],
+              ["Bearish Play 1", "bear1", "bear1Invalid", "bear1Result", "bear1Traded", "bear1WhyNot", "#E94560"],
+              ["Bearish Play 2", "bear2", "bear2Invalid", "bear2Result", "bear2Traded", "bear2WhyNot", "#E94560"]].map(([label, scenKey, invalidKey, resultKey, tradedKey, whyNotKey, color]) => {
+              const scenario = reviewPrepData?.[scenKey] || prep[scenKey];
+              const invalidation = reviewPrepData?.[invalidKey] || prep[invalidKey];
               if (!scenario) return null;
               return (
-                <div key={letter} style={{ marginBottom: 18, paddingBottom: 18, borderBottom: letter !== "C" ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 10 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: 7, background: `${color}15`, border: `1px solid ${color}33`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 700, color, flexShrink: 0, marginTop: 2 }}>{letter}</div>
-                    <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>{scenario.substring(0, 150)}{scenario.length > 150 ? "..." : ""}</div>
+                <div key={label} style={{ marginBottom: 18, paddingBottom: 18, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: 4, background: color, flexShrink: 0 }} />
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.5)", letterSpacing: 0.5 }}>{label}</span>
                   </div>
-                  {invalidation && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: "'JetBrains Mono', monospace", marginBottom: 10, marginLeft: 34 }}>Invalidated if: {invalidation}</div>}
-                  <div style={{ marginLeft: 34 }}>
+                  <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, marginBottom: 6, marginLeft: 16 }}>{scenario}</div>
+                  {invalidation && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: "'JetBrains Mono', monospace", marginBottom: 10, marginLeft: 16 }}>Invalidation: {invalidation}</div>}
+                  <div style={{ marginLeft: 16 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.35)", marginBottom: 6 }}>Did this play out?</div>
                     <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
                       {["Played Out","Partially","Didn't Play Out"].map(o => <button key={o} onClick={() => ur(resultKey, review[resultKey] === o ? "" : o)} style={{ flex:1, padding:"10px 6px", borderRadius:10, border: `1px solid ${review[resultKey] === o ? (o === "Played Out" ? "rgba(16,185,129,0.4)" : o === "Partially" ? "rgba(244,140,6,0.4)" : "rgba(233,69,96,0.4)") : "rgba(255,255,255,0.06)"}`, background: review[resultKey] === o ? (o === "Played Out" ? "rgba(16,185,129,0.1)" : o === "Partially" ? "rgba(244,140,6,0.1)" : "rgba(233,69,96,0.1)") : "rgba(255,255,255,0.03)", color: review[resultKey] === o ? (o === "Played Out" ? "#10B981" : o === "Partially" ? "#F48C06" : "#E94560") : "rgba(255,255,255,0.3)", fontSize:11, fontWeight: review[resultKey] === o ? 700 : 500, cursor:"pointer", fontFamily:"inherit" }}>{o}</button>)}
@@ -1544,38 +1915,22 @@ function MarketPrep({ onBack }) {
           <Card style={{ marginBottom: 18 }}>
             <SectionLabel text="Rule Compliance" color="#4361EE" />
             {[["rulesTrend", "rulesTrendNote", "Traded with Trend / Tape"],
-              ["rulesTopBottom", "rulesTopBottomNote", "Avoided picking tops/bottoms"],
-              ["rulesCste", "rulesCsteNote", "Every trade had CSTE plan"],
-              ["rulesRisk", "rulesRiskNote", "Risks defined — no impulsive entries"],
-              ["rulesConsol", "rulesConsolNote", "Avoided entering during consolidation"],
+              ["rulesMarketCond", "rulesMarketCondNote", "Traded inline with market condition (rotational vs imbalance)"],
+              ["rulesTopBottom", "rulesTopBottomNote", "Avoided Picking Tops and Bottoms"],
+              ["rulesPlays", "rulesPlaysNote", "Trades were from Pre Defined Plays"],
+              ["rulesExecution", "rulesExecutionNote", "Execution Model Followed"],
+              ["rulesConsol", "rulesConsolNote", "Avoided Entering During Consolidation"],
               ["rulesDLL", "rulesDLLNote", "DLL Respected"]].map(([key, noteKey, label]) => (
               <div key={key} style={{ marginBottom: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                   <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>{label}</span>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
-                  {["Yes","No","N/A"].map(o => <button key={o} onClick={() => ur(key, review[key] === o ? "" : o)} style={{ flex:1, padding:"10px 6px", borderRadius:10, border: `1px solid ${review[key] === o ? (o === "Yes" ? "rgba(16,185,129,0.4)" : o === "No" ? "rgba(233,69,96,0.4)" : "rgba(255,255,255,0.15)") : "rgba(255,255,255,0.06)"}`, background: review[key] === o ? (o === "Yes" ? "rgba(16,185,129,0.1)" : o === "No" ? "rgba(233,69,96,0.1)" : "rgba(255,255,255,0.05)") : "rgba(255,255,255,0.03)", color: review[key] === o ? (o === "Yes" ? "#10B981" : o === "No" ? "#E94560" : "rgba(255,255,255,0.6)") : "rgba(255,255,255,0.3)", fontSize:12, fontWeight: review[key] === o ? 700 : 500, cursor:"pointer", fontFamily:"inherit" }}>{o}</button>)}
+                  {["Followed","Broke","N/A"].map(o => <button key={o} onClick={() => ur(key, review[key] === o ? "" : o)} style={{ flex:1, padding:"10px 6px", borderRadius:10, border: `1px solid ${review[key] === o ? (o === "Followed" ? "rgba(16,185,129,0.4)" : o === "Broke" ? "rgba(233,69,96,0.4)" : "rgba(255,255,255,0.15)") : "rgba(255,255,255,0.06)"}`, background: review[key] === o ? (o === "Followed" ? "rgba(16,185,129,0.1)" : o === "Broke" ? "rgba(233,69,96,0.1)" : "rgba(255,255,255,0.05)") : "rgba(255,255,255,0.03)", color: review[key] === o ? (o === "Followed" ? "#10B981" : o === "Broke" ? "#E94560" : "rgba(255,255,255,0.6)") : "rgba(255,255,255,0.3)", fontSize:12, fontWeight: review[key] === o ? 700 : 500, cursor:"pointer", fontFamily:"inherit" }}>{o}</button>)}
                 </div>
-                {review[key] === "No" && <input type="text" value={review[noteKey] || ""} onChange={e => ur(noteKey, e.target.value)} placeholder="What happened?" style={{ width:"100%", padding:"10px 14px", borderRadius:10, border:"1px solid rgba(233,69,96,0.2)", background:"rgba(233,69,96,0.04)", color:"rgba(255,255,255,0.5)", fontSize:13, fontFamily:"inherit", boxSizing:"border-box", marginTop:6 }} />}
+                {review[key] === "Broke" && <input type="text" value={review[noteKey] || ""} onChange={e => ur(noteKey, e.target.value)} placeholder="What happened?" style={{ width:"100%", padding:"10px 14px", borderRadius:10, border:"1px solid rgba(233,69,96,0.2)", background:"rgba(233,69,96,0.04)", color:"rgba(255,255,255,0.5)", fontSize:13, fontFamily:"inherit", boxSizing:"border-box", marginTop:6 }} />}
               </div>
             ))}
-          </Card>
-
-          {/* FUNDAMENTALS MISREAD */}
-          <Card style={{ marginBottom: 18 }}>
-            <SectionLabel text="Fundamentals Misread" color="#E94560" />
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", marginBottom: 14, lineHeight: 1.6 }}>What did the market tell you that you missed or misread?</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {["Trend / Bias","Volume Profile (rotational vs imbalance)","Orderflow (delta/tape)","Volatility/Sizing Misread (VIX/RVOL)","MGI Levels (misread market decision)"].map(item => {
-                const misreads = review.misreads || [];
-                const checked = misreads.includes(item);
-                return <div key={item} onClick={() => { const next = checked ? misreads.filter(m => m !== item) : [...misreads, item]; ur("misreads", next); }} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 14px", borderRadius:12, cursor:"pointer", background: checked ? "rgba(233,69,96,0.08)" : "rgba(255,255,255,0.03)", border: checked ? "1px solid rgba(233,69,96,0.25)" : "1px solid rgba(255,255,255,0.06)", transition:"all 0.2s" }}>
-                  <div style={{ width:22, height:22, borderRadius:6, flexShrink:0, border: checked ? "none" : "2px solid rgba(255,255,255,0.1)", background: checked ? "#E94560" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, color:"#fff" }}>{checked ? "✓" : ""}</div>
-                  <span style={{ fontSize:14, color: checked ? "#E94560" : "rgba(255,255,255,0.45)" }}>{item}</span>
-                </div>;
-              })}
-            </div>
-            {(review.misreads || []).length > 0 && <textarea value={review.misreadNote || ""} onChange={e => ur("misreadNote", e.target.value)} placeholder="What specifically was misread and what should you have seen?" rows={2} style={{ width:"100%", padding:14, borderRadius:14, border:"1px solid rgba(233,69,96,0.15)", background:"rgba(233,69,96,0.04)", color:"rgba(255,255,255,0.7)", fontSize:15, fontFamily:"inherit", resize:"vertical", boxSizing:"border-box", marginTop:12 }} />}
           </Card>
 
           {/* BIGGEST LESSON & TOMORROW */}
@@ -1640,9 +1995,10 @@ function MarketPrep({ onBack }) {
                   {logData.prep.weeklyCandle && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Price Action:</strong> W: {logData.prep.weeklyCandle} / D: {logData.prep.priorDaily || "—"}</div>}
                   {logData.prep.auctionDirection && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Auction:</strong> {logData.prep.auctionDirection} {logData.prep.auctionConviction && `(${logData.prep.auctionConviction})`} {logData.prep.openVsValue && `· Open: ${logData.prep.openVsValue}`}</div>}
                   {logData.prep.sessionFocus && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Focus:</strong> {logData.prep.sessionFocus}</div>}
-                  {logData.prep.scenarioA && <div style={{ marginTop:4 }}><span style={{ color:"#10B981", fontFamily:"'JetBrains Mono', monospace", fontSize:11, fontWeight:700 }}>A</span> <span style={{ color:"rgba(255,255,255,0.4)" }}>{logData.prep.scenarioA}</span></div>}
-                  {logData.prep.scenarioB && <div><span style={{ color:"#F48C06", fontFamily:"'JetBrains Mono', monospace", fontSize:11, fontWeight:700 }}>B</span> <span style={{ color:"rgba(255,255,255,0.4)" }}>{logData.prep.scenarioB}</span></div>}
-                  {logData.prep.scenarioC && <div><span style={{ color:"#E94560", fontFamily:"'JetBrains Mono', monospace", fontSize:11, fontWeight:700 }}>C</span> <span style={{ color:"rgba(255,255,255,0.4)" }}>{logData.prep.scenarioC}</span></div>}
+                  {logData.prep.bull1 && <div style={{ marginTop:4 }}><span style={{ color:"#10B981", fontFamily:"'JetBrains Mono', monospace", fontSize:11, fontWeight:700 }}>Bull 1</span> <span style={{ color:"rgba(255,255,255,0.4)" }}>{logData.prep.bull1}</span></div>}
+                  {logData.prep.bull2 && <div><span style={{ color:"#10B981", fontFamily:"'JetBrains Mono', monospace", fontSize:11, fontWeight:700 }}>Bull 2</span> <span style={{ color:"rgba(255,255,255,0.4)" }}>{logData.prep.bull2}</span></div>}
+                  {logData.prep.bear1 && <div><span style={{ color:"#E94560", fontFamily:"'JetBrains Mono', monospace", fontSize:11, fontWeight:700 }}>Bear 1</span> <span style={{ color:"rgba(255,255,255,0.4)" }}>{logData.prep.bear1}</span></div>}
+                  {logData.prep.bear2 && <div><span style={{ color:"#E94560", fontFamily:"'JetBrains Mono', monospace", fontSize:11, fontWeight:700 }}>Bear 2</span> <span style={{ color:"rgba(255,255,255,0.4)" }}>{logData.prep.bear2}</span></div>}
                 </div>
               </Card>}
 
@@ -1652,7 +2008,6 @@ function MarketPrep({ onBack }) {
                 <div style={{ fontSize:15, color:"rgba(255,255,255,0.5)", lineHeight:2.2 }}>
                   {logData.review.focusRating > 0 && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Focus Rating:</strong> <span style={{ color:logData.review.focusRating>=4?"#10B981":logData.review.focusRating>=2?"#F48C06":"#E94560", fontFamily:"'JetBrains Mono', monospace", fontWeight:700 }}>{logData.review.focusRating}/5</span></div>}
                   {(logData.review.postEmotional > 0 || logData.review.postDecision > 0 || logData.review.postPhysical > 0) && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Post-Mental:</strong> Emotion {logData.review.postEmotional}/5 · Decision {logData.review.postDecision}/5 · Physical {logData.review.postPhysical}/5</div>}
-                  {logData.review.misreads?.length > 0 && <div><strong style={{ color:"#E94560" }}>Misread:</strong> {logData.review.misreads.join(", ")}</div>}
                   {logData.review.biggestLesson && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Lesson:</strong> {logData.review.biggestLesson}</div>}
                   {logData.review.tomorrowWill && <div><strong style={{ color:"#10B981" }}>Tomorrow:</strong> {logData.review.tomorrowWill}</div>}
                 </div>
@@ -1686,13 +2041,17 @@ function MentalGameFramework({ onBack }) {
   const wg = getWhoopGate(ws, wr);
 
   useEffect(() => { (async () => {
-    const k = todayKey(); const ch = await loadData(`checkin-${k}`, null);
+    const k = todayKey();
+    const [ch, sa_data, dl_data] = await Promise.all([
+      loadData(`checkin-${k}`, null),
+      loadData(`activations-${k}`, []),
+      loadData(`dll-${k}`, []),
+    ]);
     if (ch) { setWs(ch.whoopSleep||""); setWr(ch.whoopRecovery||""); setOc(ch.otherChecks||[false,false]); setSs(ch.schemaScores||[0,0,0,0,0]); setCs(true); }
-    setSa(await loadData(`activations-${k}`, [])); setDl(await loadData(`dll-${k}`, []));
-    const p = await loadData(`post-${k}`, null); if (p) { setPs(p); setPss(true); }
-    const w = await loadData(`weekly-${weekKey()}`, null); if (w) { setWrev(w); setWrs(true); }
-    try { const keys = await storage.list("checkin-"); if (keys?.keys) setHk(keys.keys.map(k=>k.replace("checkin-","")).sort().reverse()); } catch {}
+    setSa(sa_data); setDl(dl_data);
     setLoading(false);
+    // Load history keys in background
+    try { const keys = await storage.list("checkin-"); if (keys?.keys) setHk(keys.keys.map(k=>k.replace("checkin-","")).sort().reverse()); } catch {}
   })(); }, []);
 
   const saveCheckin = async () => { await saveData(`checkin-${todayKey()}`, { whoopSleep:ws, whoopRecovery:wr, otherChecks:oc, schemaScores:ss, whoopGate:wg, timestamp:new Date().toISOString() }); setCs(true); };
@@ -1798,6 +2157,7 @@ export default function App() {
       {page === "landing" && <LandingPage onNavigate={setPage} />}
       {page === "prep" && <MarketPrep onBack={() => setPage("landing")} />}
       {page === "playbook" && <Playbook onBack={() => setPage("landing")} />}
+      {page === "review" && <WeeklyReview onBack={() => setPage("landing")} />}
       {page === "mental" && <MentalGameFramework onBack={() => setPage("landing")} />}
       {page === "fundamentals" && <MarketFundamentals onBack={() => setPage("landing")} />}
     </div>
