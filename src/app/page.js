@@ -163,11 +163,12 @@ function gateColor(g) { return g==="GREEN"?"#10B981":g==="AMBER"?"#F48C06":g==="
 // EXPANDABLE CARD (shared pattern for schemas + AMT)
 // ═══════════════════════════════════════════════════════════
 
-function ExpandableCard({ item, expanded, onToggle, children }) {
+function ExpandableCard({ item, expanded, onToggle, hideIcon, children }) {
   return (
     <div style={{ background: expanded ? item.bg : "rgba(255,255,255,0.03)", backdropFilter: "blur(20px)", borderRadius: 22, border: `1px solid ${expanded ? `${item.color}33` : "rgba(255,255,255,0.06)"}`, marginBottom: 14, overflow: "hidden", transition: "all 0.3s ease" }}>
       <div onClick={onToggle} style={{ padding: "20px 22px", cursor: "pointer", display: "flex", alignItems: "center", gap: 16 }}>
-        <div style={{ width: 46, height: 46, borderRadius: 13, background: item.gradient, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0, boxShadow: expanded ? `0 4px 16px ${item.color}40` : "none", transition: "box-shadow 0.3s", color: item.iconColor || "#fff", fontWeight: 300 }}>{item.icon}</div>
+        {!hideIcon && <div style={{ width: 46, height: 46, borderRadius: 13, background: item.gradient, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0, boxShadow: expanded ? `0 4px 16px ${item.color}40` : "none", transition: "box-shadow 0.3s", color: item.iconColor || "#fff", fontWeight: 300 }}>{item.icon}</div>}
+        {hideIcon && <div style={{ width: 3, height: 36, borderRadius: 2, background: item.color, opacity: expanded ? 0.6 : 0.25, flexShrink: 0, transition: "opacity 0.3s" }} />}
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, letterSpacing: 2, color: item.color, textTransform: "uppercase" }}>{item.name}</div>
           <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>{item.subtitle}</div>
@@ -209,6 +210,7 @@ function LandingPage({ onNavigate }) {
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <NavCard onClick={() => onNavigate("prep")} gradient="linear-gradient(180deg, #F48C06, #10B981, #4361EE)" tag="SESSION PREPARATION" title="Market Prep" desc="Mental check-in, pre-market analysis, scenarios and session focus." />
+        <NavCard onClick={() => onNavigate("playbook")} gradient="linear-gradient(180deg, #2DD4BF, #10B981, #F48C06)" tag="TRADE EXECUTION" title="Playbook" desc="Setups, execution framework, risk framing and trigger confirmation." />
         <NavCard onClick={() => onNavigate("mental")} gradient="linear-gradient(180deg, #E94560, #4361EE, #F48C06)" tag="SCHEMA AWARENESS" title="Mental Game" desc="Schema tracking, DLL circuit breaker, activation logs and reviews." />
         <NavCard onClick={() => onNavigate("fundamentals")} gradient="linear-gradient(180deg, #10B981, #4361EE, #A855F7)" tag="MARKET KNOWLEDGE" title="Market Fundamentals" desc="Auction Market Theory, value and price relationships, balance, imbalance and failed auctions." />
       </div>
@@ -506,6 +508,165 @@ function RuleDiagram({ num }) {
 // MARKET FUNDAMENTALS
 // ═══════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════
+// PLAYBOOK
+// ═══════════════════════════════════════════════════════════
+
+function Playbook({ onBack }) {
+  const [tab, setTab] = useState("setups");
+  const tabs = [{id:"setups",label:"Setups",icon:"◎"},{id:"execution",label:"Execution",icon:"⊕"},{id:"risk",label:"Risk Mgmt",icon:"◈"}];
+
+  const SectionBlock = ({ title, children }) => (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 2, color: "rgba(255,255,255,0.3)", fontWeight: 600, marginBottom: 14, textTransform: "uppercase", display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ width: 16, height: 1, background: "rgba(255,255,255,0.15)", borderRadius: 1 }} />{title}
+      </div>
+      {children}
+    </div>
+  );
+
+  const RuleCard = ({ text }) => (
+    <div style={{ padding: "14px 18px", marginBottom: 8, background: "rgba(255,255,255,0.025)", borderRadius: 14, borderLeft: "2px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", fontSize: 15, lineHeight: 1.8 }}>{text}</div>
+  );
+
+  const StandDownCard = ({ text }) => (
+    <div style={{ padding: "14px 18px", marginBottom: 8, background: "rgba(233,69,96,0.04)", borderRadius: 14, borderLeft: "2px solid rgba(233,69,96,0.3)", color: "rgba(233,69,96,0.7)", fontSize: 14, lineHeight: 1.8 }}>{text}</div>
+  );
+
+  const SequenceStep = ({ number, title, children }) => (
+    <div style={{ display: "flex", gap: 14, marginBottom: 18 }}>
+      <div style={{ width: 32, height: 32, borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.35)", flexShrink: 0, marginTop: 2 }}>{number}</div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.5)", letterSpacing: 1, marginBottom: 6 }}>{title}</div>
+        <div style={{ fontSize: 15, color: "rgba(255,255,255,0.6)", lineHeight: 1.8 }}>{children}</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight: "100vh", padding: "40px 20px 100px" }}>
+      <BackButton onClick={onBack} />
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 4, color: "rgba(45,212,191,0.5)", fontWeight: 600 }}>TRADE EXECUTION</div>
+      <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5, marginTop: 6, marginBottom: 24, color: "rgba(255,255,255,0.85)" }}>Playbook</div>
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{
+            flex: 1, padding: "14px 12px", borderRadius: 16, cursor: "pointer", transition: "all 0.2s",
+            background: tab === t.id ? "rgba(45,212,191,0.12)" : "rgba(255,255,255,0.03)",
+            border: `1px solid ${tab === t.id ? "rgba(45,212,191,0.3)" : "rgba(255,255,255,0.06)"}`,
+            color: tab === t.id ? "#2DD4BF" : "rgba(255,255,255,0.35)",
+            fontSize: 12, fontWeight: tab === t.id ? 700 : 500, fontFamily: "inherit", textAlign: "center",
+          }}>
+            <div style={{ fontSize: 18, marginBottom: 4 }}>{t.icon}</div>{t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* EXECUTION TAB */}
+      {tab === "execution" && <div style={{ animation: "fadeIn 0.3s ease" }}>
+
+        {/* OVERVIEW */}
+        <Card style={{ marginBottom: 18 }}>
+          <SectionLabel text="Execution Framework" color="rgba(255,255,255,0.3)" />
+          <div style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.9, marginBottom: 14 }}>
+            Execution uses <strong style={{ color: "rgba(255,255,255,0.8)" }}>5-minute price action at pre-defined key levels</strong>, refined by orderflow. Levels come from your pre-market prep or develop as the session gives new data.
+          </div>
+          <div style={{ background: "rgba(45,212,191,0.06)", borderRadius: 14, padding: "14px 18px", border: "1px solid rgba(45,212,191,0.15)", fontSize: 13, fontFamily: "'JetBrains Mono', monospace", color: "rgba(255,255,255,0.4)", letterSpacing: 0.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, flexWrap: "wrap" }}>
+            <span>Key Area</span><span style={{ color: "rgba(255,255,255,0.15)" }}>→</span>
+            <span style={{ color: "#4361EE", fontWeight: 700, padding: "4px 12px", background: "rgba(67,97,238,0.12)", borderRadius: 8, border: "1px solid rgba(67,97,238,0.25)" }}>RISK ZONE</span>
+            <span style={{ color: "rgba(255,255,255,0.15)" }}>→</span><span>Passive Participants</span><span style={{ color: "rgba(255,255,255,0.15)" }}>→</span><span>Initiative Activity</span>
+          </div>
+        </Card>
+
+        {/* STEP 1: FRAMING RISK */}
+        <Card style={{ marginBottom: 18 }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, letterSpacing: 1.5, color: "rgba(255,255,255,0.5)", fontWeight: 700, marginBottom: 18, textTransform: "uppercase" }}>Step 1: Frame the Risk Zone</div>
+          <div style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.9, marginBottom: 16 }}>
+            Before any entry, establish the <strong style={{ color: "rgba(67,97,238,0.8)" }}>Risk Zone</strong>. A clearly defined area to trade against and how your risk is framed. No risk zone = no trade.
+          </div>
+
+          <SectionBlock title="Defined By">
+            <RuleCard text="Stuck or offside participants, seen through DELTA by price. Where are traders trapped on the wrong side? Their stops and capitulation fuel your move." />
+            <div style={{ textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.2)", fontFamily: "'JetBrains Mono', monospace", margin: "4px 0", letterSpacing: 2 }}>AND / OR</div>
+            <RuleCard text="Lack of interest, seen through a TAPER in volume. Where did participants stop engaging? This vacuum becomes the wall your trade leans against." />
+          </SectionBlock>
+
+          <StandDownCard text="If you cannot identify a clear Risk Zone at your level, there is no trade. Move on." />
+        </Card>
+
+        {/* STEP 2: PULLING THE TRIGGER */}
+        <Card style={{ marginBottom: 18 }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, letterSpacing: 1.5, color: "rgba(255,255,255,0.5)", fontWeight: 700, marginBottom: 18, textTransform: "uppercase" }}>Step 2: Pull the Trigger</div>
+          <div style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.9, marginBottom: 16 }}>
+            The trigger is a <strong style={{ color: "rgba(255,255,255,0.8)" }}>two-part sequence</strong>. Passive activity sets up the trade. Aggressive activity confirms it. Without the passive setup, aggressive alone may be a trap.
+          </div>
+
+          <SequenceStep number="1" title="PASSIVE ACTIVITY: Pull / Stack">
+            <div style={{ marginBottom: 8 }}>Orders aggressively <strong style={{ color: "rgba(255,255,255,0.8)" }}>reloading in your favour</strong> in or around the Risk Zone, indicating other participants are willing to support your trade idea.</div>
+            <div>Opposing orders start to <strong style={{ color: "rgba(255,255,255,0.8)" }}>pull</strong>, pathing the way for price to move.</div>
+          </SequenceStep>
+
+          <div style={{ height: 1, background: "rgba(255,255,255,0.04)", margin: "8px 0 18px", position: "relative" }}>
+            <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", background: "#0A0A0F", padding: "0 12px", fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: "rgba(255,255,255,0.2)", letterSpacing: 2 }}>THEN</div>
+          </div>
+
+          <SequenceStep number="2" title="AGGRESSIVE ACTIVITY: Recent Ask/Bid">
+            <div style={{ marginBottom: 8 }}>Market orders from the opposing side <strong style={{ color: "rgba(255,255,255,0.8)" }}>taper off</strong> into the Risk Zone, indicating they are stepping off the gas.</div>
+            <div>Followed by market orders in your favour starting to <strong style={{ color: "rgba(255,255,255,0.8)" }}>push price away</strong> from the Risk Zone.</div>
+          </SequenceStep>
+
+          <div style={{ background: "rgba(255,255,255,0.025)", borderRadius: 14, padding: "14px 18px", border: "1px solid rgba(255,255,255,0.06)", marginTop: 14, marginBottom: 14 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(255,255,255,0.3)", fontWeight: 600, marginBottom: 6 }}>SEQUENCE MATTERS</div>
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.8 }}>Passive first → Aggressive confirms. If you see aggressive market orders without the passive setup (pulling/stacking), treat it with caution. It may be a short-lived burst without genuine support behind it.</div>
+          </div>
+
+          <StandDownCard text="Passive setup present but no aggressive follow-through? No trade. The support is there but nobody is pulling the trigger, neither should you." />
+          <StandDownCard text="Aggressive activity fires but opposing passive orders are NOT pulling? No trade. Absorption is likely and your move gets eaten." />
+        </Card>
+
+        {/* EXECUTION AIDS */}
+        <Card style={{ marginBottom: 18 }}>
+          <SectionLabel text="Execution Aids" color="rgba(255,255,255,0.3)" />
+
+          <SectionBlock title="Tape">
+            <RuleCard text="Execute inline with the tape reader, or when the tape is turning in your favour. The tape shows real-time aggression and intent." />
+            <StandDownCard text="Never enter against a strong tape. If the tape is printing aggressively against your direction, the flow is telling you something your levels aren't." />
+          </SectionBlock>
+
+          <SectionBlock title="Volume Candles">
+            <RuleCard text="Volume candles show the speed of the tape at your levels. High-volume compression at a level indicates participants are actively engaging, either absorption or balance. Watch whether that compression resolves in your direction before committing." />
+          </SectionBlock>
+        </Card>
+
+      </div>}
+
+      {/* SETUPS TAB - PLACEHOLDER */}
+      {tab === "setups" && <div style={{ animation: "fadeIn 0.3s ease" }}>
+        <Card style={{ textAlign: "center", padding: 52 }}>
+          <div style={{ fontSize: 40, marginBottom: 14, opacity: 0.3 }}>◎</div>
+          <div style={{ color: "rgba(255,255,255,0.25)", fontSize: 16 }}>Setups: coming soon.</div>
+          <div style={{ color: "rgba(255,255,255,0.15)", fontSize: 13, marginTop: 8 }}>Entry models, patterns and conditions.</div>
+        </Card>
+      </div>}
+
+      {/* RISK MANAGEMENT TAB - PLACEHOLDER */}
+      {tab === "risk" && <div style={{ animation: "fadeIn 0.3s ease" }}>
+        <Card style={{ textAlign: "center", padding: 52 }}>
+          <div style={{ fontSize: 40, marginBottom: 14, opacity: 0.3 }}>◈</div>
+          <div style={{ color: "rgba(255,255,255,0.25)", fontSize: 16 }}>Risk Management: coming soon.</div>
+          <div style={{ color: "rgba(255,255,255,0.15)", fontSize: 13, marginTop: 8 }}>Position sizing, stop placement and trade management.</div>
+        </Card>
+      </div>}
+
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// MARKET FUNDAMENTALS
+// ═══════════════════════════════════════════════════════════
+
 function MarketFundamentals({ onBack }) {
   const [expanded, setExpanded] = useState(null);
   const [subTab, setSubTab] = useState("concepts");
@@ -777,6 +938,7 @@ function PrepLogEntry({ entry }) {
 function MarketPrep({ onBack }) {
   const [tab, setTab] = useState("checkin");
   const [loading, setLoading] = useState(true);
+  const [hunterOpen, setHunterOpen] = useState(false);
 
   // Check-in state (moved from MentalGame)
   const [ws, setWs] = useState(""); const [wr, setWr] = useState("");
@@ -998,6 +1160,60 @@ function MarketPrep({ onBack }) {
 
         {/* MENTAL CHECK-IN TAB */}
         {tab === "checkin" && <div style={{ animation: "fadeIn 0.3s ease" }}>
+
+          {/* THE HUNTER */}
+          <div onClick={() => setHunterOpen(h => !h)} style={{ background: "rgba(255,255,255,0.03)", backdropFilter: "blur(20px)", borderRadius: 22, border: "1px solid rgba(255,255,255,0.06)", marginBottom: 18, overflow: "hidden", cursor: "pointer", transition: "all 0.3s ease" }}>
+            <div style={{ padding: "18px 22px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.5)", textTransform: "uppercase" }}>The Hunter</div>
+                {!hunterOpen && <div style={{ fontSize: 13, color: "rgba(255,255,255,0.2)", marginTop: 4 }}>Am I hunting, or just making noise?</div>}
+              </div>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", transform: hunterOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s ease", color: "rgba(255,255,255,0.3)", fontSize: 13 }}>▼</div>
+            </div>
+            {hunterOpen && <div onClick={e => e.stopPropagation()} style={{ padding: "0 22px 26px", animation: "fadeIn 0.25s ease" }}>
+              <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 22 }} />
+              <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.9 }}>
+                <p style={{ marginBottom: 16 }}>Most people come to trading thinking they've found a new poker table. They've read the books, studied the setups, and convinced themselves that skill and discipline are enough to win. In poker, that's true. In trading, it isn't.</p>
+
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, letterSpacing: 1.5, color: "rgba(255,255,255,0.35)", fontWeight: 600, marginBottom: 12, marginTop: 24, textTransform: "uppercase" }}>You're Playing the Wrong Game</div>
+                <p style={{ marginBottom: 10 }}>In poker, your opponents are human. They tilt, they bluff, they have patterns you can read and exploit. In trading, the other side of your trade is Goldman Sachs, Citadel, and algorithms that have already moved before your hand reaches the mouse. You are not trying to outthink humans. You are stepping into a system that was designed, structurally, to extract money from people who think they're playing a fair game.</p>
+                <p style={{ marginBottom: 10 }}>The 95% who lose don't lose because they're dumb or haven't studied enough. They lose because they're playing the wrong game while completely convinced they're playing the right one.</p>
+                <p style={{ marginBottom: 16 }}>Your job isn't to beat the institutions. It's to read what they're doing and ride their wave without getting crushed.</p>
+
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, letterSpacing: 1.5, color: "rgba(255,255,255,0.35)", fontWeight: 600, marginBottom: 12, marginTop: 24, textTransform: "uppercase" }}>Trading is Hunting, Not Poker</div>
+                <p style={{ marginBottom: 10 }}>In poker, the game comes to you. Cards get dealt, you play the hand.</p>
+                <p style={{ marginBottom: 10 }}>In trading, you sit in the wilderness and wait for prey. You don't control when it appears or what it does. You only control whether you take the shot when the moment arrives. Most of the job is waiting. Sitting in silence, doing nothing, and being completely at peace with that.</p>
+                <p style={{ marginBottom: 10 }}>The institutions move through this market like large animals through a forest. Your job is to read their tracks, understand their direction, and step into their path at the right moment. You're not hunting against them. You're hunting in the wake of what they've already decided to do.</p>
+                <p style={{ marginBottom: 16, fontWeight: 600, color: "rgba(255,255,255,0.6)" }}>This isn't a hobby. You eat what you kill.</p>
+
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, letterSpacing: 1.5, color: "rgba(255,255,255,0.35)", fontWeight: 600, marginBottom: 12, marginTop: 24, textTransform: "uppercase" }}>Levels of the Hunt</div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontWeight: 600, color: "rgba(255,255,255,0.6)", marginBottom: 4 }}>The Tourist</div>
+                  <p>You're in the forest with a camera, not a rifle. Watching price, marking levels after the fact, getting excited about trades you would have taken. Not yet in the game. Every hunter starts here, but you can't stay.</p>
+                </div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontWeight: 600, color: "rgba(255,255,255,0.6)", marginBottom: 4 }}>The Amateur</div>
+                  <p style={{ marginBottom: 8 }}>You have a rifle and you've done the work. But you can't sit still. You wander through the forest firing at shadows, taking trades out of boredom, taking another because the last one went wrong and you want it back. You come home with one real kill for every ten trips. Not because the prey wasn't there. Because you scared it away before it came close enough.</p>
+                  <p>Revenge trades. Boredom trades. "Kinda looks like my setup" trades. The amateur bleeds slowly, not from one big blow-up, but from a hundred small unnecessary trigger pulls.</p>
+                </div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontWeight: 600, color: "rgba(255,255,255,0.6)", marginBottom: 4 }}>The Professional</div>
+                  <p style={{ marginBottom: 8 }}>You've accepted the hardest truth: waiting is the job. You're at your desk before the open, at the same spot you've scouted, watching for the specific conditions you know produce prey. You sit in silence for as long as it takes. And when the shot appears, clean and unmistakable, you take it without hesitation. Then you close the laptop. No second kill. No overstaying. You got what you came for and you're done.</p>
+                  <p>The professional is boring to watch. He shoots less than everyone else and goes home earlier than everyone else. And he eats every single week while the amateurs go home empty-handed and exhausted.</p>
+                </div>
+
+                <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 14, padding: "18px 20px", marginTop: 24, border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 2, color: "rgba(255,255,255,0.3)", fontWeight: 600, marginBottom: 10, textTransform: "uppercase" }}>The One Question</div>
+                  <div style={{ fontSize: 16, fontWeight: 600, fontStyle: "italic", color: "rgba(255,255,255,0.65)", lineHeight: 1.7, marginBottom: 10 }}>Am I hunting right now, or am I just walking through the forest making noise?</div>
+                  <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.7 }}>If you can't answer that with complete clarity, put the rifle down and wait. The prey will come. Your only job is to be still enough to let it.</div>
+                </div>
+              </div>
+            </div>}
+          </div>
+
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:22 }}><SectionLabel text="Mental Check-In" /><span style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:12, color:"rgba(255,255,255,0.2)" }}>{todayKey()}</span></div>
           <Card style={{ marginBottom:18 }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18 }}><SectionLabel text="Whoop Scores" color="#10B981" />{wg && <span style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:11, fontWeight:700, letterSpacing:1.5, padding:"5px 12px", borderRadius:8, background:`${gateColor(wg)}15`, color:gateColor(wg), border:`1px solid ${gateColor(wg)}33` }}>{wg}</span>}</div>
@@ -1488,7 +1704,7 @@ function MentalGameFramework({ onBack }) {
 
   if (loading) return <div style={{ display:"flex", justifyContent:"center", alignItems:"center", height:"100vh", color:"rgba(255,255,255,0.3)" }}>Loading...</div>;
 
-  const tabs = [{id:"schemas",label:"Schemas",icon:"☰"},{id:"activation",label:"Live",icon:"⚡"},{id:"dll",label:"DLL",icon:"⊘"},{id:"post",label:"Review",icon:"◈"},{id:"weekly",label:"Weekly",icon:"▣"},{id:"history",label:"Log",icon:"◫"}];
+  const tabs = [{id:"schemas",label:"Schemas",icon:"☰"},{id:"activation",label:"Live",icon:"⚡"},{id:"dll",label:"DLL",icon:"⊘"},{id:"history",label:"Log",icon:"◫"}];
 
   const maxS = Math.max(...ss); const sg = maxS>5?"RED":maxS>3?"AMBER":"GREEN";
   const go = {GREEN:0,AMBER:1,RED:2}; const fg = !wg ? sg : go[wg]>go[sg] ? wg : sg;
@@ -1512,7 +1728,7 @@ function MentalGameFramework({ onBack }) {
         {tab === "schemas" && <div style={{ animation: "fadeIn 0.3s ease" }}>
           <p style={{ fontSize:15, color:"rgba(255,255,255,0.35)", lineHeight:1.7, marginBottom:22 }}>Your three core threat patterns. Tap to expand.</p>
           {Object.entries(SCHEMAS).map(([key, s]) => (
-            <ExpandableCard key={key} item={{...s, iconColor: key==="standards"?"rgba(255,255,255,0.5)":"#fff"}} expanded={exp===key} onToggle={() => setExp(exp===key?null:key)}>
+            <ExpandableCard key={key} item={{...s, iconColor: key==="standards"?"rgba(255,255,255,0.5)":"#fff"}} expanded={exp===key} onToggle={() => setExp(exp===key?null:key)} hideIcon>
               {[{label:"Trigger",value:s.trigger},{label:"Core Belief",value:s.belief},{label:"Body Sensation",value:s.body}].map(r => <RuleBlock key={r.label} label={r.label} text={r.value} color={s.color} />)}
               <div style={{ marginTop:14, marginBottom:14 }}>
                 <DashedLabel text="PATTERN INTERRUPTS" color={s.color} />
@@ -1542,10 +1758,6 @@ function MentalGameFramework({ onBack }) {
           <DLLBreaker onLog={logDll} />
           {dl.length>0&&<Card style={{marginTop:24}}><SectionLabel text={`Today's DLL Events (${dl.length})`} color="#E94560" />{dl.map((d,i) => <div key={i} style={{padding:"14px 0",borderBottom:i<dl.length-1?"1px solid rgba(255,255,255,0.04)":"none",fontSize:15}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{color:"rgba(255,255,255,0.5)"}}>{d.schema||"—"}</span><span style={{fontSize:11,padding:"4px 12px",borderRadius:8,fontWeight:600,fontFamily:"'JetBrains Mono', monospace",background:d.keptLocked?"rgba(16,185,129,0.15)":"rgba(233,69,96,0.15)",color:d.keptLocked?"#10B981":"#E94560"}}>{d.keptLocked?(d.changedMind?"CHANGED MIND":"KEPT LOCKED"):"UNLOCKED"}</span></div></div>)}</Card>}
         </div>}
-
-        {tab === "post" && <div style={{animation:"fadeIn 0.3s ease"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}><SectionLabel text="Post-Session Review" /><span style={{fontFamily:"'JetBrains Mono', monospace",fontSize:12,color:"rgba(255,255,255,0.2)"}}>{todayKey()}</span></div><Card>{POST_SESSION_FIELDS.map(f => <InputField key={f.key} label={f.label} value={ps[f.key]} onChange={v=>{setPs({...ps,[f.key]:v});setPss(false);}} type={f.type} options={f.options} />)}<SaveButton saved={pss} onClick={savePost} label="Save Review" /></Card></div>}
-
-        {tab === "weekly" && <div style={{animation:"fadeIn 0.3s ease"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}><SectionLabel text="Weekly Reflection" /><span style={{fontFamily:"'JetBrains Mono', monospace",fontSize:12,color:"rgba(255,255,255,0.2)"}}>{weekKey()}</span></div><Card>{WEEKLY_QUESTIONS.map((q,i) => <InputField key={i} label={q} value={wrev[`q${i}`]} type="textarea" rows={2} onChange={v=>{setWrev({...wrev,[`q${i}`]:v});setWrs(false);}} />)}<SaveButton saved={wrs} onClick={saveWeek} label="Save Weekly Reflection" /></Card></div>}
 
         {tab === "history" && <div style={{animation:"fadeIn 0.3s ease"}}><SectionLabel text="Session History" />
           {hk.length===0?<Card style={{textAlign:"center",padding:52}}><div style={{fontSize:40,marginBottom:14,opacity:0.3}}>◫</div><div style={{color:"rgba(255,255,255,0.25)",fontSize:16}}>No sessions logged yet.</div></Card>:<>
@@ -1585,6 +1797,7 @@ export default function App() {
       `}</style>
       {page === "landing" && <LandingPage onNavigate={setPage} />}
       {page === "prep" && <MarketPrep onBack={() => setPage("landing")} />}
+      {page === "playbook" && <Playbook onBack={() => setPage("landing")} />}
       {page === "mental" && <MentalGameFramework onBack={() => setPage("landing")} />}
       {page === "fundamentals" && <MarketFundamentals onBack={() => setPage("landing")} />}
     </div>
