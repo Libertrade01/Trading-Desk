@@ -46,9 +46,9 @@ function SaveButton({ saved, onClick, label }) {
 // ═══════════════════════════════════════════════════════════
 
 const SCHEMAS = {
-  abandonment: { name: "Abandonment", subtitle: "Grab It Before It's Gone", color: "#E94560", gradient: "linear-gradient(135deg, #E94560 0%, #C62A47 100%)", bg: "rgba(233,69,96,0.06)", icon: "⚡", trigger: "Unrealised profit on an open position. A winner that starts to pull back. The urge to move stop loss to breakeven prematurely.", belief: "Good things get taken away. Encoded at survival level from past losses. Your nervous system remembers even when your mind moves on.", body: "Chest tightness, urgency, restless hands hovering over close button or SL.", interrupts: ["This is not the crypto trade. I have a stop loss. My system is managing risk.", "Moving to BE is not risk management, it is fear. My stop is my risk.", "Grabbing profit early is my fear talking, not my system.", "Every time I cut a winner early, I make the abandonment story come true.", "Let the market do the heavy lifting. I am capable of receiving this."], reset: "Hands off keyboard. Three slow breaths. Feel your feet on the floor. You are safe." },
+  abandonment: { name: "Abandonment", subtitle: "Grab It Before It's Gone", color: "#E94560", gradient: "linear-gradient(135deg, #E94560 0%, #C62A47 100%)", bg: "rgba(233,69,96,0.06)", icon: "⚡", trigger: "Unrealised profit on an open position. A winner that starts to pull back. The urge to move stop loss to breakeven prematurely. An imperfect entry making me feel like the trade doesn't deserve to run.", belief: "Good things get taken away. Encoded at survival level from past losses. Your nervous system remembers even when your mind moves on.", body: "Chest tightness, urgency, restless hands hovering over close button or SL.", interrupts: ["A good entry taken beats a perfect entry missed.", "Stop loss should not be moved until I am prepared to take profit. My system is managing risk.", "Grabbing profit early is my fear talking, not my system.", "I let the market do the heavy lifting.", "Bigger balls = Bigger results."], reset: "Hands off keyboard. Three slow breaths. Feel your feet on the floor. You are safe." },
   defectiveness: { name: "Defectiveness", subtitle: "I Have to Prove Myself", color: "#4361EE", gradient: "linear-gradient(135deg, #4361EE 0%, #3A0CA3 100%)", bg: "rgba(67,97,238,0.06)", icon: "🛡", trigger: "A loss, multiple losses, hitting DLL. Feeling like you made a mistake.", belief: "Losses confirm I'm not adequate. This fires in relationships too, especially when feeling unappreciated.", body: "Heat in face/chest, jaw tightening, compulsive drive to re-enter immediately.", interrupts: ["A loss is a cost of business, not evidence of who I am.", "The DLL exists to protect me. Respecting it IS the professional move.", "Revenge trading has never once made me feel better.", "Walking away right now is the strongest thing I can do."], reset: "Stand up. Walk away for 5 minutes. Splash cold water on your face." },
-  standards: { name: "Unrelenting Standards", subtitle: "It Has to Be Perfect", color: "#F48C06", gradient: "linear-gradient(135deg, #F48C06 0%, #DC6C02 100%)", bg: "rgba(244,140,6,0.06)", icon: "△", trigger: "A solid A+ setup that isn't at the exact top or bottom.", belief: "Anything less than perfect isn't good enough. This extends beyond trading.", body: "Dissatisfaction after profitable trades, inability to step away from charts.", interrupts: ["A+ is the standard. Not perfect. A+ builds accounts.", "Picking tops & bottoms is picking a fight I'm likely to lose.", "A good entry with proper management beats a perfect entry I never took.", "Conserve mental capital. Perform better. Be selective."], reset: "Close the 1-minute chart. Zoom out. Look at the higher timeframe trend." },
+  standards: { name: "Unrelenting Standards", subtitle: "It Has to Be Perfect", color: "#F48C06", gradient: "linear-gradient(135deg, #F48C06 0%, #DC6C02 100%)", bg: "rgba(244,140,6,0.06)", icon: "△", trigger: "Feeling like my entry wasn't perfect enough. Wanting the exact top or bottom instead of accepting a good A+ setup. Staying on the charts because I haven't hit a P&L number that feels 'good enough'.", belief: "Anything less than perfect isn't good enough. This drives overtrading, chasing, and refusing to walk away from the screen.", body: "Inability to step away from charts, restlessness, the feeling that I need to do more or stay longer to prove today was worth it.", interrupts: ["A+ is the standard. Not perfect. A+ builds accounts.", "Picking tops and bottoms is picking a fight I will lose.", "Conserve mental capital. Perform better. Be selective.", "My P&L does not define my worth or my session quality."], reset: "Close the 1-minute chart. Zoom out. Look at the higher timeframe trend." },
 };
 
 const CHECKIN_QUESTIONS = [
@@ -543,6 +543,8 @@ function WeeklyReview({ onBack }) {
   const [ackSaved, setAckSaved] = useState(false);
   const [takeaway, setTakeaway] = useState("");
   const [takeawaySaved, setTakeawaySaved] = useState(false);
+  const [refresher, setRefresher] = useState({ flagged: {}, done: {} });
+  const [refresherSaved, setRefresherSaved] = useState(true);
 
   const dates = getWeekDates(weekOffset);
   const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri"];
@@ -566,10 +568,11 @@ function WeeklyReview({ onBack }) {
         return { date: dk, checkin, activations, review };
       });
 
-      const [days, savedAck, savedTakeaway] = await Promise.all([
+      const [days, savedAck, savedTakeaway, savedRefresher] = await Promise.all([
         Promise.all(dayPromises),
         loadData(`weekly-ack-${dates[0]}`, { activations: {}, lessons: {} }),
         loadData(`weekly-takeaway-${dates[0]}`, null),
+        loadData(`weekly-refresher-${dates[0]}`, null),
       ]);
 
       setData({ days });
@@ -577,6 +580,8 @@ function WeeklyReview({ onBack }) {
       setAckSaved(true);
       if (savedTakeaway) { setTakeaway(savedTakeaway.text || ""); setTakeawaySaved(true); }
       else { setTakeaway(""); setTakeawaySaved(false); }
+      if (savedRefresher) { setRefresher(savedRefresher); setRefresherSaved(true); }
+      else { setRefresher({ flagged: {}, done: {} }); setRefresherSaved(true); }
       setLoading(false);
     })();
   }, [weekOffset]);
@@ -602,6 +607,21 @@ function WeeklyReview({ onBack }) {
   const toggleAckLesson = (dayIdx) => {
     const newAck = { ...ack, lessons: { ...ack.lessons, [dayIdx]: !ack.lessons[dayIdx] } };
     saveAck(newAck);
+  };
+
+  const REFRESHER_AREAS = ["Mental Schemas", "AMT / Volume Profile", "Setups", "Execution", "Risk / Trade Management"];
+  const toggleRefresherFlag = (area) => {
+    const newR = { ...refresher, flagged: { ...refresher.flagged, [area]: !refresher.flagged[area] } };
+    if (!newR.flagged[area]) { newR.done = { ...newR.done }; delete newR.done[area]; }
+    setRefresher(newR); setRefresherSaved(false);
+  };
+  const toggleRefresherDone = (area) => {
+    const newR = { ...refresher, done: { ...refresher.done, [area]: !refresher.done[area] } };
+    setRefresher(newR); setRefresherSaved(false);
+  };
+  const saveRefresherFn = async () => {
+    await saveData(`weekly-refresher-${dates[0]}`, refresher);
+    setRefresherSaved(true);
   };
 
   if (loading) return <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ fontFamily: "'JetBrains Mono', monospace", color: "rgba(255,255,255,0.2)", fontSize: 14 }}>Loading week...</div></div>;
@@ -648,7 +668,7 @@ function WeeklyReview({ onBack }) {
   const tradedPlays = allPlays.filter(p => p.traded === "Yes");
 
   // Rule compliance
-  const ruleKeys = [["rulesTrend","Traded with Trend / Tape"],["rulesMarketCond","Traded Inline with Market Condition"],["rulesTopBottom","Avoided Picking Tops and Bottoms"],["rulesPlays","Trades from Pre Defined Plays"],["rulesExecution","Execution Model Followed"],["rulesConsol","Avoided Entering During Consolidation"],["rulesDLL","DLL Respected"]];
+  const ruleKeys = [["rulesTrend","Traded with Trend / Tape"],["rulesMarketCond","Traded Inline with Market Condition"],["rulesTopBottom","Avoided Picking Tops and Bottoms"],["rulesPlays","Trades from Pre Defined Plays"],["rulesExecution","Execution Model Followed"],["rulesFocus","Stayed Focused and Avoided Distraction"],["rulesConsol","Avoided Entering During Consolidation"],["rulesDLL","DLL Respected"]];
   const ruleSummary = ruleKeys.map(([key, label]) => {
     let followed = 0, broke = 0, na = 0;
     data.days.forEach(d => {
@@ -866,7 +886,25 @@ function WeeklyReview({ onBack }) {
         ))}
       </Card>
 
-      {/* SECTION 6: WEEKLY TAKEAWAY */}
+      {/* SECTION 6: PROCESS REFRESHER */}
+      <Card style={{ marginBottom: 18 }}>
+        <SectionLabel text="Process Refresher" color="#A855F7" />
+        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", marginBottom: 16, lineHeight: 1.6 }}>Based on this week's review, flag any areas that need refreshing. Check them off once reviewed.</p>
+        {REFRESHER_AREAS.map((area) => {
+          const flagged = !!refresher.flagged[area];
+          const done = !!refresher.done[area];
+          return (
+            <div key={area} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+              <div onClick={() => toggleRefresherFlag(area)} style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, border: flagged ? "none" : "2px solid rgba(255,255,255,0.12)", background: flagged ? (done ? "rgba(168,85,247,0.15)" : "rgba(168,85,247,0.25)") : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#A855F7", cursor: "pointer" }}>{flagged ? "!" : ""}</div>
+              <div style={{ flex: 1, fontSize: 15, color: flagged ? (done ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.6)") : "rgba(255,255,255,0.4)", textDecoration: done ? "line-through" : "none", cursor: "pointer", userSelect: "none" }} onClick={() => toggleRefresherFlag(area)}>{area}</div>
+              {flagged && <div onClick={() => toggleRefresherDone(area)} style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, border: done ? "none" : "2px solid rgba(255,255,255,0.12)", background: done ? "#2DD4BF" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#fff", cursor: "pointer" }}>{done ? "✓" : ""}</div>}
+            </div>
+          );
+        })}
+        {Object.values(refresher.flagged).some(Boolean) && <SaveButton saved={refresherSaved} onClick={saveRefresherFn} label="Save Refresher" />}
+      </Card>
+
+      {/* SECTION 7: WEEKLY TAKEAWAY */}
       <Card style={{ marginBottom: 18 }}>
         <SectionLabel text="Weekly Takeaway" />
         <textarea value={takeaway} onChange={e => { setTakeaway(e.target.value); setTakeawaySaved(false); }} placeholder="What is the key takeaway from this week? What patterns emerged? What will you carry into next week?" rows={5} style={{ width: "100%", padding: 16, borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.7)", fontSize: 15, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box", lineHeight: 1.7 }} />
@@ -1270,7 +1308,7 @@ function PrepLogEntry({ entry }) {
           <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 1.5, color: "rgba(255,255,255,0.25)", fontWeight: 600, marginBottom: 6 }}>CHECK-IN</div>
           {ch.whoopSleep && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Whoop:</span> Sleep {ch.whoopSleep}% · Recovery {ch.whoopRecovery}% {ch.whoopGate && <span style={{ color: gc(ch.whoopGate), fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700 }}> {ch.whoopGate}</span>}</div>}
           {ch.mentalScores && (ch.mentalScores[0] > 0 || ch.mentalScores[1] > 0) && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Mental:</span> Awareness {ch.mentalScores[0]}/5 · Connected {ch.mentalScores[1]}/5</div>}
-          {ch.otherChecks && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Ready:</span> {["Hydrated","Exercised","Meditated"].filter((_, i) => ch.otherChecks[i]).join(", ") || "None"}</div>}
+          {ch.otherChecks && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Ready:</span> {["Hydrated","Exercised","Meditated","Foundation"].filter((_, i) => ch.otherChecks[i]).join(", ") || "None"}</div>}
           {ch.schemaScores && Math.max(...ch.schemaScores) > 0 && <div><span style={{ color: "rgba(255,255,255,0.3)" }}>Schemas:</span> {ch.schemaScores.join(" · ")}</div>}
         </div>}
 
@@ -1352,8 +1390,8 @@ function MarketPrep({ onBack }) {
     bull2Result: "", bull2Traded: "", bull2WhyNot: "",
     bear1Result: "", bear1Traded: "", bear1WhyNot: "",
     bear2Result: "", bear2Traded: "", bear2WhyNot: "",
-    rulesTrend: "", rulesMarketCond: "", rulesTopBottom: "", rulesPlays: "", rulesExecution: "", rulesConsol: "", rulesDLL: "",
-    rulesTrendNote: "", rulesMarketCondNote: "", rulesTopBottomNote: "", rulesPlaysNote: "", rulesExecutionNote: "", rulesConsolNote: "", rulesDLLNote: "",
+    rulesTrend: "", rulesMarketCond: "", rulesTopBottom: "", rulesPlays: "", rulesExecution: "", rulesFocus: "", rulesConsol: "", rulesDLL: "",
+    rulesTrendNote: "", rulesMarketCondNote: "", rulesTopBottomNote: "", rulesPlaysNote: "", rulesExecutionNote: "", rulesFocusNote: "", rulesConsolNote: "", rulesDLLNote: "",
     postEmotional: 0, postDecision: 0, postPhysical: 0,
     biggestLesson: "", tomorrowWill: "",
   });
@@ -1422,7 +1460,7 @@ function MarketPrep({ onBack }) {
       loadData(`checkin-${k}`, null),
       loadPrepForInstrument("NQ"),
     ]);
-    if (ch) { setWs(ch.whoopSleep||""); setWr(ch.whoopRecovery||""); setMs(ch.mentalScores||[0,0]); setOc(ch.otherChecks||[false,false,false]); setSs(ch.schemaScores||[0,0,0,0,0]); setCs(true); }
+    if (ch) { setWs(ch.whoopSleep||""); setWr(ch.whoopRecovery||""); setMs(ch.mentalScores||[0,0]); setOc(ch.otherChecks||[false,false,false,false]); setSs(ch.schemaScores||[0,0,0,0,0]); setCs(true); }
     setLoading(false);
     // Load review + instruments + log in background (non-blocking)
     (async () => {
@@ -1452,7 +1490,7 @@ function MarketPrep({ onBack }) {
   const loadReviewForInstrument = async (inst) => {
     const rv = await loadData(`review-${todayKey()}-${inst}`, null);
     if (rv) { setReview(rv); setReviewSaved(true); }
-    else { setReview({ focusRating:0, bull1Result:"", bull1Traded:"", bull1WhyNot:"", bull2Result:"", bull2Traded:"", bull2WhyNot:"", bear1Result:"", bear1Traded:"", bear1WhyNot:"", bear2Result:"", bear2Traded:"", bear2WhyNot:"", rulesTrend:"", rulesMarketCond:"", rulesTopBottom:"", rulesPlays:"", rulesExecution:"", rulesConsol:"", rulesDLL:"", rulesTrendNote:"", rulesMarketCondNote:"", rulesTopBottomNote:"", rulesPlaysNote:"", rulesExecutionNote:"", rulesConsolNote:"", rulesDLLNote:"", postEmotional:0, postDecision:0, postPhysical:0, biggestLesson:"", tomorrowWill:"" }); setReviewSaved(false); }
+    else { setReview({ focusRating:0, bull1Result:"", bull1Traded:"", bull1WhyNot:"", bull2Result:"", bull2Traded:"", bull2WhyNot:"", bear1Result:"", bear1Traded:"", bear1WhyNot:"", bear2Result:"", bear2Traded:"", bear2WhyNot:"", rulesTrend:"", rulesMarketCond:"", rulesTopBottom:"", rulesPlays:"", rulesExecution:"", rulesFocus:"", rulesConsol:"", rulesDLL:"", rulesTrendNote:"", rulesMarketCondNote:"", rulesTopBottomNote:"", rulesPlaysNote:"", rulesExecutionNote:"", rulesFocusNote:"", rulesConsolNote:"", rulesDLLNote:"", postEmotional:0, postDecision:0, postPhysical:0, biggestLesson:"", tomorrowWill:"" }); setReviewSaved(false); }
     const rp = await loadData(prepKey(inst, todayKey()), null);
     if (rp) setReviewPrepData(rp);
   };
@@ -1636,7 +1674,7 @@ function MarketPrep({ onBack }) {
               </div>;
             })}
           </Card>
-          <Card style={{ marginBottom:18 }}><SectionLabel text="Readiness" color="rgba(255,255,255,0.25)" />{["Eaten properly & hydrated","Exercised or moved today","Meditated today (5+ min)"].map((item,i) => <div key={i} onClick={()=>{const n=[...oc];n[i]=!n[i];setOc(n);setCs(false);}} style={{display:"flex",alignItems:"center",gap:16,padding:"14px 0",borderBottom:i<2?"1px solid rgba(255,255,255,0.04)":"none",cursor:"pointer",fontSize:16,color:oc[i]?"#2DD4BF":"rgba(255,255,255,0.5)",userSelect:"none"}}><div style={{width:28,height:28,borderRadius:9,flexShrink:0,border:oc[i]?"none":"2px solid rgba(255,255,255,0.12)",background:oc[i]?"#2DD4BF":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#fff"}}>{oc[i]?"✓":""}</div>{item}</div>)}</Card>
+          <Card style={{ marginBottom:18 }}><SectionLabel text="Readiness" color="rgba(255,255,255,0.25)" />{["Eaten properly & hydrated","Exercised or moved today","Meditated or visualized (5+ min)","Read Mental Game Foundation"].map((item,i) => <div key={i} onClick={()=>{const n=[...oc];n[i]=!n[i];setOc(n);setCs(false);}} style={{display:"flex",alignItems:"center",gap:16,padding:"14px 0",borderBottom:i<3?"1px solid rgba(255,255,255,0.04)":"none",cursor:"pointer",fontSize:16,color:oc[i]?"#2DD4BF":"rgba(255,255,255,0.5)",userSelect:"none"}}><div style={{width:28,height:28,borderRadius:9,flexShrink:0,border:oc[i]?"none":"2px solid rgba(255,255,255,0.12)",background:oc[i]?"#2DD4BF":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#fff"}}>{oc[i]?"✓":""}</div>{item}</div>)}</Card>
           <Card style={{ marginBottom:18 }}><SectionLabel text="Emotional Baseline" color="#4361EE" /><p style={{fontSize:14,color:"rgba(255,255,255,0.25)",marginBottom:22,lineHeight:1.6}}>Score ≥5 means significantly lower threshold for schema activation.</p>
             {CHECKIN_QUESTIONS.map((item,i) => { const v=ss[i]; const color=v>5?"#E94560":v>3?"#F48C06":"#10B981"; return <div key={i} style={{marginBottom:22}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><span style={{fontSize:15,color:"rgba(255,255,255,0.6)",flex:1}}>{item.q}</span><span style={{fontFamily:"'JetBrains Mono', monospace",fontSize:11,color:"rgba(255,255,255,0.2)",marginRight:14,letterSpacing:1}}>{item.schema}</span><span style={{fontFamily:"'JetBrains Mono', monospace",fontWeight:700,fontSize:22,color,width:40,textAlign:"center"}}>{v}</span></div><div style={{position:"relative"}}><div style={{position:"absolute",top:"50%",left:0,right:0,height:5,borderRadius:3,background:"rgba(255,255,255,0.06)",transform:"translateY(-50%)"}} /><div style={{position:"absolute",top:"50%",left:0,width:`${v*10}%`,height:5,borderRadius:3,background:color,transform:"translateY(-50%)",transition:"all 0.15s"}} /><input type="range" min={0} max={10} value={v} onChange={e=>{const n=[...ss];n[i]=parseInt(e.target.value);setSs(n);setCs(false);}} style={{width:"100%",background:"transparent",position:"relative",zIndex:2,WebkitAppearance:"none",appearance:"none",height:24}} /></div></div>; })}
             <div style={{background:fgc.g,borderRadius:16,padding:"18px 20px",textAlign:"center",border:`1px solid ${fgc.c}33`,marginTop:22}}><div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginBottom:6}}><span style={{fontSize:28,filter:`drop-shadow(0 0 8px ${fgc.c})`,color:fgc.c}}>{fgc.i}</span><span style={{fontFamily:"'JetBrains Mono', monospace",fontWeight:700,fontSize:26,color:fgc.c,letterSpacing:3}}>{fg}</span><span style={{fontFamily:"'JetBrains Mono', monospace",fontWeight:600,fontSize:11,color:fgc.c,letterSpacing:2,opacity:0.8}}>{fgc.l}</span></div><div style={{fontSize:14,color:"rgba(255,255,255,0.4)"}}>{fgc.m}</div>{dp.length>0&&<div style={{fontSize:11,color:"rgba(255,255,255,0.2)",marginTop:6,fontFamily:"'JetBrains Mono', monospace"}}>Driven by: {dp.join(" + ")}</div>}</div>
@@ -1869,6 +1907,18 @@ function MarketPrep({ onBack }) {
           <button onClick={savePrep} style={{ width: "100%", padding: 20, border: "none", borderRadius: 18, background: prepSaved ? "rgba(45,212,191,0.08)" : "linear-gradient(135deg, rgba(45,212,191,0.25), rgba(45,212,191,0.15))", color: prepSaved ? "rgba(45,212,191,0.5)" : "#2DD4BF", fontSize: 16, fontWeight: 700, cursor: prepSaved ? "default" : "pointer", fontFamily: "inherit", letterSpacing: 0.5, transition: "all 0.3s ease", border: prepSaved ? "1px solid rgba(45,212,191,0.15)" : "1px solid rgba(45,212,191,0.3)" }}>
             {prepSaved ? `✓ Committed & Saved (${instrument})` : `I Commit to Radical Personal Responsibility`}
           </button>
+
+          {prepSaved && <div style={{ marginTop: 24, animation: "fadeIn 0.5s ease" }}>
+            <div style={{ background: "linear-gradient(135deg, rgba(67,97,238,0.08), rgba(45,212,191,0.06))", borderRadius: 18, border: "1px solid rgba(67,97,238,0.15)", padding: "24px 22px" }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 3, color: "rgba(67,97,238,0.6)", fontWeight: 700, marginBottom: 14 }}>PRE-SESSION VISUALIZATION</div>
+              <div style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.8, marginBottom: 16 }}>Close your eyes for 2 minutes. Visualize today's primary play arriving at your key area. See yourself executing your entry model. Feel the fear rise as price pulls back. Watch yourself keep your hands off the stop loss. Breathe. Your system is managing risk. Watch the trade work.</div>
+              <div style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.8, marginBottom: 18 }}>Now visualize it stopping out. Feel that too. You followed the process. The loss is a cost of business. You are fine. Rehearse both outcomes so neither one surprises your nervous system.</div>
+              <div style={{ background: "rgba(67,97,238,0.08)", borderRadius: 12, padding: "14px 16px", border: "1px solid rgba(67,97,238,0.12)" }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(67,97,238,0.5)", fontWeight: 600, marginBottom: 8 }}>BOX BREATHING</div>
+                <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>4 counts in. 4 hold. 4 out. 4 hold. Two rounds. Then open your eyes and begin.</div>
+              </div>
+            </div>
+          </div>}
         </div>}
 
         {/* SESSION REVIEW TAB */}
@@ -1956,6 +2006,7 @@ function MarketPrep({ onBack }) {
               ["rulesTopBottom", "rulesTopBottomNote", "Avoided Picking Tops and Bottoms"],
               ["rulesPlays", "rulesPlaysNote", "Trades were from Pre Defined Plays"],
               ["rulesExecution", "rulesExecutionNote", "Execution Model Followed"],
+              ["rulesFocus", "rulesFocusNote", "Stayed Focused and Avoided Distraction"],
               ["rulesConsol", "rulesConsolNote", "Avoided Entering During Consolidation"],
               ["rulesDLL", "rulesDLLNote", "DLL Respected"]].map(([key, noteKey, label]) => (
               <div key={key} style={{ marginBottom: 14 }}>
@@ -2016,7 +2067,7 @@ function MarketPrep({ onBack }) {
                 <div style={{ fontSize:15, color:"rgba(255,255,255,0.5)", lineHeight:2.2 }}>
                   {logData.checkin.whoopSleep && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Whoop:</strong> Sleep {logData.checkin.whoopSleep}% · Recovery {logData.checkin.whoopRecovery}% {logData.checkin.whoopGate && <span style={{ color:gateColor(logData.checkin.whoopGate), fontFamily:"'JetBrains Mono', monospace", fontWeight:700, marginLeft:10 }}>{logData.checkin.whoopGate}</span>}</div>}
                   {logData.checkin.mentalScores && (logData.checkin.mentalScores[0] > 0 || logData.checkin.mentalScores[1] > 0) && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Mental:</strong> Awareness {logData.checkin.mentalScores[0]}/5 · Connected {logData.checkin.mentalScores[1]}/5</div>}
-                  {logData.checkin.otherChecks && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Ready:</strong> {["Hydrated","Exercised","Meditated"].filter((_, i) => logData.checkin.otherChecks[i]).join(", ") || "None"}</div>}
+                  {logData.checkin.otherChecks && <div><strong style={{ color:"rgba(255,255,255,0.7)" }}>Ready:</strong> {["Hydrated","Exercised","Meditated","Foundation"].filter((_, i) => logData.checkin.otherChecks[i]).join(", ") || "None"}</div>}
                   {logData.checkin.schemaScores && Math.max(...logData.checkin.schemaScores) > 0 && <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}><strong style={{ color:"rgba(255,255,255,0.7)" }}>Schema Scores:</strong>{logData.checkin.schemaScores.map((s,i) => <span key={i} style={{ fontFamily:"'JetBrains Mono', monospace", fontWeight:700, color:s>5?"#E94560":s>3?"#F48C06":"#10B981" }}>{s}</span>)}</div>}
                 </div>
               </Card>}
@@ -2069,7 +2120,7 @@ function MentalGameFramework({ onBack }) {
   const [loading, setLoading] = useState(true);
   const [ws, setWs] = useState(""); const [wr, setWr] = useState("");
   const [oc, setOc] = useState([false, false]); const [ss, setSs] = useState([0,0,0,0,0]); const [cs, setCs] = useState(false);
-  const [al, setAl] = useState({ time:"", happened:"", feeling:"", bodyLocation:"", urge:"", schema:"", cascadeFrom:"", howOld:"", interrupt:"", outcome:"" });
+  const [al, setAl] = useState({ time:"", happened:"", feeling:"", bodyLocation:"", urge:"", schema:"", interrupt:"", outcome:"" });
   const [sa, setSa] = useState([]); const [dl, setDl] = useState([]);
   const [ps, setPs] = useState({}); const [pss, setPss] = useState(false);
   const [wrev, setWrev] = useState({}); const [wrs, setWrs] = useState(false);
@@ -2084,7 +2135,7 @@ function MentalGameFramework({ onBack }) {
       loadData(`activations-${k}`, []),
       loadData(`dll-${k}`, []),
     ]);
-    if (ch) { setWs(ch.whoopSleep||""); setWr(ch.whoopRecovery||""); setOc(ch.otherChecks||[false,false]); setSs(ch.schemaScores||[0,0,0,0,0]); setCs(true); }
+    if (ch) { setWs(ch.whoopSleep||""); setWr(ch.whoopRecovery||""); setOc(ch.otherChecks||[false,false,false,false]); setSs(ch.schemaScores||[0,0,0,0,0]); setCs(true); }
     setSa(sa_data); setDl(dl_data);
     setLoading(false);
     // Load history keys in background
@@ -2092,7 +2143,7 @@ function MentalGameFramework({ onBack }) {
   })(); }, []);
 
   const saveCheckin = async () => { await saveData(`checkin-${todayKey()}`, { whoopSleep:ws, whoopRecovery:wr, otherChecks:oc, schemaScores:ss, whoopGate:wg, timestamp:new Date().toISOString() }); setCs(true); };
-  const saveAct = async () => { const u = [...sa, { ...al, timestamp:new Date().toISOString() }]; await saveData(`activations-${todayKey()}`, u); setSa(u); setAl({ time:"", happened:"", feeling:"", bodyLocation:"", urge:"", schema:"", cascadeFrom:"", howOld:"", interrupt:"", outcome:"" }); };
+  const saveAct = async () => { const u = [...sa, { ...al, timestamp:new Date().toISOString() }]; await saveData(`activations-${todayKey()}`, u); setSa(u); setAl({ time:"", happened:"", feeling:"", bodyLocation:"", urge:"", schema:"", interrupt:"", outcome:"" }); };
   const logDll = async (e) => { const u = [...dl, e]; await saveData(`dll-${todayKey()}`, u); setDl(u); };
   const savePost = async () => { await saveData(`post-${todayKey()}`, { ...ps, timestamp:new Date().toISOString() }); setPss(true); };
   const saveWeek = async () => { await saveData(`weekly-${weekKey()}`, { ...wrev, timestamp:new Date().toISOString() }); setWrs(true); };
@@ -2122,6 +2173,21 @@ function MentalGameFramework({ onBack }) {
       <div style={{ padding: "28px 20px 60px" }}>
 
         {tab === "schemas" && <div style={{ animation: "fadeIn 0.3s ease" }}>
+
+          {/* FOUNDATION */}
+          <div style={{ background: "linear-gradient(135deg, rgba(45,212,191,0.06), rgba(67,97,238,0.06))", borderRadius: 22, border: "1px solid rgba(45,212,191,0.12)", padding: "28px 24px", marginBottom: 28 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 4, color: "rgba(45,212,191,0.6)", fontWeight: 700, marginBottom: 16 }}>FOUNDATION</div>
+            <div style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.5, color: "rgba(255,255,255,0.65)", marginBottom: 20 }}>I am building my freedom. Every session I follow my system, I move further from my old career, not closer to it.</div>
+            <div style={{ fontSize: 15, color: "rgba(45,212,191,0.5)", lineHeight: 1.8, marginBottom: 18, fontStyle: "italic" }}>I trade for my partner, my family, and the future we are building together. This is bigger than any single session.</div>
+            <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "0 0 18px" }} />
+            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, marginBottom: 16 }}>Fear is the common thread. Fear of loss makes me close winners early. Fear of being wrong makes me hesitate on A+ setups. Fear of failure keeps me watching P&L instead of trusting the process. But fear is lying. It treats every trade like the crypto loss, and they are not the same thing.</div>
+            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, marginBottom: 18 }}>The truth: I have a proven system backed by months of data. When I follow it, it works. I have always achieved what I put my mind to and I have the results to prove it. My savings are runway for executing with conviction, not a countdown clock for trading from fear.</div>
+            <div style={{ background: "rgba(45,212,191,0.08)", borderRadius: 14, padding: "18px 20px", border: "1px solid rgba(45,212,191,0.15)" }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 3, color: "rgba(45,212,191,0.5)", fontWeight: 600, marginBottom: 10 }}>QUALIFIED RISK IS MY PROFESSION</div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.55)", lineHeight: 1.8 }}>Risk taken through my system, at my key areas, with my execution framework and a stop loss in place is not gambling. That is my job. Hesitating on qualified setups costs more than any single loss. The only path back to the old career is abandoning my process. The process is the way out.</div>
+            </div>
+          </div>
+
           <p style={{ fontSize:15, color:"rgba(255,255,255,0.35)", lineHeight:1.7, marginBottom:22 }}>Your three core threat patterns. Tap to expand.</p>
           {Object.entries(SCHEMAS).map(([key, s]) => (
             <ExpandableCard key={key} item={{...s, iconColor: key==="standards"?"rgba(255,255,255,0.5)":"#fff"}} expanded={exp===key} onToggle={() => setExp(exp===key?null:key)} hideIcon>
@@ -2143,7 +2209,7 @@ function MentalGameFramework({ onBack }) {
         {tab === "activation" && <div style={{ animation:"fadeIn 0.3s ease" }}>
           <p style={{fontSize:15,color:"rgba(255,255,255,0.35)",lineHeight:1.7,marginBottom:22}}>Pausing to fill this in <em>is</em> the intervention.</p>
           <Card style={{marginBottom:18}}><SectionLabel text="New Activation" color="#E94560" />
-            {[{key:"time",label:"Time",placeholder:"e.g. 10:32 AM"},{key:"happened",label:"What happened?",placeholder:"Price action, P&L change..."},{key:"feeling",label:"What am I feeling?",placeholder:"Fear, anger, urgency..."},{key:"bodyLocation",label:"Where in my body?",placeholder:"Chest, stomach, jaw..."},{key:"urge",label:"The urge?",placeholder:"Close, move SL, unlock DLL..."},{key:"schema",label:"Which schema fired?",type:"select",options:["Abandonment","Defectiveness","Unrelenting Standards"]},{key:"cascadeFrom",label:"Did another schema fire first?",type:"select",options:["No, this was the first","Abandonment triggered it","Defectiveness triggered it","Standards triggered it"]},{key:"howOld",label:"How old does this feel?",placeholder:"This trade, or deeper?"},{key:"interrupt",label:"Pattern interrupt used",placeholder:"Write your phrase..."},{key:"outcome",label:"What did I do?",type:"select",options:["Followed plan","Deviated"]}].map(f => <InputField key={f.key} label={f.label} value={al[f.key]} onChange={v=>setAl({...al,[f.key]:v})} type={f.type} options={f.options} placeholder={f.placeholder} />)}
+            {[{key:"time",label:"Time",placeholder:"e.g. 10:32 AM"},{key:"happened",label:"What happened?",placeholder:"Price action, P&L change..."},{key:"feeling",label:"What am I feeling?",placeholder:"Fear, anger, urgency..."},{key:"bodyLocation",label:"Where in my body?",placeholder:"Chest, stomach, jaw..."},{key:"urge",label:"The urge?",placeholder:"Close, move SL, unlock DLL..."},{key:"schema",label:"Which schema fired?",type:"select",options:["Abandonment","Defectiveness","Unrelenting Standards"]},{key:"interrupt",label:"Pattern interrupt used",placeholder:"Write your phrase..."},{key:"outcome",label:"What did I do?",type:"select",options:["Followed plan","Deviated"]}].map(f => <InputField key={f.key} label={f.label} value={al[f.key]} onChange={v=>setAl({...al,[f.key]:v})} type={f.type} options={f.options} placeholder={f.placeholder} />)}
             <button onClick={saveAct} disabled={!al.feeling} style={{width:"100%",padding:18,border:"none",borderRadius:16,background:al.feeling?"linear-gradient(135deg, #E94560, #C62A47)":"rgba(255,255,255,0.05)",color:al.feeling?"#fff":"rgba(255,255,255,0.2)",fontSize:16,fontWeight:700,cursor:al.feeling?"pointer":"default",fontFamily:"inherit"}}>Log Activation</button>
           </Card>
           {sa.length>0&&<Card><SectionLabel text={`Today's Activations (${sa.length})`} color="#E94560" />{sa.map((a,i) => <div key={i} style={{padding:"16px 0",borderBottom:i<sa.length-1?"1px solid rgba(255,255,255,0.04)":"none",fontSize:15}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}><span style={{fontFamily:"'JetBrains Mono', monospace",fontWeight:600,fontSize:13,color:"rgba(255,255,255,0.6)"}}>{a.time||"—"}</span><span style={{fontSize:11,padding:"4px 12px",borderRadius:8,fontWeight:600,fontFamily:"'JetBrains Mono', monospace",background:a.outcome==="Followed plan"?"rgba(16,185,129,0.15)":"rgba(233,69,96,0.15)",color:a.outcome==="Followed plan"?"#10B981":"#E94560"}}>{a.outcome||"—"}</span></div><div style={{color:"rgba(255,255,255,0.5)"}}><strong style={{color:"rgba(255,255,255,0.7)"}}>{a.schema}</strong>: {a.feeling}</div>{a.cascadeFrom&&a.cascadeFrom!=="No, this was the first"&&<div style={{fontSize:12,color:"rgba(255,255,255,0.3)",marginTop:4,fontFamily:"'JetBrains Mono', monospace"}}>CASCADE: {a.cascadeFrom}</div>}{a.interrupt&&<div style={{color:"rgba(255,255,255,0.3)",fontStyle:"italic",marginTop:5,fontSize:14}}>"{a.interrupt}"</div>}</div>)}</Card>}
