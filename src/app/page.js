@@ -46,7 +46,7 @@ function SaveButton({ saved, onClick, label }) {
 // ═══════════════════════════════════════════════════════════
 
 const SCHEMAS = {
-  abandonment: { name: "Abandonment", subtitle: "Grab It Before It's Gone", color: "#E94560", gradient: "linear-gradient(135deg, #E94560 0%, #C62A47 100%)", bg: "rgba(233,69,96,0.06)", icon: "⚡", trigger: "Unrealised profit on an open position. A winner that starts to pull back.", belief: "Good things get taken away. The $500K crypto loss encoded this at a survival level.", body: "Chest tightness, urgency, restless hands hovering over close button.", interrupts: ["This is not the crypto trade. I have a stop loss. My system is managing risk.", "Grabbing profit early is my fear talking, not my system.", "Every time I cut a winner early, I make the abandonment story come true.", "Let the market do the heavy lifting. I am capable of receiving this."], reset: "Hands off keyboard. Three slow breaths. Feel your feet on the floor. You are safe." },
+  abandonment: { name: "Abandonment", subtitle: "Grab It Before It's Gone", color: "#E94560", gradient: "linear-gradient(135deg, #E94560 0%, #C62A47 100%)", bg: "rgba(233,69,96,0.06)", icon: "⚡", trigger: "Unrealised profit on an open position. A winner that starts to pull back. The urge to move stop loss to breakeven prematurely.", belief: "Good things get taken away. Encoded at survival level from past losses. Your nervous system remembers even when your mind moves on.", body: "Chest tightness, urgency, restless hands hovering over close button or SL.", interrupts: ["This is not the crypto trade. I have a stop loss. My system is managing risk.", "Moving to BE is not risk management, it is fear. My stop is my risk.", "Grabbing profit early is my fear talking, not my system.", "Every time I cut a winner early, I make the abandonment story come true.", "Let the market do the heavy lifting. I am capable of receiving this."], reset: "Hands off keyboard. Three slow breaths. Feel your feet on the floor. You are safe." },
   defectiveness: { name: "Defectiveness", subtitle: "I Have to Prove Myself", color: "#4361EE", gradient: "linear-gradient(135deg, #4361EE 0%, #3A0CA3 100%)", bg: "rgba(67,97,238,0.06)", icon: "🛡", trigger: "A loss, multiple losses, hitting DLL. Feeling like you made a mistake.", belief: "Losses confirm I'm not adequate. This fires in relationships too, especially when feeling unappreciated.", body: "Heat in face/chest, jaw tightening, compulsive drive to re-enter immediately.", interrupts: ["A loss is a cost of business, not evidence of who I am.", "The DLL exists to protect me. Respecting it IS the professional move.", "Revenge trading has never once made me feel better.", "Walking away right now is the strongest thing I can do."], reset: "Stand up. Walk away for 5 minutes. Splash cold water on your face." },
   standards: { name: "Unrelenting Standards", subtitle: "It Has to Be Perfect", color: "#F48C06", gradient: "linear-gradient(135deg, #F48C06 0%, #DC6C02 100%)", bg: "rgba(244,140,6,0.06)", icon: "△", trigger: "A solid A+ setup that isn't at the exact top or bottom.", belief: "Anything less than perfect isn't good enough. This extends beyond trading.", body: "Dissatisfaction after profitable trades, inability to step away from charts.", interrupts: ["A+ is the standard. Not perfect. A+ builds accounts.", "Picking tops & bottoms is picking a fight I'm likely to lose.", "A good entry with proper management beats a perfect entry I never took.", "Conserve mental capital. Perform better. Be selective."], reset: "Close the 1-minute chart. Zoom out. Look at the higher timeframe trend." },
 };
@@ -212,7 +212,7 @@ function LandingPage({ onNavigate }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <NavCard onClick={() => onNavigate("prep")} gradient="linear-gradient(180deg, #F48C06, #10B981, #4361EE)" tag="SESSION PREPARATION" title="Market Prep" desc="Mental check-in, pre-market analysis, scenarios and session focus." />
         <NavCard onClick={() => onNavigate("playbook")} gradient="linear-gradient(180deg, #2DD4BF, #10B981, #F48C06)" tag="TRADE EXECUTION" title="Playbook" desc="Setups, execution framework, risk framing and trigger confirmation." />
-        <NavCard onClick={() => onNavigate("review")} gradient="linear-gradient(180deg, #A855F7, #4361EE, #2DD4BF)" tag="WEEKLY REVIEW" title="Review" desc="Weekly performance review, lessons, activations and discipline tracking." />
+        <NavCard onClick={() => onNavigate("review")} gradient="linear-gradient(180deg, #A855F7, #4361EE, #2DD4BF)" tag="PROCESS & MENTAL GAME" title="Review" desc="Weekly process review, lessons, activations and discipline tracking." />
         <NavCard onClick={() => onNavigate("mental")} gradient="linear-gradient(180deg, #E94560, #4361EE, #F48C06)" tag="SCHEMA AWARENESS" title="Mental Game" desc="Schema tracking, DLL circuit breaker, activation logs and reviews." />
         <NavCard onClick={() => onNavigate("fundamentals")} gradient="linear-gradient(180deg, #10B981, #4361EE, #A855F7)" tag="MARKET KNOWLEDGE" title="Market Fundamentals" desc="Auction Market Theory, value and price relationships, balance, imbalance and failed auctions." />
       </div>
@@ -607,13 +607,6 @@ function WeeklyReview({ onBack }) {
   if (loading) return <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ fontFamily: "'JetBrains Mono', monospace", color: "rgba(255,255,255,0.2)", fontSize: 14 }}>Loading week...</div></div>;
 
   // Aggregate data
-  const whoopDays = data.days.filter(d => d.checkin);
-  const avgSleep = whoopDays.length > 0 ? Math.round(whoopDays.reduce((s,d) => s + parseFloat(d.checkin.whoopSleep || 0), 0) / whoopDays.length) : null;
-  const avgRecovery = whoopDays.length > 0 ? Math.round(whoopDays.reduce((s,d) => s + parseFloat(d.checkin.whoopRecovery || 0), 0) / whoopDays.length) : null;
-  const mentalDays = whoopDays.filter(d => d.checkin.mentalScores && d.checkin.mentalScores[0] > 0);
-  const avgAwareness = mentalDays.length > 0 ? (mentalDays.reduce((s,d) => s + d.checkin.mentalScores[0], 0) / mentalDays.length).toFixed(1) : null;
-  const avgConnected = mentalDays.length > 0 ? (mentalDays.reduce((s,d) => s + d.checkin.mentalScores[1], 0) / mentalDays.length).toFixed(1) : null;
-
   // Schema flags (any question > 4)
   const schemaFlags = [];
   const schemaNames = ["Am I trying to prove something?", "Am I avoiding out of fear?", "Do I feel not good enough?", "Am I overcomplicating?", "Do I feel the need to be right?"];
@@ -655,7 +648,7 @@ function WeeklyReview({ onBack }) {
   const tradedPlays = allPlays.filter(p => p.traded === "Yes");
 
   // Rule compliance
-  const ruleKeys = [["rulesTrend","Traded with Trend / Tape"],["rulesMarketCond","Traded inline with market condition"],["rulesTopBottom","Avoided Picking Tops and Bottoms"],["rulesPlays","Trades from Pre Defined Plays"],["rulesExecution","Execution Model Followed"],["rulesConsol","Avoided Entering During Consolidation"],["rulesDLL","DLL Respected"]];
+  const ruleKeys = [["rulesTrend","Traded with Trend / Tape"],["rulesMarketCond","Traded Inline with Market Condition"],["rulesTopBottom","Avoided Picking Tops and Bottoms"],["rulesPlays","Trades from Pre Defined Plays"],["rulesExecution","Execution Model Followed"],["rulesConsol","Avoided Entering During Consolidation"],["rulesDLL","DLL Respected"]];
   const ruleSummary = ruleKeys.map(([key, label]) => {
     let followed = 0, broke = 0, na = 0;
     data.days.forEach(d => {
@@ -677,13 +670,6 @@ function WeeklyReview({ onBack }) {
     }
   });
 
-  const StatBox = ({ label, value, sub, color }) => (
-    <div style={{ flex: 1, background: "rgba(255,255,255,0.03)", borderRadius: 14, padding: "14px 16px", textAlign: "center" }}>
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 24, fontWeight: 700, color: color || "rgba(255,255,255,0.6)" }}>{value ?? "..."}</div>
-      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 4, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 0.5 }}>{label}</div>
-      {sub && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>{sub}</div>}
-    </div>
-  );
 
   const CheckRow = ({ checked, onToggle, children }) => (
     <div style={{ display: "flex", gap: 12, padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.04)", alignItems: "flex-start" }}>
@@ -695,8 +681,8 @@ function WeeklyReview({ onBack }) {
   return (
     <div style={{ minHeight: "100vh", padding: "40px 20px 100px" }}>
       <BackButton onClick={onBack} />
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 4, color: "rgba(168,85,247,0.5)", fontWeight: 600 }}>WEEKLY REVIEW</div>
-      <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5, marginTop: 6, marginBottom: 8, color: "rgba(255,255,255,0.85)" }}>Review</div>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 4, color: "rgba(168,85,247,0.5)", fontWeight: 600 }}>PROCESS & MENTAL GAME</div>
+      <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5, marginTop: 6, marginBottom: 8, color: "rgba(255,255,255,0.85)" }}>Weekly Review</div>
 
       {/* Week Selector */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
@@ -711,15 +697,54 @@ function WeeklyReview({ onBack }) {
       {/* SECTION 1: BODY & MIND */}
       <Card style={{ marginBottom: 18 }}>
         <SectionLabel text="Body & Mind" />
-        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-          <StatBox label="Avg Sleep" value={avgSleep ? `${avgSleep}%` : null} color={avgSleep >= 80 ? "#10B981" : avgSleep >= 70 ? "#F48C06" : avgSleep ? "#E94560" : null} />
-          <StatBox label="Avg Recovery" value={avgRecovery ? `${avgRecovery}%` : null} color={avgRecovery >= 70 ? "#10B981" : avgRecovery >= 30 ? "#F48C06" : avgRecovery ? "#E94560" : null} />
+        {/* Column headers */}
+        <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 1fr 1fr", gap: 6, marginBottom: 8, padding: "0 4px" }}>
+          <div />
+          <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: "rgba(255,255,255,0.2)", letterSpacing: 0.5, textAlign: "center" }}>SLEEP</div>
+          <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: "rgba(255,255,255,0.2)", letterSpacing: 0.5, textAlign: "center" }}>RECOV</div>
+          <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: "rgba(255,255,255,0.2)", letterSpacing: 0.5, textAlign: "center" }}>AWARE</div>
+          <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: "rgba(255,255,255,0.2)", letterSpacing: 0.5, textAlign: "center" }}>CONN</div>
         </div>
-        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-          <StatBox label="Awareness" value={avgAwareness} sub="avg / 5" color={parseFloat(avgAwareness) >= 4 ? "#10B981" : parseFloat(avgAwareness) >= 3 ? "#F48C06" : avgAwareness ? "#E94560" : null} />
-          <StatBox label="Connected" value={avgConnected} sub="avg / 5" color={parseFloat(avgConnected) >= 4 ? "#10B981" : parseFloat(avgConnected) >= 3 ? "#F48C06" : avgConnected ? "#E94560" : null} />
-        </div>
-        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "rgba(255,255,255,0.2)", textAlign: "center" }}>{whoopDays.length} of 5 days logged</div>
+        {/* Day rows */}
+        {data.days.map((d, di) => {
+          const sl = d.checkin ? parseFloat(d.checkin.whoopSleep) : null;
+          const rc = d.checkin ? parseFloat(d.checkin.whoopRecovery) : null;
+          const aw = d.checkin?.mentalScores?.[0] || null;
+          const cn = d.checkin?.mentalScores?.[1] || null;
+          const slC = sl >= 80 ? "#10B981" : sl >= 70 ? "#F48C06" : sl ? "#E94560" : null;
+          const rcC = rc >= 70 ? "#10B981" : rc >= 30 ? "#F48C06" : rc ? "#E94560" : null;
+          const awC = aw >= 4 ? "#10B981" : aw >= 2 ? "#F48C06" : aw ? "#E94560" : null;
+          const cnC = cn >= 4 ? "#10B981" : cn >= 2 ? "#F48C06" : cn ? "#E94560" : null;
+          const cell = (val, unit, color) => (
+            <div style={{ textAlign: "center", padding: "8px 4px", borderRadius: 8, background: color ? `${color}08` : "rgba(255,255,255,0.02)" }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 700, color: color || "rgba(255,255,255,0.1)" }}>{val ?? "..."}{unit || ""}</span>
+            </div>
+          );
+          return (
+            <div key={di} style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 1fr 1fr", gap: 6, marginBottom: 4, padding: "0 4px" }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", display: "flex", alignItems: "center" }}>{dayNames[di]}</div>
+              {cell(sl ? Math.round(sl) : null, "%", slC)}
+              {cell(rc ? Math.round(rc) : null, "%", rcC)}
+              {cell(aw > 0 ? aw : null, null, awC)}
+              {cell(cn > 0 ? cn : null, null, cnC)}
+            </div>
+          );
+        })}
+        {/* Summary line */}
+        {(() => {
+          const slDays = data.days.filter(d => d.checkin?.whoopSleep);
+          const redCount = slDays.filter(d => parseFloat(d.checkin.whoopSleep) < 70 || parseFloat(d.checkin.whoopRecovery) < 30).length;
+          const amberCount = slDays.filter(d => { const s = parseFloat(d.checkin.whoopSleep); const r = parseFloat(d.checkin.whoopRecovery); return s >= 70 && r >= 30 && s < 80; }).length;
+          const greenCount = slDays.filter(d => parseFloat(d.checkin.whoopSleep) >= 80 && parseFloat(d.checkin.whoopRecovery) >= 30).length;
+          return slDays.length > 0 ? (
+            <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 12, fontSize: 12, fontFamily: "'JetBrains Mono', monospace" }}>
+              {greenCount > 0 && <span style={{ color: "#10B981" }}>{greenCount} green</span>}
+              {amberCount > 0 && <span style={{ color: "#F48C06" }}>{amberCount} amber</span>}
+              {redCount > 0 && <span style={{ color: "#E94560" }}>{redCount} red</span>}
+              <span style={{ color: "rgba(255,255,255,0.15)" }}>{slDays.length}/5 logged</span>
+            </div>
+          ) : <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "rgba(255,255,255,0.15)", textAlign: "center", marginTop: 8 }}>No days logged yet</div>;
+        })()}
       </Card>
 
       {/* SCHEMA FLAGS */}
@@ -765,7 +790,9 @@ function WeeklyReview({ onBack }) {
               <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, background: a.outcome === "Followed plan" ? "rgba(16,185,129,0.12)" : "rgba(233,69,96,0.12)", color: a.outcome === "Followed plan" ? "#10B981" : "#E94560" }}>{a.outcome || "?"}</span>
             </div>
             <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}><strong style={{ color: "rgba(255,255,255,0.6)" }}>{a.schema}</strong>: {a.feeling}</div>
+            {a.happened && <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginTop: 4, lineHeight: 1.5 }}>{a.happened}</div>}
             {a.interrupt && <div style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", fontStyle: "italic", marginTop: 4 }}>"{a.interrupt}"</div>}
+            {a.cascadeFrom && a.cascadeFrom !== "No, this was the first" && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 4, fontFamily: "'JetBrains Mono', monospace" }}>CASCADE: {a.cascadeFrom}</div>}
           </CheckRow>
         ))}
       </Card>
@@ -1292,7 +1319,7 @@ function MarketPrep({ onBack }) {
   const go = {GREEN:0,AMBER:1,RED:2};
   const gates = [wg, sg, mg].filter(Boolean);
   const fg = gates.length === 0 ? "GREEN" : gates.reduce((worst, g) => go[g] > go[worst] ? g : worst, "GREEN");
-  const gc = {GREEN:{c:"#10B981",g:"rgba(16,185,129,0.12)",l:"FULL SIZE",m:"All systems go. Execute CSTE plan.",i:"●"},AMBER:{c:"#F48C06",g:"rgba(244,140,6,0.12)",l:"HALF SIZE",m:"A+ setups only. Reduced size.",i:"◐"},RED:{c:"#E94560",g:"rgba(233,69,96,0.12)",l:"NO TRADE",m:"Walk away. Protect capital & progress.",i:"○"}};
+  const gc = {GREEN:{c:"#10B981",g:"rgba(16,185,129,0.12)",l:"FULL SIZE",m:"Ready to hunt. Patience is the edge.",i:"●"},AMBER:{c:"#F48C06",g:"rgba(244,140,6,0.12)",l:"HALF SIZE",m:"A+ setups only. Reduced size.",i:"◐"},RED:{c:"#E94560",g:"rgba(233,69,96,0.12)",l:"NO TRADE",m:"Walk away. Protect capital & progress.",i:"○"}};
   const fgc = gc[fg]; const dp = []; if(wg&&wg!=="GREEN") dp.push(`Whoop: ${wg}`); if(sg!=="GREEN") dp.push(`Schemas: ${sg}`); if(mg&&mg!=="GREEN") dp.push(`Mental: ${mg}`);
 
   // Instrument & prep state
@@ -1487,12 +1514,16 @@ function MarketPrep({ onBack }) {
     </div>
   );
 
-  const Checkbox = ({ label, checked, onChange }) => (
-    <div onClick={() => onChange(!checked)} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 0", cursor: "pointer", fontSize: 15, color: checked ? "#10B981" : "rgba(255,255,255,0.5)", userSelect: "none" }}>
-      <div style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, border: checked ? "none" : "2px solid rgba(255,255,255,0.12)", background: checked ? "linear-gradient(135deg, #10B981, #059669)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#fff" }}>{checked ? "✓" : ""}</div>
+  const Checkbox = ({ label, checked, onChange, color }) => {
+    const c = color || "#10B981";
+    const bg = color ? `${color}` : "linear-gradient(135deg, #10B981, #059669)";
+    return (
+    <div onClick={() => onChange(!checked)} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 0", cursor: "pointer", fontSize: 15, color: checked ? c : "rgba(255,255,255,0.5)", userSelect: "none" }}>
+      <div style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, border: checked ? "none" : "2px solid rgba(255,255,255,0.12)", background: checked ? bg : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#fff" }}>{checked ? "✓" : ""}</div>
       {label}
     </div>
   );
+  };
 
   const RegimeBadge = ({ regime }) => regime ? (
     <span style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:11, fontWeight:700, letterSpacing:1.5, padding:"5px 12px", borderRadius:8, background:regime.bg, color:regime.color, border:`1px solid ${regime.border}` }}>{regime.label}</span>
@@ -1528,7 +1559,7 @@ function MarketPrep({ onBack }) {
             <div style={{ padding: "18px 22px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
                 <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.5)", textTransform: "uppercase" }}>The Hunter</div>
-                {!hunterOpen && <div style={{ fontSize: 13, color: "rgba(255,255,255,0.2)", marginTop: 4 }}>Am I hunting, or just making noise?</div>}
+                {!hunterOpen && <div style={{ fontSize: 13, color: "rgba(45,212,191,0.5)", marginTop: 4, fontStyle: "italic" }}>Am I hunting, or just making noise?</div>}
               </div>
               <div style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", transform: hunterOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s ease", color: "rgba(255,255,255,0.3)", fontSize: 13 }}>▼</div>
             </div>
@@ -1605,10 +1636,10 @@ function MarketPrep({ onBack }) {
               </div>;
             })}
           </Card>
-          <Card style={{ marginBottom:18 }}><SectionLabel text="Readiness" color="rgba(255,255,255,0.25)" />{["Eaten properly & hydrated","Exercised or moved today","Meditated today (5+ min)"].map((item,i) => <div key={i} onClick={()=>{const n=[...oc];n[i]=!n[i];setOc(n);setCs(false);}} style={{display:"flex",alignItems:"center",gap:16,padding:"14px 0",borderBottom:i<2?"1px solid rgba(255,255,255,0.04)":"none",cursor:"pointer",fontSize:16,color:oc[i]?"#10B981":"rgba(255,255,255,0.5)",userSelect:"none"}}><div style={{width:28,height:28,borderRadius:9,flexShrink:0,border:oc[i]?"none":"2px solid rgba(255,255,255,0.12)",background:oc[i]?"linear-gradient(135deg, #10B981, #059669)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#fff"}}>{oc[i]?"✓":""}</div>{item}</div>)}</Card>
+          <Card style={{ marginBottom:18 }}><SectionLabel text="Readiness" color="rgba(255,255,255,0.25)" />{["Eaten properly & hydrated","Exercised or moved today","Meditated today (5+ min)"].map((item,i) => <div key={i} onClick={()=>{const n=[...oc];n[i]=!n[i];setOc(n);setCs(false);}} style={{display:"flex",alignItems:"center",gap:16,padding:"14px 0",borderBottom:i<2?"1px solid rgba(255,255,255,0.04)":"none",cursor:"pointer",fontSize:16,color:oc[i]?"#2DD4BF":"rgba(255,255,255,0.5)",userSelect:"none"}}><div style={{width:28,height:28,borderRadius:9,flexShrink:0,border:oc[i]?"none":"2px solid rgba(255,255,255,0.12)",background:oc[i]?"#2DD4BF":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#fff"}}>{oc[i]?"✓":""}</div>{item}</div>)}</Card>
           <Card style={{ marginBottom:18 }}><SectionLabel text="Emotional Baseline" color="#4361EE" /><p style={{fontSize:14,color:"rgba(255,255,255,0.25)",marginBottom:22,lineHeight:1.6}}>Score ≥5 means significantly lower threshold for schema activation.</p>
             {CHECKIN_QUESTIONS.map((item,i) => { const v=ss[i]; const color=v>5?"#E94560":v>3?"#F48C06":"#10B981"; return <div key={i} style={{marginBottom:22}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><span style={{fontSize:15,color:"rgba(255,255,255,0.6)",flex:1}}>{item.q}</span><span style={{fontFamily:"'JetBrains Mono', monospace",fontSize:11,color:"rgba(255,255,255,0.2)",marginRight:14,letterSpacing:1}}>{item.schema}</span><span style={{fontFamily:"'JetBrains Mono', monospace",fontWeight:700,fontSize:22,color,width:40,textAlign:"center"}}>{v}</span></div><div style={{position:"relative"}}><div style={{position:"absolute",top:"50%",left:0,right:0,height:5,borderRadius:3,background:"rgba(255,255,255,0.06)",transform:"translateY(-50%)"}} /><div style={{position:"absolute",top:"50%",left:0,width:`${v*10}%`,height:5,borderRadius:3,background:color,transform:"translateY(-50%)",transition:"all 0.15s"}} /><input type="range" min={0} max={10} value={v} onChange={e=>{const n=[...ss];n[i]=parseInt(e.target.value);setSs(n);setCs(false);}} style={{width:"100%",background:"transparent",position:"relative",zIndex:2,WebkitAppearance:"none",appearance:"none",height:24}} /></div></div>; })}
-            <div style={{background:fgc.g,borderRadius:18,padding:28,textAlign:"center",border:`1px solid ${fgc.c}33`,marginTop:28}}><div style={{fontSize:40,marginBottom:6,filter:`drop-shadow(0 0 12px ${fgc.c})`,color:fgc.c}}>{fgc.i}</div><div style={{fontFamily:"'JetBrains Mono', monospace",fontWeight:700,fontSize:36,color:fgc.c,letterSpacing:4}}>{fg}</div><div style={{fontFamily:"'JetBrains Mono', monospace",fontWeight:600,fontSize:12,color:fgc.c,marginTop:6,letterSpacing:2,opacity:0.8}}>{fgc.l}</div><div style={{fontSize:15,color:"rgba(255,255,255,0.45)",marginTop:12}}>{fgc.m}</div>{dp.length>0&&<div style={{fontSize:12,color:"rgba(255,255,255,0.25)",marginTop:10,fontFamily:"'JetBrains Mono', monospace"}}>Driven by: {dp.join(" + ")}</div>}</div>
+            <div style={{background:fgc.g,borderRadius:16,padding:"18px 20px",textAlign:"center",border:`1px solid ${fgc.c}33`,marginTop:22}}><div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginBottom:6}}><span style={{fontSize:28,filter:`drop-shadow(0 0 8px ${fgc.c})`,color:fgc.c}}>{fgc.i}</span><span style={{fontFamily:"'JetBrains Mono', monospace",fontWeight:700,fontSize:26,color:fgc.c,letterSpacing:3}}>{fg}</span><span style={{fontFamily:"'JetBrains Mono', monospace",fontWeight:600,fontSize:11,color:fgc.c,letterSpacing:2,opacity:0.8}}>{fgc.l}</span></div><div style={{fontSize:14,color:"rgba(255,255,255,0.4)"}}>{fgc.m}</div>{dp.length>0&&<div style={{fontSize:11,color:"rgba(255,255,255,0.2)",marginTop:6,fontFamily:"'JetBrains Mono', monospace"}}>Driven by: {dp.join(" + ")}</div>}</div>
           </Card>
           <SaveButton saved={cs} onClick={saveCheckin} label="Save Check-In" />
         </div>}
@@ -1696,11 +1727,11 @@ function MarketPrep({ onBack }) {
           <Card style={{ marginBottom: 18 }}>
             <SectionLabel text="Value & Volume" color="#A855F7" />
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", marginBottom: 16, lineHeight: 1.6 }}>Confirm each profile has been reviewed and levels marked.</p>
-            <Checkbox label="Prior Day Profile reviewed" checked={prep.profilePriorDay} onChange={v => up("profilePriorDay", v)} />
-            <Checkbox label="Developing Day Profile noted" checked={prep.profileDevDay} onChange={v => up("profileDevDay", v)} />
-            <Checkbox label="Prior Week Profile reviewed" checked={prep.profilePriorWeek} onChange={v => up("profilePriorWeek", v)} />
-            <Checkbox label="Developing Week Profile noted" checked={prep.profileDevWeek} onChange={v => up("profileDevWeek", v)} />
-            <Checkbox label="Supply / Demand levels marked" checked={prep.sdLevels} onChange={v => up("sdLevels", v)} />
+            <Checkbox label="Prior Day Profile reviewed" checked={prep.profilePriorDay} onChange={v => up("profilePriorDay", v)} color="#2DD4BF" />
+            <Checkbox label="Developing Day Profile noted" checked={prep.profileDevDay} onChange={v => up("profileDevDay", v)} color="#2DD4BF" />
+            <Checkbox label="Prior Week Profile reviewed" checked={prep.profilePriorWeek} onChange={v => up("profilePriorWeek", v)} color="#2DD4BF" />
+            <Checkbox label="Developing Week Profile noted" checked={prep.profileDevWeek} onChange={v => up("profileDevWeek", v)} color="#2DD4BF" />
+            <Checkbox label="Supply / Demand levels marked" checked={prep.sdLevels} onChange={v => up("sdLevels", v)} color="#2DD4BF" />
             <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"16px 0" }} />
             <div style={{ marginBottom:6, fontFamily:"'JetBrains Mono', monospace", fontSize:10, letterSpacing:2, color:"rgba(255,255,255,0.3)", fontWeight:600 }}>AUCTION READ</div>
             <SelectField label="Where is price trying to go?" value={prep.auctionDirection} options={["Up","Down","Sideways"]} onChange={v => up("auctionDirection", v)} />
@@ -1824,14 +1855,20 @@ function MarketPrep({ onBack }) {
           {/* SYSTEM CHECKS */}
           <Card style={{ marginBottom: 18 }}>
             <SectionLabel text="System Checks" color="rgba(255,255,255,0.25)" />
-            <Checkbox label="Sim Deactivated" checked={prep.simDeactivated} onChange={v => up("simDeactivated", v)} />
-            <Checkbox label="Bracket Set" checked={prep.bracket} onChange={v => up("bracket", v)} />
-            <Checkbox label="MINI / Micro Selected" checked={prep.miniMicro} onChange={v => up("miniMicro", v)} />
-            <Checkbox label="Accounts Unlocked" checked={prep.accountsUnlocked} onChange={v => up("accountsUnlocked", v)} />
-            <Checkbox label="Lag Check" checked={prep.lagCheck} onChange={v => up("lagCheck", v)} />
+            <Checkbox label="Sim Deactivated" checked={prep.simDeactivated} onChange={v => up("simDeactivated", v)} color="#2DD4BF" />
+            <Checkbox label="Bracket Set" checked={prep.bracket} onChange={v => up("bracket", v)} color="#2DD4BF" />
+            <Checkbox label="MINI / Micro Selected" checked={prep.miniMicro} onChange={v => up("miniMicro", v)} color="#2DD4BF" />
+            <Checkbox label="Accounts Unlocked" checked={prep.accountsUnlocked} onChange={v => up("accountsUnlocked", v)} color="#2DD4BF" />
+            <Checkbox label="Lag Check" checked={prep.lagCheck} onChange={v => up("lagCheck", v)} color="#2DD4BF" />
           </Card>
 
-          <SaveButton saved={prepSaved} onClick={savePrep} label={`Save Prep (${instrument})`} />
+          <div style={{ marginTop: 8, marginBottom: 18, textAlign: "center" }}>
+            <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 2, color: "rgba(255,255,255,0.2)", fontWeight: 600, marginBottom: 12 }}>RADICAL PERSONAL RESPONSIBILITY</div>
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", lineHeight: 1.7, marginBottom: 20, maxWidth: 340, margin: "0 auto 20px" }}>My system works. My sole job is to follow it. My results are my responsibility. No excuses, no exceptions.</div>
+          </div>
+          <button onClick={savePrep} style={{ width: "100%", padding: 20, border: "none", borderRadius: 18, background: prepSaved ? "rgba(45,212,191,0.08)" : "linear-gradient(135deg, rgba(45,212,191,0.25), rgba(45,212,191,0.15))", color: prepSaved ? "rgba(45,212,191,0.5)" : "#2DD4BF", fontSize: 16, fontWeight: 700, cursor: prepSaved ? "default" : "pointer", fontFamily: "inherit", letterSpacing: 0.5, transition: "all 0.3s ease", border: prepSaved ? "1px solid rgba(45,212,191,0.15)" : "1px solid rgba(45,212,191,0.3)" }}>
+            {prepSaved ? `✓ Committed & Saved (${instrument})` : `I Commit to Radical Personal Responsibility`}
+          </button>
         </div>}
 
         {/* SESSION REVIEW TAB */}
@@ -1915,7 +1952,7 @@ function MarketPrep({ onBack }) {
           <Card style={{ marginBottom: 18 }}>
             <SectionLabel text="Rule Compliance" color="#4361EE" />
             {[["rulesTrend", "rulesTrendNote", "Traded with Trend / Tape"],
-              ["rulesMarketCond", "rulesMarketCondNote", "Traded inline with market condition (rotational vs imbalance)"],
+              ["rulesMarketCond", "rulesMarketCondNote", "Traded Inline with Market Condition (Rotational vs Imbalance)"],
               ["rulesTopBottom", "rulesTopBottomNote", "Avoided Picking Tops and Bottoms"],
               ["rulesPlays", "rulesPlaysNote", "Trades were from Pre Defined Plays"],
               ["rulesExecution", "rulesExecutionNote", "Execution Model Followed"],
@@ -2067,7 +2104,7 @@ function MentalGameFramework({ onBack }) {
 
   const maxS = Math.max(...ss); const sg = maxS>5?"RED":maxS>3?"AMBER":"GREEN";
   const go = {GREEN:0,AMBER:1,RED:2}; const fg = !wg ? sg : go[wg]>go[sg] ? wg : sg;
-  const gc = {GREEN:{c:"#10B981",g:"rgba(16,185,129,0.12)",l:"FULL SIZE",m:"All systems go. Execute CSTE plan.",i:"●"},AMBER:{c:"#F48C06",g:"rgba(244,140,6,0.12)",l:"HALF SIZE",m:"A+ setups only. Reduced size.",i:"◐"},RED:{c:"#E94560",g:"rgba(233,69,96,0.12)",l:"NO TRADE",m:"Walk away. Protect capital & progress.",i:"○"}};
+  const gc = {GREEN:{c:"#10B981",g:"rgba(16,185,129,0.12)",l:"FULL SIZE",m:"Ready to hunt. Patience is the edge.",i:"●"},AMBER:{c:"#F48C06",g:"rgba(244,140,6,0.12)",l:"HALF SIZE",m:"A+ setups only. Reduced size.",i:"◐"},RED:{c:"#E94560",g:"rgba(233,69,96,0.12)",l:"NO TRADE",m:"Walk away. Protect capital & progress.",i:"○"}};
   const fgc = gc[fg]; const dp = []; if(wg&&wg!=="GREEN") dp.push(`Whoop: ${wg}`); if(sg!=="GREEN") dp.push(`Schemas: ${sg}`);
 
   return (
