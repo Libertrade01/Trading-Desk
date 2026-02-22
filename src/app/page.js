@@ -1977,9 +1977,9 @@ function MarketPrep({ onBack }) {
           {/* POST-SESSION MENTAL CHECK */}
           <Card style={{ marginBottom: 18 }}>
             <SectionLabel text="Post-Session Mental Check" color="#A855F7" />
-            {[["postEmotional", "Emotional Regulation", "How well did you manage stress and tilt?"],
-              ["postDecision", "Decision Quality", "Were your decisions clear and process-driven?"],
-              ["postPhysical", "Physical State", "Energy level and nervous system regulation?"]].map(([key, label, desc]) => {
+            {[["postEmotional", "Emotional Regulation", "How early did I detect the chimp? Did I catch survival mode before it took over?"],
+              ["postDecision", "Decision Quality", "Were my decisions from strategy mode? Process-driven, not reactive?"],
+              ["postPhysical", "Physical State", "Did I stay regulated? Body calm, breathing steady, hands controlled?"]].map(([key, label, desc]) => {
               const v = review[key]; const color = v >= 4 ? "#10B981" : v >= 2 ? "#F48C06" : v > 0 ? "#E94560" : "rgba(255,255,255,0.15)";
               return <div key={key} style={{ marginBottom: 18 }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
@@ -2151,7 +2151,7 @@ function MentalGameFramework({ onBack }) {
 
   if (loading) return <div style={{ display:"flex", justifyContent:"center", alignItems:"center", height:"100vh", color:"rgba(255,255,255,0.3)" }}>Loading...</div>;
 
-  const tabs = [{id:"schemas",label:"Schemas",icon:"☰"},{id:"activation",label:"Live",icon:"⚡"},{id:"dll",label:"DLL",icon:"⊘"},{id:"history",label:"Log",icon:"◫"}];
+  const tabs = [{id:"schemas",label:"Schemas",icon:"☰"},{id:"regulate",label:"Regulate",icon:"🧠"},{id:"activation",label:"Live",icon:"⚡"},{id:"dll",label:"DLL",icon:"⊘"},{id:"history",label:"Log",icon:"◫"}];
 
   const maxS = Math.max(...ss); const sg = maxS>5?"RED":maxS>3?"AMBER":"GREEN";
   const go = {GREEN:0,AMBER:1,RED:2}; const fg = !wg ? sg : go[wg]>go[sg] ? wg : sg;
@@ -2204,6 +2204,79 @@ function MentalGameFramework({ onBack }) {
             <div style={{ padding:"20px 22px", display:"flex", alignItems:"center", justifyContent:"space-between" }}><div><div style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:12, fontWeight:700, letterSpacing:2, color:"rgba(255,255,255,0.6)" }}>MY NON-NEGOTIABLES</div>{!nn && <div style={{ fontSize:14, color:"rgba(255,255,255,0.3)", marginTop:4, fontWeight:500 }}>The truths that protect my dreams</div>}</div><div style={{ width:32, height:32, borderRadius:10, background:"rgba(255,255,255,0.05)", display:"flex", alignItems:"center", justifyContent:"center", transform:nn?"rotate(180deg)":"rotate(0deg)", transition:"transform 0.3s ease", color:"rgba(255,255,255,0.3)", fontSize:13 }}>▼</div></div>
             {nn && <div style={{ padding:"0 22px 22px", animation:"fadeIn 0.25s ease" }} onClick={e=>e.stopPropagation()}><div style={{ height:1, background:"rgba(255,255,255,0.06)", marginBottom:18 }} />{NON_NEGOTIABLES.map((r,i) => <div key={i} style={{ padding:"14px 0", borderBottom:i<5?"1px solid rgba(255,255,255,0.04)":"none", fontSize:16, color:"rgba(255,255,255,0.7)", lineHeight:1.6, fontWeight:500 }}>{r}</div>)}</div>}
           </div>
+        </div>}
+
+        {tab === "regulate" && <div style={{ animation: "fadeIn 0.3s ease" }}>
+
+          {/* SECTION 1: SURVIVAL MODE vs STRATEGY MODE */}
+          <div style={{ background: "linear-gradient(135deg, rgba(168,85,247,0.06), rgba(67,97,238,0.06))", borderRadius: 22, border: "1px solid rgba(168,85,247,0.12)", padding: "28px 24px", marginBottom: 24 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 4, color: "rgba(168,85,247,0.6)", fontWeight: 700, marginBottom: 16 }}>SURVIVAL MODE vs STRATEGY MODE</div>
+            <div style={{ fontSize: 19, fontWeight: 800, lineHeight: 1.5, color: "rgba(255,255,255,0.65)", marginBottom: 18 }}>This is a regulation problem, not a discipline problem.</div>
+            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, marginBottom: 16 }}>Your brain has two systems competing for control. The chimp (your limbic system) thinks in terms of survival: fight, flee, freeze. It is fast, emotional, and powerful. The human (your prefrontal cortex) thinks in terms of strategy: plans, context, long-term goals. It is slower, rational, and easily overridden.</div>
+            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, marginBottom: 16 }}>When stress rises past a threshold, the chimp takes over. Information bypasses your rational brain entirely. The amygdala activates before the prefrontal cortex has time to interpret context. This is biology, not weakness.</div>
+            <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+              <div style={{ flex: 1, background: "rgba(233,69,96,0.08)", borderRadius: 14, padding: "14px 16px", border: "1px solid rgba(233,69,96,0.15)" }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(233,69,96,0.6)", fontWeight: 600, marginBottom: 8 }}>SURVIVAL MODE</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>Stimulus → Chimp → Immediate reaction</div>
+              </div>
+              <div style={{ flex: 1, background: "rgba(45,212,191,0.08)", borderRadius: 14, padding: "14px 16px", border: "1px solid rgba(45,212,191,0.15)" }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(45,212,191,0.6)", fontWeight: 600, marginBottom: 8 }}>STRATEGY MODE</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>Stimulus → Human → Evaluation → Intentional response</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, marginBottom: 16 }}>The chimp is not your enemy. It is trying to protect you. But it cannot tell the difference between a pullback on an open trade and a genuine threat to your survival. To the chimp, they feel identical.</div>
+            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, marginBottom: 16 }}>And the shift does not reverse instantly. It takes minutes, not seconds, for the human brain to come back online. Until then, you are not equipped to override the response. You are inside it.</div>
+            <div style={{ fontSize: 15, color: "rgba(168,85,247,0.7)", lineHeight: 1.8, fontWeight: 600 }}>This is why you move to breakeven when your system says hold. This is why you revenge trade after a loss. This is why you unlock the DLL. You are not making a choice. You are escaping discomfort instead of tolerating it. The chimp is driving, and it only knows one thing: make the uncomfortable feeling stop.</div>
+          </div>
+
+          {/* SECTION 2: DETECTION IS THE SKILL */}
+          <Card style={{ marginBottom: 24 }}>
+            <SectionLabel text="Detection is the Skill" color="#A855F7" />
+            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, marginBottom: 16 }}>The difference between traders who maintain control and those who don't is not willpower. It is how early they detect that their internal state is changing.</div>
+            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, marginBottom: 16 }}>Your body signals the shift before your mind catches up:</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+              {["Heart rate rising", "Chest tightness", "Jaw clenching", "Restless hands", "Sudden urgency"].map(s => <div key={s} style={{ background: "rgba(168,85,247,0.08)", borderRadius: 10, padding: "8px 14px", fontSize: 13, color: "rgba(168,85,247,0.7)", fontWeight: 600, border: "1px solid rgba(168,85,247,0.12)" }}>{s}</div>)}
+            </div>
+            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, marginBottom: 16 }}>These are not distractions. These are your early warning system. The body sensation field in your activation log is the most important field you fill in, because detection creates choice.</div>
+            <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 14, padding: "18px 20px", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(255,255,255,0.3)", fontWeight: 600, marginBottom: 10 }}>SKILLED REGULATORS</div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.8 }}>Notice activation earlier. Re-anchor sooner. Recover faster. Over time they develop wider tolerances for discomfort, making them less likely to enter survival mode in the first place. This tolerance is trainable.</div>
+            </div>
+          </Card>
+
+          {/* SECTION 3: REGULATION TOOLKIT */}
+          <Card style={{ marginBottom: 24 }}>
+            <SectionLabel text="Your Regulation Toolkit" color="#2DD4BF" />
+            {[
+              { tag: "DETECT", title: "Interoception", color: "#A855F7", text: "Train yourself to notice your internal state in real time. Ask: \"What am I feeling in my body right now?\" This is what your pre-session visualization and daily mindfulness practice build. Every session of practice strengthens the insula, the part of the brain that answers \"what state am I in right now?\"" },
+              { tag: "REFRAME", title: "Cognitive Reappraisal", color: "#4361EE", text: "Once detected, relabel the signal. This is what your pattern interrupts are. \"This is not danger. This is uncertainty.\" \"This is not the crypto loss. This is a defined-risk trade.\" \"This is not urgency. This is discomfort, and I can tolerate discomfort.\" Reappraisal reduces amygdala activation and increases prefrontal regulation. But it only works if detection happens first. You cannot regulate what you do not detect." },
+              { tag: "PAUSE", title: "Deliberate Inhibition", color: "#2DD4BF", text: "When you feel the impulse, do not act for 30 seconds. Feel where it lives in your body. Box breathe: 4 in, 4 hold, 4 out, 4 hold. Two rounds. Those 32 seconds are not just calming you down. They are buying time for your prefrontal cortex to come back online. This is the biological purpose of your physical reset." }
+            ].map(item => (
+              <div key={item.tag} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: "18px 20px", marginBottom: 12, borderLeft: `3px solid ${item.color}` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 3, color: item.color, fontWeight: 700 }}>{item.tag}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>{item.title}</div>
+                </div>
+                <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.8 }}>{item.text}</div>
+              </div>
+            ))}
+          </Card>
+
+          {/* SECTION 4: THE SHIFT */}
+          <div style={{ background: "linear-gradient(135deg, rgba(233,69,96,0.06), rgba(45,212,191,0.06))", borderRadius: 22, border: "1px solid rgba(255,255,255,0.08)", padding: "24px 22px", marginBottom: 18, textAlign: "center" }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 4, color: "rgba(255,255,255,0.3)", fontWeight: 700, marginBottom: 18 }}>THE SHIFT</div>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: "rgba(233,69,96,0.5)", fontWeight: 600, marginBottom: 6 }}>WITHOUT DETECTION</div>
+              <div style={{ fontSize: 15, color: "rgba(233,69,96,0.7)", fontWeight: 600 }}>Activation → Reaction → Regret</div>
+            </div>
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: "rgba(45,212,191,0.5)", fontWeight: 600, marginBottom: 6 }}>WITH DETECTION</div>
+              <div style={{ fontSize: 15, color: "rgba(45,212,191,0.7)", fontWeight: 600 }}>Activation → Awareness → Regulation → Intentional action</div>
+            </div>
+            <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "0 20px 18px" }} />
+            <div style={{ fontSize: 16, fontStyle: "italic", color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>The ones who remain in control are not the ones who never activate. They are the ones who notice first.</div>
+          </div>
+
         </div>}
 
         {tab === "activation" && <div style={{ animation:"fadeIn 0.3s ease" }}>
