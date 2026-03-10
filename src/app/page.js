@@ -668,7 +668,7 @@ function WeeklyReview({ onBack }) {
   const tradedPlays = allPlays.filter(p => p.traded === "Yes");
 
   // Rule compliance
-  const ruleKeys = [["rulesTrend","Traded with Trend / Tape"],["rulesMarketCond","Traded Inline with Market Condition"],["rulesTopBottom","Avoided Picking Tops and Bottoms"],["rulesPlays","Trades from Pre Defined Plays"],["rulesExecution","Execution Model Followed"],["rulesFocus","Stayed Focused and Avoided Distraction"],["rulesConsol","Avoided Entering During Consolidation"],["rulesDLL","DLL Respected"]];
+  const ruleKeys = [["rulesTrend","Traded with Trend / Tape"],["rulesMarketCond","Traded Inline with Market Condition"],["rulesTopBottom","Avoided Picking Tops and Bottoms"],["rulesPlays","Trades from Pre Defined Plays"],["rulesExecution","Execution Model Followed"],["rulesFocus","Stayed Focused and Avoided Distraction"],["rulesConsol","Avoided Entering During Consolidation"],["rulesCooloff","20 Min Cool-off After 3 Stop Outs"],["rulesDLL","DLL Respected"]];
   const ruleSummary = ruleKeys.map(([key, label]) => {
     let followed = 0, broke = 0, na = 0;
     data.days.forEach(d => {
@@ -1390,8 +1390,8 @@ function MarketPrep({ onBack }) {
     bull2Result: "", bull2Traded: "", bull2WhyNot: "",
     bear1Result: "", bear1Traded: "", bear1WhyNot: "",
     bear2Result: "", bear2Traded: "", bear2WhyNot: "",
-    rulesTrend: "", rulesMarketCond: "", rulesTopBottom: "", rulesPlays: "", rulesExecution: "", rulesFocus: "", rulesConsol: "", rulesDLL: "",
-    rulesTrendNote: "", rulesMarketCondNote: "", rulesTopBottomNote: "", rulesPlaysNote: "", rulesExecutionNote: "", rulesFocusNote: "", rulesConsolNote: "", rulesDLLNote: "",
+    rulesTrend: "", rulesMarketCond: "", rulesTopBottom: "", rulesPlays: "", rulesExecution: "", rulesFocus: "", rulesConsol: "", rulesDLL: "", rulesCooloff: "",
+    rulesTrendNote: "", rulesMarketCondNote: "", rulesTopBottomNote: "", rulesPlaysNote: "", rulesExecutionNote: "", rulesFocusNote: "", rulesConsolNote: "", rulesDLLNote: "", rulesCooloffNote: "",
     postEmotional: 0, postDecision: 0, postPhysical: 0,
     biggestLesson: "", tomorrowWill: "",
   });
@@ -1490,7 +1490,7 @@ function MarketPrep({ onBack }) {
   const loadReviewForInstrument = async (inst) => {
     const rv = await loadData(`review-${todayKey()}-${inst}`, null);
     if (rv) { setReview(rv); setReviewSaved(true); }
-    else { setReview({ focusRating:0, bull1Result:"", bull1Traded:"", bull1WhyNot:"", bull2Result:"", bull2Traded:"", bull2WhyNot:"", bear1Result:"", bear1Traded:"", bear1WhyNot:"", bear2Result:"", bear2Traded:"", bear2WhyNot:"", rulesTrend:"", rulesMarketCond:"", rulesTopBottom:"", rulesPlays:"", rulesExecution:"", rulesFocus:"", rulesConsol:"", rulesDLL:"", rulesTrendNote:"", rulesMarketCondNote:"", rulesTopBottomNote:"", rulesPlaysNote:"", rulesExecutionNote:"", rulesFocusNote:"", rulesConsolNote:"", rulesDLLNote:"", postEmotional:0, postDecision:0, postPhysical:0, biggestLesson:"", tomorrowWill:"" }); setReviewSaved(false); }
+    else { setReview({ focusRating:0, bull1Result:"", bull1Traded:"", bull1WhyNot:"", bull2Result:"", bull2Traded:"", bull2WhyNot:"", bear1Result:"", bear1Traded:"", bear1WhyNot:"", bear2Result:"", bear2Traded:"", bear2WhyNot:"", rulesTrend:"", rulesMarketCond:"", rulesTopBottom:"", rulesPlays:"", rulesExecution:"", rulesFocus:"", rulesConsol:"", rulesDLL:"", rulesCooloff:"", rulesTrendNote:"", rulesMarketCondNote:"", rulesTopBottomNote:"", rulesPlaysNote:"", rulesExecutionNote:"", rulesFocusNote:"", rulesConsolNote:"", rulesDLLNote:"", rulesCooloffNote:"", postEmotional:0, postDecision:0, postPhysical:0, biggestLesson:"", tomorrowWill:"" }); setReviewSaved(false); }
     const rp = await loadData(prepKey(inst, todayKey()), null);
     if (rp) setReviewPrepData(rp);
   };
@@ -2008,6 +2008,7 @@ function MarketPrep({ onBack }) {
               ["rulesExecution", "rulesExecutionNote", "Execution Model Followed"],
               ["rulesFocus", "rulesFocusNote", "Stayed Focused and Avoided Distraction"],
               ["rulesConsol", "rulesConsolNote", "Avoided Entering During Consolidation"],
+              ["rulesCooloff", "rulesCooloffNote", "20 Min Cool-off After 3 Stop Outs"],
               ["rulesDLL", "rulesDLLNote", "DLL Respected"]].map(([key, noteKey, label]) => (
               <div key={key} style={{ marginBottom: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
