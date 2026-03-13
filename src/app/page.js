@@ -996,7 +996,7 @@ function Playbook({ onBack }) {
           <SectionBlock title="Defined By">
             <RuleCard text="Stuck or offside participants, seen through DELTA by price. Where are traders trapped on the wrong side? Their stops and capitulation fuel your move." />
             <div style={{ textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.2)", fontFamily: "'JetBrains Mono', monospace", margin: "4px 0", letterSpacing: 2 }}>AND / OR</div>
-            <RuleCard text="Lack of interest, seen through a TAPER in volume. Where did participants stop engaging? This vacuum becomes the wall your trade leans against." />
+            <RuleCard text="Lack of interest, seen through a taper in volume or an LVN. Where did participants stop engaging? This vacuum becomes the wall your trade leans against." />
           </SectionBlock>
 
           <StandDownCard text="If you cannot identify a clear Risk Zone at your level, there is no trade. Move on." />
