@@ -1067,9 +1067,6 @@ function Playbook({ onBack }) {
                 <RuleCard text="EMAs are continuously traded through and oscillate in the middle of the range. In these conditions they should be discarded entirely and not used for trade decisions." />
                 <RuleCard text="VWAP remains flat throughout the session. Expect a lot of two-way trade with a lack of sustained imbalances." />
                 <StandDownCard text="Price is likely to be choppy. Execute at the edges, be patient. Avoid forcing trades expecting big moves — choppy markets punish overtrading." />
-                <div style={{ padding: "12px 16px", background: "rgba(45,212,191,0.06)", borderRadius: 12, border: "1px solid rgba(45,212,191,0.15)", fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "'JetBrains Mono', monospace", letterSpacing: 0.3, lineHeight: 1.7, marginTop: 4 }}>
-                  TP mid-range · Runners to opposite side
-                </div>
               </div>
             )
           },
