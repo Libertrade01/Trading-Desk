@@ -1052,110 +1052,107 @@ function Playbook({ onBack }) {
 
       {/* CONDITIONS TAB */}
       {tab === "conditions" && <div style={{ animation: "fadeIn 0.3s ease" }}>
-
-        {/* BALANCE / ROTATIONAL */}
         {[
           {
             id: "balance",
-            label: "BALANCE / ROTATIONAL",
-            icon: "⇌",
-            color: "rgba(45,212,191,0.6)",
-            borderColor: "rgba(45,212,191,0.2)",
-            bgColor: "rgba(45,212,191,0.04)",
-            content: (
-              <div>
-                <RuleCard text="A D-shape profile. An indecisive market with no buyers at the highs and no sellers at the lows. Prices below VAL are too cheap to sell, prices above VAH are too expensive to buy." />
-                <RuleCard text="EMAs are continuously traded through and oscillate in the middle of the range. In these conditions they should be discarded entirely and not used for trade decisions." />
-                <RuleCard text="VWAP remains flat throughout the session. Expect a lot of two-way trade with a lack of sustained imbalances." />
-                <StandDownCard text="Price is likely to be choppy. Execute at the edges, be patient. Avoid forcing trades expecting big moves — choppy markets punish overtrading." />
-              </div>
-            )
+            number: "01",
+            label: "Balance / Rotational",
+            teaser: "A D-shape profile. An indecisive market with no buyers at the highs and no sellers at the lows.",
+            paragraphs: [
+              "A D-shape profile. An indecisive market with no buyers at the highs and no sellers at the lows. Prices below VAL are too cheap to sell, prices above VAH are too expensive to buy.",
+              "EMAs are continuously traded through and oscillate in the middle of the range. In these conditions they should be discarded entirely and not used for trade decisions.",
+              "VWAP remains flat throughout the session. Expect a lot of two-way trade with a lack of sustained imbalances.",
+            ],
+            warning: "Price is likely to be choppy. Execute at the edges, be patient. Avoid forcing trades expecting big moves. Choppy markets punish overtrading."
           },
           {
             id: "grind",
-            label: "GRIND / TREND UP",
-            icon: "↗",
-            color: "rgba(16,185,129,0.7)",
-            borderColor: "rgba(16,185,129,0.2)",
-            bgColor: "rgba(16,185,129,0.04)",
-            content: (
-              <div>
-                <RuleCard text="Strong imbalance from the open which holds. 24VWAP slopes upwards with price consistently above it. The 9/20 EMAs slope up and act as dynamic support, price holds above both and fails to auction below them." />
-                <RuleCard text="The market pushes and builds volume to the upside with every move, signalling buyers continue to be rewarded. This tells you shorts are off the table." />
-                <RuleCard text="Pullbacks are likely to be shallow. Even though it feels like you are buying high in the moment, buyers tend to be rewarded. When entering at the 9EMA, hold and ride the trend until price breaks it." />
-                <StandDownCard text="Do not attempt to pick a high or force a short. This is a recipe for DLL. Be patient and frame longs until there is a clear break in volume structure leaving buyers offside." />
-              </div>
-            )
+            number: "02",
+            label: "Grind / Trend Up",
+            teaser: "Strong imbalance from the open which holds. 24VWAP slopes upwards with price consistently above it.",
+            paragraphs: [
+              "Strong imbalance from the open which holds. 24VWAP slopes upwards with price consistently above it. The 9/20 EMAs slope up and act as dynamic support, price holds above both and fails to auction below them.",
+              "The market pushes and builds volume to the upside with every move, signalling buyers continue to be rewarded. This tells you shorts are off the table.",
+              "Pullbacks are likely to be shallow. Even though it feels like you are buying high in the moment, buyers tend to be rewarded. When entering at the 9EMA, hold and ride the trend until price breaks it.",
+            ],
+            warning: "Do not attempt to pick a high or force a short. This is a recipe for DLL. Be patient and frame longs until there is a clear break in volume structure leaving buyers offside."
           },
           {
             id: "liquidation",
-            label: "LIQUIDATION / SELL OFF",
-            icon: "↘",
-            color: "rgba(233,69,96,0.7)",
-            borderColor: "rgba(233,69,96,0.2)",
-            bgColor: "rgba(233,69,96,0.04)",
-            content: (
-              <div>
-                <RuleCard text="Unlike grind up days which are slow with shallow pullbacks, liquidations are fast-moving with violent whips and bounces. The bounces can be strong enough to mistakenly flip your bullish bias before the market shows any real change in structure. Every small counter-trend bounce is not the start of a new trend." />
-                <RuleCard text="The market continually sequences lower highs and lower lows, running into resistance at the 9/20 EMAs. Every bid ends up unrewarded and underwater, with volume continuing to build to the downside. The best way to interact with this market is to patiently wait for a reoffer opportunity at the EMAs." />
-                <RuleCard text="Shorting is inherently difficult. Be conservative and prepared to lock profits early. Strong bounces can quickly squeeze out shorts and vaporise uPnL." />
-                <div style={{ padding: "14px 18px", marginBottom: 8, marginTop: 8, background: "rgba(233,69,96,0.06)", borderRadius: 14, border: "1px solid rgba(233,69,96,0.15)" }}>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 2, color: "rgba(233,69,96,0.6)", fontWeight: 600, marginBottom: 8 }}>SHORT COVERING IS NOT NEW BUY INTEREST</div>
-                  <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.8 }}>After strong selling activity, the swift rally characteristic of short covering can be easily misinterpreted as aggressive other timeframe buying. If the rally is truly caused by short covering and not new buying interest, the market will often resume its prior course once the selling imbalance is neutralised. This generates a market-created opportunity to sell, but only when identified correctly.</div>
-                </div>
-                <StandDownCard text="Picking bottoms is the fastest way to hit DLL." />
-              </div>
-            )
+            number: "03",
+            label: "Liquidation / Sell Off",
+            teaser: "Fast-moving with violent whips and bounces. Every small counter-trend bounce is not the start of a new trend.",
+            paragraphs: [
+              "Unlike grind up days which are slow with shallow pullbacks, liquidations are fast-moving with violent whips and bounces. The bounces can be strong enough to mistakenly flip your bullish bias before the market shows any real change in structure. Every small counter-trend bounce is not the start of a new trend.",
+              "The market continually sequences lower highs and lower lows, running into resistance at the 9/20 EMAs. Every bid ends up unrewarded and underwater, with volume continuing to build to the downside. The best way to interact with this market is to patiently wait for a reoffer opportunity at the EMAs.",
+              "Shorting is inherently difficult. Be conservative and prepared to lock profits early. Strong bounces can quickly squeeze out shorts and vaporise uPnL.",
+            ],
+            callout: {
+              label: "SHORT COVERING IS NOT NEW BUY INTEREST",
+              text: "After strong selling activity, the swift rally characteristic of short covering can be easily misinterpreted as aggressive other timeframe buying. If the rally is truly caused by short covering and not new buying interest, the market will often resume its prior course once the selling imbalance is neutralised. This generates a market-created opportunity to sell, but only when identified correctly."
+            },
+            warning: "Picking bottoms is the fastest way to hit DLL."
           },
           {
             id: "objective",
-            label: "REMAIN OBJECTIVE",
-            icon: "◎",
-            color: "rgba(255,255,255,0.3)",
-            borderColor: "rgba(255,255,255,0.1)",
-            bgColor: "rgba(255,255,255,0.02)",
-            content: (
-              <div>
-                <RuleCard text="The market does not lie. Take the way it is behaving for what it is and do not impose your own opinion or bias onto your decisions." />
-                <StandDownCard text="Continually shorting a grind up day, trying to pick a bottom in a liquidation, or repeatedly engaging in a consolidation knife fight will lead to hitting DLL and draining all mental capital." />
-              </div>
-            )
+            number: "04",
+            label: "Remain Objective",
+            teaser: "The market does not lie. Take the way it is behaving for what it is.",
+            paragraphs: [
+              "The market does not lie. Take the way it is behaving for what it is and do not impose your own opinion or bias onto your decisions.",
+            ],
+            warning: "Continually shorting a grind up day, trying to pick a bottom in a liquidation, or repeatedly engaging in a consolidation knife fight will lead to hitting DLL and draining all mental capital."
           },
           {
             id: "dalton",
-            label: "TRENDING VS ROTATIONAL — DALTON",
-            icon: "◈",
-            color: "rgba(67,97,238,0.7)",
-            borderColor: "rgba(67,97,238,0.2)",
-            bgColor: "rgba(67,97,238,0.04)",
-            content: (
-              <div>
-                <SectionBlock title="Trending Markets">
-                  <RuleCard text="The key to capitalising on a trend lies in determining whether the trend is continuing, that is whether the divergence of price is being accepted or rejected. A good indication of trend continuation is observing value area placement. If a series of value areas is moving in a clear direction through time, new price levels are being accepted and the trend is finding acceptance. If value areas begin to overlap or move in the opposite direction, the trend is likely slowing and beginning to balance." />
-                  <RuleCard text="As price auctions higher, the trend draws in participants from many different timeframes until virtually everyone is a buyer. The upward trend ends because there are simply no more buyers, and the responsive seller enters and auctions price downward, beginning the bracketing process." />
-                </SectionBlock>
-                <SectionBlock title="Rotational Markets">
-                  <RuleCard text="A trend typically ends in a balanced area. Markets do not trend up then turn on a dime and begin trending down. An upward trend auctions higher, balances, then either continues or begins to auction downward. In a bracket, both the other timeframe buyer and seller become responsive parties. As price nears the top of the bracket, the seller responds and rotates price downward. The responsive buyer then enters and rotates price back up." />
-                  <RuleCard text="This bracketing process signals the market is in balance and waiting for more information. When price is accepted above or below a known bracket extreme, the market may be coming out of balance. Monitoring such a breakout for continuation and acceptance alerts the observant trader to the beginning of a new trend." />
-                </SectionBlock>
-              </div>
-            )
+            number: "05",
+            label: "Trending vs Rotational — Dalton",
+            teaser: "The key to capitalising on a trend lies in determining whether the divergence of price is being accepted or rejected.",
+            paragraphs: [
+              "The key to capitalising on a trend lies in determining whether the trend is continuing, that is whether the divergence of price is being accepted or rejected. A good indication of trend continuation is observing value area placement. If a series of value areas is moving in a clear direction through time, new price levels are being accepted and the trend is finding acceptance. If value areas begin to overlap or move in the opposite direction, the trend is likely slowing and beginning to balance.",
+              "As price auctions higher, the trend draws in participants from many different timeframes until virtually everyone is a buyer. The upward trend ends because there are simply no more buyers, and the responsive seller enters and auctions price downward, beginning the bracketing process.",
+              "A trend typically ends in a balanced area. Markets do not trend up then turn on a dime and begin trending down. An upward trend auctions higher, balances, then either continues or begins to auction downward. In a bracket, both the other timeframe buyer and seller become responsive parties. As price nears the top of the bracket, the seller responds and rotates price downward. The responsive buyer then enters and rotates price back up.",
+              "This bracketing process signals the market is in balance and waiting for more information. When price is accepted above or below a known bracket extreme, the market may be coming out of balance. Monitoring such a breakout for continuation and acceptance alerts the observant trader to the beginning of a new trend.",
+            ]
           }
         ].map(section => (
           <div key={section.id} style={{ marginBottom: 10 }}>
             <div
               onClick={() => setConditionExpanded(conditionExpanded === section.id ? null : section.id)}
-              style={{ padding: "16px 18px", borderRadius: conditionExpanded === section.id ? "14px 14px 0 0" : 14, background: conditionExpanded === section.id ? section.bgColor : "rgba(255,255,255,0.03)", border: `1px solid ${conditionExpanded === section.id ? section.borderColor : "rgba(255,255,255,0.06)"}`, borderBottom: conditionExpanded === section.id ? "none" : undefined, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", transition: "all 0.2s" }}
+              style={{
+                padding: "16px 18px",
+                borderRadius: conditionExpanded === section.id ? "14px 14px 0 0" : 14,
+                background: conditionExpanded === section.id ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.03)",
+                border: `1px solid ${conditionExpanded === section.id ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.06)"}`,
+                borderBottom: conditionExpanded === section.id ? "none" : undefined,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                transition: "all 0.2s"
+              }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ fontSize: 16, color: section.color }}>{section.icon}</span>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: 1.5, color: conditionExpanded === section.id ? section.color : "rgba(255,255,255,0.4)" }}>{section.label}</span>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.15)", flexShrink: 0 }}>{section.number}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: 1, color: conditionExpanded === section.id ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.4)", marginBottom: conditionExpanded !== section.id ? 4 : 0 }}>{section.label}</div>
+                {conditionExpanded !== section.id && <div style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", lineHeight: 1.6 }}>{section.teaser}</div>}
               </div>
-              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", transition: "transform 0.2s", display: "inline-block", transform: conditionExpanded === section.id ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", transition: "transform 0.2s", display: "inline-block", transform: conditionExpanded === section.id ? "rotate(180deg)" : "rotate(0deg)", flexShrink: 0 }}>▾</span>
             </div>
             {conditionExpanded === section.id && (
-              <div style={{ padding: "16px 18px 18px", background: section.bgColor, border: `1px solid ${section.borderColor}`, borderTop: "none", borderRadius: "0 0 14px 14px" }}>
-                {section.content}
+              <div style={{ padding: "18px 18px 20px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderTop: "none", borderRadius: "0 0 14px 14px" }}>
+                {section.paragraphs.map((para, i) => (
+                  <div key={i} style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.9, marginBottom: 14 }}>{para}</div>
+                ))}
+                {section.callout && (
+                  <div style={{ padding: "14px 16px", marginBottom: 14, background: "rgba(233,69,96,0.05)", borderRadius: 12, border: "1px solid rgba(233,69,96,0.15)" }}>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(233,69,96,0.5)", fontWeight: 700, marginBottom: 8 }}>{section.callout.label}</div>
+                    <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.8 }}>{section.callout.text}</div>
+                  </div>
+                )}
+                {section.warning && (
+                  <div style={{ padding: "12px 16px", background: "rgba(233,69,96,0.04)", borderRadius: 12, borderLeft: "2px solid rgba(233,69,96,0.3)", fontSize: 14, color: "rgba(233,69,96,0.6)", lineHeight: 1.8 }}>{section.warning}</div>
+                )}
               </div>
             )}
           </div>
