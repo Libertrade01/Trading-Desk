@@ -52,7 +52,6 @@ const SCHEMAS = {
 };
 
 const CHECKIN_QUESTIONS = [
-  { q: "Anxiety about losing money today?", schema: "ABANDON" }, { q: "Need to 'prove' something today?", schema: "DEFECT" },
   { q: "Fixated on making today 'perfect'?", schema: "STANDARD" }, { q: "Something personal activating me?", schema: "ALL" },
   { q: "Trading to recover yesterday?", schema: "DEFECT" },
 ];
@@ -1569,8 +1568,10 @@ function MarketPrep({ onBack }) {
     bear1: "", bear1Invalid: "", bear2: "", bear2Invalid: "",
     sessionFocus: "",
     simDeactivated: false, bracket: false, miniMicro: false, accountsUnlocked: false, lagCheck: false,
+    accountHealth: 0,
   });
   const [prepSaved, setPrepSaved] = useState(false);
+  const [regimesExpanded, setRegimesExpanded] = useState(false);
   const [prevAdrs, setPrevAdrs] = useState([]);
   const [prevFocus, setPrevFocus] = useState("");
   const [prevLessons, setPrevLessons] = useState(null);
@@ -1625,7 +1626,7 @@ function MarketPrep({ onBack }) {
         bull1:"", bull1Invalid:"", bull2:"", bull2Invalid:"",
         bear1:"", bear1Invalid:"", bear2:"", bear2Invalid:"",
         sessionFocus:"",
-        simDeactivated:false, bracket:false, miniMicro:false, accountsUnlocked:false, lagCheck:false });
+        simDeactivated:false, bracket:false, miniMicro:false, accountsUnlocked:false, lagCheck:false, accountHealth:0 });
       setPrepSaved(false);
     }
 
@@ -1931,7 +1932,14 @@ function MarketPrep({ onBack }) {
             {rvolR && <div style={{ background:rvolR.bg, borderRadius:12, padding:"12px 16px", marginBottom:10, display:"flex", alignItems:"center", justifyContent:"space-between", border:`1px solid ${rvolR.border}` }}>
               <div><span style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:11, fontWeight:700, color:rvolR.color, letterSpacing:1.5 }}>RVOL: {rvolR.label}</span><span style={{ fontSize:13, color:"rgba(255,255,255,0.35)", marginLeft:12 }}>{rvolR.desc}</span></div>
             </div>}
-            <div style={{ background:"rgba(255,255,255,0.03)", borderRadius:12, padding:14, fontSize:11, color:"rgba(255,255,255,0.2)", lineHeight:1.9, fontFamily:"'JetBrains Mono', monospace" }}>
+            <div
+              onClick={() => setRegimesExpanded(r => !r)}
+              style={{ display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer", padding:"10px 14px", borderRadius:10, background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", marginTop:4 }}
+            >
+              <span style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:10, fontWeight:700, letterSpacing:2, color:"rgba(255,255,255,0.25)" }}>VIEW REGIMES</span>
+              <span style={{ fontSize:11, color:"rgba(255,255,255,0.2)", display:"inline-block", transition:"transform 0.2s", transform: regimesExpanded ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
+            </div>
+            {regimesExpanded && <div style={{ background:"rgba(255,255,255,0.03)", borderRadius:12, padding:14, fontSize:11, color:"rgba(255,255,255,0.2)", lineHeight:1.9, fontFamily:"'JetBrains Mono', monospace", marginTop:6 }}>
               <div style={{ marginBottom:4, fontWeight:600, color:"rgba(255,255,255,0.3)", letterSpacing:1 }}>VIX REGIMES</div>
               <div><span style={{color:"#38BDF8"}}>●</span> &lt;14 Ultra Low · compressed, watch for expansion</div>
               <div><span style={{color:"#10B981"}}>●</span> 14–20 Normal · standard conditions</div>
@@ -1943,7 +1951,27 @@ function MarketPrep({ onBack }) {
               <div><span style={{color:"#10B981"}}>●</span> 85–120 Active · run your playbook</div>
               <div><span style={{color:"#E94560"}}>●</span> &gt;120 Hot · A-setups only, adjust size</div>
               <div style={{ marginTop:10, paddingTop:8, borderTop:"1px solid rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.25)", fontStyle:"italic", fontFamily:"inherit" }}>The market does not need high RVOL to grind all day. Low RVOL can still trend.</div>
+            </div>}
+          </Card>
+
+          {/* ACCOUNT HEALTH */}
+          <Card style={{ marginBottom: 18 }}>
+            <SectionLabel text="Account Health" color="rgba(255,255,255,0.25)" />
+            <p style={{ fontSize:13, color:"rgba(255,255,255,0.25)", marginBottom:16, lineHeight:1.6 }}>Current account state. Helps frame position sizing for the session.</p>
+            <div style={{ display:"flex", gap:8, marginBottom:14 }}>
+              {[1,2,3,4,5].map(n => {
+                const selected = prep.accountHealth === n;
+                const color = n <= 2 ? "#E94560" : n === 3 ? "#F48C06" : "#10B981";
+                return (
+                  <button key={n} onClick={() => { up("accountHealth", selected ? 0 : n); }} style={{ flex:1, padding:"14px 0", borderRadius:12, cursor:"pointer", fontFamily:"'JetBrains Mono', monospace", fontSize:18, fontWeight:700, transition:"all 0.15s", background: selected ? `${color}22` : "rgba(255,255,255,0.03)", border: selected ? `1px solid ${color}66` : "1px solid rgba(255,255,255,0.07)", color: selected ? color : "rgba(255,255,255,0.2)" }}>{n}</button>
+                );
+              })}
             </div>
+            {prep.accountHealth > 0 && <div style={{ padding:"10px 14px", borderRadius:10, background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", fontSize:13, color:"rgba(255,255,255,0.4)", lineHeight:1.7 }}>
+              {prep.accountHealth <= 2 && "In drawdown. Reduce size, protect capital."}
+              {prep.accountHealth === 3 && "Neutral. Trade standard size."}
+              {prep.accountHealth >= 4 && "Healthy. Full size available."}
+            </div>}
           </Card>
 
           {/* HTF CONTEXT - SPLIT INTO TREND + PRICE ACTION */}
