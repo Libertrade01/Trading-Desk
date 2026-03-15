@@ -922,6 +922,7 @@ function WeeklyReview({ onBack }) {
 function Playbook({ onBack }) {
   const [tab, setTab] = useState("conditions");
   const [conditionExpanded, setConditionExpanded] = useState(null);
+  const [setupExpanded, setSetupExpanded] = useState(null);
   const tabs = [{id:"conditions",label:"Conditions",icon:"◑"},{id:"setups",label:"Setups",icon:"◎"},{id:"execution",label:"Execution",icon:"⊕"},{id:"risk",label:"Risk Mgmt",icon:"◈"}];
 
   const SectionBlock = ({ title, children }) => (
@@ -1161,13 +1162,85 @@ function Playbook({ onBack }) {
         ))}
       </div>}
 
-      {/* SETUPS TAB - PLACEHOLDER */}
+      {/* SETUPS TAB */}
       {tab === "setups" && <div style={{ animation: "fadeIn 0.3s ease" }}>
-        <Card style={{ textAlign: "center", padding: 52 }}>
-          <div style={{ fontSize: 40, marginBottom: 14, opacity: 0.3 }}>◎</div>
-          <div style={{ color: "rgba(255,255,255,0.25)", fontSize: 16 }}>Setups: coming soon.</div>
-          <div style={{ color: "rgba(255,255,255,0.15)", fontSize: 13, marginTop: 8 }}>Entry models, patterns and conditions.</div>
-        </Card>
+
+        {[
+          {
+            id: "hve",
+            number: "01",
+            label: "High Volume Edge (HVE) Fade",
+            teaser: "Price comes into the edge of a high volume node where the market is providing significant liquidity.",
+            content: "Price comes into the edge of a high volume node where the market is providing significant liquidity and is willing to refresh it repeatedly. If there is more liquidity than there is interest in doing business beyond this level, price reverses. The HVE acts as the wall your trade leans against.\n\nThe key is patience. One instance of responsive activity is not enough. It can simply be a single large order. You need to see the liquidity refresh repeatedly in the same area before interacting. Look for refreshing bids or offers on the DOM, a tight cluster of volume candles, and high concentration of volume and delta at price.\n\nThe reversal itself requires two things to align. First, absorption, the repeated refreshing of liquidity at the edge. Second, a change in initiative activity away from the area. When positioning becomes offside at the HVE and initiative activity shifts direction, that combination is what drives the acceleration and reversal.\n\nThe more volume that was absorbed, the stronger the expected reversal."
+          },
+          {
+            id: "pullback",
+            number: "02",
+            label: "Imbalance Pullback (Rebid / Reoffer)",
+            teaser: "When the market shows clear directional movement, look to join the move on a pullback rather than chasing it.",
+            content: "When the market shows clear directional movement, look to join the move on a pullback rather than chasing it. A rebid is when price returns to an area of prior aggressive buy activity and finds the buyers again. A reoffer is when price returns to an area of prior aggressive sell activity and finds the sellers again.\n\nFirst identify the aggressive one-way activity. You are looking for widening candles, acceleration in price velocity, increased volume and an increasing delta gradient. Once that activity is identified, the question becomes how far price is likely to pull back before those players step back in.\n\nThere is an inverse relationship between the strength of the initial move and the depth of the pullback. Large violent moves tend to have shallow pullbacks as aggressive participants follow through quickly. Shorter, less violent moves tend to pull back deeper, reflecting more two-way activity filling out volume before the move continues.\n\nOnce you have identified your area, observe for responsive activity stepping back in and manage risk against it. Primary areas to engage are LVNs and the 9EMA."
+          },
+          {
+            id: "peakfail",
+            number: "03",
+            label: "Peak & Fail",
+            teaser: "Price probes beyond a key level, triggering stops and attracting breakout participants, but fails to find acceptance.",
+            content: "Price probes beyond a key level, triggering stops and attracting breakout participants, but fails to find acceptance and snaps back through. The probe hunts liquidity. Once those stops are collected there is no more fuel in that direction and the market reverses sharply as trapped participants are forced to cover.\n\nThe quality of the setup lies in the probe itself. A brief, sharp move with no acceptance below the level signals sellers had no real conviction. The longer price spends beyond the level the weaker the setup becomes.\n\nApplicable at HVN edges, Initial Balance High/Low and consolidation box boundaries."
+          },
+          {
+            id: "breaktretest",
+            number: "04",
+            label: "Break & Retest",
+            teaser: "Price breaks out of a balance area or range and returns to test that level.",
+            content: "Price breaks out of a balance area or range, prior day, overnight range, or any established boundary, and returns to test that level. The boundary flips from resistance to support or vice versa, the retest confirms acceptance and price continues in the direction of the break.\n\nAlternatively, price returns to a previous range, finds acceptance and is accepted back inside. The range reasserts itself and price is likely to traverse to the opposite side.\n\nThe retest is the key moment in both scenarios. It is where acceptance or rejection is confirmed."
+          },
+          {
+            id: "vwap",
+            number: "05",
+            label: "VWAP Retest",
+            teaser: "Once price auctions away from VWAP with conviction, the first retest during RTH is the highest probability opportunity.",
+            content: "Once price auctions away from VWAP with conviction, the first retest during RTH in imbalance conditions is the highest probability opportunity. VWAP is a key institutional benchmark level with significant algorithmic activity, creating natural engagement on the retest. In a trend up, buyers defend VWAP and the trend holds. In a liquidation, sellers step in on the first rally back and price resumes its move."
+          }
+        ].map(setup => (
+          <div key={setup.id} style={{ marginBottom: 10 }}>
+            <div
+              onClick={() => setSetupExpanded(setupExpanded === setup.id ? null : setup.id)}
+              style={{
+                padding: "16px 18px",
+                borderRadius: setupExpanded === setup.id ? "14px 14px 0 0" : 14,
+                background: setupExpanded === setup.id ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.03)",
+                border: `1px solid ${setupExpanded === setup.id ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.06)"}`,
+                borderBottom: setupExpanded === setup.id ? "none" : undefined,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                transition: "all 0.2s"
+              }}
+            >
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.15)", flexShrink: 0 }}>{setup.number}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: 1, color: setupExpanded === setup.id ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.4)", marginBottom: 4 }}>{setup.label}</div>
+                {setupExpanded !== setup.id && <div style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", lineHeight: 1.6 }}>{setup.teaser}</div>}
+              </div>
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", transition: "transform 0.2s", display: "inline-block", transform: setupExpanded === setup.id ? "rotate(180deg)" : "rotate(0deg)", flexShrink: 0 }}>▾</span>
+            </div>
+            {setupExpanded === setup.id && (
+              <div style={{ padding: "18px 18px 20px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderTop: "none", borderRadius: "0 0 14px 14px" }}>
+                {setup.content.split("\n\n").map((para, i) => (
+                  <div key={i} style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.9, marginBottom: i < setup.content.split("\n\n").length - 1 ? 14 : 0 }}>{para}</div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* CONTEXT IS KING */}
+        <div style={{ marginTop: 8, padding: "16px 18px", background: "rgba(45,212,191,0.04)", borderRadius: 14, border: "1px solid rgba(45,212,191,0.12)" }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: 2, color: "rgba(45,212,191,0.5)", marginBottom: 8 }}>CONTEXT IS KING</div>
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.8 }}>No setup exists in isolation. Always read the broader market context before interacting. A pullback into the 9EMA is not a buy if price has just rejected from VAH — wait and see if it is going to roll over and continue down through the range. The setup is only as good as the context it sits in.</div>
+        </div>
+
       </div>}
 
       {/* RISK MANAGEMENT TAB - PLACEHOLDER */}
