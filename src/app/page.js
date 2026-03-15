@@ -1091,13 +1091,10 @@ function Playbook({ onBack }) {
             warning: "Picking bottoms is the fastest way to hit DLL."
           },
           {
-            id: "objective",
-            label: "Remain Objective",
-            teaser: "The market does not lie. Take the way it is behaving for what it is.",
-            paragraphs: [
-              "The market does not lie. Take the way it is behaving for what it is and do not impose your own opinion or bias onto your decisions.",
-            ],
-            warning: "Continually shorting a grind up day, trying to pick a bottom in a liquidation, or repeatedly engaging in a consolidation knife fight will lead to hitting DLL and draining all mental capital."
+            id: "ema",
+            label: "EMA Reference",
+            teaser: "9EMA as momentum gauge, 20EMA as trend filter.",
+            emaContent: true
           },
           {
             id: "dalton",
@@ -1109,12 +1106,6 @@ function Playbook({ onBack }) {
               "A trend typically ends in a balanced area. Markets do not trend up then turn on a dime and begin trending down. An upward trend auctions higher, balances, then either continues or begins to auction downward. In a bracket, both the other timeframe buyer and seller become responsive parties. As price nears the top of the bracket, the seller responds and rotates price downward. The responsive buyer then enters and rotates price back up.",
               "This bracketing process signals the market is in balance and waiting for more information. When price is accepted above or below a known bracket extreme, the market may be coming out of balance. Monitoring such a breakout for continuation and acceptance alerts the observant trader to the beginning of a new trend.",
             ]
-          },
-          {
-            id: "ema",
-            label: "EMA Reference",
-            teaser: "9EMA as momentum gauge, 20EMA as trend filter.",
-            emaContent: true
           }
         ].map(section => (
           <div key={section.id} style={{ marginBottom: 10 }}>
@@ -1172,6 +1163,14 @@ function Playbook({ onBack }) {
             )}
           </div>
         ))}
+
+        {/* REMAIN OBJECTIVE */}
+        <div style={{ marginTop: 8, padding: "16px 18px", background: "rgba(45,212,191,0.04)", borderRadius: 14, border: "1px solid rgba(45,212,191,0.12)" }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: 2, color: "rgba(45,212,191,0.5)", marginBottom: 8 }}>REMAIN OBJECTIVE</div>
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.8, marginBottom: 10 }}>The market does not lie. Take the way it is behaving for what it is and do not impose your own opinion or bias onto your decisions.</div>
+          <div style={{ padding: "10px 14px", background: "rgba(233,69,96,0.04)", borderRadius: 10, borderLeft: "2px solid rgba(233,69,96,0.3)", fontSize: 13, color: "rgba(233,69,96,0.6)", lineHeight: 1.8 }}>Continually shorting a grind up day, trying to pick a bottom in a liquidation, or repeatedly engaging in a consolidation knife fight will lead to hitting DLL and draining all mental capital.</div>
+        </div>
+
       </div>}
 
       {/* SETUPS TAB */}
