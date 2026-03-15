@@ -1055,7 +1055,6 @@ function Playbook({ onBack }) {
         {[
           {
             id: "balance",
-            number: "01",
             label: "Balance / Rotational",
             teaser: "A D-shape profile. An indecisive market with no buyers at the highs and no sellers at the lows.",
             paragraphs: [
@@ -1067,7 +1066,6 @@ function Playbook({ onBack }) {
           },
           {
             id: "grind",
-            number: "02",
             label: "Grind / Trend Up",
             teaser: "Strong imbalance from the open which holds. 24VWAP slopes upwards with price consistently above it.",
             paragraphs: [
@@ -1079,7 +1077,6 @@ function Playbook({ onBack }) {
           },
           {
             id: "liquidation",
-            number: "03",
             label: "Liquidation / Sell Off",
             teaser: "Fast-moving with violent whips and bounces. Every small counter-trend bounce is not the start of a new trend.",
             paragraphs: [
@@ -1095,7 +1092,6 @@ function Playbook({ onBack }) {
           },
           {
             id: "objective",
-            number: "04",
             label: "Remain Objective",
             teaser: "The market does not lie. Take the way it is behaving for what it is.",
             paragraphs: [
@@ -1105,7 +1101,6 @@ function Playbook({ onBack }) {
           },
           {
             id: "dalton",
-            number: "05",
             label: "Trending vs Rotational — Dalton",
             teaser: "The key to capitalising on a trend lies in determining whether the divergence of price is being accepted or rejected.",
             paragraphs: [
@@ -1114,6 +1109,12 @@ function Playbook({ onBack }) {
               "A trend typically ends in a balanced area. Markets do not trend up then turn on a dime and begin trending down. An upward trend auctions higher, balances, then either continues or begins to auction downward. In a bracket, both the other timeframe buyer and seller become responsive parties. As price nears the top of the bracket, the seller responds and rotates price downward. The responsive buyer then enters and rotates price back up.",
               "This bracketing process signals the market is in balance and waiting for more information. When price is accepted above or below a known bracket extreme, the market may be coming out of balance. Monitoring such a breakout for continuation and acceptance alerts the observant trader to the beginning of a new trend.",
             ]
+          },
+          {
+            id: "ema",
+            label: "EMA Reference",
+            teaser: "9EMA as momentum gauge, 20EMA as trend filter.",
+            emaContent: true
           }
         ].map(section => (
           <div key={section.id} style={{ marginBottom: 10 }}>
@@ -1132,7 +1133,6 @@ function Playbook({ onBack }) {
                 transition: "all 0.2s"
               }}
             >
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.15)", flexShrink: 0 }}>{section.number}</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: 1, color: conditionExpanded === section.id ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.4)", marginBottom: conditionExpanded !== section.id ? 4 : 0 }}>{section.label}</div>
                 {conditionExpanded !== section.id && <div style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", lineHeight: 1.6 }}>{section.teaser}</div>}
@@ -1141,17 +1141,32 @@ function Playbook({ onBack }) {
             </div>
             {conditionExpanded === section.id && (
               <div style={{ padding: "18px 18px 20px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderTop: "none", borderRadius: "0 0 14px 14px" }}>
-                {section.paragraphs.map((para, i) => (
-                  <div key={i} style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.9, marginBottom: 14 }}>{para}</div>
-                ))}
-                {section.callout && (
-                  <div style={{ padding: "14px 16px", marginBottom: 14, background: "rgba(233,69,96,0.05)", borderRadius: 12, border: "1px solid rgba(233,69,96,0.15)" }}>
-                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(233,69,96,0.5)", fontWeight: 700, marginBottom: 8 }}>{section.callout.label}</div>
-                    <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.8 }}>{section.callout.text}</div>
+                {section.emaContent ? (
+                  <div>
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(255,255,255,0.3)", fontWeight: 700, marginBottom: 8 }}>9EMA — MOMENTUM GAUGE</div>
+                      <div style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.9 }}>In a strong trending market, look for the 9EMA to hold the trend.</div>
+                    </div>
+                    <div>
+                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(255,255,255,0.3)", fontWeight: 700, marginBottom: 8 }}>20EMA — TREND FILTER</div>
+                      <div style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.9 }}>During directional moves the 20EMA acts as the trend filter. Bullish above, bearish below.</div>
+                    </div>
                   </div>
-                )}
-                {section.warning && (
-                  <div style={{ padding: "12px 16px", background: "rgba(233,69,96,0.04)", borderRadius: 12, borderLeft: "2px solid rgba(233,69,96,0.3)", fontSize: 14, color: "rgba(233,69,96,0.6)", lineHeight: 1.8 }}>{section.warning}</div>
+                ) : (
+                  <div>
+                    {section.paragraphs.map((para, i) => (
+                      <div key={i} style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.9, marginBottom: 14 }}>{para}</div>
+                    ))}
+                    {section.callout && (
+                      <div style={{ padding: "14px 16px", marginBottom: 14, background: "rgba(233,69,96,0.05)", borderRadius: 12, border: "1px solid rgba(233,69,96,0.15)" }}>
+                        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(233,69,96,0.5)", fontWeight: 700, marginBottom: 8 }}>{section.callout.label}</div>
+                        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.8 }}>{section.callout.text}</div>
+                      </div>
+                    )}
+                    {section.warning && (
+                      <div style={{ padding: "12px 16px", background: "rgba(233,69,96,0.04)", borderRadius: 12, borderLeft: "2px solid rgba(233,69,96,0.3)", fontSize: 14, color: "rgba(233,69,96,0.6)", lineHeight: 1.8 }}>{section.warning}</div>
+                    )}
+                  </div>
                 )}
               </div>
             )}
