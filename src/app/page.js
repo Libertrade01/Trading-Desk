@@ -1307,7 +1307,7 @@ function MarketPrep({ onBack }) {
   const loadReviewForInstrument = async (inst) => {
     const rv = await loadData(`review-${todayKey()}-${inst}`, null);
     if (rv) { setReview(rv); setReviewSaved(true); }
-    else { setReview({ focusRating:0, bull1Result:"", bull1Traded:"", bull1WhyNot:"", bull2Result:"", bull2Traded:"", bull2WhyNot:"", bear1Result:"", bear1Traded:"", bear1WhyNot:"", bear2Result:"", bear2Traded:"", bear2WhyNot:"", rulesTrend:"", rulesMarketCond:"", rulesTopBottom:"", rulesPlays:"", rulesExecution:"", rulesFocus:"", rulesConsol:"", rulesDLL:"", rulesCooloff:"", rulesTrendNote:"", rulesMarketCondNote:"", rulesTopBottomNote:"", rulesPlaysNote:"", rulesExecutionNote:"", rulesFocusNote:"", rulesConsolNote:"", rulesDLLNote:"", rulesCooloffNote:"", postEmotional:0, postDecision:0, postPhysical:0, biggestLesson:"", tomorrowWill:"" }); setReviewSaved(false); }
+    else { setReview({ focusRating:0, bull1Result:"", bull1Traded:"", bull1WhyNot:"", bull2Result:"", bull2Traded:"", bull2WhyNot:"", bear1Result:"", bear1Traded:"", bear1WhyNot:"", bear2Result:"", bear2Traded:"", bear2WhyNot:"", rulesTrend:"", rulesMarketCond:"", rulesTopBottom:"", rulesPlays:"", rulesExecution:"", rulesFocus:"", rulesConsol:"", rulesDLL:"", rulesCooloff:"", rulesTrendNote:"", rulesMarketCondNote:"", rulesTopBottomNote:"", rulesPlaysNote:"", rulesExecutionNote:"", rulesFocusNote:"", rulesConsolNote:"", rulesDLLNote:"", rulesCooloffNote:"", postEmotional:0, postDecision:0, postPhysical:0, biggestLesson:"", tomorrowWill:"", sessionCharacter:"" }); setReviewSaved(false); }
     const rp = await loadData(prepKey(inst, todayKey()), null);
     if (rp) setReviewPrepData(rp);
   };
@@ -1816,6 +1816,13 @@ function MarketPrep({ onBack }) {
                 </div>
               );
             })}
+          </Card>
+
+          {/* SESSION CHARACTER */}
+          <Card style={{ marginBottom: 18 }}>
+            <SectionLabel text="Session Character" color="rgba(255,255,255,0.4)" />
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", marginBottom: 12, lineHeight: 1.6 }}>How did price actually move today? Describe the session character in 1-2 sentences — balance, trend, rotational, mixed etc. This context helps the AI understand your R scores.</p>
+            <textarea value={review.sessionCharacter || ""} onChange={e => ur("sessionCharacter", e.target.value)} placeholder='e.g. "Opened in balance, rotated VAH/VAL for first hour then broke out with strong imbalance up rest of session."' rows={3} style={{ width:"100%", padding:14, borderRadius:14, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.7)", fontSize:15, fontFamily:"inherit", resize:"vertical", boxSizing:"border-box", lineHeight:1.7 }} />
           </Card>
 
           {/* POST-SESSION MENTAL CHECK */}
