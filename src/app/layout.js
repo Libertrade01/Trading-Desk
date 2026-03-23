@@ -1,10 +1,10 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Mental Game Framework',
-  description: 'Schema Awareness Trading Framework',
+  title: 'Trade Desk',
+  description: 'Libertrade Trading Desk',
   manifest: '/manifest.json',
-  themeColor: '#0A0A0F',
+  themeColor: '#000000',
   viewport: {
     width: 'device-width',
     initialScale: 1,
@@ -14,7 +14,7 @@ export const metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Mental Game',
+    title: 'Trade Desk',
   },
 };
 
