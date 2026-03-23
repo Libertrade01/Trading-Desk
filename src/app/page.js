@@ -203,10 +203,12 @@ function AccentCard({ text, color }) {
 function LandingPage({ onNavigate }) {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: "40px 24px", animation: "fadeIn 0.4s ease" }}>
-      <a href="/analytics" style={{ position: "fixed", top: 20, left: 20, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(45,212,191,0.45)", fontWeight: 600, textDecoration: "none", border: "1px solid rgba(45,212,191,0.12)", padding: "8px 14px", borderRadius: 10, background: "rgba(45,212,191,0.04)", transition: "all 0.2s", display: "flex", alignItems: "center", gap: 6, textTransform: "uppercase" }}>Analytics →</a>
       <div style={{ marginBottom: 48 }}>
         <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 4, color: "rgba(45,212,191,0.5)", fontWeight: 600 }}>LIBERTRADE</div>
-        <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: -1, marginTop: 6, color: "rgba(255,255,255,0.85)" }}>Trading Desk</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
+          <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: -1, color: "rgba(255,255,255,0.85)" }}>Trading Desk</div>
+          <a href="/analytics" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(45,212,191,0.45)", fontWeight: 600, textDecoration: "none", border: "1px solid rgba(45,212,191,0.12)", padding: "8px 14px", borderRadius: 10, background: "rgba(45,212,191,0.04)", transition: "all 0.2s", display: "flex", alignItems: "center", gap: 6, textTransform: "uppercase", flexShrink: 0 }}>Analytics →</a>
+        </div>
         <div style={{ fontSize: 15, color: "rgba(255,255,255,0.25)", marginTop: 10, lineHeight: 1.7 }}>My system works when I follow it. These tools help me follow it.</div>
       </div>
       <div className="nav-grid">
@@ -2171,7 +2173,7 @@ export default function App() {
   const [page, setPage] = useState("landing");
 
   return (
-    <div className="app-shell" style={{ fontFamily: "system-ui, -apple-system, sans-serif", background: "#0A0A0F", minHeight: "100vh", width: "100%", color: "#fff" }}>
+    <div className="app-shell" style={{ fontFamily: "system-ui, -apple-system, sans-serif", background: "#000000", minHeight: "100vh", width: "100%", color: "#fff" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
