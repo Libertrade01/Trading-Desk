@@ -209,7 +209,7 @@ function LandingPage({ onNavigate }) {
         <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: -1, marginTop: 6, color: "rgba(255,255,255,0.85)" }}>Trading Desk</div>
         <div style={{ fontSize: 15, color: "rgba(255,255,255,0.25)", marginTop: 10, lineHeight: 1.7 }}>My system works when I follow it. These tools help me follow it.</div>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div className="nav-grid">
         <NavCard onClick={() => onNavigate("prep")} gradient="linear-gradient(180deg, #F48C06, #10B981, #4361EE)" tag="SESSION PREPARATION" title="Market Prep" desc="Mental check-in, pre-market analysis, scenarios and session focus." />
         <NavCard onClick={() => onNavigate("playbook")} gradient="linear-gradient(180deg, #2DD4BF, #10B981, #F48C06)" tag="TRADE EXECUTION" title="Playbook" desc="Setups, execution framework, risk framing and trigger confirmation." />
         <NavCard onClick={() => onNavigate("mental")} gradient="linear-gradient(180deg, #E94560, #4361EE, #F48C06)" tag="SCHEMA AWARENESS" title="Mental Game" desc="Schema tracking, DLL circuit breaker, activation logs and reviews." />
@@ -2171,7 +2171,7 @@ export default function App() {
   const [page, setPage] = useState("landing");
 
   return (
-    <div style={{ fontFamily: "system-ui, -apple-system, sans-serif", background: "#0A0A0F", minHeight: "100vh", width: "100%", maxWidth: 768, margin: "0 auto", color: "#fff" }}>
+    <div className="app-shell" style={{ fontFamily: "system-ui, -apple-system, sans-serif", background: "#0A0A0F", minHeight: "100vh", width: "100%", color: "#fff" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }

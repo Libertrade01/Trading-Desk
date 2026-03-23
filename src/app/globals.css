@@ -31,3 +31,25 @@ textarea:focus, input:focus, select:focus {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+.app-shell {
+  max-width: 768px;
+  margin: 0 auto;
+}
+
+.nav-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+@media (min-width: 1024px) {
+  .app-shell {
+    max-width: 1100px;
+  }
+  .nav-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+}
