@@ -203,6 +203,7 @@ function AccentCard({ text, color }) {
 function LandingPage({ onNavigate }) {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: "40px 24px", animation: "fadeIn 0.4s ease" }}>
+      <a href="/analytics" style={{ position: "fixed", top: 20, left: 20, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(45,212,191,0.45)", fontWeight: 600, textDecoration: "none", border: "1px solid rgba(45,212,191,0.12)", padding: "8px 14px", borderRadius: 10, background: "rgba(45,212,191,0.04)", transition: "all 0.2s", display: "flex", alignItems: "center", gap: 6, textTransform: "uppercase" }}>Analytics →</a>
       <div style={{ marginBottom: 48 }}>
         <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 4, color: "rgba(45,212,191,0.5)", fontWeight: 600 }}>LIBERTRADE</div>
         <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: -1, marginTop: 6, color: "rgba(255,255,255,0.85)" }}>Trading Desk</div>
