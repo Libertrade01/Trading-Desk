@@ -4103,18 +4103,16 @@ function renderDiscipline(days, trades) {
   const RULES = [
     { key: 'rules_trend',         label: 'Traded with Trend / Tape' },
     { key: 'rules_market_cond',   label: 'Traded Inline with Market Condition' },
-    { key: 'rules_top_bottom',    label: 'Avoided Picking Tops & Bottoms' },
-    { key: 'rules_plays',         label: 'Trades from Pre Defined Plays' },
+    { key: 'rules_plays',         label: 'Traded Playbook Setups' },
     { key: 'rules_execution',     label: 'Execution Model Followed' },
     { key: 'rules_focus',         label: 'Stayed Focused / Avoided Distraction' },
     { key: 'rules_consol',        label: 'Avoided Entering During Consolidation' },
-    { key: 'rules_cooloff',       label: '20 Min Cool-off After 3 Stop Outs' },
-    { key: 'rules_dll',           label: 'DLL Respected' },
+    { key: 'rules_dll',           label: 'Risk Manager Respected' },
   ];
 
 
   // ── Streak logic (inline) ─────────────────────────────────────────────
-  const ruleKeysStreak = ['rules_trend','rules_market_cond','rules_top_bottom','rules_plays','rules_execution','rules_focus','rules_consol','rules_cooloff','rules_dll'];
+  const ruleKeysStreak = ['rules_trend','rules_market_cond','rules_plays','rules_execution','rules_focus','rules_consol','rules_dll'];
   const allSortedDays = [...days].filter(d=>d.date).sort((a,b)=>a.date.localeCompare(b.date));
   const tradeableDays = allSortedDays.map(d => {
     const dt = trades.filter(t=>t.date===d.date);
@@ -5964,7 +5962,7 @@ function buildWeekReport(start, end, days, trades, activations, ruleCompliance =
   const fmtDate = d => d ? new Date((d.date||d.entry_time||'').substring(0,10)+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}) : '—';
 
   const disciplineScores = days.map(d => {
-    const rules = ['rules_trend','rules_market_cond','rules_top_bottom','rules_plays','rules_execution','rules_focus','rules_consol','rules_cooloff','rules_dll'];
+    const rules = ['rules_trend','rules_market_cond','rules_plays','rules_execution','rules_focus','rules_consol','rules_dll'];
     const followed = rules.filter(r => d[r]==='Followed'||d[r]==='followed').length;
     const broke    = rules.filter(r => d[r]==='Broke'||d[r]==='broke').length;
     return followed+broke > 0 ? Math.round(followed/(followed+broke)*100) : null;
@@ -6071,7 +6069,7 @@ function buildWeekReport(start, end, days, trades, activations, ruleCompliance =
             const dayTradesList = trades.filter(t => t.date === d.date);
             const dayTrades = dayTradesList.length;
             const dayPnl = dayTradesList.reduce((s,t) => s + (t.net_pnl||0), 0);
-            const rules = ['rules_trend','rules_market_cond','rules_top_bottom','rules_plays','rules_execution','rules_focus','rules_consol','rules_dll','rules_cooloff'];
+            const rules = ['rules_trend','rules_market_cond','rules_plays','rules_execution','rules_focus','rules_consol','rules_dll'];
             const followed = rules.filter(r => d[r]==='Followed'||d[r]==='followed').length;
             const broke = rules.filter(r => d[r]==='Broke'||d[r]==='broke').length;
             const score = followed+broke>0 ? Math.round(followed/(followed+broke)*100) : null;
@@ -6125,13 +6123,11 @@ function buildWeekReport(start, end, days, trades, activations, ruleCompliance =
   const ruleKeys = [
     {key:'rules_trend',       label:'Trend / Tape'},
     {key:'rules_market_cond', label:'Market Condition'},
-    {key:'rules_top_bottom',  label:'Tops & Bottoms'},
-    {key:'rules_plays',       label:'Pre-Defined Plays'},
+    {key:'rules_plays',       label:'Playbook Setups'},
     {key:'rules_execution',   label:'Execution Model'},
     {key:'rules_focus',       label:'Focus'},
     {key:'rules_consol',      label:'Consolidation'},
-    {key:'rules_cooloff',     label:'3 SL Cool-off'},
-    {key:'rules_dll',         label:'DLL'},
+    {key:'rules_dll',         label:'Risk Manager'},
   ];
   const noteKeys = {
     rules_trend:'rules_trend_note', rules_market_cond:'rules_market_cond_note',
@@ -6536,8 +6532,8 @@ function buildMonthReport(start, end, label, days, trades, acts) {
   var arl = rl.length ? rl.reduce(function(a,b){return a+b;},0)/rl.length : null;
   var er  = arw!==null&&arl!==null ? arw*(wr/100)+arl*(1-wr/100) : null;
 
-  var RULE_KEYS   = ['rules_trend','rules_market_cond','rules_top_bottom','rules_plays','rules_execution','rules_focus','rules_consol','rules_cooloff','rules_dll'];
-  var RULE_LABELS = {rules_trend:'Trend/Tape',rules_market_cond:'Market Condition',rules_top_bottom:'Tops & Bottoms',rules_plays:'Pre-Defined Plays',rules_execution:'Execution Model',rules_focus:'Focus',rules_consol:'Consolidation',rules_dll:'DLL',rules_cooloff:'3 SL Cool-off'};
+  var RULE_KEYS   = ['rules_trend','rules_market_cond','rules_plays','rules_execution','rules_focus','rules_consol','rules_dll'];
+  var RULE_LABELS = {rules_trend:'Trend/Tape',rules_market_cond:'Market Condition',rules_plays:'Playbook Setups',rules_execution:'Execution Model',rules_focus:'Focus',rules_consol:'Consolidation',rules_dll:'Risk Manager'};
 
   // Week-by-week
   var wrows = '';
@@ -6764,8 +6760,8 @@ async function generateMonthlyAIReport(start, end, label) {
   var arl = rl2.length?rl2.reduce(function(a,b){return a+b;},0)/rl2.length:null;
   var er  = arw!==null&&arl!==null?arw*(wr/100)+arl*(1-wr/100):null;
 
-  var RULE_KEYS   = ['rules_trend','rules_market_cond','rules_top_bottom','rules_plays','rules_execution','rules_focus','rules_consol','rules_cooloff','rules_dll'];
-  var RULE_LABELS = {rules_trend:'Trend/Tape',rules_market_cond:'Market Condition',rules_top_bottom:'Tops & Bottoms',rules_plays:'Pre-Defined Plays',rules_execution:'Execution Model',rules_focus:'Focus',rules_consol:'Consolidation',rules_dll:'DLL',rules_cooloff:'3 SL Cool-off'};
+  var RULE_KEYS   = ['rules_trend','rules_market_cond','rules_plays','rules_execution','rules_focus','rules_consol','rules_dll'];
+  var RULE_LABELS = {rules_trend:'Trend/Tape',rules_market_cond:'Market Condition',rules_plays:'Playbook Setups',rules_execution:'Execution Model',rules_focus:'Focus',rules_consol:'Consolidation',rules_dll:'Risk Manager'};
 
   var tf=0,tb=0,bmap={};
   days.forEach(function(d){RULE_KEYS.forEach(function(r){if(d[r]==='Followed'||d[r]==='followed')tf++;if(d[r]==='Broke'||d[r]==='broke'){tb++;bmap[r]=(bmap[r]||0)+1;}});});
@@ -6997,9 +6993,9 @@ async function generateAIReport(start, end) {
   });
 
   // Rule breaks with notes
-  const aiRuleKeys    = ['rules_trend','rules_market_cond','rules_top_bottom','rules_plays','rules_execution','rules_focus','rules_consol','rules_cooloff','rules_dll'];
-  const aiRuleLabels  = {rules_trend:'Trend/Tape',rules_market_cond:'Market Condition',rules_top_bottom:'Tops & Bottoms',rules_plays:'Pre-Defined Plays',rules_execution:'Execution Model',rules_focus:'Focus',rules_consol:'Consolidation',rules_dll:'DLL',rules_cooloff:'3 SL Cool-off'};
-  const aiRuleNoteKeys= {rules_trend:'rules_trend_note',rules_market_cond:'rules_market_cond_note',rules_top_bottom:'rules_top_bottom_note',rules_plays:'rules_plays_note',rules_execution:'rules_execution_note',rules_focus:'rules_focus_note',rules_consol:'rules_consol_note',rules_dll:'rules_dll_note',rules_cooloff:'rules_cooloff_note'};
+  const aiRuleKeys    = ['rules_trend','rules_market_cond','rules_plays','rules_execution','rules_focus','rules_consol','rules_dll'];
+  const aiRuleLabels  = {rules_trend:'Trend/Tape',rules_market_cond:'Market Condition',rules_plays:'Playbook Setups',rules_execution:'Execution Model',rules_focus:'Focus',rules_consol:'Consolidation',rules_dll:'Risk Manager'};
+  const aiRuleNoteKeys= {rules_trend:'rules_trend_note',rules_market_cond:'rules_market_cond_note',rules_plays:'rules_plays_note',rules_execution:'rules_execution_note',rules_focus:'rules_focus_note',rules_consol:'rules_consol_note',rules_dll:'rules_dll_note'};
 
   const dailyBreakdown = days.map(d => {
     const dayPnl    = pnlByDay[d.date]||0;
@@ -7187,7 +7183,7 @@ function renderTopStreaks(days, trades) {
   const el = document.getElementById('topbar-streaks');
   if (!el) return;
 
-  const rk = ['rules_trend','rules_market_cond','rules_top_bottom','rules_plays','rules_execution','rules_focus','rules_consol','rules_cooloff','rules_dll'];
+  const rk = ['rules_trend','rules_market_cond','rules_plays','rules_execution','rules_focus','rules_consol','rules_dll'];
   const sorted = [...days].filter(d=>d.date).sort((a,b)=>a.date.localeCompare(b.date));
   const dm = sorted.map(d => {
     const dt = trades.filter(t=>t.date===d.date);

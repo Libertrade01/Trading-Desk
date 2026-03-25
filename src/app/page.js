@@ -1857,19 +1857,17 @@ function MarketPrep({ onBack }) {
             <SectionLabel text="Rule Compliance" color="#4361EE" />
             {[["rulesTrend", "rulesTrendNote", "Traded with Trend / Tape"],
               ["rulesMarketCond", "rulesMarketCondNote", "Traded Inline with Market Condition (Rotational vs Imbalance)"],
-              ["rulesTopBottom", "rulesTopBottomNote", "Avoided Picking Tops and Bottoms"],
-              ["rulesPlays", "rulesPlaysNote", "Trades were from Pre Defined Plays"],
+              ["rulesPlays", "rulesPlaysNote", "Traded Playbook Setups"],
               ["rulesExecution", "rulesExecutionNote", "Execution Model Followed"],
               ["rulesFocus", "rulesFocusNote", "Stayed Focused and Avoided Distraction"],
               ["rulesConsol", "rulesConsolNote", "Avoided Entering During Consolidation"],
-              ["rulesCooloff", "rulesCooloffNote", "20 Min Cool-off After 3 Stop Outs"],
-              ["rulesDLL", "rulesDLLNote", "DLL Respected"]].map(([key, noteKey, label]) => (
+              ["rulesDLL", "rulesDLLNote", "Risk Manager Respected"]].map(([key, noteKey, label]) => (
               <div key={key} style={{ marginBottom: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                   <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>{label}</span>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
-                  {["Followed","Broke","N/A"].map(o => <button key={o} onClick={() => ur(key, review[key] === o ? "" : o)} style={{ flex:1, padding:"10px 6px", borderRadius:10, border: `1px solid ${review[key] === o ? (o === "Followed" ? "rgba(16,185,129,0.4)" : o === "Broke" ? "rgba(233,69,96,0.4)" : "rgba(255,255,255,0.15)") : "rgba(255,255,255,0.06)"}`, background: review[key] === o ? (o === "Followed" ? "rgba(16,185,129,0.1)" : o === "Broke" ? "rgba(233,69,96,0.1)" : "rgba(255,255,255,0.05)") : "rgba(255,255,255,0.03)", color: review[key] === o ? (o === "Followed" ? "#10B981" : o === "Broke" ? "#E94560" : "rgba(255,255,255,0.6)") : "rgba(255,255,255,0.3)", fontSize:12, fontWeight: review[key] === o ? 700 : 500, cursor:"pointer", fontFamily:"inherit" }}>{o}</button>)}
+                  {["Followed","Broke"].map(o => <button key={o} onClick={() => ur(key, review[key] === o ? "" : o)} style={{ flex:1, padding:"10px 6px", borderRadius:10, border: `1px solid ${review[key] === o ? (o === "Followed" ? "rgba(16,185,129,0.4)" : "rgba(233,69,96,0.4)") : "rgba(255,255,255,0.06)"}`, background: review[key] === o ? (o === "Followed" ? "rgba(16,185,129,0.1)" : "rgba(233,69,96,0.1)") : "rgba(255,255,255,0.03)", color: review[key] === o ? (o === "Followed" ? "#10B981" : "#E94560") : "rgba(255,255,255,0.3)", fontSize:12, fontWeight: review[key] === o ? 700 : 500, cursor:"pointer", fontFamily:"inherit" }}>{o}</button>)}
                 </div>
                 {review[key] === "Broke" && <input type="text" value={review[noteKey] || ""} onChange={e => ur(noteKey, e.target.value)} placeholder="What happened?" style={{ width:"100%", padding:"10px 14px", borderRadius:10, border:"1px solid rgba(233,69,96,0.2)", background:"rgba(233,69,96,0.04)", color:"rgba(255,255,255,0.5)", fontSize:13, fontFamily:"inherit", boxSizing:"border-box", marginTop:6 }} />}
               </div>
