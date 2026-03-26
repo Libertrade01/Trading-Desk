@@ -1642,6 +1642,7 @@
     <button class="range-btn" onclick="setRange('lastweek')">Last Week</button>
     <button class="range-btn active" onclick="setRange('month')">This Month</button>
     <button class="range-btn" onclick="setRange('5d')">5D</button>
+    <button class="range-btn" onclick="setRange('10d')">10D</button>
     <button class="range-btn" onclick="setRange('20d')">20D</button>
     <button class="range-btn" onclick="setRange('all')">All Time</button>
     <span style="margin-left:8px;color:var(--border);font-family:var(--font-mono)">|</span>
@@ -2263,6 +2264,10 @@ function setRange(range) {
 
   if (range === '5d') {
     const from = new Date(now.getTime() - 7 * 86400000); // 7 calendar days covers 5 trading days
+    dateFrom = limaStr(from);
+    dateTo   = today;
+  } else if (range === '10d') {
+    const from = new Date(now.getTime() - 14 * 86400000); // 14 calendar days ≈ 10 trading days
     dateFrom = limaStr(from);
     dateTo   = today;
   } else if (range === '20d') {
