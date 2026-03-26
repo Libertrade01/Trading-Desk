@@ -2471,7 +2471,6 @@ let dateFrom = null;
 let dateTo   = null;
 let allTrades = [];
 let allDays   = [];
-let allActivations = [];
 let allJournalEntries = [];
 let allLessonEntries  = [];
 
@@ -2603,15 +2602,13 @@ async function loadData() {
     tradeFilters.push(`account_type=eq.${activeTypeFilter}`);
   }
 
-  const [trades, days, activations] = await Promise.all([
+  const [trades, days] = await Promise.all([
     query('trades', '*', tradeFilters),
     query('trading_days', '*', filters),
-    query('activations', '*', filters),
   ]);
 
-  allTrades      = trades      || [];
-  allDays        = days        || [];
-  allActivations = activations || [];
+  allTrades = trades || [];
+  allDays   = days   || [];
 }
 
 // ── Journal & Lessons data (always last 5, ignores date filter) ───────────────
@@ -2758,7 +2755,6 @@ function destroyChart(id) {
 function render() {
   const trades = allTrades;
   const days   = allDays;
-  const acts   = allActivations;
   const stats  = calcStats(trades);
 
   const html = [];
@@ -2856,17 +2852,6 @@ function render() {
   </div>
 </div>`);
 
-  // ── Section 4: Readiness Intelligence
-  html.push(`<div class="card">
-    <div class="card-title">Readiness Intelligence</div>
-    <div id="readiness-section"></div>
-  </div>`);
-
-  // ── Section 9: Activation Hot Window
-  html.push(`<div class="card">
-    <div class="card-title">Activation Hot Window</div>
-    <div id="hot-window-section"></div>
-  </div>`);
 
   document.getElementById('main-content').innerHTML = html.join('');
 
@@ -2877,7 +2862,6 @@ function render() {
     ['renderDailyCal',     () => renderDailyCal(trades, days)],
     ['renderBaskets',      () => renderBaskets(trades)],
     ['renderDayOfWeek',    () => renderDayOfWeek(trades)],
-    ['renderReadiness',    () => renderReadiness(days, trades)],
     ['renderSequence',     () => renderSequence(trades)],
     ['renderRecovery',     () => renderRecovery(trades)],
     ['renderRecentTrades', () => renderRecentTrades(trades)],
@@ -2885,7 +2869,6 @@ function render() {
     ['renderJournal',      () => renderJournal()],
     ['renderLessons',      () => renderLessons()],
     ['renderTopStreaks',    () => renderTopStreaks(days, trades)],
-    ['renderHotWindow',    () => renderHotWindow(trades, acts)],
   ];
   for (const [name, fn] of _renders) {
     try { fn(); }
@@ -3358,246 +3341,6 @@ function renderRecovery(trades) {
 }
 
 // ── Activation Hot Window ────────────────────────────────────────────────────
-// Finds trades within -5 / +10 min window around logged activations (Lima time)
-// Compares baseline vs hot window: followed plan vs triggered
-
-function renderHotWindow(trades, activations) {
-  const el = document.getElementById('hot-window-section');
-  if (!el) return;
-
-  if (!activations || !activations.length) {
-    el.innerHTML = '<div class="no-data">No activation data in range — run Sync to import from Trading Desk</div>';
-    return;
-  }
-  if (!trades || !trades.length) {
-    el.innerHTML = '<div class="no-data">No trades in range</div>';
-    return;
-  }
-
-  const BEFORE_MINS = 5;
-  const AFTER_MINS  = 10;
-
-  // Convert session_time "0940" → minutes since midnight
-  function sessionTimeToMins(t) {
-    if (!t) return null;
-    const s = t.replace(':', '').padStart(4, '0');
-    return parseInt(s.substring(0,2)) * 60 + parseInt(s.substring(2,4));
-  }
-
-  // Convert trade entry_time → NY time minutes since midnight
-  // rTrader stores EST times; add 1hr correction during DST, 0 in winter
-  function tradeToLimaMins(entry_time) {
-    if (!entry_time) return null;
-    const d = new Date(entry_time);
-    const off = getNYOffsetHours(d);
-    return (d.getUTCHours() + off) * 60 + d.getUTCMinutes();
-  }
-
-  // Build activation lookup by date
-  const actsByDate = {};
-  activations.forEach(a => {
-    const mins = sessionTimeToMins(a.session_time);
-    if (mins === null) return;
-    if (!actsByDate[a.date]) actsByDate[a.date] = [];
-    actsByDate[a.date].push({ mins, outcome: a.outcome || '', schema: a.schema || '' });
-  });
-
-  const hwFollowed  = []; // hot window, followed plan
-  const hwTriggered = []; // hot window, did not follow plan
-  const baseline    = []; // all other trades
-
-  trades.forEach(t => {
-    const tradeMins = tradeToLimaMins(t.entry_time);
-    if (tradeMins === null) return;
-
-    const dayActs = actsByDate[t.date] || [];
-    let inWindow = false;
-    let windowOutcome = null;
-    let windowSchema  = null;
-
-    for (const a of dayActs) {
-      const diff = tradeMins - a.mins; // positive = trade after activation
-      if (diff >= -BEFORE_MINS && diff <= AFTER_MINS) {
-        inWindow = true;
-        windowOutcome = a.outcome;
-        windowSchema  = a.schema;
-        break;
-      }
-    }
-
-    const row = { ...t, _windowOutcome: windowOutcome, _windowSchema: windowSchema, _tradeMins: tradeMins };
-
-    if (!inWindow) {
-      baseline.push(row);
-    } else if ((windowOutcome || '').toLowerCase().includes('followed')) {
-      hwFollowed.push(row);
-    } else {
-      hwTriggered.push(row);
-    }
-  });
-
-  // Compute stats for a bucket
-  function stats(bucket) {
-    if (!bucket.length) return null;
-    const pnls = bucket.map(t => t.net_pnl || 0);
-    const avg  = pnls.reduce((s,v) => s+v, 0) / pnls.length;
-    const wins = pnls.filter(v => v > 0).length;
-    const wr   = (wins / pnls.length * 100).toFixed(0);
-    return { avg, wr, count: bucket.length };
-  }
-
-  const bStats  = stats(baseline);
-  const fStats  = stats(hwFollowed);
-  const tStats  = stats(hwTriggered);
-
-  function fmt(v) {
-    if (v == null) return '—';
-    return (v >= 0 ? '+' : '') + '$' + Math.abs(v).toFixed(0);
-  }
-  function pnlColor(v) {
-    return v > 0 ? 'var(--green)' : v < 0 ? 'var(--red)' : 'var(--muted)';
-  }
-  function delta(a, b) {
-    if (a == null || b == null) return '';
-    const d = a - b;
-    const cls = d >= 0 ? 'color:var(--green)' : 'color:var(--red)';
-    return `<span style="font-family:var(--font-mono);font-size:9px;${cls};opacity:0.7">${d>=0?'+':''}$${Math.abs(d).toFixed(0)} vs baseline</span>`;
-  }
-
-  // Auto insight
-  function buildInsight() {
-    if (!tStats && !fStats) return '';
-    const parts = [];
-    if (tStats && bStats) {
-      const swing = tStats.avg - bStats.avg;
-      parts.push(`When triggered and not following the plan, avg P&L is <span>${fmt(tStats.avg)}</span> vs a ${fmt(bStats.avg)} baseline — a <span>${fmt(Math.abs(swing))} swing per trade</span>.`);
-    }
-    if (fStats && bStats && fStats.avg > bStats.avg) {
-      parts.push(`Your interrupt protocol is working: followed-plan hot window trades outperform baseline by <span style="color:var(--green);opacity:0.7">${fmt(fStats.avg - bStats.avg)}</span>.`);
-    } else if (fStats && bStats) {
-      parts.push(`Followed-plan hot window trades average ${fmt(fStats.avg)}, close to your ${fmt(bStats.avg)} baseline.`);
-    }
-    return parts.join(' ');
-  }
-
-  function card(title, s, type) {
-    if (!s) return `
-      <div class="hw-card hw-${type}">
-        <div class="hw-card-top-bar"></div>
-        <div class="hw-label">${title}</div>
-        <div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);padding:8px 0">No trades in window</div>
-      </div>`;
-    return `
-      <div class="hw-card hw-${type}">
-        <div class="hw-card-top-bar"></div>
-        <div class="hw-label">${title}</div>
-        <div class="hw-pnl" style="color:${pnlColor(s.avg)}">${fmt(s.avg)}</div>
-        ${type !== 'baseline' ? `<div style="margin-bottom:12px">${delta(s.avg, bStats?.avg)}</div>` : '<div style="margin-bottom:12px"></div>'}
-        <div class="hw-stats">
-          <div class="hw-stat-item">
-            <div class="hw-stat-label">Win Rate</div>
-            <div class="hw-stat-val">${s.wr}%</div>
-          </div>
-          <div class="hw-stat-item">
-            <div class="hw-stat-label">Trades</div>
-            <div class="hw-stat-val">${s.count}</div>
-          </div>
-        </div>
-      </div>`;
-  }
-
-  // Hot window trade list
-  const hwTrades = [...hwFollowed, ...hwTriggered]
-    .sort((a,b) => new Date(b.entry_time) - new Date(a.entry_time));
-
-  function tradeRow(t) {
-    const timeStr  = toNYTimeShort(t.entry_time);
-    const dateStr  = t.date ? t.date.substring(5) : '';
-    const pnl      = t.net_pnl || 0;
-    const pnlStr   = (pnl >= 0 ? '+' : '') + '$' + Math.abs(pnl).toFixed(0);
-    const pnlCol   = pnlColor(pnl);
-    const dirCol   = t.direction === 'long' ? 'var(--green)' : 'var(--red)';
-    const followed = (t._windowOutcome || '').toLowerCase().includes('followed');
-    const outcomeCol = followed ? 'var(--green)' : 'var(--red)';
-    const outcomeStr = followed ? 'Followed plan' : 'Triggered';
-    const schemaCol  = 'rgba(117,104,184,0.6)';
-
-    // Find activation for this trade to get mins offset
-    const dayActs = actsByDate[t.date] || [];
-    let minsDiff = null;
-    for (const a of dayActs) {
-      const d = t._tradeMins - a.mins;
-      if (d >= -BEFORE_MINS && d <= AFTER_MINS) { minsDiff = d; break; }
-    }
-    const minsStr = minsDiff !== null
-      ? (minsDiff <= 0
-          ? `<span style="color:rgba(110,120,136,0.7);font-size:9px">${minsDiff}m</span>`
-          : `<span style="color:rgba(138,53,53,0.6);font-size:9px">+${minsDiff}m</span>`)
-      : '—';
-
-    return `<tr>
-      <td style="color:var(--muted)">${dateStr}</td>
-      <td>${timeStr}</td>
-      <td style="color:var(--text)">${t.instrument || '—'}</td>
-      <td style="color:${dirCol}">${(t.direction||'').toUpperCase()}</td>
-      <td style="color:${pnlCol}">${pnlStr}</td>
-      <td>${minsStr}</td>
-      <td style="color:${schemaCol};font-size:9px">${t._windowSchema || '—'}</td>
-      <td style="color:${outcomeCol};opacity:0.7;font-size:9px">${outcomeStr}</td>
-    </tr>`;
-  }
-
-  const insight = buildInsight();
-
-  el.innerHTML = `
-    <!-- Window definition strip -->
-    <div style="display:flex;align-items:center;gap:0;margin-bottom:22px;font-family:var(--font-mono);font-size:9px">
-      <div style="padding:7px 14px;border:1px solid var(--border);color:var(--muted);background:var(--surface2);border-radius:3px 0 0 3px">Baseline</div>
-      <div style="padding:7px 8px;background:var(--surface2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--muted)">←</div>
-      <div style="padding:7px 14px;border:1px solid var(--border2);background:rgba(110,120,136,0.08);color:rgba(110,120,136,0.6)">−${BEFORE_MINS} min</div>
-      <div style="padding:7px 8px;background:var(--surface2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--muted)">·</div>
-      <div style="padding:7px 14px;border:1px solid var(--border2);color:rgba(117,104,184,0.6);background:transparent;letter-spacing:0.1em;text-transform:uppercase">Activation Logged</div>
-      <div style="padding:7px 8px;background:var(--surface2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--muted)">·</div>
-      <div style="padding:7px 14px;border:1px solid var(--border2);background:rgba(138,53,53,0.07);color:rgba(138,53,53,0.55)">+${AFTER_MINS} min</div>
-      <div style="padding:7px 8px;background:var(--surface2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--muted)">→</div>
-      <div style="padding:7px 14px;border:1px solid var(--border);color:var(--muted);background:var(--surface2);border-radius:0 3px 3px 0">Baseline</div>
-    </div>
-
-    <!-- Three comparison cards -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px">
-      ${card('Baseline trades', bStats, 'baseline')}
-      ${card('Hot window · Followed plan', fStats, 'followed')}
-      ${card('Hot window · Triggered', tStats, 'triggered')}
-    </div>
-
-    <!-- Insight -->
-    ${insight ? `<div style="background:rgba(138,53,53,0.04);border:1px solid rgba(138,53,53,0.12);border-left:2px solid rgba(138,53,53,0.3);border-radius:4px;padding:11px 15px;font-family:var(--font-mono);font-size:10px;color:var(--muted);line-height:1.7;margin-bottom:20px">${insight}</div>` : ''}
-
-  `;
-}
-
-// Card styles injected once
-(function injectHwStyles() {
-  if (document.getElementById('hw-styles')) return;
-  const s = document.createElement('style');
-  s.id = 'hw-styles';
-  s.textContent = [
-    '.hw-card { background:var(--surface2); border:1px solid var(--border); border-radius:5px; padding:16px 18px; position:relative; overflow:hidden; }',
-    '.hw-card-top-bar { position:absolute; top:0; left:0; right:0; height:2px; }',
-    '.hw-baseline .hw-card-top-bar { background:rgba(110,120,136,0.5); }',
-    '.hw-followed .hw-card-top-bar { background:var(--green); opacity:0.6; }',
-    '.hw-triggered .hw-card-top-bar { background:var(--red); opacity:0.6; }',
-    '.hw-label { font-family:var(--font-mono); font-size:9px; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:12px; }',
-    '.hw-baseline .hw-label { color:var(--blue); }',
-    '.hw-followed .hw-label { color:var(--green); opacity:0.7; }',
-    '.hw-triggered .hw-label { color:var(--red); opacity:0.7; }',
-    '.hw-pnl { font-family:var(--font-num); font-size:30px; font-weight:300; line-height:1; margin-bottom:6px; }',
-    '.hw-stats { display:flex; gap:16px; padding-top:12px; border-top:1px solid var(--border); }',
-    '.hw-stat-label { font-family:var(--font-mono); font-size:8px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:3px; }',
-    '.hw-stat-val { font-family:var(--font-num); font-size:14px; color:var(--text); }'
-  ].join(' ');
-  document.head.appendChild(s);
-})();
 
 // ── Sync ──────────────────────────────────────────────────────────────────────
 // Reads app_data (Trading Desk mobile app) and incrementally backfills
@@ -4043,209 +3786,6 @@ window.addEventListener('DOMContentLoaded', () => {
   loadToday();
   loadAndRender();
 });
-
-
-function renderReadiness(days, trades) {
-  const el = document.getElementById('readiness-section');
-  if (!el) return;
-  if (!days || !days.length) { el.innerHTML = '<div class="no-data">No readiness data in range — run Sync to import from Trading Desk</div>'; return; }
-
-  // Map day P&L
-  const dayPnl = {};
-  trades.forEach(t => {
-    if (!dayPnl[t.date]) dayPnl[t.date] = 0;
-    dayPnl[t.date] += t.net_pnl || 0;
-  });
-
-  // ── Gate cards ──────────────────────────────────────────────
-  function gateStats(gate) {
-    const gateTrades = trades.filter(t => {
-      const day = days.find(d => d.date === t.date);
-      return day && (day.gate || '').toUpperCase() === gate;
-    });
-    if (!gateTrades.length) return null;
-    const avg = gateTrades.reduce((s,t) => s + (t.net_pnl||0), 0) / gateTrades.length;
-    const wr  = gateTrades.filter(t => t.net_pnl > 0).length / gateTrades.length * 100;
-    const dayCount = [...new Set(gateTrades.map(t => t.date))].length;
-    return { avg, wr, trades: gateTrades.length, days: dayCount };
-  }
-
-  function gateCard(gate, s) {
-    const color = gate === 'GREEN' ? 'var(--green)' : gate === 'AMBER' ? 'var(--amber)' : 'var(--red)';
-    const label = gate === 'GREEN' ? '● Green — Full size' : gate === 'AMBER' ? '◐ Amber — Half size' : '○ Red — No trade';
-    if (!s) return `
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:16px 18px;position:relative;overflow:hidden;opacity:0.4">
-        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${color};opacity:0.7"></div>
-        <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:${color};opacity:0.8;margin-bottom:12px">${label}</div>
-        <div style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">No trades</div>
-      </div>`;
-    const pnlColor = s.avg >= 0 ? 'var(--green)' : 'var(--red)';
-    const pnlStr   = (s.avg >= 0 ? '+' : '') + '$' + Math.abs(s.avg).toFixed(0);
-    return `
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:16px 18px;position:relative;overflow:hidden">
-        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${color};opacity:0.7"></div>
-        <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:${color};opacity:0.8;margin-bottom:12px">${label}</div>
-        <div style="font-family:var(--font-num);font-size:30px;font-weight:300;line-height:1;color:${pnlColor};margin-bottom:14px">${pnlStr}</div>
-        <div style="display:flex;gap:16px;padding-top:12px;border-top:1px solid var(--border)">
-          <div>
-            <div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px">Win Rate</div>
-            <div style="font-family:var(--font-num);font-size:14px;color:var(--text)">${s.wr.toFixed(0)}%</div>
-          </div>
-          <div>
-            <div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px">Days</div>
-            <div style="font-family:var(--font-num);font-size:14px;color:var(--text)">${s.days}</div>
-          </div>
-          <div>
-            <div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px">Trades</div>
-            <div style="font-family:var(--font-num);font-size:14px;color:var(--text)">${s.trades}</div>
-          </div>
-        </div>
-      </div>`;
-  }
-
-  const gs = { GREEN: gateStats('GREEN'), AMBER: gateStats('AMBER'), RED: gateStats('RED') };
-
-  // ── Bar breakdown helper ─────────────────────────────────────
-  function barGroup(label, buckets) {
-    const maxAbsAvg = Math.max(...buckets.map(b => Math.abs(b.avg || 0)), 1);
-    const rows = buckets.map(b => {
-      const pct   = b.n ? Math.abs(b.avg || 0) / maxAbsAvg * 100 : 0;
-      const color = !b.n ? 'var(--muted)' : b.avg >= 0 ? 'var(--green)' : 'var(--red)';
-      const barColor = !b.n ? 'var(--border)' : b.avg >= 0 ? 'rgba(37,145,134,0.55)' : 'rgba(138,53,53,0.5)';
-      const valStr  = !b.n ? '—' : (b.avg >= 0 ? '+' : '') + '$' + Math.abs(b.avg).toFixed(0);
-      return `
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);width:46px;text-align:right;flex-shrink:0">${b.label}</div>
-          <div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden">
-            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width 0.6s"></div>
-          </div>
-          <div style="font-family:var(--font-num);font-size:12px;color:${color};width:52px;text-align:right;flex-shrink:0">${valStr}</div>
-          <div style="font-family:var(--font-mono);font-size:8px;color:var(--muted);width:28px;flex-shrink:0">${b.n ? 'n='+b.n : ''}</div>
-        </div>`;
-    }).join('');
-    return `
-      <div>
-        <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">${label}</div>
-        ${rows}
-      </div>`;
-  }
-
-  // ── Sleep buckets ────────────────────────────────────────────
-  function sleepBuckets() {
-    const defs = [
-      { label: '80+',   fn: d => d.whoop_sleep >= 80 },
-      { label: '70–79', fn: d => d.whoop_sleep >= 70 && d.whoop_sleep < 80 },
-      { label: '<70',   fn: d => d.whoop_sleep != null && d.whoop_sleep < 70 },
-    ];
-    return defs.map(def => {
-      const bucket = days.filter(d => def.fn(d) && dayPnl[d.date] != null);
-      const n   = bucket.length;
-      const avg = n ? bucket.reduce((s,d) => s + dayPnl[d.date], 0) / n : null;
-      return { label: def.label, n, avg };
-    });
-  }
-
-  // ── Recovery buckets (only for completeness, threshold is <30) ──
-  function recoveryBuckets() {
-    const defs = [
-      { label: '50+',   fn: d => d.whoop_recovery >= 50 },
-      { label: '30–49', fn: d => d.whoop_recovery >= 30 && d.whoop_recovery < 50 },
-      { label: '<30',   fn: d => d.whoop_recovery != null && d.whoop_recovery < 30 },
-    ];
-    return defs.map(def => {
-      const bucket = days.filter(d => def.fn(d) && dayPnl[d.date] != null);
-      const n   = bucket.length;
-      const avg = n ? bucket.reduce((s,d) => s + dayPnl[d.date], 0) / n : null;
-      return { label: def.label, n, avg };
-    });
-  }
-
-  // ── Connectedness buckets ────────────────────────────────────
-  function connectednessBuckets() {
-    const defs = [
-      { label: 'High 4-5', fn: d => d.mental_connected >= 4 },
-      { label: 'Mid 3',    fn: d => d.mental_connected === 3 },
-      { label: 'Low 1-2',  fn: d => d.mental_connected != null && d.mental_connected <= 2 },
-    ];
-    return defs.map(def => {
-      const bucket = days.filter(d => def.fn(d) && dayPnl[d.date] != null);
-      const n   = bucket.length;
-      const avg = n ? bucket.reduce((s,d) => s + dayPnl[d.date], 0) / n : null;
-      return { label: def.label, n, avg };
-    });
-  }
-
-  // ── Gate driver bar ──────────────────────────────────────────
-  function driverBar() {
-    const nonGreenDays = days.filter(d => (d.gate || '').toUpperCase() !== 'GREEN');
-    if (!nonGreenDays.length) return '';
-
-    let sleepDriven = 0, connDriven = 0, recDriven = 0, both = 0;
-    nonGreenDays.forEach(d => {
-      const sleepBad = d.whoop_sleep != null && d.whoop_sleep < 70;
-      const recBad   = d.whoop_recovery != null && d.whoop_recovery < 30;
-      const connBad  = d.mental_connected != null && d.mental_connected <= 2;
-      if (sleepBad && connBad) both++;
-      else if (sleepBad || recBad) sleepDriven++;
-      else if (connBad) connDriven++;
-      else sleepDriven++; // fallback
-    });
-
-    const total = nonGreenDays.length;
-    const sleepPct = Math.round((sleepDriven + both * 0.5) / total * 100);
-    const connPct  = 100 - sleepPct;
-
-    return `
-      <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:10px;opacity:0.7">
-        What's driving amber & red days
-        <span style="flex:1;height:1px;background:var(--border);display:block"></span>
-      </div>
-      <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:4px">
-        <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap">Gate driver</div>
-        <div style="flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;display:flex">
-          <div style="height:100%;width:${sleepPct}%;background:var(--blue);opacity:0.6;border-radius:2px 0 0 2px"></div>
-          <div style="height:100%;width:${connPct}%;background:rgba(117,104,184,0.5);border-radius:0 2px 2px 0"></div>
-        </div>
-        <div style="display:flex;gap:14px;flex-shrink:0">
-          <div style="display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:9px;color:var(--muted)">
-            <div style="width:6px;height:6px;border-radius:50%;background:var(--blue);opacity:0.6"></div>
-            Sleep ${sleepPct}%
-          </div>
-          <div style="display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:9px;color:var(--muted)">
-            <div style="width:6px;height:6px;border-radius:50%;background:rgba(117,104,184,0.7)"></div>
-            Connectedness ${connPct}%
-          </div>
-        </div>
-      </div>`;
-  }
-
-  // ── Divider helper ───────────────────────────────────────────
-  function divider(label) {
-    return `<div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin:22px 0 16px;display:flex;align-items:center;gap:10px;opacity:0.7">
-      ${label}<span style="flex:1;height:1px;background:var(--border);display:block"></span>
-    </div>`;
-  }
-
-  el.innerHTML = `
-    <!-- Gate cards -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:4px">
-      ${gateCard('GREEN', gs.GREEN)}
-      ${gateCard('AMBER', gs.AMBER)}
-      ${gateCard('RED',   gs.RED)}
-    </div>
-
-    ${divider('Whoop breakdown')}
-
-    <!-- Three bar groups -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:4px">
-      ${barGroup('Sleep %', sleepBuckets())}
-      ${barGroup('Recovery %', recoveryBuckets())}
-      ${barGroup('Connectedness', connectednessBuckets())}
-    </div>
-
-    ${driverBar()}
-  `;
-}
 
 function renderDiscipline(days, trades) {
   const el = document.getElementById('discipline-section');
