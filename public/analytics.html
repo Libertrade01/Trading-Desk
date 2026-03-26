@@ -3379,7 +3379,7 @@ async function syncData() {
       .sort();
 
     if (!checkinDates.length) {
-      showSyncResult({ skipped: 0, days: 0, activations: 0, message: 'No Trading Desk data found in app_data.' });
+      showSyncResult({ skipped: 0, days: 0, message: 'No Trading Desk data found in app_data.' });
       return;
     }
 
@@ -3405,7 +3405,7 @@ async function syncData() {
     const skippedCount = checkinDates.length - datesToSync.length;
 
     if (!datesToSync.length) {
-      showSyncResult({ skipped: skippedCount, days: 0, activations: 0, message: 'All dates already synced.' });
+      showSyncResult({ skipped: skippedCount, days: 0, message: 'All dates already synced.' });
       await loadAndRender();
       return;
     }
@@ -3418,8 +3418,6 @@ async function syncData() {
 
     for (const date of datesToSync) {
       const checkin   = appData[`checkin-${date}`] || null;
-      const activs    = appData[`activations-${date}`] || [];
-
       // Find prep key — could be any instrument e.g. prep-2026-02-27-NQ
       const prepKey = Object.keys(appData).find(k => k.startsWith(`prep-${date}-`));
       const prep = prepKey ? appData[prepKey] : null;
