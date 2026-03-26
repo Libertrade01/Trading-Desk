@@ -1560,188 +1560,6 @@
   }
 
 
-  /* ── Intel Tab ── */
-  #intel-page {
-    display: none;
-    flex-direction: column;
-    min-height: calc(100vh - 52px);
-    background: var(--bg);
-    font-family: var(--font-mono);
-  }
-  .intel-pulse-strip {
-    display: flex;
-    align-items: stretch;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    overflow-x: auto;
-  }
-  .ipc {
-    flex: 1; min-width: 110px;
-    padding: 12px 18px;
-    border-right: 1px solid var(--border);
-    position: relative;
-    transition: background 0.12s;
-    cursor: default;
-  }
-  .ipc:last-child { border-right: none; }
-  .ipc:hover { background: var(--surface2); }
-  .ipc-label {
-    font-size: 8px; letter-spacing: 0.14em;
-    text-transform: uppercase; color: var(--muted);
-    margin-bottom: 5px;
-  }
-  .ipc-value {
-    font-size: 17px; font-weight: 500;
-    letter-spacing: 0.02em; line-height: 1;
-    margin-bottom: 3px;
-  }
-  .ipc-change { font-size: 10px; letter-spacing: 0.04em; }
-  .ipc-bar {
-    position: absolute; bottom: 0; left: 0;
-    height: 2px; transition: width 0.8s ease;
-  }
-  .intel-main {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    flex: 1;
-    overflow: hidden;
-  }
-  .intel-left {
-    border-right: 1px solid var(--border);
-    display: flex; flex-direction: column;
-    max-height: calc(100vh - 52px - 58px);
-    overflow: hidden;
-  }
-  .intel-right {
-    display: flex; flex-direction: column;
-    overflow: hidden;
-  }
-  .intel-panel-hdr {
-    padding: 12px 18px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    flex-shrink: 0;
-  }
-  .intel-panel-title {
-    font-size: 8px; letter-spacing: 0.16em;
-    text-transform: uppercase; color: var(--muted);
-    display: flex; align-items: center; gap: 8px;
-  }
-  .intel-panel-title::before {
-    content: ''; width: 2px; height: 10px;
-    background: var(--teal); border-radius: 1px; display: block;
-  }
-  /* Day nav */
-  .intel-day-nav {
-    display: flex; border-bottom: 1px solid var(--border);
-    flex-shrink: 0; overflow-x: auto;
-  }
-  .intel-day-btn {
-    flex: 1; padding: 9px 6px;
-    font-family: var(--font-mono); font-size: 8px;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--muted); background: none; border: none;
-    border-bottom: 2px solid transparent;
-    cursor: pointer; transition: all 0.12s; white-space: nowrap;
-    text-align: center;
-  }
-  .intel-day-btn:hover { color: var(--text); background: var(--surface2); }
-  .intel-day-btn.active { color: var(--teal); border-bottom-color: var(--teal); }
-  .intel-day-btn .hi-dot {
-    width: 3px; height: 3px; border-radius: 50%;
-    background: var(--red); display: inline-block;
-    margin-left: 3px; vertical-align: middle;
-  }
-  /* Cal events */
-  .intel-cal-body { flex: 1; overflow-y: auto; }
-  .intel-cal-event {
-    display: flex; align-items: flex-start; gap: 10px;
-    padding: 11px 18px; border-bottom: 1px solid var(--border);
-    position: relative; transition: background 0.1s;
-  }
-  .intel-cal-event:hover { background: var(--surface2); }
-  .intel-cal-event::before {
-    content: ''; position: absolute;
-    left: 0; top: 0; bottom: 0; width: 2px;
-  }
-  .intel-cal-event.high::before   { background: var(--red); }
-  .intel-cal-event.medium::before { background: #b8860b; }
-  .intel-cal-time {
-    font-size: 10px; color: var(--muted);
-    width: 46px; flex-shrink: 0; padding-top: 1px;
-  }
-  .intel-cal-time.soon { color: var(--teal); }
-  .intel-cal-name { font-size: 11px; color: var(--text); margin-bottom: 3px; line-height: 1.3; }
-  .intel-cal-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-  .intel-cal-badge {
-    font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase;
-    padding: 2px 5px; border-radius: 2px;
-  }
-  .intel-cal-badge.high   { background: rgba(138,53,53,0.2); color: var(--red); border: 1px solid rgba(138,53,53,0.3); }
-  .intel-cal-badge.medium { background: rgba(184,134,11,0.15); color: #c9a227; border: 1px solid rgba(184,134,11,0.25); }
-  .intel-cal-sub { font-size: 9px; color: var(--muted); }
-  /* Sector flow */
-  .intel-flow { flex: 1; display: flex; flex-direction: column; border-bottom: 1px solid var(--border); min-height: 340px; }
-  .intel-flow-controls {
-    display: flex; align-items: center; flex-wrap: wrap;
-    padding: 0 18px; gap: 8px;
-    border-bottom: 1px solid var(--border); flex-shrink: 0;
-  }
-  .intel-cluster-btn {
-    font-family: var(--font-mono); font-size: 8px;
-    letter-spacing: 0.09em; text-transform: uppercase;
-    padding: 4px 9px; border-radius: 2px;
-    border: 1px solid var(--border2); background: none;
-    color: var(--muted); cursor: pointer; transition: all 0.12s;
-  }
-  .intel-cluster-btn.active {
-    background: rgba(29,122,114,0.15);
-    border-color: rgba(29,122,114,0.4);
-    color: var(--teal);
-  }
-  .intel-cluster-btn:hover:not(.active) { color: var(--text); border-color: var(--text); }
-  .intel-tf-btn {
-    font-family: var(--font-mono); font-size: 9px;
-    letter-spacing: 0.08em; padding: 4px 9px;
-    border: none; background: none;
-    color: var(--muted); cursor: pointer;
-    transition: all 0.12s; border-radius: 2px;
-  }
-  .intel-tf-btn.active { color: var(--teal); background: rgba(29,122,114,0.1); }
-  .intel-tf-btn:hover:not(.active) { color: var(--text); }
-  .intel-chart-wrap { flex: 1; position: relative; min-height: 0; padding: 12px 16px; }
-  .intel-chart-wrap canvas { position: absolute; inset: 12px 16px; }
-  /* Heatmap */
-  .intel-heatmap { height: 380px; display: flex; flex-direction: column; flex-shrink: 0; }
-  .intel-hm-btn {
-    font-family: var(--font-mono); font-size: 8px;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    padding: 4px 11px; border: 1px solid var(--border2);
-    background: none; color: var(--muted); cursor: pointer;
-    transition: all 0.12s;
-  }
-  .intel-hm-btn:first-child { border-radius: 2px 0 0 2px; }
-  .intel-hm-btn:last-child  { border-radius: 0 2px 2px 0; }
-  .intel-hm-btn.active { background: rgba(29,122,114,0.15); border-color: rgba(29,122,114,0.4); color: var(--teal); }
-  .intel-heatmap-frame { flex: 1; overflow: hidden; background: #000; }
-  .intel-heatmap-frame iframe { width: 100%; height: 100%; border: none; }
-  .intel-refresh-btn {
-    font-family: var(--font-mono); font-size: 9px;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    background: none; border: 1px solid var(--border2);
-    color: var(--muted); padding: 4px 12px;
-    border-radius: 2px; cursor: pointer; transition: all 0.12s;
-  }
-  .intel-refresh-btn:hover { border-color: var(--teal); color: var(--teal); }
-  .intel-no-events {
-    padding: 30px 18px; text-align: center;
-    font-size: 10px; letter-spacing: 0.06em; color: var(--muted);
-  }
-  .intel-loading {
-    padding: 30px 18px; text-align: center;
-    font-size: 10px; color: var(--muted);
-    animation: pulse-opacity 1.5s ease-in-out infinite;
-  }
 
 </style>
 </head>
@@ -1755,7 +1573,6 @@
       <div style="display:flex;align-items:center;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px">
         <button id="nav-dashboard" onclick="showPage('dashboard')" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:5px 14px;border-radius:3px;border:none;cursor:pointer;background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:all 0.15s">Dashboard</button>
         <button id="nav-reports" onclick="showPage('reports')" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:5px 14px;border-radius:3px;border:none;cursor:pointer;background:none;color:var(--muted);transition:all 0.15s">Reports</button>
-        <button id="nav-intel" onclick="showPage('intel')" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:5px 14px;border-radius:3px;border:none;cursor:pointer;background:none;color:var(--muted);transition:all 0.15s">Intel</button>
       </div>
     </div>
     <a href="/" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);text-decoration:none;border:1px solid rgba(45,212,191,0.15);padding:5px 14px;border-radius:4px;background:rgba(45,212,191,0.04);transition:all 0.15s;opacity:0.6">← Trade Desk</a>
@@ -1824,6 +1641,8 @@
     <button class="range-btn" onclick="setRange('week')">This Week</button>
     <button class="range-btn" onclick="setRange('lastweek')">Last Week</button>
     <button class="range-btn active" onclick="setRange('month')">This Month</button>
+    <button class="range-btn" onclick="setRange('5d')">5D</button>
+    <button class="range-btn" onclick="setRange('20d')">20D</button>
     <button class="range-btn" onclick="setRange('all')">All Time</button>
     <span style="margin-left:8px;color:var(--border);font-family:var(--font-mono)">|</span>
     <input type="date" class="date-input" id="date-from" onchange="setCustomRange()">
@@ -2138,116 +1957,6 @@
   </div>
 
 
-  <!-- Intel Page -->
-  <div id="intel-page" style="display:none;flex-direction:column;min-height:calc(100vh - 52px)">
-
-    <!-- Pulse Strip -->
-    <div class="intel-pulse-strip">
-      <div class="ipc" id="ipc-vix">
-        <div class="ipc-label">VIX</div>
-        <div class="ipc-value neu">—</div>
-        <div class="ipc-change neu">—</div>
-        <div class="ipc-bar"></div>
-      </div>
-      <div class="ipc" id="ipc-dxy">
-        <div class="ipc-label">DXY</div>
-        <div class="ipc-value neu">—</div>
-        <div class="ipc-change neu">—</div>
-        <div class="ipc-bar"></div>
-      </div>
-      <div class="ipc" id="ipc-10y">
-        <div class="ipc-label">10Y Yield</div>
-        <div class="ipc-value neu">—</div>
-        <div class="ipc-change neu">—</div>
-        <div class="ipc-bar"></div>
-      </div>
-      <div class="ipc" id="ipc-gold">
-        <div class="ipc-label">Gold</div>
-        <div class="ipc-value neu">—</div>
-        <div class="ipc-change neu">—</div>
-        <div class="ipc-bar"></div>
-      </div>
-      <div class="ipc" id="ipc-oil">
-        <div class="ipc-label">Crude Oil</div>
-        <div class="ipc-value neu">—</div>
-        <div class="ipc-change neu">—</div>
-        <div class="ipc-bar"></div>
-      </div>
-      <div class="ipc" id="ipc-btc">
-        <div class="ipc-label">BTC</div>
-        <div class="ipc-value neu">—</div>
-        <div class="ipc-change neu">—</div>
-        <div class="ipc-bar"></div>
-      </div>
-      <div class="ipc" id="ipc-fg" style="min-width:160px">
-        <div class="ipc-label">Fear &amp; Greed</div>
-        <div class="ipc-value neu" id="ifg-value">—</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
-          <div style="flex:1;height:3px;background:linear-gradient(to right,var(--red),#b8860b,var(--green));border-radius:2px;position:relative">
-            <div id="ifg-needle" style="position:absolute;top:-3px;width:2px;height:9px;background:var(--text);border-radius:1px;transform:translateX(-50%);transition:left 1s ease;left:50%"></div>
-          </div>
-          <div id="ifg-label" style="font-size:9px;color:var(--muted);white-space:nowrap;letter-spacing:0.04em">—</div>
-        </div>
-        <div class="ipc-bar"></div>
-      </div>
-      <div style="display:flex;align-items:center;padding:0 16px;border-left:1px solid var(--border);flex-shrink:0">
-        <button class="intel-refresh-btn" id="intel-refresh-btn" onclick="intelRefreshAll()">⟳ Refresh</button>
-      </div>
-    </div>
-
-    <!-- Main -->
-    <div class="intel-main" style="flex:1">
-
-      <!-- Left: Calendar -->
-      <div class="intel-left">
-        <div class="intel-panel-hdr">
-          <div class="intel-panel-title">Economic Calendar · USD</div>
-          <div style="font-size:8px;color:var(--muted);letter-spacing:0.06em">High + Medium</div>
-        </div>
-        <div class="intel-day-nav" id="intel-day-nav"></div>
-        <div class="intel-cal-body" id="intel-cal-body">
-          <div class="intel-loading">Loading...</div>
-        </div>
-      </div>
-
-      <!-- Right: Flow + Heatmap -->
-      <div class="intel-right">
-
-        <!-- Sector Flow -->
-        <div class="intel-flow">
-          <div class="intel-flow-controls" style="padding-top:10px;padding-bottom:10px">
-            <div class="intel-panel-title">Sector Flow</div>
-            <div id="intel-cluster-toggles" style="display:flex;gap:4px;flex-wrap:wrap"></div>
-            <div style="flex:1"></div>
-            <div style="display:flex;border-left:1px solid var(--border);padding-left:10px;gap:2px">
-              <button class="intel-tf-btn active" onclick="intelSetTF('1D',this)">1D</button>
-              <button class="intel-tf-btn" onclick="intelSetTF('5D',this)">5D</button>
-              <button class="intel-tf-btn" onclick="intelSetTF('1M',this)">1M</button>
-            </div>
-          </div>
-          <div class="intel-chart-wrap">
-            <canvas id="intel-chart-flow"></canvas>
-          </div>
-        </div>
-
-        <!-- Heatmap -->
-        <div class="intel-heatmap">
-          <div class="intel-panel-hdr">
-            <div class="intel-panel-title">Market Heatmap</div>
-            <div style="display:flex;gap:0">
-              <button class="intel-hm-btn active" onclick="intelSetHeatmap('sp500',this)">S&amp;P 500</button>
-              <button class="intel-hm-btn" onclick="intelSetHeatmap('sectors',this)">Sectors</button>
-              <button class="intel-hm-btn" onclick="intelSetHeatmap('futures',this)">Futures</button>
-            </div>
-          </div>
-          <div class="intel-heatmap-frame" id="intel-heatmap-frame">
-            <div id="intel-heatmap-inner" style="width:100%;height:100%"></div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
 
   <!-- Accounts Drawer Overlay -->
   <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
@@ -2552,7 +2261,15 @@ function setRange(range) {
   const dow     = lima.getUTCDay(); // 0=Sun in Lima time
   const limaStr = d => new Date(d.getTime() - 5*3600000).toISOString().split('T')[0];
 
-  if (range === 'week') {
+  if (range === '5d') {
+    const from = new Date(now.getTime() - 7 * 86400000); // 7 calendar days covers 5 trading days
+    dateFrom = limaStr(from);
+    dateTo   = today;
+  } else if (range === '20d') {
+    const from = new Date(now.getTime() - 28 * 86400000); // 28 calendar days ≈ 20 trading days
+    dateFrom = limaStr(from);
+    dateTo   = today;
+  } else if (range === 'week') {
     const monday = new Date(now);
     monday.setTime(now.getTime() - (dow === 0 ? 6 : dow - 1) * 86400000);
     dateFrom = limaStr(monday);
@@ -2613,11 +2330,15 @@ async function loadData() {
 
 // ── Journal & Lessons data (always last 5, ignores date filter) ───────────────
 async function loadJournalData() {
+  const dateFilters = [];
+  if (dateFrom) dateFilters.push(`trading_day=gte.${dateFrom}`);
+  if (dateTo)   dateFilters.push(`trading_day=lte.${dateTo}`);
+
   const [journal, lessons] = await Promise.all([
     query('intraday_journal', 'et_time,trading_day,session_phase,dictated_text,emotions',
-      ['dictated_text=not.is.null', 'order=et_time.desc', 'limit=5']),
+      ['dictated_text=not.is.null', ...dateFilters, 'order=et_time.desc', 'limit=5']),
     query('intraday_journal', 'et_time,trading_day,session_phase,lesson_text',
-      ['lesson_text=not.is.null', 'order=et_time.desc', 'limit=5']),
+      ['lesson_text=not.is.null', ...dateFilters, 'order=et_time.desc', 'limit=5']),
   ]);
   allJournalEntries = journal || [];
   allLessonEntries  = (lessons || []).filter(e => (e.lesson_text || '').trim());
@@ -5379,20 +5100,17 @@ function showPage(page) {
   const rstrip  = document.getElementById('readiness-strip');
   const fbar    = document.querySelector('.filter-bar');
   const rpage   = document.getElementById('reports-page');
-  const ipage   = document.getElementById('intel-page');
   const navDash = document.getElementById('nav-dashboard');
   const navRep  = document.getElementById('nav-reports');
-  const navInt  = document.getElementById('nav-intel');
 
   // Reset all nav buttons
-  [navDash, navRep, navInt].forEach(b => {
+  [navDash, navRep].forEach(b => {
     if (b) { b.style.background = 'none'; b.style.color = 'var(--muted)'; b.style.boxShadow = 'none'; }
   });
 
   // Hide all pages
   dash.style.display  = 'none';
   rpage.style.display = 'none';
-  ipage.style.display = 'none';
   if (rstrip) rstrip.style.display = 'none';
   if (fbar)   fbar.style.display   = 'none';
 
@@ -5407,10 +5125,6 @@ function showPage(page) {
     rpage.style.display = 'grid';
     Object.assign(navRep.style, activeStyle);
     initReportsPage();
-  } else if (page === 'intel') {
-    ipage.style.display = 'flex';
-    Object.assign(navInt.style, activeStyle);
-    intelInit();
   }
 }
 
@@ -6897,18 +6611,22 @@ async function loadJournalPanelPage() {
   document.getElementById('jp-tab-journal').style.color  = _jpCurrentTab === 'journal'  ? 'var(--text)' : '';
   document.getElementById('jp-tab-lessons').style.color  = _jpCurrentTab === 'lessons'  ? 'var(--text)' : '';
 
+  const dateFilters = [];
+  if (dateFrom) dateFilters.push(`trading_day=gte.${dateFrom}`);
+  if (dateTo)   dateFilters.push(`trading_day=lte.${dateTo}`);
+
   try {
     let entries;
     if (_jpCurrentTab === 'journal') {
       titleEl.textContent = 'Journal';
       entries = await query('intraday_journal',
         'id,et_time,trading_day,session_phase,dictated_text,emotions',
-        ['dictated_text=not.is.null', 'order=et_time.desc', 'limit=200']);
+        ['dictated_text=not.is.null', ...dateFilters, 'order=et_time.desc', 'limit=200']);
     } else {
       titleEl.textContent = 'Lessons & Reflections';
       entries = await query('intraday_journal',
         'id,et_time,trading_day,session_phase,lesson_text',
-        ['lesson_text=not.is.null', 'order=et_time.desc', 'limit=200']);
+        ['lesson_text=not.is.null', ...dateFilters, 'order=et_time.desc', 'limit=200']);
       entries = (entries || []).filter(e => (e.lesson_text || '').trim());
     }
     renderJournalPanel(entries || []);
