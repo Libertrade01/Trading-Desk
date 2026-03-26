@@ -3398,8 +3398,8 @@ async function syncData() {
       if (d.synced_at) syncedMap[d.date] = d.synced_at;
     }
 
-    // Dates to sync = not yet synced, today, or within last 90 days (to catch data fixes)
-    const cutoffDate = new Date(); cutoffDate.setDate(cutoffDate.getDate() - 90);
+    // Dates to sync = not yet synced, or within last 7 days (to catch same-week edits)
+    const cutoffDate = new Date(); cutoffDate.setDate(cutoffDate.getDate() - 7);
     const cutoffStr = cutoffDate.toISOString().split('T')[0];
     const datesToSync = checkinDates.filter(d => !syncedMap[d] || d >= cutoffStr);
     const skippedCount = checkinDates.length - datesToSync.length;
@@ -3415,8 +3415,6 @@ async function syncData() {
 
     const tradingDayRows = [];
     const descriptionRows = [];   // separate batch — only dates that have prep descriptions
-    let totalActivations = 0;
-    const activationRows = [];
 
     for (const date of datesToSync) {
       const checkin   = appData[`checkin-${date}`] || null;
@@ -3549,23 +3547,6 @@ async function syncData() {
 
       tradingDayRows.push(row);
 
-      // ── Activations ───────────────────────────────────────────────────────
-      if (Array.isArray(activs) && activs.length) {
-        for (const a of activs) {
-          activationRows.push({
-            date,
-            schema:            a.schema        || null,
-            outcome:           a.outcome       || null,
-            the_urge:          a.urge          || null,
-            feeling:           a.feeling       || null,
-            what_happened:     a.happened      || null,
-            body_location:     a.bodyLocation  || null,
-            pattern_interrupt: a.interrupt     || null,
-            activated_at:      a.timestamp     || new Date(date).toISOString(),
-          });
-          totalActivations++;
-        }
-      }
     }
 
     // ── Step 5: Upsert trading_days rows ──────────────────────────────────────
@@ -3616,36 +3597,7 @@ async function syncData() {
       }
     }
 
-    // ── Step 6: Upsert activations ────────────────────────────────────────────
-    // Delete existing synced activations for these dates first, then re-insert
-    // This avoids duplicates on re-sync of today
-    if (activationRows.length) {
-      btn.textContent = `⟳ Syncing ${totalActivations} activations...`;
-
-      // Delete existing activations for dates we're syncing (safe re-sync)
-      for (const date of datesToSync) {
-        await fetch(
-          `${SUPABASE_URL}/rest/v1/activations?date=eq.${date}`,
-          { method: 'DELETE', headers: HEADERS }
-        );
-      }
-
-      // Insert fresh
-      const actRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/activations`,
-        {
-          method: 'POST',
-          headers: { ...HEADERS, 'Prefer': 'return=minimal' },
-          body: JSON.stringify(activationRows),
-        }
-      );
-      if (!actRes.ok) {
-        const err = await actRes.text();
-        throw new Error('activations insert failed: ' + err);
-      }
-    }
-
-    // ── Step 6b: Write rule notes to rule_compliance ─────────────────────────
+    // ── Step 6: Write rule notes to rule_compliance ──────────────────────────
     // Fetch trading_day IDs for synced dates so we can relate rule_compliance rows
     const tdIdRes = await fetch(
       `${SUPABASE_URL}/rest/v1/trading_days?select=id,date&date=in.(${datesToSync.join(',')})`,
@@ -3686,9 +3638,9 @@ async function syncData() {
     }
 
     if (ruleCompRows.length) {
-      for (const date of datesToSync) {
-        await fetch(`${SUPABASE_URL}/rest/v1/rule_compliance?date=eq.${date}`, { method: 'DELETE', headers: HEADERS });
-      }
+      await Promise.all(datesToSync.map(date =>
+        fetch(`${SUPABASE_URL}/rest/v1/rule_compliance?date=eq.${date}`, { method: 'DELETE', headers: HEADERS })
+      ));
       const rcRes = await fetch(`${SUPABASE_URL}/rest/v1/rule_compliance`, {
         method: 'POST',
         headers: { ...HEADERS, 'Prefer': 'return=minimal' },
@@ -3702,10 +3654,9 @@ async function syncData() {
     await loadAndRender();
 
     showSyncResult({
-      days:        tradingDayRows.length,
-      activations: totalActivations,
-      skipped:     skippedCount,
-      message:     null,
+      days:    tradingDayRows.length,
+      skipped: skippedCount,
+      message: null,
     });
 
   } catch (err) {
