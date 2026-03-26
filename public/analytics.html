@@ -2579,13 +2579,13 @@ async function loadData() {
 // ── Journal & Lessons data (always last 5, ignores date filter) ───────────────
 async function loadJournalData() {
   const [journal, lessons] = await Promise.all([
-    query('intraday_journal', 'et_time,trading_day,session_phase,dictated_text,emotions',
-      ['dictated_text=not.is.null', 'order=et_time.desc', 'limit=5']),
+    query('intraday_journal', 'et_time,trading_day,session_phase,dictated_text,lesson_text,emotions',
+      ['order=et_time.desc', 'limit=5']),
     query('intraday_journal', 'et_time,trading_day,session_phase,lesson_text',
-      ['lesson_text=not.is.null', 'lesson_text=neq.', 'order=et_time.desc', 'limit=5']),
+      ['lesson_text=not.is.null', 'order=et_time.desc', 'limit=5']),
   ]);
-  allJournalEntries = journal || [];
-  allLessonEntries  = lessons || [];
+  allJournalEntries = (journal || []).filter(e => e.dictated_text || e.lesson_text);
+  allLessonEntries  = (lessons || []).filter(e => e.lesson_text && e.lesson_text.trim());
 }
 
 // ── Today's readiness ─────────────────────────────────────────────────────────
@@ -7288,16 +7288,18 @@ Write in plain prose with the section headings listed above. No bullet points wi
 // ── Top bar streak pills ──────────────────────────────────────────────────────
 // ── Emotion chip helper ────────────────────────────────────────────────────────
 const EMOTION_CLASS = {
-  Focused: 'positive', Confident: 'positive', Calm: 'positive',
-  Neutral: 'neutral',
-  Overconfident: 'caution', Hesitant: 'caution', Impatient: 'caution', Anxious: 'caution',
-  Frustrated: 'negative', FOMO: 'negative', Revenge: 'negative',
+  focused: 'positive', confident: 'positive', calm: 'positive',
+  neutral: 'neutral',
+  overconfident: 'caution', hesitant: 'caution', impatient: 'caution', anxious: 'caution',
+  frustrated: 'negative', fomo: 'negative', revenge: 'negative',
 };
 function emotionChipsHtml(emotions) {
   if (!emotions || !emotions.length) return '';
   const chips = emotions.map(e => {
-    const cls = EMOTION_CLASS[e] || 'neutral';
-    return `<span class="emotion-chip ${cls}">${e}</span>`;
+    const key = (e || '').toLowerCase();
+    const cls = EMOTION_CLASS[key] || 'neutral';
+    const label = key.charAt(0).toUpperCase() + key.slice(1);
+    return `<span class="emotion-chip ${cls}">${label}</span>`;
   }).join('');
   return `<div class="journal-emotion-chips">${chips}</div>`;
 }
@@ -7332,23 +7334,26 @@ function renderJournal() {
     return;
   }
   el.innerHTML = allJournalEntries.map(entry => {
-    const preview = (entry.dictated_text || '').trim();
-    const timeStr = fmtJournalTime(entry.et_time);
-    const phase   = entry.session_phase ? entry.session_phase.charAt(0).toUpperCase() + entry.session_phase.slice(1) : '';
-    const chips   = emotionChipsHtml(entry.emotions);
-    const fullHtml = `
-      <p style="font-family:var(--font-sans);font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${preview.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>
+    const mainText  = (entry.dictated_text || '').trim();
+    const lessonTxt = (entry.lesson_text  || '').trim();
+    const preview   = mainText || lessonTxt;
+    const isLesson  = !mainText && lessonTxt;
+    const timeStr   = fmtJournalTime(entry.et_time);
+    const phase     = entry.session_phase ? entry.session_phase.charAt(0).toUpperCase() + entry.session_phase.slice(1) : '';
+    const chips     = emotionChipsHtml(entry.emotions);
+    const safe      = s => (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const fullHtml  = `
+      ${isLesson ? `<div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--purple);margin-bottom:8px">Lesson / Reflection</div>` : ''}
+      <p style="font-family:var(--font-sans);font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${safe(preview)}</p>
       ${chips}`;
-    const escapedTitle   = 'Journal Entry';
-    const escapedTime    = timeStr;
-    const escapedFullHtml = fullHtml.replace(/`/g, '\\`').replace(/\\/g, '\\\\').replace(/\n/g, '\\n');
     return `
     <div class="journal-entry" onclick="openJournalModal('Journal Entry', '${timeStr.replace(/'/g,"\\'")}', \`${fullHtml.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\n/g,'\\n')}\`)">
       <div class="journal-entry-meta">
         <span class="journal-entry-time">${timeStr}</span>
         ${phase ? `<span class="journal-entry-phase">${phase}</span>` : ''}
+        ${isLesson ? `<span style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.07em;text-transform:uppercase;color:var(--purple);opacity:0.8">lesson</span>` : ''}
       </div>
-      <div class="journal-entry-text">${preview.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      <div class="journal-entry-text">${safe(preview)}</div>
       ${chips}
     </div>`;
   }).join('');
