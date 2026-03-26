@@ -7305,20 +7305,32 @@ function emotionChipsHtml(emotions) {
 }
 
 // ── Format ET timestamp ────────────────────────────────────────────────────────
-function fmtJournalTime(etTime) {
-  if (!etTime) return '';
-  try {
-    const d = new Date(etTime);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-      + ' · ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-  } catch { return etTime; }
+// et_time is stored as "HH:MM:SS ET" (time only); trading_day is "YYYY-MM-DD"
+function fmtJournalTime(entry) {
+  const day  = (entry.trading_day || '').trim();
+  const time = (entry.et_time     || '').trim();
+  if (!day && !time) return '';
+  if (day) {
+    const d = new Date(day + 'T12:00:00'); // noon to avoid timezone date shift
+    const dayStr = isNaN(d) ? day : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return time ? `${dayStr} · ${time}` : dayStr;
+  }
+  return time;
 }
 
-// ── Journal modal ──────────────────────────────────────────────────────────────
-function openJournalModal(title, timeStr, bodyHtml) {
-  document.getElementById('journal-modal-title').textContent = title;
-  document.getElementById('journal-modal-meta').textContent  = timeStr;
-  document.getElementById('journal-modal-body').innerHTML    = bodyHtml;
+// ── Safe HTML escape ───────────────────────────────────────────────────────────
+const _safe = s => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// ── Entry stores (indexed to avoid onclick escaping issues) ───────────────────
+let _journalStore = [];
+let _lessonStore  = [];
+
+function openJournalEntry(store, idx) {
+  const entry = store[idx];
+  if (!entry) return;
+  document.getElementById('journal-modal-title').textContent = entry._modalTitle;
+  document.getElementById('journal-modal-meta').textContent  = entry._timeStr;
+  document.getElementById('journal-modal-body').innerHTML    = entry._bodyHtml;
   document.getElementById('journal-modal-overlay').classList.add('open');
 }
 function closeJournalModal() {
@@ -7333,23 +7345,26 @@ function renderJournal() {
     el.innerHTML = '<div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);padding:8px 0">No journal entries yet</div>';
     return;
   }
-  el.innerHTML = allJournalEntries.map(entry => {
+  _journalStore = allJournalEntries.map(entry => {
     const preview = (entry.dictated_text || '').trim();
-    const timeStr = fmtJournalTime(entry.et_time);
-    const phase   = entry.session_phase ? entry.session_phase.charAt(0).toUpperCase() + entry.session_phase.slice(1) : '';
+    const timeStr = fmtJournalTime(entry);
     const chips   = emotionChipsHtml(entry.emotions);
-    const safe    = s => (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const fullHtml = `<p style="font-family:var(--font-sans);font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${safe(preview)}</p>${chips}`;
-    return `
-    <div class="journal-entry" onclick="openJournalModal('Journal Entry', '${timeStr.replace(/'/g,"\\'")}', \`${fullHtml.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\n/g,'\\n')}\`)">
+    return {
+      _modalTitle: 'Journal Entry',
+      _timeStr:    timeStr,
+      _bodyHtml:   `<p style="font-family:var(--font-sans);font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${_safe(preview)}</p>${chips}`,
+      preview, timeStr, phase: entry.session_phase || '', chips,
+    };
+  });
+  el.innerHTML = _journalStore.map((e, i) => `
+    <div class="journal-entry" onclick="openJournalEntry(_journalStore,${i})">
       <div class="journal-entry-meta">
-        <span class="journal-entry-time">${timeStr}</span>
-        ${phase ? `<span class="journal-entry-phase">${phase}</span>` : ''}
+        <span class="journal-entry-time">${e.timeStr}</span>
+        ${e.phase ? `<span class="journal-entry-phase">${e.phase.charAt(0).toUpperCase()+e.phase.slice(1)}</span>` : ''}
       </div>
-      <div class="journal-entry-text">${safe(preview)}</div>
-      ${chips}
-    </div>`;
-  }).join('');
+      <div class="journal-entry-text">${_safe(e.preview)}</div>
+      ${e.chips}
+    </div>`).join('');
 }
 
 // ── renderLessons ──────────────────────────────────────────────────────────────
@@ -7360,19 +7375,23 @@ function renderLessons() {
     el.innerHTML = '<div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);padding:8px 0">No lessons captured yet</div>';
     return;
   }
-  el.innerHTML = allLessonEntries.map(entry => {
-    const preview  = (entry.lesson_text || '').trim();
-    const timeStr  = fmtJournalTime(entry.et_time);
-    const safe     = s => (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const fullHtml = `<p style="font-family:var(--font-sans);font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${safe(preview)}</p>`;
-    return `
-    <div class="journal-entry" onclick="openJournalModal('Lesson &amp; Reflection', '${timeStr.replace(/'/g,"\\'")}', \`${fullHtml.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\n/g,'\\n')}\`)">
+  _lessonStore = allLessonEntries.map(entry => {
+    const preview = (entry.lesson_text || '').trim();
+    const timeStr = fmtJournalTime(entry);
+    return {
+      _modalTitle: 'Lesson & Reflection',
+      _timeStr:    timeStr,
+      _bodyHtml:   `<p style="font-family:var(--font-sans);font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${_safe(preview)}</p>`,
+      preview, timeStr,
+    };
+  });
+  el.innerHTML = _lessonStore.map((e, i) => `
+    <div class="journal-entry" onclick="openJournalEntry(_lessonStore,${i})">
       <div class="journal-entry-meta">
-        <span class="journal-entry-time">${timeStr}</span>
+        <span class="journal-entry-time">${e.timeStr}</span>
       </div>
-      <div class="journal-entry-text">${safe(preview)}</div>
-    </div>`;
-  }).join('');
+      <div class="journal-entry-text">${_safe(e.preview)}</div>
+    </div>`).join('');
 }
 
 function renderTopStreaks(days, trades) {
