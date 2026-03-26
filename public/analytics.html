@@ -2579,13 +2579,13 @@ async function loadData() {
 // ── Journal & Lessons data (always last 5, ignores date filter) ───────────────
 async function loadJournalData() {
   const [journal, lessons] = await Promise.all([
-    query('intraday_journal', 'et_time,trading_day,session_phase,dictated_text,lesson_text,emotions',
-      ['order=et_time.desc', 'limit=5']),
+    query('intraday_journal', 'et_time,trading_day,session_phase,dictated_text,emotions',
+      ['dictated_text=not.is.null', 'order=et_time.desc', 'limit=5']),
     query('intraday_journal', 'et_time,trading_day,session_phase,lesson_text',
       ['lesson_text=not.is.null', 'order=et_time.desc', 'limit=5']),
   ]);
-  allJournalEntries = (journal || []).filter(e => e.dictated_text || e.lesson_text);
-  allLessonEntries  = (lessons || []).filter(e => e.lesson_text && e.lesson_text.trim());
+  allJournalEntries = journal || [];
+  allLessonEntries  = (lessons || []).filter(e => (e.lesson_text || '').trim());
 }
 
 // ── Today's readiness ─────────────────────────────────────────────────────────
@@ -7334,24 +7334,17 @@ function renderJournal() {
     return;
   }
   el.innerHTML = allJournalEntries.map(entry => {
-    const mainText  = (entry.dictated_text || '').trim();
-    const lessonTxt = (entry.lesson_text  || '').trim();
-    const preview   = mainText || lessonTxt;
-    const isLesson  = !mainText && lessonTxt;
-    const timeStr   = fmtJournalTime(entry.et_time);
-    const phase     = entry.session_phase ? entry.session_phase.charAt(0).toUpperCase() + entry.session_phase.slice(1) : '';
-    const chips     = emotionChipsHtml(entry.emotions);
-    const safe      = s => (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const fullHtml  = `
-      ${isLesson ? `<div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--purple);margin-bottom:8px">Lesson / Reflection</div>` : ''}
-      <p style="font-family:var(--font-sans);font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${safe(preview)}</p>
-      ${chips}`;
+    const preview = (entry.dictated_text || '').trim();
+    const timeStr = fmtJournalTime(entry.et_time);
+    const phase   = entry.session_phase ? entry.session_phase.charAt(0).toUpperCase() + entry.session_phase.slice(1) : '';
+    const chips   = emotionChipsHtml(entry.emotions);
+    const safe    = s => (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const fullHtml = `<p style="font-family:var(--font-sans);font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${safe(preview)}</p>${chips}`;
     return `
     <div class="journal-entry" onclick="openJournalModal('Journal Entry', '${timeStr.replace(/'/g,"\\'")}', \`${fullHtml.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\n/g,'\\n')}\`)">
       <div class="journal-entry-meta">
         <span class="journal-entry-time">${timeStr}</span>
         ${phase ? `<span class="journal-entry-phase">${phase}</span>` : ''}
-        ${isLesson ? `<span style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.07em;text-transform:uppercase;color:var(--purple);opacity:0.8">lesson</span>` : ''}
       </div>
       <div class="journal-entry-text">${safe(preview)}</div>
       ${chips}
