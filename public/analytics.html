@@ -1640,7 +1640,7 @@
     <span class="filter-label">Range</span>
     <button class="range-btn" onclick="setRange('week')">This Week</button>
     <button class="range-btn" onclick="setRange('lastweek')">Last Week</button>
-    <button class="range-btn active" onclick="setRange('month')">This Month</button>
+    <button class="range-btn" onclick="setRange('month')">This Month</button>
     <button class="range-btn" onclick="setRange('5d')">5D</button>
     <button class="range-btn" onclick="setRange('10d')">10D</button>
     <button class="range-btn" onclick="setRange('20d')">20D</button>
@@ -3447,19 +3447,13 @@ async function loadAndRender() {
 
 // Set default range to this month and init
 window.addEventListener('DOMContentLoaded', () => {
-  dateFrom = null;
-  dateTo   = null;
-  document.getElementById('date-from').value = '';
-  document.getElementById('date-to').value   = '';
-  // Mark ALL TIME button active
-  document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
-  const allBtn = [...document.querySelectorAll('.range-btn')].find(b => b.textContent.trim() === 'All Time');
-  if (allBtn) allBtn.classList.add('active');
-
   loadAccounts();
   renderAccountChips();
   loadToday();
-  loadAndRender();
+  // Default to rolling 10D
+  const btn10d = [...document.querySelectorAll('.range-btn')].find(b => b.textContent.trim() === '10D');
+  if (btn10d) btn10d.click();
+  else loadAndRender();
 });
 
 function renderDiscipline(days, trades) {
