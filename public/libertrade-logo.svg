@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 248 48">
+
+  <!-- Icon mark -->
+  <rect x="0" y="4" width="40" height="40" rx="8" fill="#16171e"/>
+  <!-- L axis -->
+  <path d="M13 12v18h16" stroke="#3a9aaa" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Trend line through L -->
+  <polyline points="13,24 20,18 28,13" stroke="#259186" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Peak dot -->
+  <circle cx="28" cy="13" r="2.2" fill="#259186"/>
+
+  <!-- Wordmark -->
+  <text x="52" y="30" font-family="'DM Sans', system-ui, -apple-system, sans-serif" font-size="17" letter-spacing="2.5">
+    <tspan font-weight="300" fill="#6e7888">LIBER</tspan><tspan font-weight="600" fill="#3a9aaa">TRADE</tspan>
+  </text>
+
+</svg>
