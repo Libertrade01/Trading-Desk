@@ -3530,7 +3530,7 @@ _supaAuth.auth.onAuthStateChange((event, session) => {
 async function signInWithGoogle() {
   await _supaAuth.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: 'https://libertrade-trade-desk.vercel.app/analytics' },
+    options: { redirectTo: window.location.origin + window.location.pathname },
   });
 }
 
