@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Libertrade — Analytics</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1561,9 +1562,62 @@
 
 
 
+  /* ── Auth overlay ── */
+  #auth-overlay {
+    position: fixed; inset: 0; z-index: 2000;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+  }
+  #auth-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 48px 52px; text-align: center;
+    width: 340px;
+  }
+  #auth-card .auth-logo {
+    font-family: var(--font-mono); font-size: 18px;
+    font-weight: 600; letter-spacing: 0.04em;
+    color: var(--text); margin-bottom: 6px;
+  }
+  #auth-card .auth-logo span { color: var(--cyan); }
+  #auth-card .auth-sub {
+    font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 36px;
+  }
+  #google-signin-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 11px 16px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 5px; cursor: pointer;
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.07em; text-transform: uppercase; color: var(--text);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  #google-signin-btn:hover { border-color: var(--cyan); background: var(--dim); }
+  #signout-btn {
+    background: none; border: 1px solid var(--border2);
+    border-radius: 4px; padding: 5px 10px; cursor: pointer;
+    font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--muted); transition: all 0.15s;
+  }
+  #signout-btn:hover { color: var(--red); border-color: var(--red); }
 </style>
 </head>
 <body>
+
+<!-- Auth overlay -->
+<div id="auth-overlay">
+  <div id="auth-card">
+    <div style="font-family:var(--font-sans);font-size:22px;font-weight:600;color:var(--text);margin-bottom:8px">Libertrade</div>
+    <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:36px">Analytics</div>
+    <button id="google-signin-btn" onclick="signInWithGoogle()">
+      <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+      Sign in with Google
+    </button>
+  </div>
+</div>
+
 <div class="app">
 
   <!-- Top bar -->
@@ -1606,6 +1660,7 @@
           <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
         </svg>
       </button>
+      <button id="signout-btn" onclick="signOut()" style="display:none">Sign Out</button>
       <button class="settings-btn" onclick="openDrawer()" title="Manage Accounts">⚙</button>
     </div>
   </div>
@@ -3445,15 +3500,47 @@ async function loadAndRender() {
   }
 }
 
-// Set default range to this month and init
+// ── Auth ──────────────────────────────────────────────────────────────────────
+const _supaAuth = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let _dashboardInitialised = false;
+
+_supaAuth.auth.onAuthStateChange((event, session) => {
+  const overlay    = document.getElementById('auth-overlay');
+  const signoutBtn = document.getElementById('signout-btn');
+  if (session) {
+    HEADERS['Authorization'] = `Bearer ${session.access_token}`;
+    if (overlay)    overlay.style.display    = 'none';
+    if (signoutBtn) signoutBtn.style.display = '';
+    if (!_dashboardInitialised) {
+      _dashboardInitialised = true;
+      loadAccounts();
+      renderAccountChips();
+      loadToday();
+      const btn10d = [...document.querySelectorAll('.range-btn')].find(b => b.textContent.trim() === '10D');
+      if (btn10d) btn10d.click();
+      else loadAndRender();
+    }
+  } else {
+    HEADERS['Authorization'] = `Bearer ${SUPABASE_KEY}`;
+    if (overlay)    overlay.style.display    = 'flex';
+    if (signoutBtn) signoutBtn.style.display = 'none';
+  }
+});
+
+async function signInWithGoogle() {
+  await _supaAuth.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: 'https://libertrade-trade-desk.vercel.app/analytics' },
+  });
+}
+
+async function signOut() {
+  _dashboardInitialised = false;
+  await _supaAuth.auth.signOut();
+}
+
 window.addEventListener('DOMContentLoaded', () => {
-  loadAccounts();
-  renderAccountChips();
-  loadToday();
-  // Default to rolling 10D
-  const btn10d = [...document.querySelectorAll('.range-btn')].find(b => b.textContent.trim() === '10D');
-  if (btn10d) btn10d.click();
-  else loadAndRender();
+  // Dashboard init is driven by auth state — nothing to do here
 });
 
 function renderDiscipline(days, trades) {
