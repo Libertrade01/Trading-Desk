@@ -56,28 +56,6 @@ const CHECKIN_QUESTIONS = [
   { q: "Trading to recover yesterday?", schema: "DEFECT" },
 ];
 
-const POST_SESSION_FIELDS = [
-  { key: "preScores", label: "Pre-session schema scores" }, { key: "gateColor", label: "Decision gate colour", type: "select", options: ["GREEN", "AMBER", "RED"] },
-  { key: "activations", label: "Times activated" }, { key: "dominantSchema", label: "Schema that fired most", type: "select", options: ["Abandonment", "Defectiveness", "Standards", "None"] },
-  { key: "cascadePattern", label: "Most common cascade pattern" }, { key: "dllUrges", label: "DLL unlock urges today", type: "select", options: ["0", "1", "2", "3+"] },
-  { key: "dllOutcome", label: "DLL outcome", type: "select", options: ["No urges", "Used breaker, stayed locked", "Unlocked", "N/A"] },
-  { key: "usedInterrupts", label: "Used pattern interrupts?", type: "select", options: ["Yes", "No", "Partially"] },
-  { key: "interruptsWorked", label: "Did they work?", type: "select", options: ["Yes", "No", "Partially", "N/A"] },
-  { key: "deviated", label: "Deviated from CSTE?", type: "select", options: ["Yes", "No"] }, { key: "deviationSchema", label: "If deviated, which schema?" },
-  { key: "bestMoment", label: "Best moment" }, { key: "worstMoment", label: "Worst moment" }, { key: "reflection", label: "Key insight", type: "textarea" },
-];
-
-const WEEKLY_QUESTIONS = ["Which schema was most active this week?", "Most common cascade pattern this week?", "How many DLL urges? Did the circuit breaker help?", "On my worst day, what was my pre-session emotional state?", "Sessions where I was activated but followed plan? (These are wins)", "P&L on GREEN vs AMBER vs RED days?", "Patterns activating me outside of trading?", "One thing I'll change next week?"];
-
-const DLL_STEPS = [
-  { title: "STOP", subtitle: "Do not touch the DLL yet.", prompt: "What just happened that made me want to unlock?", key: "whatHappened", type: "text" },
-  { title: "FEEL", subtitle: "Name what's happening inside you.", prompt: "What am I feeling right now?", key: "feeling", type: "select", options: ["Anger at a loss", "Need to prove myself", "Frustration, I know I'm better than this", "Desperation to recover", "Numbness, I've stopped caring", "Other"] },
-  { title: "IDENTIFY", subtitle: "Which schema is driving this?", prompt: "This urge is being driven by:", key: "schema", type: "select", options: ["Defectiveness: I need to prove I'm not a failure", "Abandonment: I need to get back what was taken", "Standards: I can't accept ending the day like this"] },
-  { title: "REMEMBER", subtitle: "These are your own words.", prompt: null, key: "remember", type: "affirmations" },
-  { title: "DECIDE", subtitle: "Make a conscious choice.", prompt: "Having read all of this, I choose to:", key: "decision", type: "select", options: ["Keep DLL locked. Walk away and protect my dreams", "Keep DLL locked. I'll come back tomorrow stronger", "Unlock DLL. I acknowledge I am breaking my own rules"] },
-];
-
-const DLL_AFFIRMATIONS = ["Disrespecting and unlocking DLL means I am intentionally breaking my own dreams.", "The DLL exists to protect me from this exact moment.", "Revenge trading has never once made me feel better. It has only ever made the day worse.", "Walking away right now is the strongest thing I can do.", "My large drawdown days come from this exact decision.", "Not following my system means I'm not following my dreams."];
 
 const NON_NEGOTIABLES = ["Breaking my rules means I am intentionally breaking my own dreams.", "Not following my system means I'm not following my dreams.", "Picking tops & bottoms is picking a fight I'm likely to lose.", "Moving to BE out of fear is choosing comfort over conviction.", "Distractions while trading rob me of my progress.", "Trading my PnL means long term Probably Lose."];
 
@@ -214,7 +192,7 @@ function LandingPage({ onNavigate }) {
       <div className="nav-grid">
         <NavCard onClick={() => onNavigate("prep")} gradient="linear-gradient(180deg, #F48C06, #10B981, #4361EE)" tag="SESSION PREPARATION" title="Market Prep" desc="Mental check-in, pre-market analysis, scenarios and session focus." />
         <NavCard onClick={() => onNavigate("playbook")} gradient="linear-gradient(180deg, #2DD4BF, #10B981, #F48C06)" tag="TRADE EXECUTION" title="Playbook" desc="Setups, execution framework, risk framing and trigger confirmation." />
-        <NavCard onClick={() => onNavigate("mental")} gradient="linear-gradient(180deg, #E94560, #4361EE, #F48C06)" tag="SCHEMA AWARENESS" title="Mental Game" desc="Schema tracking, DLL circuit breaker, activation logs and reviews." />
+        <NavCard onClick={() => onNavigate("mental")} gradient="linear-gradient(180deg, #E94560, #4361EE, #F48C06)" tag="SCHEMA AWARENESS" title="Mental Game" desc="Schema awareness and regulation tools for peak mental performance." />
         <NavCard onClick={() => onNavigate("fundamentals")} gradient="linear-gradient(180deg, #10B981, #4361EE, #A855F7)" tag="MARKET KNOWLEDGE" title="Market Fundamentals" desc="Auction Market Theory, value and price relationships, balance, imbalance and failed auctions." />
       </div>
       <div style={{ marginTop: 48, textAlign: "center" }}>
@@ -1018,45 +996,7 @@ function MarketFundamentals({ onBack }) {
 // DLL BREAKER
 // ═══════════════════════════════════════════════════════════
 
-function DLLBreaker({ onLog }) {
-  const [step, setStep] = useState(0);
-  const [responses, setResponses] = useState({});
-  const [completed, setCompleted] = useState(false);
-  const [coolingDown, setCoolingDown] = useState(false);
-  const [cooldownLeft, setCooldownLeft] = useState(0);
-  const cs = DLL_STEPS[step]; const isLast = step === DLL_STEPS.length - 1;
-  const canAdvance = cs.type === "affirmations" || responses[cs.key];
 
-  const handleNext = () => { if (isLast) { const d = responses.decision || ""; if (d.startsWith("Unlock")) { setCoolingDown(true); setCooldownLeft(30); } else { setCompleted(true); onLog({ ...responses, timestamp: new Date().toISOString(), keptLocked: true }); } } else setStep(step + 1); };
-
-  useEffect(() => { if (!coolingDown) return; if (cooldownLeft <= 0) { setCompleted(true); onLog({ ...responses, timestamp: new Date().toISOString(), keptLocked: false }); return; } const t = setTimeout(() => setCooldownLeft(cooldownLeft - 1), 1000); return () => clearTimeout(t); }, [coolingDown, cooldownLeft]);
-
-  const reset = () => { setStep(0); setResponses({}); setCompleted(false); setCoolingDown(false); setCooldownLeft(0); };
-
-  if (completed) { const kl = responses.decision && !responses.decision.startsWith("Unlock"); return (<div style={{ animation: "fadeIn 0.3s ease" }}><Card style={{ textAlign: "center", border: `1px solid ${kl ? "rgba(16,185,129,0.3)" : "rgba(233,69,96,0.3)"}` }}><div style={{ fontSize: 52, marginBottom: 18 }}>{kl ? "✓" : "⚠"}</div><div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 700, color: kl ? "#10B981" : "#E94560", letterSpacing: 2, marginBottom: 10 }}>{kl ? "DLL PROTECTED" : "DLL UNLOCKED"}</div><div style={{ fontSize: 16, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: 24 }}>{kl ? "You chose to protect your dreams." : "This decision has been logged."}</div><button onClick={reset} style={{ padding: "14px 28px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Reset</button></Card></div>); }
-  if (coolingDown) { return (<div style={{ animation: "fadeIn 0.3s ease" }}><Card style={{ textAlign: "center", border: "1px solid rgba(233,69,96,0.3)" }}><div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 3, color: "#E94560", fontWeight: 600, marginBottom: 18 }}>COOLING DOWN</div><div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 64, fontWeight: 700, color: "#E94560", textShadow: "0 0 40px rgba(233,69,96,0.4)", marginBottom: 14 }}>{cooldownLeft}</div><div style={{ fontSize: 16, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: 18 }}>Sit with this decision for {cooldownLeft} seconds.</div><button onClick={() => { setCompleted(true); onLog({ ...responses, timestamp: new Date().toISOString(), keptLocked: true, changedMind: true }); }} style={{ marginTop: 24, padding: "16px 28px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #10B981, #059669)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>I changed my mind. Keep DLL Locked</button></Card></div>); }
-
-  return (
-    <div style={{ animation: "fadeIn 0.3s ease" }}>
-      <div style={{ display: "flex", gap: 5, marginBottom: 28 }}>{DLL_STEPS.map((_, i) => <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= step ? "#E94560" : "rgba(255,255,255,0.06)", transition: "all 0.3s" }} />)}</div>
-      <Card style={{ border: "1px solid rgba(233,69,96,0.2)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 24 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg, #E94560, #C62A47)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 700, color: "#fff" }}>{step + 1}</div>
-          <div><div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 700, letterSpacing: 2, color: "#E94560" }}>{cs.title}</div><div style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>{cs.subtitle}</div></div>
-        </div>
-        {cs.type === "affirmations" ? (<div><div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 2, color: "rgba(255,255,255,0.3)", marginBottom: 18 }}>READ EACH ONE CAREFULLY</div>{DLL_AFFIRMATIONS.map((a, i) => <div key={i} style={{ padding: "16px 18px", marginBottom: 10, background: "rgba(233,69,96,0.06)", borderRadius: 14, border: "1px solid rgba(233,69,96,0.1)", fontSize: 16, color: "rgba(255,255,255,0.75)", lineHeight: 1.7, fontWeight: 500 }}>{a}</div>)}</div>
-        ) : (<div><label style={{ fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.6)", display: "block", marginBottom: 12 }}>{cs.prompt}</label>
-          {cs.type === "select" ? (<div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{cs.options.map(o => <button key={o} onClick={() => setResponses({ ...responses, [cs.key]: o })} style={{ padding: "16px 18px", borderRadius: 14, textAlign: "left", border: responses[cs.key] === o ? "1px solid rgba(233,69,96,0.5)" : "1px solid rgba(255,255,255,0.06)", background: responses[cs.key] === o ? "rgba(233,69,96,0.1)" : "rgba(255,255,255,0.03)", color: responses[cs.key] === o ? "#E94560" : "rgba(255,255,255,0.55)", fontSize: 15, fontWeight: responses[cs.key] === o ? 600 : 400, cursor: "pointer", fontFamily: "inherit" }}>{o}</button>)}</div>
-          ) : (<textarea value={responses[cs.key] || ""} onChange={(e) => setResponses({ ...responses, [cs.key]: e.target.value })} rows={3} placeholder="Be honest with yourself..." style={{ width: "100%", padding: "14px 16px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", fontSize: 16, fontFamily: "inherit", background: "rgba(255,255,255,0.04)", color: "#fff", boxSizing: "border-box", outline: "none", resize: "vertical" }} />)}
-        </div>)}
-        <div style={{ display: "flex", gap: 14, marginTop: 28 }}>
-          {step > 0 && <button onClick={() => setStep(step - 1)} style={{ padding: "16px 22px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Back</button>}
-          <button onClick={handleNext} disabled={!canAdvance} style={{ flex: 1, padding: 16, borderRadius: 14, border: "none", background: canAdvance ? (isLast ? "linear-gradient(135deg, #E94560, #C62A47)" : "rgba(255,255,255,0.08)") : "rgba(255,255,255,0.03)", color: canAdvance ? (isLast ? "#fff" : "rgba(255,255,255,0.7)") : "rgba(255,255,255,0.15)", fontSize: 16, fontWeight: 700, cursor: canAdvance ? "pointer" : "default", fontFamily: "inherit" }}>{isLast ? "Submit Decision" : "Continue →"}</button>
-        </div>
-      </Card>
-    </div>
-  );
-}
 
 // ═══════════════════════════════════════════════════════════
 // MARKET PREP
@@ -1971,45 +1911,13 @@ function MentalGameFramework({ onBack }) {
   const [tab, setTab] = useState("schemas");
   const [exp, setExp] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [ws, setWs] = useState(""); const [wr, setWr] = useState("");
-  const [oc, setOc] = useState([false, false]); const [ss, setSs] = useState([0,0,0,0,0]); const [cs, setCs] = useState(false);
-  const [al, setAl] = useState({ time:"", happened:"", feeling:"", bodyLocation:"", urge:"", schema:"", interrupt:"", outcome:"" });
-  const [sa, setSa] = useState([]); const [dl, setDl] = useState([]);
-  const [ps, setPs] = useState({}); const [pss, setPss] = useState(false);
-  const [wrev, setWrev] = useState({}); const [wrs, setWrs] = useState(false);
-  const [hk, setHk] = useState([]); const [sh, setSh] = useState(null); const [hd, setHd] = useState(null);
   const [nn, setNn] = useState(false);
-  const wg = getWhoopGate(ws, wr);
 
-  useEffect(() => { (async () => {
-    const k = todayKey();
-    const [ch, sa_data, dl_data] = await Promise.all([
-      loadData(`checkin-${k}`, null),
-      loadData(`activations-${k}`, []),
-      loadData(`dll-${k}`, []),
-    ]);
-    if (ch) { setWs(ch.whoopSleep||""); setWr(ch.whoopRecovery||""); setOc(ch.otherChecks||[false,false,false,false]); setSs(ch.schemaScores||[0,0,0,0,0]); setCs(true); }
-    setSa(sa_data); setDl(dl_data);
-    setLoading(false);
-    // Load history keys in background
-    try { const keys = await storage.list("checkin-"); if (keys?.keys) setHk(keys.keys.map(k=>k.replace("checkin-","")).sort().reverse()); } catch {}
-  })(); }, []);
-
-  const saveCheckin = async () => { await saveData(`checkin-${todayKey()}`, { whoopSleep:ws, whoopRecovery:wr, otherChecks:oc, schemaScores:ss, whoopGate:wg, timestamp:new Date().toISOString() }); setCs(true); };
-  const saveAct = async () => { const u = [...sa, { ...al, timestamp:new Date().toISOString() }]; await saveData(`activations-${todayKey()}`, u); setSa(u); setAl({ time:"", happened:"", feeling:"", bodyLocation:"", urge:"", schema:"", interrupt:"", outcome:"" }); };
-  const logDll = async (e) => { const u = [...dl, e]; await saveData(`dll-${todayKey()}`, u); setDl(u); };
-  const savePost = async () => { await saveData(`post-${todayKey()}`, { ...ps, timestamp:new Date().toISOString() }); setPss(true); };
-  const saveWeek = async () => { await saveData(`weekly-${weekKey()}`, { ...wrev, timestamp:new Date().toISOString() }); setWrs(true); };
-  const loadHist = async (d) => { setSh(d); setHd({ checkin:await loadData(`checkin-${d}`,null), activations:await loadData(`activations-${d}`,[]), post:await loadData(`post-${d}`,null), dll:await loadData(`dll-${d}`,[]) }); };
+  useEffect(() => { setLoading(false); }, []);
 
   if (loading) return <div style={{ display:"flex", justifyContent:"center", alignItems:"center", height:"100vh", color:"rgba(255,255,255,0.3)" }}>Loading...</div>;
 
-  const tabs = [{id:"schemas",label:"Schemas",icon:"☰"},{id:"regulate",label:"Regulate",icon:"🧠"},{id:"activation",label:"Live",icon:"⚡"},{id:"dll",label:"DLL",icon:"⊘"},{id:"history",label:"Log",icon:"◫"}];
-
-  const maxS = Math.max(...ss); const sg = maxS>5?"RED":maxS>3?"AMBER":"GREEN";
-  const go = {GREEN:0,AMBER:1,RED:2}; const fg = !wg ? sg : go[wg]>go[sg] ? wg : sg;
-  const gc = {GREEN:{c:"#10B981",g:"rgba(16,185,129,0.12)",l:"FULL SIZE",m:"Ready to hunt. Patience is the edge.",i:"●"},AMBER:{c:"#F48C06",g:"rgba(244,140,6,0.12)",l:"HALF SIZE",m:"A+ setups only. Reduced size.",i:"◐"},RED:{c:"#E94560",g:"rgba(233,69,96,0.12)",l:"NO TRADE",m:"Walk away. Protect capital & progress.",i:"○"}};
-  const fgc = gc[fg]; const dp = []; if(wg&&wg!=="GREEN") dp.push(`Whoop: ${wg}`); if(sg!=="GREEN") dp.push(`Schemas: ${sg}`);
+  const tabs = [{id:"schemas",label:"Schemas",icon:"☰"},{id:"regulate",label:"Regulate",icon:"🧠"}];
 
   return (
     <div style={{ animation: "fadeIn 0.3s ease" }}>
@@ -2132,32 +2040,6 @@ function MentalGameFramework({ onBack }) {
 
         </div>}
 
-        {tab === "activation" && <div style={{ animation:"fadeIn 0.3s ease" }}>
-          <p style={{fontSize:15,color:"rgba(255,255,255,0.35)",lineHeight:1.7,marginBottom:22}}>Pausing to fill this in <em>is</em> the intervention.</p>
-          <Card style={{marginBottom:18}}><SectionLabel text="New Activation" color="#E94560" />
-            {[{key:"time",label:"Time",placeholder:"e.g. 10:32 AM"},{key:"happened",label:"What happened?",placeholder:"Price action, P&L change..."},{key:"feeling",label:"What am I feeling?",placeholder:"Fear, anger, urgency..."},{key:"bodyLocation",label:"Where in my body?",placeholder:"Chest, stomach, jaw..."},{key:"urge",label:"The urge?",placeholder:"Close, move SL, unlock DLL..."},{key:"schema",label:"Which schema fired?",type:"select",options:["Abandonment","Defectiveness","Unrelenting Standards"]},{key:"interrupt",label:"Pattern interrupt used",placeholder:"Write your phrase..."},{key:"outcome",label:"What did I do?",type:"select",options:["Followed plan","Deviated"]}].map(f => <InputField key={f.key} label={f.label} value={al[f.key]} onChange={v=>setAl({...al,[f.key]:v})} type={f.type} options={f.options} placeholder={f.placeholder} />)}
-            <button onClick={saveAct} disabled={!al.feeling} style={{width:"100%",padding:18,border:"none",borderRadius:16,background:al.feeling?"linear-gradient(135deg, #E94560, #C62A47)":"rgba(255,255,255,0.05)",color:al.feeling?"#fff":"rgba(255,255,255,0.2)",fontSize:16,fontWeight:700,cursor:al.feeling?"pointer":"default",fontFamily:"inherit"}}>Log Activation</button>
-          </Card>
-          {sa.length>0&&<Card><SectionLabel text={`Today's Activations (${sa.length})`} color="#E94560" />{sa.map((a,i) => <div key={i} style={{padding:"16px 0",borderBottom:i<sa.length-1?"1px solid rgba(255,255,255,0.04)":"none",fontSize:15}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}><span style={{fontFamily:"'JetBrains Mono', monospace",fontWeight:600,fontSize:13,color:"rgba(255,255,255,0.6)"}}>{a.time||"—"}</span><span style={{fontSize:11,padding:"4px 12px",borderRadius:8,fontWeight:600,fontFamily:"'JetBrains Mono', monospace",background:a.outcome==="Followed plan"?"rgba(16,185,129,0.15)":"rgba(233,69,96,0.15)",color:a.outcome==="Followed plan"?"#10B981":"#E94560"}}>{a.outcome||"—"}</span></div><div style={{color:"rgba(255,255,255,0.5)"}}><strong style={{color:"rgba(255,255,255,0.7)"}}>{a.schema}</strong>: {a.feeling}</div>{a.cascadeFrom&&a.cascadeFrom!=="No, this was the first"&&<div style={{fontSize:12,color:"rgba(255,255,255,0.3)",marginTop:4,fontFamily:"'JetBrains Mono', monospace"}}>CASCADE: {a.cascadeFrom}</div>}{a.interrupt&&<div style={{color:"rgba(255,255,255,0.3)",fontStyle:"italic",marginTop:5,fontSize:14}}>"{a.interrupt}"</div>}</div>)}</Card>}
-        </div>}
-
-        {tab === "dll" && <div style={{ animation:"fadeIn 0.3s ease" }}>
-          <div style={{textAlign:"center",marginBottom:28}}><div style={{fontFamily:"'JetBrains Mono', monospace",fontSize:11,letterSpacing:3,color:"#E94560",fontWeight:600,marginBottom:10}}>CIRCUIT BREAKER</div><div style={{fontSize:18,fontWeight:700,color:"rgba(255,255,255,0.7)"}}>DLL Unlock Protocol</div><div style={{fontSize:15,color:"rgba(255,255,255,0.3)",marginTop:8,lineHeight:1.6}}>Work through each step before making any decision.</div></div>
-          <DLLBreaker onLog={logDll} />
-          {dl.length>0&&<Card style={{marginTop:24}}><SectionLabel text={`Today's DLL Events (${dl.length})`} color="#E94560" />{dl.map((d,i) => <div key={i} style={{padding:"14px 0",borderBottom:i<dl.length-1?"1px solid rgba(255,255,255,0.04)":"none",fontSize:15}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{color:"rgba(255,255,255,0.5)"}}>{d.schema||"—"}</span><span style={{fontSize:11,padding:"4px 12px",borderRadius:8,fontWeight:600,fontFamily:"'JetBrains Mono', monospace",background:d.keptLocked?"rgba(16,185,129,0.15)":"rgba(233,69,96,0.15)",color:d.keptLocked?"#10B981":"#E94560"}}>{d.keptLocked?(d.changedMind?"CHANGED MIND":"KEPT LOCKED"):"UNLOCKED"}</span></div></div>)}</Card>}
-        </div>}
-
-        {tab === "history" && <div style={{animation:"fadeIn 0.3s ease"}}><SectionLabel text="Session History" />
-          {hk.length===0?<Card style={{textAlign:"center",padding:52}}><div style={{fontSize:40,marginBottom:14,opacity:0.3}}>◫</div><div style={{color:"rgba(255,255,255,0.25)",fontSize:16}}>No sessions logged yet.</div></Card>:<>
-            <div style={{display:"flex",flexWrap:"wrap",gap:10,marginBottom:22}}>{hk.map(d => <button key={d} onClick={()=>loadHist(d)} style={{padding:"10px 16px",borderRadius:12,cursor:"pointer",border:sh===d?"1px solid rgba(45,212,191,0.4)":"1px solid rgba(255,255,255,0.06)",background:sh===d?"rgba(45,212,191,0.1)":"rgba(255,255,255,0.03)",fontSize:13,fontFamily:"'JetBrains Mono', monospace",fontWeight:sh===d?700:400,color:sh===d?"#2DD4BF":"rgba(255,255,255,0.35)"}}>{formatDate(d)}</button>)}</div>
-            {hd&&<div>
-              {hd.checkin&&<Card style={{marginBottom:14}}><SectionLabel text="Pre-Session" color="#4361EE" /><div style={{fontSize:15,color:"rgba(255,255,255,0.5)",lineHeight:2.2}}>{hd.checkin.whoopSleep&&<div><strong style={{color:"rgba(255,255,255,0.7)"}}>Whoop:</strong> Sleep {hd.checkin.whoopSleep}% · Recovery {hd.checkin.whoopRecovery}%{hd.checkin.whoopGate&&<span style={{color:gateColor(hd.checkin.whoopGate),fontFamily:"'JetBrains Mono', monospace",fontWeight:700,marginLeft:10}}>{hd.checkin.whoopGate}</span>}</div>}<div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><strong style={{color:"rgba(255,255,255,0.7)"}}>Schema Scores:</strong>{hd.checkin.schemaScores?.map((s,i) => <span key={i} style={{fontFamily:"'JetBrains Mono', monospace",fontWeight:700,color:s>5?"#E94560":s>3?"#F48C06":"#10B981"}}>{s}</span>)}</div></div></Card>}
-              {hd.activations?.length>0&&<Card style={{marginBottom:14}}><SectionLabel text={`Activations (${hd.activations.length})`} color="#E94560" />{hd.activations.map((a,i) => <div key={i} style={{padding:"12px 0",borderBottom:i<hd.activations.length-1?"1px solid rgba(255,255,255,0.04)":"none",fontSize:15}}><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontFamily:"'JetBrains Mono', monospace",fontSize:12,color:"rgba(255,255,255,0.4)"}}>{a.time}</span><span style={{fontSize:11,color:a.outcome==="Followed plan"?"#10B981":"#E94560",fontFamily:"'JetBrains Mono', monospace",fontWeight:600}}>{a.outcome}</span></div><div style={{color:"rgba(255,255,255,0.5)",marginTop:3}}><strong style={{color:"rgba(255,255,255,0.6)"}}>{a.schema}</strong>: {a.feeling}</div>{a.cascadeFrom&&a.cascadeFrom!=="No, this was the first"&&<div style={{fontSize:12,color:"rgba(255,255,255,0.25)",marginTop:3,fontFamily:"'JetBrains Mono', monospace"}}>CASCADE: {a.cascadeFrom}</div>}</div>)}</Card>}
-              {hd.dll?.length>0&&<Card style={{marginBottom:14}}><SectionLabel text={`DLL Events (${hd.dll.length})`} color="#E94560" />{hd.dll.map((d,i) => <div key={i} style={{padding:"12px 0",borderBottom:i<hd.dll.length-1?"1px solid rgba(255,255,255,0.04)":"none",fontSize:15}}><div style={{display:"flex",justifyContent:"space-between"}}><span style={{color:"rgba(255,255,255,0.5)"}}>{d.schema||"—"}</span><span style={{fontSize:11,fontFamily:"'JetBrains Mono', monospace",fontWeight:600,color:d.keptLocked?"#10B981":"#E94560"}}>{d.keptLocked?"LOCKED":"UNLOCKED"}</span></div></div>)}</Card>}
-              {hd.post&&<Card><SectionLabel text="Post-Session" color="#F48C06" />{POST_SESSION_FIELDS.filter(f=>hd.post[f.key]).map(f => <div key={f.key} style={{marginBottom:12,fontSize:15}}><span style={{color:"rgba(255,255,255,0.4)"}}>{f.label}: </span><span style={{color:"rgba(255,255,255,0.65)"}}>{hd.post[f.key]}</span></div>)}</Card>}
-            </div>}
-          </>}
-        </div>}
       </div>
     </div>
   );

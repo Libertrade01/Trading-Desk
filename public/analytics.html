@@ -2411,9 +2411,8 @@ async function loadJournalData() {
 async function loadToday() {
   const today = new Date().toISOString().split('T')[0];
   try {
-    const [days, acts, trades] = await Promise.all([
+    const [days, trades] = await Promise.all([
       query('trading_days', '*', [`date=eq.${today}`]),
-      query('activations',  '*', [`date=eq.${today}`]),
       query('trades',       '*', [`date=eq.${today}`]),
     ]);
 
@@ -2422,10 +2421,6 @@ async function loadToday() {
       const gateEl = document.getElementById('today-gate');
       gateEl.textContent = day.gate || '—';
       gateEl.className = `gate-badge gate-${day.gate || 'none'}`;
-
-      const temp = day.schema_temp_composite;
-      const tempEl = document.getElementById('today-schema-temp');
-      if (tempEl) { tempEl.textContent = temp != null ? temp.toFixed(1) : '—'; tempEl.className = `val ${temp > 3 ? 'bad' : temp > 1 ? 'warn' : 'good'}`; }
 
       const sleep = day.whoop_sleep;
       const sleepEl = document.getElementById('today-sleep');
@@ -2437,9 +2432,6 @@ async function loadToday() {
       recEl.textContent = rec != null ? rec + '%' : '—';
       recEl.className = `val ${rec < 30 ? 'bad' : rec < 50 ? 'warn' : 'good'}`;
     }
-
-    const actEl = document.getElementById('today-activations');
-    if (actEl) { actEl.textContent = acts ? acts.length : '0'; actEl.className = `val ${acts && acts.length > 2 ? 'bad' : acts && acts.length > 0 ? 'warn' : 'good'}`; }
 
     const todayPnl = trades ? trades.reduce((s, t) => s + (t.net_pnl || 0), 0) : 0;
     const pnlEl = document.getElementById('today-pnl');
@@ -5346,19 +5338,17 @@ async function loadWeekReport(start, end, clickedEl) {
   area.innerHTML = '<div style="padding:40px 0;text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--muted)">Loading report...</div>';
 
   // Fetch all data in parallel
-  const [daysRes, tradesRes, activRes, ruleCompRes] = await Promise.all([
+  const [daysRes, tradesRes, ruleCompRes] = await Promise.all([
     fetch(`${SUPABASE_URL}/rest/v1/trading_days?date=gte.${start}&date=lte.${end}&order=date.asc`, { headers: HEADERS }),
     fetch(`${SUPABASE_URL}/rest/v1/trades?date=gte.${start}&date=lte.${end}&order=entry_time.asc`, { headers: HEADERS }),
-    fetch(`${SUPABASE_URL}/rest/v1/activations?date=gte.${start}&date=lte.${end}&order=activated_at.asc`, { headers: HEADERS }),
     fetch(`${SUPABASE_URL}/rest/v1/rule_compliance?date=gte.${start}&date=lte.${end}`, { headers: HEADERS }).catch(() => null),
   ]);
   const days           = await daysRes.json();
   const trades         = await tradesRes.json();
-  const activations    = await activRes.json();
   const ruleCompRaw    = ruleCompRes ? await ruleCompRes.json().catch(() => []) : [];
   const ruleCompliance = Array.isArray(ruleCompRaw) ? ruleCompRaw : [];
 
-  area.innerHTML = buildWeekReport(start, end, days, trades, activations, ruleCompliance);
+  area.innerHTML = buildWeekReport(start, end, days, trades, ruleCompliance);
   renderReportCharts(days, trades);
 
   // Restore saved AI analysis if one exists for this week
@@ -5375,7 +5365,7 @@ async function loadWeekReport(start, end, clickedEl) {
   }
 }
 
-function buildWeekReport(start, end, days, trades, activations, ruleCompliance = []) {
+function buildWeekReport(start, end, days, trades, ruleCompliance = []) {
   const weekLabel = fmtWeekLabel(start, end);
   const tradingDays = days.filter(d => d.net_pnl !== null);
 
@@ -5625,28 +5615,6 @@ function buildWeekReport(start, end, days, trades, activations, ruleCompliance =
     </table>
   </div>`;
 
-  // ── Section: Activations ──
-  const activSection = activations.length ? `
-  <div class="rpt-card">
-    <div class="rpt-section-title">Schema Activations <span style="font-size:9px;font-weight:300;color:var(--muted);text-transform:none;letter-spacing:0">${activations.length} this week</span></div>
-    ${activations.map(a => {
-      const outcomeCol = a.outcome==='Followed plan'?'var(--green)':'var(--red)';
-      const dateLabel = a.date ? new Date(a.date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',month:'short',day:'numeric'}) : '';
-      return `<div class="activation-card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="display:flex;align-items:center;gap:10px">
-            <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--purple);opacity:0.8">${a.schema||'Unknown'}</span>
-            <span style="font-family:var(--font-mono);font-size:8px;color:var(--muted)">${dateLabel} ${a.time||''}</span>
-          </div>
-          <span style="font-family:var(--font-mono);font-size:9px;color:${outcomeCol}">${a.outcome||'—'}</span>
-        </div>
-        ${a.what_happened?`<div style="font-family:var(--font-sans);font-size:12px;color:var(--text);opacity:0.85;margin-bottom:8px;line-height:1.6"><span style="font-family:var(--font-mono);font-size:8px;text-transform:uppercase;color:var(--muted);letter-spacing:0.08em">What happened · </span>${a.what_happened}</div>`:''}
-        ${a.feeling?`<div style="font-family:var(--font-sans);font-size:12px;color:var(--text);opacity:0.75;margin-bottom:8px;line-height:1.6"><span style="font-family:var(--font-mono);font-size:8px;text-transform:uppercase;color:var(--muted);letter-spacing:0.08em">Feeling · </span>${a.feeling}</div>`:''}
-        ${a.the_urge?`<div style="font-family:var(--font-sans);font-size:12px;color:var(--text);opacity:0.75;margin-bottom:8px;line-height:1.6"><span style="font-family:var(--font-mono);font-size:8px;text-transform:uppercase;color:var(--muted);letter-spacing:0.08em">Response · </span>${a.the_urge}</div>`:''}
-        ${a.pattern_interrupt?`<div style="font-family:var(--font-sans);font-size:12px;color:var(--text);opacity:0.7;line-height:1.6;padding:8px 12px;background:var(--surface);border-radius:3px;border-left:2px solid rgba(117,104,184,0.3);margin-top:4px"><span style="font-family:var(--font-mono);font-size:8px;text-transform:uppercase;color:var(--muted);letter-spacing:0.08em">Reframe · </span>${a.pattern_interrupt}</div>`:''}
-      </div>`;
-    }).join('')}
-  </div>` : `<div class="rpt-card"><div class="rpt-section-title">Schema Activations</div><div style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">No activations logged this week.</div></div>`;
 
   // ── Section: Play Review (Option C — all playable setups) ──
   const plays = ['bull1','bull2','bear1','bear2'];
@@ -5768,7 +5736,6 @@ function buildWeekReport(start, end, days, trades, activations, ruleCompliance =
     ${perfSection}
     ${mentalSection}
     ${disciplineSection}
-    ${activSection}
     ${missedSection}
     ${lessonsSection}
     ${aiSection}
@@ -5805,7 +5772,7 @@ function renderReportCharts(days, trades) {
 
 function renderAIReportText(el, text) {
   // Section headings the new prompt produces
-  const sectionHeadings = ['PERFORMANCE','MENTAL & READINESS','DISCIPLINE','SCHEMA ACTIVATIONS','PLAY REVIEW','DAILY LESSONS','THIS WEEK VS LAST WEEK','FOCUS FOR NEXT WEEK'];
+  const sectionHeadings = ['PERFORMANCE','MENTAL & READINESS','DISCIPLINE','PLAY REVIEW','DAILY LESSONS','THIS WEEK VS LAST WEEK','FOCUS FOR NEXT WEEK'];
   const focusHeading    = 'FOCUS FOR NEXT WEEK';
 
   // Split text into lines and build HTML
@@ -5928,16 +5895,14 @@ async function loadMonthReport(start, end, label, clickedEl) {
   var area = document.getElementById('report-main-area');
   area.innerHTML = '<div style="padding:40px 0;text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--muted)">Loading...</div>';
 
-  var [daysRes, tradesRes, activRes] = await Promise.all([
+  var [daysRes, tradesRes] = await Promise.all([
     fetch(SUPABASE_URL + '/rest/v1/trading_days?date=gte.' + start + '&date=lte.' + end + '&order=date.asc', { headers: HEADERS }),
     fetch(SUPABASE_URL + '/rest/v1/trades?date=gte.' + start + '&date=lte.' + end + '&order=entry_time.asc', { headers: HEADERS }),
-    fetch(SUPABASE_URL + '/rest/v1/activations?date=gte.' + start + '&date=lte.' + end + '&order=activated_at.asc', { headers: HEADERS }).catch(function(){ return { json: async function(){ return []; } }; }),
   ]);
   var days   = await daysRes.json();
   var trades = await tradesRes.json();
-  var acts   = await activRes.json();
 
-  area.innerHTML = buildMonthReport(start, end, label, days, trades, acts);
+  area.innerHTML = buildMonthReport(start, end, label, days, trades);
 
   // Restore saved AI
   var aiRes = await fetch(SUPABASE_URL + '/rest/v1/app_data?key=eq.ai_report_monthly:' + start + '&select=value', { headers: HEADERS });
@@ -5957,7 +5922,7 @@ function mpill(label, val, col) {
   '</div>';
 }
 
-function buildMonthReport(start, end, label, days, trades, acts) {
+function buildMonthReport(start, end, label, days, trades) {
   var BT = 2.0;
   var wt = trades.filter(function(t){ return (t.net_pnl||0) > BT; });
   var lt = trades.filter(function(t){ return (t.net_pnl||0) < -BT; });
@@ -6053,15 +6018,6 @@ function buildMonthReport(start, end, label, days, trades, acts) {
   var aslp=slp.length?(slp.reduce(function(a,b){return a+b;},0)/slp.length).toFixed(0)+'%':'—';
   var arec=rec.length?(rec.reduce(function(a,b){return a+b;},0)/rec.length).toFixed(0)+'%':'—';
 
-  // Schemas
-  var sc={};
-  acts.forEach(function(a){sc[a.schema]=(sc[a.schema]||0)+1;});
-  var scRows=Object.keys(sc).sort(function(a,b){return sc[b]-sc[a];}).map(function(s){
-    return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">' +
-      '<span style="color:var(--muted)">'+s+'</span>' +
-      '<span style="font-family:var(--font-mono);font-size:10px;color:var(--purple)">'+sc[s]+'x</span>' +
-    '</div>';
-  }).join('');
 
   var pnlStr = (tp>=0?'+':'')+' $'+tp.toFixed(0);
   var pnlCol = tp>0?'var(--green)':tp<0?'var(--red)':'var(--text)';
@@ -6130,29 +6086,18 @@ function buildMonthReport(start, end, label, days, trades, acts) {
 
     '</div>' +
 
-    // Two-col: Readiness + Schemas
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px">' +
-
-      '<div>' +
-        '<div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)">Readiness</div>' +
-        '<div style="display:flex;gap:20px;margin-bottom:12px">' +
-          '<div><div style="font-family:var(--font-mono);font-size:8px;color:var(--muted);margin-bottom:3px">Avg Sleep</div><div style="font-family:var(--font-num);font-size:20px;font-weight:300;color:var(--text)">'+aslp+'</div></div>' +
-          '<div><div style="font-family:var(--font-mono);font-size:8px;color:var(--muted);margin-bottom:3px">Avg Recovery</div><div style="font-family:var(--font-num);font-size:20px;font-weight:300;color:var(--text)">'+arec+'</div></div>' +
-        '</div>' +
-        '<div style="display:flex;gap:6px">' +
-          '<div style="padding:4px 8px;border-radius:3px;background:rgba(37,145,134,0.1);border:1px solid rgba(37,145,134,0.2);font-family:var(--font-mono);font-size:9px;color:var(--green)">GREEN '+gn+'d</div>' +
-          '<div style="padding:4px 8px;border-radius:3px;background:rgba(158,112,64,0.1);border:1px solid rgba(158,112,64,0.2);font-family:var(--font-mono);font-size:9px;color:var(--amber)">AMBER '+am+'d</div>' +
-          '<div style="padding:4px 8px;border-radius:3px;background:rgba(138,53,53,0.1);border:1px solid rgba(138,53,53,0.2);font-family:var(--font-mono);font-size:9px;color:var(--red)">RED '+rd+'d</div>' +
-        '</div>' +
+    // Readiness
+    '<div style="margin-bottom:32px">' +
+      '<div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)">Readiness</div>' +
+      '<div style="display:flex;gap:20px;margin-bottom:12px">' +
+        '<div><div style="font-family:var(--font-mono);font-size:8px;color:var(--muted);margin-bottom:3px">Avg Sleep</div><div style="font-family:var(--font-num);font-size:20px;font-weight:300;color:var(--text)">'+aslp+'</div></div>' +
+        '<div><div style="font-family:var(--font-mono);font-size:8px;color:var(--muted);margin-bottom:3px">Avg Recovery</div><div style="font-family:var(--font-num);font-size:20px;font-weight:300;color:var(--text)">'+arec+'</div></div>' +
       '</div>' +
-
-      '<div>' +
-        '<div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)">Schema Activations</div>' +
-        (acts.length ?
-          '<div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-bottom:8px">'+acts.length+' total activations</div>' + scRows :
-          '<div style="color:var(--muted);font-size:11px;font-family:var(--font-mono)">No activations recorded</div>') +
+      '<div style="display:flex;gap:6px">' +
+        '<div style="padding:4px 8px;border-radius:3px;background:rgba(37,145,134,0.1);border:1px solid rgba(37,145,134,0.2);font-family:var(--font-mono);font-size:9px;color:var(--green)">GREEN '+gn+'d</div>' +
+        '<div style="padding:4px 8px;border-radius:3px;background:rgba(158,112,64,0.1);border:1px solid rgba(158,112,64,0.2);font-family:var(--font-mono);font-size:9px;color:var(--amber)">AMBER '+am+'d</div>' +
+        '<div style="padding:4px 8px;border-radius:3px;background:rgba(138,53,53,0.1);border:1px solid rgba(138,53,53,0.2);font-family:var(--font-mono);font-size:9px;color:var(--red)">RED '+rd+'d</div>' +
       '</div>' +
-
     '</div>' +
 
     // AI section
@@ -6181,14 +6126,12 @@ async function generateMonthlyAIReport(start, end, label) {
   btn.disabled = true;
   el.innerHTML = '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px">Generating monthly analysis...</div>';
 
-  var [daysRes, tradesRes, activRes] = await Promise.all([
+  var [daysRes, tradesRes] = await Promise.all([
     fetch(SUPABASE_URL + '/rest/v1/trading_days?date=gte.' + start + '&date=lte.' + end + '&order=date.asc', { headers: HEADERS }),
     fetch(SUPABASE_URL + '/rest/v1/trades?date=gte.' + start + '&date=lte.' + end + '&order=entry_time.asc', { headers: HEADERS }),
-    fetch(SUPABASE_URL + '/rest/v1/activations?date=gte.' + start + '&date=lte.' + end + '&order=activated_at.asc', { headers: HEADERS }).catch(function(){ return { json: async function(){ return []; } }; }),
   ]);
   var days   = await daysRes.json();
   var trades = await tradesRes.json();
-  var acts   = await activRes.json();
 
   var BT = 2.0;
   var wt = trades.filter(function(t){return(t.net_pnl||0)>BT;});
@@ -6221,9 +6164,6 @@ async function generateMonthlyAIReport(start, end, label) {
   var sm={},sr={},spnl={};
   trades.forEach(function(t){var s=t.setup||null;if(!s)return;sm[s]=(sm[s]||0)+1;var r=calcR(t);if(!sr[s])sr[s]=[];if(r!==null)sr[s].push(r);spnl[s]=(spnl[s]||0)+(t.net_pnl||0);});
   var setupSum=Object.keys(sm).map(function(s){var ra=sr[s]||[];var ar2=ra.length?(ra.reduce(function(a,b){return a+b;},0)/ra.length).toFixed(2)+'R':'no R data';return s+': '+sm[s]+' trades, P&L $'+spnl[s].toFixed(0)+', Avg R '+ar2;}).join(' | ');
-
-  var sc={};acts.forEach(function(a){sc[a.schema]=(sc[a.schema]||0)+1;});
-  var actSum=Object.keys(sc).length?Object.keys(sc).map(function(s){return s+': '+sc[s]+'x';}).join(', '):'None recorded';
 
   var tdDays=new Set(trades.map(function(t){return t.date;})).size;
 
@@ -6263,7 +6203,7 @@ async function generateMonthlyAIReport(start, end, label) {
     'MONTHLY PERFORMANCE\nAnalyse the month as a whole. Lead with R stats. Comment on profit factor, expectancy, and win rate trajectory. Is the edge consistent or carried by outlier weeks? What does the week-by-week breakdown reveal?\n\n' +
     'SETUP EDGE ANALYSIS\nWhich setups generated real edge this month? Which cost money? Is the trader allocating volume correctly? Skip if no setup data.\n\n' +
     'DISCIPLINE TREND\nHow did discipline evolve across the month? Which rules broke most frequently? Improving, declining, or plateauing?\n\n' +
-    'MENTAL GAME\nReadiness trends and correlation with performance. Which schemas were most active? Are activations being managed better as the month progressed?\n\n' +
+    'MENTAL GAME\nReadiness trends and correlation with performance. On low-readiness days, what was the impact on discipline and P&L?\n\n' +
     'MONTHLY VERDICT\nHonest verdict. What genuinely improved? What is still stuck? Building sustainable edge or relying on outliers?\n\n' +
     'PRIORITIES FOR NEXT MONTH\nThree specific, concrete priorities based on the data. Not generic advice.\n---\n\n' +
     'DATA:\nMONTH: ' + label + '\nTRADING DAYS: ' + tdDays + '\n' +
@@ -6272,7 +6212,6 @@ async function generateMonthlyAIReport(start, end, label) {
     (ar!==null?'AVG R: '+fmtR(ar)+' | AVG WIN R: '+fmtR(arw)+' | AVG LOSS R: '+fmtR(arl)+' | EXPECTANCY R: '+fmtR(er)+'\n':'R-FACTOR: No stop data\n') +
     'DISCIPLINE: ' + (disc!==null?disc+'%':'n/a') + ' | MOST BROKEN: ' + (topB||'none') + '\n' +
     (setupSum?'SETUP BREAKDOWN: '+setupSum+'\n':'') +
-    'SCHEMA ACTIVATIONS: ' + actSum + '\n\n' +
     'WEEK BY WEEK:\n' + (wSums.join('\n')||'No data') + '\n\n' +
     'Write in plain prose with the section headings above.';
 
@@ -6304,14 +6243,12 @@ async function generateAIReport(start, end) {
   el.innerHTML = '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">Generating analysis...</span>';
 
   // Fetch data for prompt
-  const [daysRes, tradesRes, activRes] = await Promise.all([
+  const [daysRes, tradesRes] = await Promise.all([
     fetch(`${SUPABASE_URL}/rest/v1/trading_days?date=gte.${start}&date=lte.${end}&order=date.asc`, { headers: HEADERS }),
     fetch(`${SUPABASE_URL}/rest/v1/trades?date=gte.${start}&date=lte.${end}`, { headers: HEADERS }),
-    fetch(`${SUPABASE_URL}/rest/v1/activations?date=gte.${start}&date=lte.${end}&order=activated_at.asc`, { headers: HEADERS }).catch(()=>({json:async()=>[]})),
   ]);
-  const days        = await daysRes.json();
-  const trades      = await tradesRes.json();
-  const activations = await activRes.json();
+  const days   = await daysRes.json();
+  const trades = await tradesRes.json();
 
   // ── Build rich data context for AI ──
   const aiTotalPnl  = trades.reduce((s,t)=>s+(t.net_pnl||0),0);
@@ -6481,11 +6418,6 @@ async function generateAIReport(start, end) {
     });
   });
 
-  // Activations with full context
-  const activSummary = activations.length ? activations.map(a=>
-    `[${a.date}] Schema: ${a.schema} | what happened: "${a.what_happened||'?'}" | feeling: "${a.feeling||'?'}" | urge/response: "${a.the_urge||'?'}" | reframe used: "${a.pattern_interrupt||'none'}" | outcome: ${a.outcome||'?'}`
-  ).join('\n') : 'None recorded';
-
   // Intentions
   const lessons = days.filter(d=>d.tomorrow_will).map(d=>
     `${d.date}: intention: "${d.tomorrow_will}"`
@@ -6549,9 +6481,6 @@ Analyse readiness data (sleep, recovery, gate, post-session scores) across each 
 DISCIPLINE
 Analyse rule compliance day by day. Which rules were broken, when, and what were the stated reasons? Did rule breaks correlate with worse P&L or more trades? Flag any overtrade spirals — a day with high trade count + broken rules + negative P&L is a spiral, name it. If R data is available, calculate and state the implied Avg R for spiral days versus disciplined days — this makes the cost of discipline failures concrete and undeniable. Are the same rules being broken repeatedly — if so, what does that suggest?
 
-SCHEMA ACTIVATIONS
-Step into the role of a performance psychologist here. Analyse every single activation in detail — what triggered it, what the trader felt, what their urge was, and whether the reframe actually interrupted the pattern or just labelled it. Look for: which schemas are most active and what market conditions trigger them; whether the reframes are genuinely working (did the outcome change?) or are being used as a tick-box exercise; whether the trader is catching activations earlier or later in the spiral; and what the overall psychological narrative of the week tells you about their mental game. Be specific about each activation. If a reframe is working, say why. If it isn't, say what a better intervention might be. This section should read like a proper psychological debrief, not a summary.
-
 PLAY REVIEW
 Summarise the taken plays — are the plays the trader is taking working well? Are they from the pre-defined playbook or improvised? Now analyse the missed plays carefully — how many playable setups were skipped, what were the reasons given, and is there a pattern (e.g. always missing pre-open plays, always missing a specific direction, always second-guessing)? What is the opportunity cost of these misses?
 
@@ -6559,7 +6488,7 @@ DAILY INTENTIONS
 Analyse the trader's daily intentions for tomorrow. Are they specific and actionable, or generic? Are they actually being acted on in subsequent sessions?
 
 THIS WEEK VS LAST WEEK
-Compare directly. Is P&L improving? Is discipline improving? Are the same errors being repeated? Are the schema activations improving in outcome? If R data is available for both weeks, compare R expectancy week over week — this is more meaningful than comparing dollar P&L because it controls for contract size changes. Be honest about whether this represents genuine progress or more of the same.
+Compare directly. Is P&L improving? Is discipline improving? Are the same errors being repeated? If R data is available for both weeks, compare R expectancy week over week — this is more meaningful than comparing dollar P&L because it controls for contract size changes. Be honest about whether this represents genuine progress or more of the same.
 
 FOCUS FOR NEXT WEEK
 Based on everything above, give 2-3 very specific, concrete priorities for next week. Not generic advice. Reference the exact patterns identified above. Tell the trader precisely what to watch for and what to do differently.
@@ -6586,9 +6515,6 @@ ${takenSummary.join('\n') || 'None'}
 
 MISSED PLAYS (${missedSummary.length} of ${takenSummary.length + missedSummary.length} playable setups):
 ${missedSummary.join('\n') || 'None'}
-
-SCHEMA ACTIVATIONS:
-${activSummary}
 
 DAILY LESSONS & INTENTIONS:
 ${lessons}
