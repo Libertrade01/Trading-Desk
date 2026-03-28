@@ -5537,13 +5537,16 @@ function renderAgentProse(text) {
   };
 
   lines.forEach(line => {
-    // Strip ** markers
-    const stripped = line.trim().replace(/^\*\*|\*\*$/g, '');
-    // Heading: all-caps, only letters/spaces/&/()/%/-/. and at least 4 chars
-    const isHeading = stripped.length >= 4 &&
+    const trimmed = line.trim();
+    // Bold-wrapped lines (**HEADING**) are always headings
+    const isBoldWrapped = trimmed.startsWith('**') && trimmed.endsWith('**') && trimmed.length > 4;
+    const stripped = trimmed.replace(/^\*\*|\*\*$/g, '');
+    // All-caps lines (letters/digits/spaces/&/()/%/-/.) are also headings
+    const isAllCaps = stripped.length >= 4 &&
       stripped === stripped.toUpperCase() &&
       /[A-Z]/.test(stripped) &&
       /^[A-Z0-9\s&()%\-\/\.\,]+$/.test(stripped);
+    const isHeading = isBoldWrapped || isAllCaps;
 
     if (isHeading) {
       flushBuffer();
