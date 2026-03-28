@@ -19,7 +19,7 @@ const TRADER_PROFILE = `TRADER PROFILE (read this before analysing any data):
 - Sequences are manually tagged at import via sequence_id — all trades in one sequence = one trade idea
 - Multiple entries within a sequence are strategic repositioning, not overtrading — do not misread them as impulsivity
 - HIGH ATTEMPT COUNT (4+ trades in one sequence) warrants specific attention — may indicate forcing a setup that was not there
-- DLL (Daily Loss Limit) is a hard psychological and financial stop — being near or hitting it is a key data point
+- Risk Manager is the hard daily loss limit — a non-negotiable psychological and financial stop. Always call it "Risk Manager" or "Risk Manager limit", never "DLL". Being near or hitting it is a critical data point.
 - The 1.5R target is the minimum for avg win R — below this suggests winners are not being held to their intended target`;
 
 // ── Point values for R calculation ──────────────────────────────────────────
@@ -326,7 +326,7 @@ Rules:
 - focus_next_week: max 3 items. Carry over any unresolved prior focus items. Remove resolved ones. New items must be specific and measurable.
 - resolution_check: for each focus item in PRIOR FOCUS ITEMS, assess whether this week's data shows the trader acted on it. Be direct. If no prior focus items exist, return [].
 - pattern_flags: scan agent memory for issues recurring 2+ consecutive weeks. Severity: WARNING=2 weeks, ESCALATING=3 weeks, CRITICAL=4+ weeks. Only flag genuine recurring patterns.
-- risk_flag: RED if DLL breached on 2+ days AND trade count >50 AND discipline_pct <60%; AMBER if any two of those; GREEN otherwise.
+- risk_flag: RED if Risk Manager limit breached on 2+ days AND trade count >50 AND discipline_pct <60%; AMBER if any two of those; GREEN otherwise.
 - key_findings.net_pnl: MUST use exact number from VERIFIED COMPUTED STATS
 - key_findings.win_rate_ex_scratches: MUST use exact number from VERIFIED COMPUTED STATS
 - key_findings.discipline_pct: MUST use exact number from VERIFIED COMPUTED STATS
