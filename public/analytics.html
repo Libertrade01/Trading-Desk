@@ -5449,7 +5449,7 @@ async function loadAgentReport(weekEnding, clickedEl) {
 
       <!-- Tabs -->
       <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px" id="agent-report-tabs">
-        ${['agent1','agent2','manager'].filter(t => byType[t]).map((t,i) =>
+        ${['agent2','agent1','manager'].filter(t => byType[t]).map((t,i) =>
           `<button onclick="switchAgentTab('${t}')" id="agent-tab-${t}"
             style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:8px 16px;background:none;border:none;border-bottom:2px solid ${i===0?'var(--green)':'transparent'};color:${i===0?'var(--text)':'var(--muted)'};cursor:pointer">
             ${t === 'agent1' ? 'Psychology' : t === 'agent2' ? 'Performance' : 'Manager'}
@@ -5466,11 +5466,11 @@ async function loadAgentReport(weekEnding, clickedEl) {
 
   // Store reports for tab switching
   window._agentReports = byType;
-  window._agentActiveTab = ['agent1','agent2','manager'].find(t => byType[t]);
+  window._agentActiveTab = ['agent2','agent1','manager'].find(t => byType[t]);
 }
 
 function renderFirstAgentTab(byType) {
-  const first = ['agent1','agent2','manager'].find(t => byType[t]);
+  const first = ['agent2','agent1','manager'].find(t => byType[t]);
   if (!first) return '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px">No data.</div>';
   return renderAgentTabContent(first, byType[first]);
 }
@@ -5911,7 +5911,7 @@ function renderInlineAgentSection(weekEnding, reports) {
       })()}
 
       <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px" id="agent-report-tabs">
-        ${['agent1','agent2','manager'].filter(t => byType[t]).map((t, i) =>
+        ${['agent2','agent1','manager'].filter(t => byType[t]).map((t, i) =>
           `<button onclick="switchAgentTab('${t}')" id="agent-tab-${t}"
             style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:8px 16px;background:none;border:none;border-bottom:2px solid ${i===0?'var(--green)':'transparent'};color:${i===0?'var(--text)':'var(--muted)'};cursor:pointer">
             ${t === 'agent1' ? 'Psychology' : t === 'agent2' ? 'Performance' : 'Manager'}
@@ -5926,7 +5926,7 @@ function renderInlineAgentSection(weekEnding, reports) {
   </div>`;
 
   window._agentReports = byType;
-  window._agentActiveTab = ['agent1','agent2','manager'].find(t => byType[t]);
+  window._agentActiveTab = ['agent2','agent1','manager'].find(t => byType[t]);
 }
 
 function renderReportCharts(days, trades) {
