@@ -5587,11 +5587,13 @@ function renderAgentProse(text) {
     // Bold-wrapped lines (**HEADING**) are always headings
     const isBoldWrapped = trimmed.startsWith('**') && trimmed.endsWith('**') && trimmed.length > 4;
     const stripped = trimmed.replace(/^\*\*|\*\*$/g, '');
-    // All-caps lines (letters/digits/spaces/&/()/%/-/.) are also headings
-    const isAllCaps = stripped.length >= 4 &&
-      stripped === stripped.toUpperCase() &&
-      /[A-Z]/.test(stripped) &&
-      /^[A-Z0-9\s&()%\-\/\.\,]+$/.test(stripped);
+    // All-caps check: strip parenthetical suffixes before checking case
+    // e.g. "DISCIPLINE (numbers)" → "DISCIPLINE" → all caps ✓
+    const strippedParens = stripped.replace(/\s*\([^)]*\)\s*$/, '').trim();
+    const isAllCaps = strippedParens.length >= 3 &&
+      strippedParens === strippedParens.toUpperCase() &&
+      /[A-Z]/.test(strippedParens) &&
+      /^[A-Z0-9\s&%\-\/\.\,]+$/.test(strippedParens);
     const isHeading = isBoldWrapped || isAllCaps;
 
     if (isHeading) {
