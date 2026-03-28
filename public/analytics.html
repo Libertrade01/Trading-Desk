@@ -3320,7 +3320,6 @@ async function syncData() {
         if (review.bear2Result)            row.bear2_result        = review.bear2Result;
         if (review.bear2Traded)            row.bear2_traded        = review.bear2Traded;
         if (review.bear2WhyNot)            row.bear2_why_not       = review.bear2WhyNot;
-        if (review.biggestLesson)          row.biggest_lesson      = review.biggestLesson;
         if (review.tomorrowWill)           row.tomorrow_will       = review.tomorrowWill;
         if (review.sessionCharacter)       row.session_character   = review.sessionCharacter;
       }
@@ -5365,7 +5364,7 @@ async function loadWeekReport(start, end, clickedEl) {
 
 function buildWeekReport(start, end, days, trades, activations, ruleCompliance = []) {
   const weekLabel = fmtWeekLabel(start, end);
-  const tradingDays = days.filter(d => d.net_pnl !== null || (d.biggest_lesson));
+  const tradingDays = days.filter(d => d.net_pnl !== null);
 
   // ── Headline numbers ──
   const totalPnl    = trades.reduce((s,t) => s + (t.net_pnl||0), 0);
@@ -5712,26 +5711,22 @@ function buildWeekReport(start, end, days, trades, activations, ruleCompliance =
   </div>` : `<div class="rpt-card"><div class="rpt-section-title">Play Review</div><div style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">No setups played out this week.</div></div>`;
 
   // ── Section: Daily Lessons ──
-  const lessonsWithData = days.filter(d => d.biggest_lesson || d.tomorrow_will || d.tomorrow_intention);
+  const lessonsWithData = days.filter(d => d.tomorrow_will || d.tomorrow_intention);
   const lessonsSection = lessonsWithData.length ? `
   <div class="rpt-card">
-    <div class="rpt-section-title">Daily Lessons</div>
+    <div class="rpt-section-title">Intentions</div>
     ${lessonsWithData.map(d => {
       const dateLabel = new Date(d.date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',month:'short',day:'numeric'});
       const intention = d.tomorrow_will || d.tomorrow_intention;
       return `<div class="lesson-card">
         <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">${dateLabel}</div>
-        ${d.biggest_lesson?`<div style="margin-bottom:10px">
-          <div style="font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:5px;opacity:0.7">Biggest Lesson</div>
-          <div style="font-family:var(--font-sans);font-size:13px;color:var(--text);opacity:0.88;line-height:1.7">${d.biggest_lesson}</div>
-        </div>`:''}
         ${intention?`<div>
           <div style="font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:5px;opacity:0.7">Tomorrow</div>
           <div style="font-family:var(--font-sans);font-size:12px;color:var(--text);opacity:0.7;line-height:1.65;padding:8px 12px;background:var(--surface2);border-radius:3px;border-left:2px solid rgba(37,145,134,0.3)">${intention}</div>
         </div>`:''}
       </div>`;
     }).join('')}
-  </div>` : `<div class="rpt-card"><div class="rpt-section-title">Daily Lessons</div><div style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">No lessons logged this week.</div></div>`;
+  </div>` : `<div class="rpt-card"><div class="rpt-section-title">Intentions</div><div style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">No intentions logged this week.</div></div>`;
 
   // ── AI Narrative ──
   const aiSection = `
@@ -6478,9 +6473,9 @@ async function generateAIReport(start, end) {
     `[${a.date}] Schema: ${a.schema} | what happened: "${a.what_happened||'?'}" | feeling: "${a.feeling||'?'}" | urge/response: "${a.the_urge||'?'}" | reframe used: "${a.pattern_interrupt||'none'}" | outcome: ${a.outcome||'?'}`
   ).join('\n') : 'None recorded';
 
-  // Lessons + intentions
-  const lessons = days.filter(d=>d.biggest_lesson||d.tomorrow_will).map(d=>
-    `${d.date}: lesson: "${d.biggest_lesson||''}"${d.tomorrow_will?' | intention: "'+d.tomorrow_will+'"':''}`
+  // Intentions
+  const lessons = days.filter(d=>d.tomorrow_will).map(d=>
+    `${d.date}: intention: "${d.tomorrow_will}"`
   ).join('\n') || 'None recorded';
 
   // Fetch last week's data for comparison
@@ -6547,8 +6542,8 @@ Step into the role of a performance psychologist here. Analyse every single acti
 PLAY REVIEW
 Summarise the taken plays — are the plays the trader is taking working well? Are they from the pre-defined playbook or improvised? Now analyse the missed plays carefully — how many playable setups were skipped, what were the reasons given, and is there a pattern (e.g. always missing pre-open plays, always missing a specific direction, always second-guessing)? What is the opportunity cost of these misses?
 
-DAILY LESSONS
-Summarise what the trader is learning. Are the lessons insightful or surface level? Are they identifying the right problems? Are the same lessons recurring week after week — if so, say it directly. Are their intentions for the next day actually being acted on?
+DAILY INTENTIONS
+Analyse the trader's daily intentions for tomorrow. Are they specific and actionable, or generic? Are they actually being acted on in subsequent sessions?
 
 THIS WEEK VS LAST WEEK
 Compare directly. Is P&L improving? Is discipline improving? Are the same errors being repeated? Are the schema activations improving in outcome? If R data is available for both weeks, compare R expectancy week over week — this is more meaningful than comparing dollar P&L because it controls for contract size changes. Be honest about whether this represents genuine progress or more of the same.
