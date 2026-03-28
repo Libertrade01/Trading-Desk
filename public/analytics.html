@@ -1728,16 +1728,12 @@
         <button onclick="setReportPeriod('quarterly')" id="rp-quarterly" style="display:flex;align-items:center;gap:10px;padding:11px 0;font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;border:none;background:none;width:100%;text-align:left;border-left:2px solid transparent;padding-left:12px;opacity:0.5">
           <span style="width:5px;height:5px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>Quarterly <span style="font-size:8px;margin-left:4px;opacity:0.5">soon</span>
         </button>
-        <button onclick="setReportPeriod('agent')" id="rp-agent" style="display:flex;align-items:center;gap:10px;padding:11px 0;font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;border:none;background:none;width:100%;text-align:left;border-left:2px solid transparent;padding-left:12px">
-          <span style="width:5px;height:5px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>Agent
-        </button>
       </div>
       <div style="height:1px;background:var(--border);margin:4px 0 16px"></div>
       <div style="padding:0 0 12px">
         <div id="reports-sidebar-label" style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0 20px 10px;opacity:0.6">Recent Weeks</div>
         <div id="reports-sidebar-weeks"></div>
         <div id="reports-sidebar-months" style="display:none"></div>
-        <div id="reports-sidebar-agent" style="display:none"></div>
       </div>
     </div>
 
@@ -5225,7 +5221,7 @@ function showPage(page) {
 }
 
 function setReportPeriod(p) {
-  ['weekly','monthly','quarterly','agent'].forEach(function(id) {
+  ['weekly','monthly','quarterly'].forEach(function(id) {
     var btn = document.getElementById('rp-' + id);
     if (!btn) return;
     var active = (id === p);
@@ -5237,25 +5233,15 @@ function setReportPeriod(p) {
   });
   var weeksEl  = document.getElementById('reports-sidebar-weeks');
   var monthsEl = document.getElementById('reports-sidebar-months');
-  var agentEl  = document.getElementById('reports-sidebar-agent');
   var labelEl  = document.getElementById('reports-sidebar-label');
   if (p === 'weekly') {
     if (weeksEl)  weeksEl.style.display  = '';
     if (monthsEl) monthsEl.style.display = 'none';
-    if (agentEl)  agentEl.style.display  = 'none';
     if (labelEl)  labelEl.textContent = 'Recent Weeks';
   } else if (p === 'monthly') {
     if (weeksEl)  weeksEl.style.display  = 'none';
     if (monthsEl) { monthsEl.style.display = ''; initMonthlySidebar(); }
-    if (agentEl)  agentEl.style.display  = 'none';
     if (labelEl)  labelEl.textContent = 'Recent Months';
-  } else if (p === 'agent') {
-    if (weeksEl)  weeksEl.style.display  = 'none';
-    if (monthsEl) monthsEl.style.display = 'none';
-    if (agentEl)  { agentEl.style.display = ''; initAgentSidebar(); }
-    if (labelEl)  labelEl.textContent = 'Agent Reports';
-    document.getElementById('report-main-area').innerHTML =
-      '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px">Select a week to view agent output.</div>';
   }
 }
 
@@ -5568,20 +5554,20 @@ async function runWeeklyReview(weekEnding, btn) {
     btn.textContent = 'Done ✓';
     btn.style.color = 'var(--green)';
 
-    // Refresh the dot status
-    const dot = document.querySelector(`#agent-week-row-${weekEnding} span span`);
-    if (dot) { dot.style.background = 'var(--green)'; dot.style.opacity = '1'; }
+    // Re-fetch and refresh the inline agent section
+    const agentRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/agent_reports?week_ending=eq.${weekEnding}&order=report_type.asc`,
+      { headers: HEADERS }
+    ).catch(() => null);
+    const agentRaw = agentRes ? await agentRes.json().catch(() => []) : [];
+    renderInlineAgentSection(weekEnding, Array.isArray(agentRaw) ? agentRaw : []);
 
-    // Auto-load the freshly generated report
-    const row = document.getElementById(`agent-week-row-${weekEnding}`);
-    loadAgentReport(weekEnding, row);
-
-    setTimeout(() => { btn.textContent = 'Re-run'; btn.disabled = false; }, 3000);
+    setTimeout(() => { btn.textContent = 'Re-run ↗'; btn.disabled = false; btn.style.color = ''; }, 3000);
   } catch(e) {
     btn.textContent = 'Error';
     btn.style.color = 'var(--red)';
     btn.title = e.message;
-    setTimeout(() => { btn.textContent = origText; btn.disabled = false; btn.style.color = 'var(--muted)'; btn.title = ''; }, 4000);
+    setTimeout(() => { btn.textContent = origText; btn.disabled = false; btn.style.color = ''; btn.title = ''; }, 4000);
   }
 }
 
@@ -5625,34 +5611,22 @@ async function loadWeekReport(start, end, clickedEl) {
   area.innerHTML = '<div style="padding:40px 0;text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--muted)">Loading report...</div>';
 
   // Fetch all data in parallel
-  const [daysRes, tradesRes, ruleCompRes] = await Promise.all([
+  const [daysRes, tradesRes, agentRes] = await Promise.all([
     fetch(`${SUPABASE_URL}/rest/v1/trading_days?date=gte.${start}&date=lte.${end}&order=date.asc`, { headers: HEADERS }),
     fetch(`${SUPABASE_URL}/rest/v1/trades?date=gte.${start}&date=lte.${end}&order=entry_time.asc`, { headers: HEADERS }),
-    fetch(`${SUPABASE_URL}/rest/v1/rule_compliance?date=gte.${start}&date=lte.${end}`, { headers: HEADERS }).catch(() => null),
+    fetch(`${SUPABASE_URL}/rest/v1/agent_reports?week_ending=eq.${end}&order=report_type.asc`, { headers: HEADERS }).catch(() => null),
   ]);
-  const days           = await daysRes.json();
-  const trades         = await tradesRes.json();
-  const ruleCompRaw    = ruleCompRes ? await ruleCompRes.json().catch(() => []) : [];
-  const ruleCompliance = Array.isArray(ruleCompRaw) ? ruleCompRaw : [];
+  const days         = await daysRes.json();
+  const trades       = await tradesRes.json();
+  const agentRaw     = agentRes ? await agentRes.json().catch(() => []) : [];
+  const agentReports = Array.isArray(agentRaw) ? agentRaw : [];
 
-  area.innerHTML = buildWeekReport(start, end, days, trades, ruleCompliance);
+  area.innerHTML = buildWeekReport(start, end, days, trades);
   renderReportCharts(days, trades);
-
-  // Restore saved AI analysis if one exists for this week
-  const aiRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/app_data?key=eq.ai_report:${start}:${end}&select=value`,
-    { headers: HEADERS }
-  );
-  const aiRows = await aiRes.json();
-  if (aiRows.length && aiRows[0].value) {
-    const aiEl = document.getElementById('ai-report-content');
-    if (aiEl) renderAIReportText(aiEl, aiRows[0].value);
-    const btn = document.getElementById('ai-report-btn');
-    if (btn) btn.textContent = 'Regenerate ↗';
-  }
+  renderInlineAgentSection(end, agentReports);
 }
 
-function buildWeekReport(start, end, days, trades, ruleCompliance = []) {
+function buildWeekReport(start, end, days, trades) {
   const weekLabel = fmtWeekLabel(start, end);
   const tradingDays = days.filter(d => d.net_pnl !== null);
 
@@ -5818,199 +5792,6 @@ function buildWeekReport(start, end, days, trades, ruleCompliance = []) {
     </div>
   </div>`;
 
-  // ── Section: Mental / Readiness ──
-  const mentalSection = `
-  <div class="rpt-card">
-    <div class="rpt-section-title">Mental & Readiness</div>
-    <table class="rpt-table">
-      <thead><tr>
-        <th>Date</th><th>Gate</th><th>Sleep</th><th>Recovery</th><th>Connected</th><th>Emotional</th><th>Decision</th><th>Physical</th><th>Focus</th>
-      </tr></thead>
-      <tbody>
-        ${days.map(d => {
-          const dateLabel = new Date(d.date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',month:'short',day:'numeric'});
-          const val = (v,lo,hi) => {
-            if (v==null) return '<td style="color:var(--muted)">—</td>';
-            const col = v>=hi?'var(--green)':v>=lo?'var(--amber)':'var(--red)';
-            return `<td style="color:${col}">${v}${typeof v==='number'&&v<=10?'':v<=100?'%':''}</td>`;
-          };
-          return `<tr>
-            <td style="color:var(--text)">${dateLabel}</td>
-            <td style="color:${gateCol(d.gate)};font-size:9px">${d.gate||'—'}</td>
-            ${val(d.whoop_sleep,70,85)}
-            ${val(d.whoop_recovery,50,70)}
-            ${val(d.mental_connected,3,4)}
-            ${val(d.post_emotional,3,4)}
-            ${val(d.post_decision,3,4)}
-            ${val(d.post_physical,3,4)}
-            ${val(d.focus_rating,3,4)}
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-  </div>`;
-
-  // ── Section: Discipline ──
-  const ruleKeys = [
-    {key:'rules_trend',       label:'Trend / Tape'},
-    {key:'rules_market_cond', label:'Market Condition'},
-    {key:'rules_plays',       label:'Playbook Setups'},
-    {key:'rules_execution',   label:'Execution Model'},
-    {key:'rules_focus',       label:'Focus'},
-    {key:'rules_consol',      label:'Consolidation'},
-    {key:'rules_dll',         label:'Risk Manager'},
-  ];
-  const noteKeys = {
-    rules_trend:'rules_trend_note', rules_market_cond:'rules_market_cond_note',
-    rules_top_bottom:'rules_top_bottom_note', rules_plays:'rules_plays_note',
-    rules_execution:'rules_execution_note', rules_focus:'rules_focus_note',
-    rules_consol:'rules_consol_note', rules_dll:'rules_dll_note', rules_cooloff:'rules_cooloff_note',
-  };
-  // Camel-case keys used by the Python sync when writing to rule_compliance table
-  const noteCamelKeys = {
-    rules_trend:'rulesTrend', rules_market_cond:'rulesMarketCond',
-    rules_top_bottom:'rulesTopBottom', rules_plays:'rulesPlays',
-    rules_execution:'rulesExecution', rules_focus:'rulesFocus',
-    rules_consol:'rulesConsol', rules_dll:'rulesDLL', rules_cooloff:'rulesCooloff',
-  };
-  const ruleColor = v => v==='Followed'||v==='followed'?'var(--green)':v==='Broke'||v==='broke'?'var(--red)':'var(--muted)';
-
-  const disciplineSection = `
-  <div class="rpt-card">
-    <div class="rpt-section-title">Discipline</div>
-    <table class="rpt-table">
-      <thead><tr>
-        <th>Rule</th>
-        ${days.map(d=>`<th>${new Date(d.date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short'})}</th>`).join('')}
-        <th>Notes</th>
-      </tr></thead>
-      <tbody>
-        ${ruleKeys.map(r => {
-          const fromDays = days.map(d => d[noteKeys[r.key]]).filter(Boolean);
-          const fromRC   = ruleCompliance.filter(rc => rc.rule === noteCamelKeys[r.key] && rc.notes).map(rc => rc.notes);
-          const notes    = fromDays.length ? fromDays : fromRC;
-          return `<tr>
-            <td style="color:var(--text);white-space:nowrap">${r.label}</td>
-            ${days.map(d => {
-              const v = d[r.key];
-              return `<td style="color:${ruleColor(v)};font-size:9px;text-align:center">${v==='Followed'||v==='followed'?'✓':v==='Broke'||v==='broke'?'✗':v==='N/A'||v==='n/a'?'—':'—'}</td>`;
-            }).join('')}
-            <td style="font-size:9px;color:var(--muted);max-width:200px;line-height:1.5">${notes.join(' · ')||'—'}</td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-  </div>`;
-
-
-  // ── Section: Play Review (Option C — all playable setups) ──
-  const plays = ['bull1','bull2','bear1','bear2'];
-  const playLabels = {bull1:'Bull Play 1',bull2:'Bull Play 2',bear1:'Bear Play 1',bear2:'Bear Play 2'};
-  const playableSetups = [];
-  days.forEach(d => {
-    plays.forEach(p => {
-      const result = d[`${p}_result`];
-      const traded = d[`${p}_traded`];
-      const whyNot = d[`${p}_why_not`];
-      // Include all setups that played out or partially played out
-      if (result==='Played Out' || result==='Partially') {
-        playableSetups.push({
-          date: d.date, play: playLabels[p], result, traded, whyNot,
-          description:  d[`${p}_description`]  || null,
-          invalidation: d[`${p}_invalidation`] || null,
-        });
-      }
-    });
-  });
-  const takenPlays  = playableSetups.filter(p => p.traded==='Yes');
-  const missedPlays = playableSetups.filter(p => p.traded==='No');
-
-  const missedSection = playableSetups.length ? `
-  <div class="rpt-card">
-    <div class="rpt-section-title">Play Review
-      <span style="font-size:9px;font-weight:300;color:var(--muted);text-transform:none;letter-spacing:0">
-        ${playableSetups.length} setup${playableSetups.length!==1?'s':''} played out ·
-        <span style="color:var(--green)">${takenPlays.length} taken</span> ·
-        <span style="color:var(--amber)">${missedPlays.length} missed</span>
-      </span>
-    </div>
-
-    ${playableSetups.length === 0 ? '<div style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">No setups played out this week.</div>' : ''}
-
-    ${takenPlays.length > 0 ? `
-      <div class="rpt-inner-label" style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--green);margin-bottom:10px;display:flex;align-items:center;gap:10px;opacity:0.8">
-        Taken <span style="flex:1;height:1px;background:rgba(37,145,134,0.2);display:inline-block"></span>
-      </div>
-      ${takenPlays.map(m => {
-        const dateLabel = new Date(m.date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',month:'short',day:'numeric'});
-        return `<div style="background:var(--surface2);border:1px solid var(--border);border-left:2px solid rgba(37,145,134,0.5);border-radius:4px;padding:14px 18px;margin-bottom:10px">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:${m.description?'10px':'0'}">
-            <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--green)">${m.play}</span>
-            <span style="font-family:var(--font-mono);font-size:8px;color:var(--muted)">${dateLabel}</span>
-            <span style="font-family:var(--font-mono);font-size:8px;padding:2px 7px;border-radius:10px;background:rgba(37,145,134,0.1);border:1px solid rgba(37,145,134,0.2);color:var(--green)">${m.result}</span>
-            <span style="font-family:var(--font-mono);font-size:8px;padding:2px 7px;border-radius:10px;background:rgba(37,145,134,0.08);border:1px solid rgba(37,145,134,0.15);color:var(--green);margin-left:auto">✓ Traded</span>
-          </div>
-          ${m.description ? `<div style="font-family:var(--font-sans);font-size:12px;color:var(--text);opacity:0.8;line-height:1.65;white-space:pre-line">${m.description}</div>` : ''}
-        </div>`;
-      }).join('')}
-    ` : ''}
-
-    ${missedPlays.length > 0 ? `
-      <div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--amber);margin:${takenPlays.length>0?'16px':0} 0 10px;display:flex;align-items:center;gap:10px;opacity:0.8">
-        Missed <span style="flex:1;height:1px;background:rgba(158,112,64,0.2);display:inline-block"></span>
-      </div>
-      ${missedPlays.map(m => {
-        const dateLabel = new Date(m.date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',month:'short',day:'numeric'});
-        return `<div class="missed-play-card">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:${m.description||m.whyNot?'10px':'0'}">
-            <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--amber)">${m.play}</span>
-            <span style="font-family:var(--font-mono);font-size:8px;color:var(--muted)">${dateLabel}</span>
-            <span style="font-family:var(--font-mono);font-size:8px;padding:2px 7px;border-radius:10px;background:rgba(158,112,64,0.1);border:1px solid rgba(158,112,64,0.2);color:var(--amber)">${m.result}</span>
-            <span style="font-family:var(--font-mono);font-size:8px;padding:2px 7px;border-radius:10px;background:rgba(138,53,53,0.08);border:1px solid rgba(138,53,53,0.15);color:var(--red);margin-left:auto">✗ Missed</span>
-          </div>
-          ${m.description ? `<div style="font-family:var(--font-sans);font-size:12px;color:var(--text);opacity:0.8;line-height:1.65;white-space:pre-line;margin-bottom:${m.whyNot?'10px':'0'}">${m.description}</div>` : ''}
-          ${m.whyNot
-            ? `<div style="font-family:var(--font-sans);font-size:12px;color:var(--text);opacity:0.8;line-height:1.65"><span style="font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">Why missed · </span>${m.whyNot}</div>`
-            : `<div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);font-style:italic">No reason recorded</div>`}
-        </div>`;
-      }).join('')}
-    ` : ''}
-
-  </div>` : `<div class="rpt-card"><div class="rpt-section-title">Play Review</div><div style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">No setups played out this week.</div></div>`;
-
-  // ── Section: Daily Lessons ──
-  const lessonsWithData = days.filter(d => d.tomorrow_will || d.tomorrow_intention);
-  const lessonsSection = lessonsWithData.length ? `
-  <div class="rpt-card">
-    <div class="rpt-section-title">Intentions</div>
-    ${lessonsWithData.map(d => {
-      const dateLabel = new Date(d.date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',month:'short',day:'numeric'});
-      const intention = d.tomorrow_will || d.tomorrow_intention;
-      return `<div class="lesson-card">
-        <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">${dateLabel}</div>
-        ${intention?`<div>
-          <div style="font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:5px;opacity:0.7">Tomorrow</div>
-          <div style="font-family:var(--font-sans);font-size:12px;color:var(--text);opacity:0.7;line-height:1.65;padding:8px 12px;background:var(--surface2);border-radius:3px;border-left:2px solid rgba(37,145,134,0.3)">${intention}</div>
-        </div>`:''}
-      </div>`;
-    }).join('')}
-  </div>` : `<div class="rpt-card"><div class="rpt-section-title">Intentions</div><div style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">No intentions logged this week.</div></div>`;
-
-  // ── AI Narrative ──
-  const aiSection = `
-  <div class="ai-narrative-card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div class="ai-pulse"></div>
-        <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--purple);opacity:0.8">AI Analysis</span>
-      </div>
-      <button id="ai-report-btn" onclick="generateAIReport('${start}','${end}')" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);background:none;border:1px solid var(--border);border-radius:3px;padding:4px 10px;cursor:pointer">Generate ↗</button>
-    </div>
-    <div id="ai-report-content" style="font-family:var(--font-sans);font-size:13px;color:var(--text);opacity:0.8;line-height:1.8">
-      <span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">Click Generate to run AI analysis on this week's data.</span>
-    </div>
-  </div>`;
-
   return `
     <!-- Report header -->
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px">
@@ -6021,12 +5802,72 @@ function buildWeekReport(start, end, days, trades, ruleCompliance = []) {
       <div style="font-family:var(--font-num);font-size:28px;font-weight:300;color:${pnlCol(totalPnl)}">${pnlStr(totalPnl)}</div>
     </div>
     ${perfSection}
-    ${mentalSection}
-    ${disciplineSection}
-    ${missedSection}
-    ${lessonsSection}
-    ${aiSection}
+    <div id="agent-report-inline"></div>
   `;
+}
+
+function renderInlineAgentSection(weekEnding, reports) {
+  const el = document.getElementById('agent-report-inline');
+  if (!el) return;
+
+  const byType = {};
+  reports.forEach(r => { byType[r.report_type] = r; });
+  const mgr = byType['manager'];
+  const mgrContent = mgr ? mgr.content : null;
+  const hasReports = reports.length > 0;
+  const genAt = mgr ? new Date(mgr.generated_at).toLocaleDateString('en-GB', {
+    day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'
+  }) : '';
+
+  el.innerHTML = `
+  <div class="rpt-card" style="margin-top:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${hasReports ? '20px' : '14px'}">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="ai-pulse"></div>
+        <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--purple);opacity:0.8">Agent Analysis</span>
+        ${genAt ? `<span style="font-family:var(--font-mono);font-size:8px;color:var(--muted);opacity:0.45">· ${genAt}</span>` : ''}
+      </div>
+      <button id="agent-run-btn-${weekEnding}" onclick="runWeeklyReview('${weekEnding}', this)"
+        style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);background:none;border:1px solid var(--border);border-radius:3px;padding:4px 10px;cursor:pointer">
+        ${hasReports ? 'Re-run ↗' : 'Run ↗'}
+      </button>
+    </div>
+
+    ${!hasReports ? `
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">No agent analysis for this week. Click Run to generate.</div>
+    ` : `
+      ${mgrContent && mgrContent.week_in_one_line ? `
+        <div style="font-family:var(--font-mono);font-size:14px;color:var(--text);line-height:1.55;padding:14px 18px;background:var(--surface);border-left:3px solid var(--green);border-radius:0 4px 4px 0;margin-bottom:16px">
+          ${escHtml(mgrContent.week_in_one_line)}
+        </div>` : ''}
+
+      ${mgrContent && Array.isArray(mgrContent.focus_next_week) && mgrContent.focus_next_week.length ? `
+        <div style="margin-bottom:22px">
+          <div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Focus Next Week</div>
+          ${mgrContent.focus_next_week.map(f => `
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+              <span style="color:var(--green);font-size:10px;margin-top:1px">▸</span>
+              <span style="font-family:var(--font-mono);font-size:11px;color:var(--text);line-height:1.5">${escHtml(f)}</span>
+            </div>`).join('')}
+        </div>` : ''}
+
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px" id="agent-report-tabs">
+        ${['agent1','agent2','manager'].filter(t => byType[t]).map((t, i) =>
+          `<button onclick="switchAgentTab('${t}')" id="agent-tab-${t}"
+            style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:8px 16px;background:none;border:none;border-bottom:2px solid ${i===0?'var(--green)':'transparent'};color:${i===0?'var(--text)':'var(--muted)'};cursor:pointer">
+            ${t === 'agent1' ? 'Psychology' : t === 'agent2' ? 'Performance' : 'Manager'}
+          </button>`
+        ).join('')}
+      </div>
+
+      <div id="agent-tab-content">
+        ${renderFirstAgentTab(byType)}
+      </div>
+    `}
+  </div>`;
+
+  window._agentReports = byType;
+  window._agentActiveTab = ['agent1','agent2','manager'].find(t => byType[t]);
 }
 
 function renderReportCharts(days, trades) {
