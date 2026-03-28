@@ -5374,7 +5374,7 @@ async function initAgentSidebar() {
     </div>
     ${weeksDesc.map(w => {
       const generated = done.has(w);
-      const label = fmtWeekLabel(w, fridayOf(w));
+      const label = fmtWeekLabel(mondayOf(w), w);
       return `<div class="sidebar-week-item" id="agent-week-row-${w}" onclick="loadAgentReport('${w}', this)">
         <span style="display:flex;align-items:center;gap:7px">
           <span style="width:6px;height:6px;border-radius:50%;background:${generated ? 'var(--green)' : 'var(--muted)'};flex-shrink:0;opacity:${generated ? 1 : 0.4}"></span>
@@ -5389,9 +5389,9 @@ async function initAgentSidebar() {
   `;
 }
 
-function fridayOf(mondayStr) {
-  const d = new Date(mondayStr + 'T12:00:00');
-  d.setDate(d.getDate() + 4);
+function mondayOf(fridayStr) {
+  const d = new Date(fridayStr + 'T12:00:00');
+  d.setDate(d.getDate() - 4);
   return fmtDate(d);
 }
 
@@ -5437,7 +5437,7 @@ async function loadAgentReport(weekEnding, clickedEl) {
   const mgr = byType['manager'];
   const mgrContent = mgr ? mgr.content : null;
 
-  const weekLabel = fmtWeekLabel(weekEnding, fridayOf(weekEnding));
+  const weekLabel = fmtWeekLabel(mondayOf(weekEnding), weekEnding);
   const genAt = mgr ? new Date(mgr.generated_at).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
 
   area.innerHTML = `
@@ -5463,10 +5463,10 @@ async function loadAgentReport(weekEnding, clickedEl) {
 
       <!-- Tabs -->
       <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px" id="agent-report-tabs">
-        ${['psychology','performance','manager'].filter(t => byType[t]).map((t,i) =>
+        ${['agent1','agent2','manager'].filter(t => byType[t]).map((t,i) =>
           `<button onclick="switchAgentTab('${t}')" id="agent-tab-${t}"
             style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:8px 16px;background:none;border:none;border-bottom:2px solid ${i===0?'var(--green)':'transparent'};color:${i===0?'var(--text)':'var(--muted)'};cursor:pointer">
-            ${t === 'psychology' ? 'Psychology' : t === 'performance' ? 'Performance' : 'Manager'}
+            ${t === 'agent1' ? 'Psychology' : t === 'agent2' ? 'Performance' : 'Manager'}
           </button>`
         ).join('')}
       </div>
@@ -5480,11 +5480,11 @@ async function loadAgentReport(weekEnding, clickedEl) {
 
   // Store reports for tab switching
   window._agentReports = byType;
-  window._agentActiveTab = Object.keys(byType).filter(t => ['psychology','performance','manager'].includes(t))[0];
+  window._agentActiveTab = ['agent1','agent2','manager'].find(t => byType[t]);
 }
 
 function renderFirstAgentTab(byType) {
-  const first = ['psychology','performance','manager'].find(t => byType[t]);
+  const first = ['agent1','agent2','manager'].find(t => byType[t]);
   if (!first) return '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px">No data.</div>';
   return renderAgentTabContent(first, byType[first]);
 }
@@ -5506,16 +5506,31 @@ function renderAgentTabContent(type, report) {
   if (!content) return '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px">Empty.</div>';
 
   if (type === 'manager') {
-    // Manager has structured JSON — render key_findings + trajectory_note
+    const kf = content.key_findings || {};
+    const themes = Array.isArray(kf.unresolved_lesson_themes) ? kf.unresolved_lesson_themes : [];
+    const stats = [
+      { label: 'Net P&L',        value: kf.net_pnl != null ? (kf.net_pnl >= 0 ? `+$${kf.net_pnl}` : `-$${Math.abs(kf.net_pnl)}`) : '—', color: kf.net_pnl > 0 ? 'var(--green)' : kf.net_pnl < 0 ? 'var(--red)' : 'var(--muted)' },
+      { label: 'Avg R',          value: kf.avg_r != null ? kf.avg_r.toFixed(2) + 'R' : '—', color: kf.avg_r > 0 ? 'var(--green)' : kf.avg_r < 0 ? 'var(--red)' : 'var(--muted)' },
+      { label: 'Win Rate',       value: kf.win_rate_ex_scratches != null ? kf.win_rate_ex_scratches + '%' : '—', color: 'var(--text)' },
+      { label: 'Discipline',     value: kf.discipline_pct != null ? kf.discipline_pct + '%' : '—', color: kf.discipline_pct >= 80 ? 'var(--green)' : kf.discipline_pct >= 60 ? 'var(--yellow,#f0b429)' : 'var(--red)' },
+      { label: 'Verdict',        value: kf.week_verdict || '—', color: 'var(--muted)' },
+    ].filter(s => s.value !== '—');
+
     return `
-      ${content.key_findings?.length ? `
-        <div style="margin-bottom:24px">
-          <div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Key Findings</div>
-          ${content.key_findings.map(f => `
-            <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-              <span style="color:var(--muted);font-size:10px">◆</span>
-              <span style="font-family:var(--font-mono);font-size:11px;color:var(--text);line-height:1.6">${escHtml(f)}</span>
+      ${stats.length ? `
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-bottom:28px">
+          ${stats.map(s => `
+            <div style="padding:12px 14px;background:var(--surface);border-radius:4px">
+              <div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">${s.label}</div>
+              <div style="font-family:var(--font-num);font-size:16px;font-weight:300;color:${s.color}">${escHtml(String(s.value))}</div>
             </div>`).join('')}
+        </div>` : ''}
+      ${themes.length ? `
+        <div style="margin-bottom:24px">
+          <div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Unresolved Lesson Themes</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            ${themes.map(t => `<span style="font-family:var(--font-mono);font-size:9px;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:3px;color:var(--muted)">${escHtml(t)}</span>`).join('')}
+          </div>
         </div>` : ''}
       ${content.trajectory_note ? `
         <div>
