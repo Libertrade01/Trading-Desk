@@ -5452,7 +5452,7 @@ async function loadAgentReport(weekEnding, clickedEl) {
         ${['agent2','agent1','manager'].filter(t => byType[t]).map((t,i) =>
           `<button onclick="switchAgentTab('${t}')" id="agent-tab-${t}"
             style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:8px 16px;background:none;border:none;border-bottom:2px solid ${i===0?'var(--green)':'transparent'};color:${i===0?'var(--text)':'var(--muted)'};cursor:pointer">
-            ${t === 'agent1' ? 'Psychology' : t === 'agent2' ? 'Performance' : 'Manager'}
+            ${t === 'agent1' ? 'Psychology Agent' : t === 'agent2' ? 'Performance Agent' : 'Manager Agent'}
           </button>`
         ).join('')}
       </div>
@@ -5914,7 +5914,7 @@ function renderInlineAgentSection(weekEnding, reports) {
         ${['agent2','agent1','manager'].filter(t => byType[t]).map((t, i) =>
           `<button onclick="switchAgentTab('${t}')" id="agent-tab-${t}"
             style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:8px 16px;background:none;border:none;border-bottom:2px solid ${i===0?'var(--green)':'transparent'};color:${i===0?'var(--text)':'var(--muted)'};cursor:pointer">
-            ${t === 'agent1' ? 'Psychology' : t === 'agent2' ? 'Performance' : 'Manager'}
+            ${t === 'agent1' ? 'Psychology Agent' : t === 'agent2' ? 'Performance Agent' : 'Manager Agent'}
           </button>`
         ).join('')}
       </div>
