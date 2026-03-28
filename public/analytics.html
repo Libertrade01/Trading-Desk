@@ -1799,6 +1799,8 @@
               <th>Risk (pts)</th>
               <th>Setup</th>
               <th>Mgmt</th>
+              <th>Seq</th>
+              <th>Post-Exit</th>
             </tr>
           </thead>
           <tbody id="import-tbody"></tbody>
@@ -4263,6 +4265,15 @@ function renderImportRows() {
     rows += '<option value="">—</option>';
     rows += '<option value="Managed Well">Mgd Well</option>' +'<option value="Closed Early">Early</option>' +'<option value="Closed Late">Late</option>' +'<option value="Exited Early — Ran (2R+)">Exit→2R+</option>' + '';
     rows += '</select></td>';
+    var seqVal = (t.sequence_id !== null && t.sequence_id !== undefined) ? t.sequence_id : '';
+    rows += '<td><input type="number" min="1" step="1" value="' + seqVal + '" placeholder="—"';
+    rows += ' data-idx="' + i + '"';
+    rows += ' style="width:40px;padding:3px 6px;font-size:10px;font-family:var(--font-mono);background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:3px;text-align:center"';
+    rows += ' oninput="pendingTrades[this.dataset.idx].sequence_id = this.value ? parseInt(this.value) : null"></td>';
+    rows += '<td><select data-idx="' + i + '" style="width:72px;padding:3px 4px;font-size:10px;font-family:var(--font-mono);background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:3px;cursor:pointer" onchange="pendingTrades[this.dataset.idx].post_exit_outcome = this.value || null">';
+    rows += '<option value="">—</option>';
+    rows += '<option value="ran_1r">Ran 1R+</option><option value="ran_2r">Ran 2R+</option><option value="ran_3r">Ran 3R+</option>';
+    rows += '</select></td>';
     rows += '</tr>';
   }
   tbody.innerHTML = rows;
@@ -4316,9 +4327,11 @@ async function confirmImport() {
       platform:        'rTrader',
       account_name:    accountName,
       account_type:    acctType,
-      stop_loss_points: t.stop_loss_points != null ? t.stop_loss_points : null,
-      setup:            t.setup      || null,
-      management:       t.management || null,
+      stop_loss_points:  t.stop_loss_points != null ? t.stop_loss_points : null,
+      setup:             t.setup           || null,
+      management:        t.management      || null,
+      sequence_id:       t.sequence_id     || null,
+      post_exit_outcome: t.post_exit_outcome || null,
     };
   });
 
