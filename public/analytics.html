@@ -1728,12 +1728,16 @@
         <button onclick="setReportPeriod('quarterly')" id="rp-quarterly" style="display:flex;align-items:center;gap:10px;padding:11px 0;font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;border:none;background:none;width:100%;text-align:left;border-left:2px solid transparent;padding-left:12px;opacity:0.5">
           <span style="width:5px;height:5px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>Quarterly <span style="font-size:8px;margin-left:4px;opacity:0.5">soon</span>
         </button>
+        <button onclick="setReportPeriod('agent')" id="rp-agent" style="display:flex;align-items:center;gap:10px;padding:11px 0;font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;border:none;background:none;width:100%;text-align:left;border-left:2px solid transparent;padding-left:12px">
+          <span style="width:5px;height:5px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>Agent
+        </button>
       </div>
       <div style="height:1px;background:var(--border);margin:4px 0 16px"></div>
       <div style="padding:0 0 12px">
-        <div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0 20px 10px;opacity:0.6">Recent Weeks</div>
+        <div id="reports-sidebar-label" style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0 20px 10px;opacity:0.6">Recent Weeks</div>
         <div id="reports-sidebar-weeks"></div>
         <div id="reports-sidebar-months" style="display:none"></div>
+        <div id="reports-sidebar-agent" style="display:none"></div>
       </div>
     </div>
 
@@ -5221,7 +5225,7 @@ function showPage(page) {
 }
 
 function setReportPeriod(p) {
-  ['weekly','monthly','quarterly'].forEach(function(id) {
+  ['weekly','monthly','quarterly','agent'].forEach(function(id) {
     var btn = document.getElementById('rp-' + id);
     if (!btn) return;
     var active = (id === p);
@@ -5233,12 +5237,25 @@ function setReportPeriod(p) {
   });
   var weeksEl  = document.getElementById('reports-sidebar-weeks');
   var monthsEl = document.getElementById('reports-sidebar-months');
+  var agentEl  = document.getElementById('reports-sidebar-agent');
+  var labelEl  = document.getElementById('reports-sidebar-label');
   if (p === 'weekly') {
     if (weeksEl)  weeksEl.style.display  = '';
     if (monthsEl) monthsEl.style.display = 'none';
+    if (agentEl)  agentEl.style.display  = 'none';
+    if (labelEl)  labelEl.textContent = 'Recent Weeks';
   } else if (p === 'monthly') {
     if (weeksEl)  weeksEl.style.display  = 'none';
     if (monthsEl) { monthsEl.style.display = ''; initMonthlySidebar(); }
+    if (agentEl)  agentEl.style.display  = 'none';
+    if (labelEl)  labelEl.textContent = 'Recent Months';
+  } else if (p === 'agent') {
+    if (weeksEl)  weeksEl.style.display  = 'none';
+    if (monthsEl) monthsEl.style.display = 'none';
+    if (agentEl)  { agentEl.style.display = ''; initAgentSidebar(); }
+    if (labelEl)  labelEl.textContent = 'Agent Reports';
+    document.getElementById('report-main-area').innerHTML =
+      '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px">Select a week to view agent output.</div>';
   }
 }
 
@@ -5325,6 +5342,261 @@ async function initReportsPage() {
   // Auto-load most recent week
   loadWeekReport(weeks[0].start, weeks[0].end, null);
 }
+
+// ─── AGENT REPORT WEEKS ──────────────────────────────────────────────────────
+// The 6 weeks of trading data available for agent processing (oldest first for backfill)
+const AGENT_WEEKS = [
+  '2026-02-20',
+  '2026-02-27',
+  '2026-03-06',
+  '2026-03-13',
+  '2026-03-20',
+  '2026-03-27',
+];
+
+async function initAgentSidebar() {
+  const el = document.getElementById('reports-sidebar-agent');
+  el.innerHTML = '<div style="padding:0 20px 12px;font-family:var(--font-mono);font-size:9px;color:var(--muted)">Loading...</div>';
+
+  // Check which weeks already have reports
+  const { data: existing } = await sbFetch(
+    `/rest/v1/agent_reports?select=week_ending&report_type=eq.manager&order=week_ending.desc`
+  );
+  const done = new Set((existing || []).map(r => r.week_ending));
+
+  const weeksDesc = [...AGENT_WEEKS].reverse(); // newest first for display
+
+  el.innerHTML = `
+    <div style="padding:0 16px 12px">
+      <button onclick="runAllBackfill()" style="width:100%;padding:8px 12px;font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;background:var(--surface-2,#1a1a2e);border:1px solid var(--border);color:var(--text);cursor:pointer;border-radius:4px" id="btn-run-all">
+        Run All (oldest first)
+      </button>
+    </div>
+    ${weeksDesc.map(w => {
+      const generated = done.has(w);
+      const label = fmtWeekLabel(w, fridayOf(w));
+      return `<div class="sidebar-week-item" id="agent-week-row-${w}" onclick="loadAgentReport('${w}', this)">
+        <span style="display:flex;align-items:center;gap:7px">
+          <span style="width:6px;height:6px;border-radius:50%;background:${generated ? 'var(--green)' : 'var(--muted)'};flex-shrink:0;opacity:${generated ? 1 : 0.4}"></span>
+          <span style="font-family:var(--font-mono);font-size:9px;color:var(--text)">${label}</span>
+        </span>
+        <button id="agent-run-btn-${w}" onclick="event.stopPropagation();runWeeklyReview('${w}',this)"
+          style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.06em;text-transform:uppercase;padding:3px 8px;background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;border-radius:3px">
+          ${generated ? 'Re-run' : 'Run'}
+        </button>
+      </div>`;
+    }).join('')}
+  `;
+}
+
+function fridayOf(mondayStr) {
+  const d = new Date(mondayStr + 'T12:00:00');
+  d.setDate(d.getDate() + 4);
+  return fmtDate(d);
+}
+
+async function sbFetch(path) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}${path}`, { headers: HEADERS });
+    const data = await res.json();
+    return { data: Array.isArray(data) ? data : null, error: Array.isArray(data) ? null : data };
+  } catch(e) {
+    return { data: null, error: e };
+  }
+}
+
+async function loadAgentReport(weekEnding, clickedEl) {
+  if (clickedEl) {
+    document.querySelectorAll('#reports-sidebar-agent .sidebar-week-item').forEach(el => el.classList.remove('active'));
+    clickedEl.classList.add('active');
+  }
+
+  const area = document.getElementById('report-main-area');
+  area.innerHTML = '<div style="padding:40px 0;text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--muted)">Loading agent reports...</div>';
+
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/agent_reports?week_ending=eq.${weekEnding}&order=report_type.asc`,
+    { headers: HEADERS }
+  );
+  const reports = await res.json();
+
+  if (!Array.isArray(reports) || reports.length === 0) {
+    area.innerHTML = `
+      <div style="padding:60px 0;text-align:center">
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:20px">No agent report for week of ${weekEnding}.</div>
+        <button onclick="runWeeklyReview('${weekEnding}', this)" style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;padding:10px 20px;background:var(--green);border:none;color:#000;cursor:pointer;border-radius:4px">
+          Generate Report
+        </button>
+      </div>`;
+    return;
+  }
+
+  const byType = {};
+  reports.forEach(r => { byType[r.report_type] = r; });
+
+  const mgr = byType['manager'];
+  const mgrContent = mgr ? mgr.content : null;
+
+  const weekLabel = fmtWeekLabel(weekEnding, fridayOf(weekEnding));
+  const genAt = mgr ? new Date(mgr.generated_at).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+
+  area.innerHTML = `
+    <div style="max-width:860px">
+      <!-- Header -->
+      <div style="margin-bottom:28px">
+        <div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Week of ${weekLabel}</div>
+        ${mgrContent?.week_in_one_line ? `
+          <div style="font-family:var(--font-mono);font-size:15px;color:var(--text);line-height:1.5;padding:16px 20px;background:var(--surface);border-left:3px solid var(--green);border-radius:0 4px 4px 0;margin-bottom:16px">
+            ${escHtml(mgrContent.week_in_one_line)}
+          </div>` : ''}
+        ${mgrContent?.focus_next_week?.length ? `
+          <div style="margin-bottom:16px">
+            <div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Focus Next Week</div>
+            ${mgrContent.focus_next_week.map(f => `
+              <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+                <span style="color:var(--green);font-size:10px;margin-top:1px">▸</span>
+                <span style="font-family:var(--font-mono);font-size:11px;color:var(--text);line-height:1.5">${escHtml(f)}</span>
+              </div>`).join('')}
+          </div>` : ''}
+        ${genAt ? `<div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);opacity:0.5">Generated ${genAt}</div>` : ''}
+      </div>
+
+      <!-- Tabs -->
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px" id="agent-report-tabs">
+        ${['psychology','performance','manager'].filter(t => byType[t]).map((t,i) =>
+          `<button onclick="switchAgentTab('${t}')" id="agent-tab-${t}"
+            style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:8px 16px;background:none;border:none;border-bottom:2px solid ${i===0?'var(--green)':'transparent'};color:${i===0?'var(--text)':'var(--muted)'};cursor:pointer">
+            ${t === 'psychology' ? 'Psychology' : t === 'performance' ? 'Performance' : 'Manager'}
+          </button>`
+        ).join('')}
+      </div>
+
+      <!-- Tab content -->
+      <div id="agent-tab-content">
+        ${renderFirstAgentTab(byType)}
+      </div>
+    </div>
+  `;
+
+  // Store reports for tab switching
+  window._agentReports = byType;
+  window._agentActiveTab = Object.keys(byType).filter(t => ['psychology','performance','manager'].includes(t))[0];
+}
+
+function renderFirstAgentTab(byType) {
+  const first = ['psychology','performance','manager'].find(t => byType[t]);
+  if (!first) return '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px">No data.</div>';
+  return renderAgentTabContent(first, byType[first]);
+}
+
+function switchAgentTab(t) {
+  const byType = window._agentReports || {};
+  document.querySelectorAll('#agent-report-tabs button').forEach(btn => {
+    const active = btn.id === 'agent-tab-' + t;
+    btn.style.borderBottomColor = active ? 'var(--green)' : 'transparent';
+    btn.style.color = active ? 'var(--text)' : 'var(--muted)';
+  });
+  document.getElementById('agent-tab-content').innerHTML = renderAgentTabContent(t, byType[t]);
+  window._agentActiveTab = t;
+}
+
+function renderAgentTabContent(type, report) {
+  if (!report) return '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px">Not generated.</div>';
+  const content = report.content;
+  if (!content) return '<div style="color:var(--muted);font-family:var(--font-mono);font-size:11px">Empty.</div>';
+
+  if (type === 'manager') {
+    // Manager has structured JSON — render key_findings + trajectory_note
+    return `
+      ${content.key_findings?.length ? `
+        <div style="margin-bottom:24px">
+          <div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Key Findings</div>
+          ${content.key_findings.map(f => `
+            <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+              <span style="color:var(--muted);font-size:10px">◆</span>
+              <span style="font-family:var(--font-mono);font-size:11px;color:var(--text);line-height:1.6">${escHtml(f)}</span>
+            </div>`).join('')}
+        </div>` : ''}
+      ${content.trajectory_note ? `
+        <div>
+          <div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Trajectory Note</div>
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--text);line-height:1.7;padding:14px 16px;background:var(--surface);border-radius:4px">${escHtml(content.trajectory_note)}</div>
+        </div>` : ''}
+    `;
+  }
+
+  // Psychology or Performance — content is a string or object with sections
+  const text = typeof content === 'string' ? content : (content.output || JSON.stringify(content, null, 2));
+  return `<div style="font-family:var(--font-mono);font-size:11px;color:var(--text);line-height:1.8;white-space:pre-wrap">${escHtml(text)}</div>`;
+}
+
+function escHtml(s) {
+  if (typeof s !== 'string') return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function runWeeklyReview(weekEnding, btn) {
+  const origText = btn.textContent.trim();
+  btn.textContent = 'Running…';
+  btn.disabled = true;
+  btn.style.color = 'var(--muted)';
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/weekly-review`, {
+      method: 'POST',
+      headers: { ...HEADERS, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ week_ending: weekEnding }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+    btn.textContent = 'Done ✓';
+    btn.style.color = 'var(--green)';
+
+    // Refresh the dot status
+    const dot = document.querySelector(`#agent-week-row-${weekEnding} span span`);
+    if (dot) { dot.style.background = 'var(--green)'; dot.style.opacity = '1'; }
+
+    // Auto-load the freshly generated report
+    const row = document.getElementById(`agent-week-row-${weekEnding}`);
+    loadAgentReport(weekEnding, row);
+
+    setTimeout(() => { btn.textContent = 'Re-run'; btn.disabled = false; }, 3000);
+  } catch(e) {
+    btn.textContent = 'Error';
+    btn.style.color = 'var(--red)';
+    btn.title = e.message;
+    setTimeout(() => { btn.textContent = origText; btn.disabled = false; btn.style.color = 'var(--muted)'; btn.title = ''; }, 4000);
+  }
+}
+
+async function runAllBackfill() {
+  const btn = document.getElementById('btn-run-all');
+  if (!btn) return;
+  btn.disabled = true;
+
+  for (let i = 0; i < AGENT_WEEKS.length; i++) {
+    const w = AGENT_WEEKS[i]; // already oldest first
+    btn.textContent = `Running ${i+1}/${AGENT_WEEKS.length}…`;
+    const runBtn = document.getElementById(`agent-run-btn-${w}`);
+    if (runBtn) {
+      await runWeeklyReview(w, runBtn);
+      // Small gap between calls to avoid hammering the edge function
+      await new Promise(r => setTimeout(r, 1500));
+    }
+  }
+
+  btn.textContent = 'All Done ✓';
+  btn.style.color = 'var(--green)';
+  btn.style.borderColor = 'var(--green)';
+  setTimeout(() => {
+    btn.textContent = 'Run All (oldest first)';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+    btn.disabled = false;
+  }, 4000);
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 async function loadWeekReport(start, end, clickedEl) {
   // Update sidebar active state
