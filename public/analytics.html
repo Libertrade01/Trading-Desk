@@ -2419,9 +2419,9 @@ async function loadJournalData() {
   if (dateTo)   dateFilters.push(`trading_day=lte.${dateTo}`);
 
   const [journal, lessons] = await Promise.all([
-    query('intraday_journal', 'et_time,trading_day,session_phase,dictated_text,emotions',
+    query('intraday_journal', 'id,et_time,trading_day,session_phase,dictated_text,emotions',
       ['dictated_text=not.is.null', ...dateFilters, 'order=et_time.desc', 'limit=5']),
-    query('intraday_journal', 'et_time,trading_day,session_phase,lesson_text',
+    query('intraday_journal', 'id,et_time,trading_day,session_phase,lesson_text',
       ['lesson_text=not.is.null', ...dateFilters, 'order=et_time.desc', 'limit=5']),
   ]);
   allJournalEntries = journal || [];
@@ -6996,6 +6996,8 @@ function renderJournalPanel(entries) {
       id: entry.id,
       field: isLesson ? 'lesson_text' : 'dictated_text',
       text,
+      chips,
+      phase,
     };
     return `
     <div class="jp-entry" id="jp-entry-${i}">
@@ -7081,16 +7083,19 @@ async function saveJournalEdit(i) {
     if (!res.ok) throw new Error(res.status);
     // Update store
     store[i].text = newText;
-    store[i]._bodyHtml = `<p style="font-family:var(--font-sans);font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${_safe(newText)}</p>`;
-    // Restore normal view
+    store[i]._bodyHtml = `<p style="font-family:var(--font-sans);font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${_safe(newText)}</p>${e.chips || ''}`;
+    // Restore normal view with chips preserved
     const entryEl = document.getElementById('jp-entry-' + i);
     const bodyEl = entryEl.querySelector('.jp-entry-body');
     bodyEl.innerHTML = `
-      <div class="jp-entry-meta">${e._timeStr}</div>
-      <div class="jp-entry-text">${_safe(newText)}</div>`;
+      <div class="jp-entry-meta">${e._timeStr}${e.phase ? ' · ' + e.phase : ''}</div>
+      <div class="jp-entry-text">${_safe(newText)}</div>
+      ${e.chips || ''}`;
     bodyEl.onclick = () => openJournalEntryFromPanel(i);
-    // Refresh dashboard widgets
-    await loadJournalData();
+    // Patch in-memory arrays so dashboard updates regardless of date filter
+    const memArr = e.field === 'lesson_text' ? allLessonEntries : allJournalEntries;
+    const memEntry = memArr.find(x => x.id === e.id);
+    if (memEntry) memEntry[e.field] = newText;
     renderJournal();
     renderLessons();
   } catch(err) {
@@ -7106,8 +7111,9 @@ function cancelJournalEdit(i) {
   const entryEl = document.getElementById('jp-entry-' + i);
   const bodyEl = entryEl.querySelector('.jp-entry-body');
   bodyEl.innerHTML = `
-    <div class="jp-entry-meta">${e._timeStr}</div>
-    <div class="jp-entry-text">${_safe(e.text)}</div>`;
+    <div class="jp-entry-meta">${e._timeStr}${e.phase ? ' · ' + e.phase : ''}</div>
+    <div class="jp-entry-text">${_safe(e.text)}</div>
+    ${e.chips || ''}`;
   bodyEl.onclick = () => openJournalEntryFromPanel(i);
 }
 
