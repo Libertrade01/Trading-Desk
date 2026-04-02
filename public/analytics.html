@@ -1728,6 +1728,9 @@
         <button onclick="setReportPeriod('quarterly')" id="rp-quarterly" style="display:flex;align-items:center;gap:10px;padding:11px 0;font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;border:none;background:none;width:100%;text-align:left;border-left:2px solid transparent;padding-left:12px;opacity:0.5">
           <span style="width:5px;height:5px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>Quarterly <span style="font-size:8px;margin-left:4px;opacity:0.5">soon</span>
         </button>
+        <button onclick="setReportPeriod('trajectory')" id="rp-trajectory" style="display:flex;align-items:center;gap:10px;padding:11px 0;font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--purple);cursor:pointer;border:none;background:none;width:100%;text-align:left;border-left:2px solid transparent;padding-left:12px;opacity:0.7">
+          <span style="width:5px;height:5px;border-radius:50%;background:var(--purple);flex-shrink:0"></span>Trajectory
+        </button>
       </div>
       <div style="height:1px;background:var(--border);margin:4px 0 16px"></div>
       <div style="padding:0 0 12px">
@@ -1828,6 +1831,18 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Daily P&L Panel Overlay -->
+  <div class="drawer-overlay" id="daily-pnl-panel-overlay" onclick="closeDailyPnlPanel()" style="z-index:449"></div>
+
+  <!-- Daily P&L Panel -->
+  <div class="trade-panel" id="daily-pnl-panel" style="width:min(560px,92vw)">
+    <div class="panel-header">
+      <span class="panel-title">All Days — Daily P&L</span>
+      <button class="panel-close" onclick="closeDailyPnlPanel()">✕</button>
+    </div>
+    <div class="panel-body" id="daily-pnl-panel-body" style="padding:20px 28px"></div>
   </div>
 
   <!-- Trade Panel Overlay -->
@@ -2542,7 +2557,7 @@ function render() {
   </div>`);
 
   // ── Section 2+3: P&L + Daily + Recent Trades in one row
-  html.push(`<div style="display:grid;grid-template-columns:2fr 1fr 1.4fr;gap:var(--gap);align-items:stretch">
+  html.push(`<div style="display:grid;grid-template-columns:2fr 1.05fr 1fr;gap:var(--gap);align-items:stretch">
     <div class="card" style="display:flex;flex-direction:column">
       <div class="card-title">Cumulative P&L</div>
       <div class="chart-wrap" style="flex:1;min-height:200px;position:relative">
@@ -2550,7 +2565,10 @@ function render() {
       </div>
     </div>
     <div class="card">
-      <div class="card-title">Daily P&L</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="card-title" style="margin-bottom:0">Daily P&L</div>
+        <button onclick="openDailyPnlPanel()" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--teal);background:none;border:none;cursor:pointer;padding:0">View All →</button>
+      </div>
       <div id="daily-cal"></div>
     </div>
     <div class="card" id="recent-trades-card">
@@ -2812,6 +2830,29 @@ function renderPnlChart(trades) {
   });
 }
 
+var _dailyPnlData = null;
+
+function buildDailyPnlRows(dates, byDate, cols) {
+  return dates.map(d => {
+    const { pnl, count, gate, seqIds, soloCount } = byDate[d];
+    const seq     = (seqIds ? seqIds.size : 0) + (soloCount || 0);
+    const pnlCol  = pnl > 0 ? '#259186' : pnl < 0 ? '#c26060' : 'var(--muted)';
+    const pnlStr  = (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2);
+    const gateCol = gate === 'GREEN' ? 'var(--green)' : gate === 'AMBER' ? 'var(--amber)' : gate === 'RED' ? 'var(--red)' : 'var(--muted)';
+    const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const dateObj = new Date(d + 'T12:00:00');
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const dateLabel = dayNames[dateObj.getDay()] + ' ' + dateObj.getDate() + ' ' + monthNames[dateObj.getMonth()];
+    return '<div style="display:grid;grid-template-columns:' + cols + ';gap:8px;padding:7px 0;border-bottom:1px solid var(--border);align-items:center">'
+      + '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-align:left">' + dateLabel + '</span>'
+      + '<span style="font-family:var(--font-mono);font-size:9px;color:' + gateCol + ';text-align:center">' + (gate || '—') + '</span>'
+      + '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-align:center">' + count + '</span>'
+      + '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-align:center">' + seq + '</span>'
+      + '<span style="font-family:var(--font-mono);font-size:11px;font-weight:500;color:' + pnlCol + ';text-align:right">' + pnlStr + '</span>'
+      + '</div>';
+  }).join('');
+}
+
 function renderDailyCal(trades, days) {
   // Gate from trading_days is more reliable — covers days where CSV was imported before gate was set
   const gateByDate = {};
@@ -2819,34 +2860,50 @@ function renderDailyCal(trades, days) {
 
   const byDate = {};
   trades.forEach(t => {
-    if (!byDate[t.date]) byDate[t.date] = { pnl: 0, count: 0, gate: gateByDate[t.date] || t.gate_at_session_open };
+    if (!byDate[t.date]) byDate[t.date] = { pnl: 0, count: 0, gate: gateByDate[t.date] || t.gate_at_session_open, seqIds: new Set(), soloCount: 0 };
     byDate[t.date].pnl += t.net_pnl || 0;
     byDate[t.date].count++;
+    if (t.sequence_id != null) byDate[t.date].seqIds.add(t.sequence_id);
+    else byDate[t.date].soloCount++;
   });
 
-  const sorted = Object.keys(byDate).sort().reverse().slice(0, 8);
+  const allSorted = Object.keys(byDate).sort().reverse();
+  _dailyPnlData = { byDate, allSorted };
+
+  const sorted = allSorted.slice(0, 8);
   if (!sorted.length) { document.getElementById('daily-cal').innerHTML = '<div class="no-data">No data</div>'; return; }
 
-  const cols = '120px 50px 40px 80px';
+  const cols = '110px 46px 32px 32px 72px';
 
+  const colAligns = ['left','center','center','center','right'];
   const header = '<div style="display:grid;grid-template-columns:' + cols + ';gap:8px;padding:0 0 8px;border-bottom:1px solid var(--border);margin-bottom:2px">'
-    + ['Date','Gate','Trd','P&L'].map(h => '<span style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)">' + h + '</span>').join('')
+    + ['Date','Gate','Trd','Seq','P&L'].map((h,i) => '<span style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-align:' + colAligns[i] + '">' + h + '</span>').join('')
     + '</div>';
 
-  const rows = sorted.map(d => {
-    const { pnl, count, gate } = byDate[d];
-    const pnlCol  = pnl > 0 ? '#259186' : pnl < 0 ? '#c26060' : 'var(--muted)';
-    const pnlStr  = (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2);
-    const gateCol = gate === 'GREEN' ? 'var(--green)' : gate === 'AMBER' ? 'var(--amber)' : gate === 'RED' ? 'var(--red)' : 'var(--muted)';
-    return '<div style="display:grid;grid-template-columns:' + cols + ';gap:8px;padding:7px 0;border-bottom:1px solid var(--border);align-items:center">'
-      + '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">' + d + '</span>'
-      + '<span style="font-family:var(--font-mono);font-size:9px;color:' + gateCol + '">' + (gate || '—') + '</span>'
-      + '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">' + count + '</span>'
-      + '<span style="font-family:var(--font-mono);font-size:11px;font-weight:500;color:' + pnlCol + ';text-align:right">' + pnlStr + '</span>'
-      + '</div>';
-  }).join('');
+  document.getElementById('daily-cal').innerHTML = header + buildDailyPnlRows(sorted, byDate, cols);
+}
 
-  document.getElementById('daily-cal').innerHTML = header + rows;
+function openDailyPnlPanel() {
+  document.getElementById('daily-pnl-panel-overlay').classList.add('open');
+  document.getElementById('daily-pnl-panel').classList.add('open');
+
+  const body = document.getElementById('daily-pnl-panel-body');
+  if (!_dailyPnlData || !_dailyPnlData.allSorted.length) {
+    body.innerHTML = '<div class="no-data">No data</div>';
+    return;
+  }
+  const { byDate, allSorted } = _dailyPnlData;
+  const cols = '130px 55px 40px 40px 85px';
+  const colAligns = ['left','center','center','center','right'];
+  const header = '<div style="display:grid;grid-template-columns:' + cols + ';gap:8px;padding:0 0 10px;border-bottom:1px solid var(--border);margin-bottom:4px">'
+    + ['Date','Gate','Trd','Seq','P&L'].map((h,i) => '<span style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-align:' + colAligns[i] + '">' + h + '</span>').join('')
+    + '</div>';
+  body.innerHTML = header + buildDailyPnlRows(allSorted, byDate, cols);
+}
+
+function closeDailyPnlPanel() {
+  document.getElementById('daily-pnl-panel-overlay').classList.remove('open');
+  document.getElementById('daily-pnl-panel').classList.remove('open');
 }
 
 function renderBaskets(trades) {
@@ -3697,7 +3754,7 @@ function renderDiscipline(days, trades) {
   }
 
   function divider(label) {
-    return `<div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin:22px 0 16px;display:flex;align-items:center;gap:10px;opacity:0.7">${label}<span style="flex:1;height:1px;background:var(--border);display:block"></span></div>`;
+    return `<div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple);font-weight:500;margin:22px 0 16px;display:flex;align-items:center;gap:10px">${label}<span style="flex:1;height:1px;background:var(--border);display:block"></span></div>`;
   }
 
   // Chart data
@@ -4620,9 +4677,10 @@ function renderRecentTrades(trades) {
   var recent = trades.slice().sort(function(a,b){ return (b.entry_time||'').localeCompare(a.entry_time||''); }).slice(0,8);
   if (!recent.length) { el.innerHTML = '<div style="color:var(--muted);font-size:11px;font-family:var(--font-mono)">No trades yet</div>'; return; }
 
+  var rtAligns = ['left','left','center','center','right'];
   var html = '<div style="display:grid;grid-template-columns:90px 1fr 60px 40px 80px;gap:8px;padding:0 6px 8px;border-bottom:1px solid var(--border);margin-bottom:4px">';
-  ['Time','Symbol','Dir','Qty','Net P&L'].forEach(function(h) {
-    html += '<span style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)">' + h + '</span>';
+  ['Time','Symbol','Dir','Qty','Net P&L'].forEach(function(h, i) {
+    html += '<span style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-align:' + rtAligns[i] + '">' + h + '</span>';
   });
   html += '</div>';
 
@@ -4635,8 +4693,8 @@ function renderRecentTrades(trades) {
     html += '<div class="recent-trade-row" data-id="' + t.id + '" style="display:grid;grid-template-columns:90px 1fr 60px 40px 80px;gap:8px;padding:7px 6px;border-bottom:1px solid var(--border);cursor:pointer">';
     html += '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">' + dateStr + '</span>';
     html += '<span style="font-family:var(--font-mono);font-size:11px;color:#6a7080">' + (t.instrument||'--') + '</span>';
-    html += '<span style="font-family:var(--font-mono);font-size:10px;color:' + dirCol + '">' + (t.direction||'').toUpperCase() + '</span>';
-    html += '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">' + (t.quantity||'') + '</span>';
+    html += '<span style="font-family:var(--font-mono);font-size:10px;color:' + dirCol + ';text-align:center">' + (t.direction||'').toUpperCase() + '</span>';
+    html += '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-align:center">' + (t.quantity||'') + '</span>';
     html += '<span style="font-family:var(--font-mono);font-size:11px;font-weight:500;color:' + pnlCol + ';text-align:right">' + pnlStr + '</span>';
     html += '</div>';
   });
@@ -5221,20 +5279,39 @@ function showPage(page) {
 }
 
 function setReportPeriod(p) {
-  ['weekly','monthly','quarterly'].forEach(function(id) {
+  ['weekly','monthly','quarterly','trajectory'].forEach(function(id) {
     var btn = document.getElementById('rp-' + id);
     if (!btn) return;
     var active = (id === p);
-    btn.style.color = active ? 'var(--text)' : 'var(--muted)';
-    btn.style.borderLeftColor = active ? 'var(--green)' : 'transparent';
-    btn.style.opacity = (!active && id === 'quarterly') ? '0.5' : '1';
-    var dot = btn.querySelector('span');
-    if (dot) dot.style.background = active ? 'var(--green)' : 'var(--muted)';
+    if (id === 'trajectory') {
+      btn.style.color = active ? 'var(--purple)' : 'var(--purple)';
+      btn.style.borderLeftColor = active ? 'var(--purple)' : 'transparent';
+      btn.style.opacity = active ? '1' : '0.7';
+      var dot = btn.querySelector('span');
+      if (dot) dot.style.background = 'var(--purple)';
+    } else {
+      btn.style.color = active ? 'var(--text)' : 'var(--muted)';
+      btn.style.borderLeftColor = active ? 'var(--green)' : 'transparent';
+      btn.style.opacity = (!active && id === 'quarterly') ? '0.5' : '1';
+      var dot = btn.querySelector('span');
+      if (dot) dot.style.background = active ? 'var(--green)' : 'var(--muted)';
+    }
   });
   var weeksEl  = document.getElementById('reports-sidebar-weeks');
   var monthsEl = document.getElementById('reports-sidebar-months');
   var labelEl  = document.getElementById('reports-sidebar-label');
-  if (p === 'weekly') {
+  var reportEl = document.getElementById('report-main-area');
+  if (p === 'trajectory') {
+    if (weeksEl)  weeksEl.style.display  = 'none';
+    if (monthsEl) monthsEl.style.display = 'none';
+    if (labelEl)  labelEl.textContent = '';
+    if (reportEl) reportEl.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:340px;gap:16px">
+        <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple);font-weight:500">Trajectory</div>
+        <div style="font-family:var(--font-mono);font-size:13px;color:var(--text);opacity:0.5">Coming soon</div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-align:center;max-width:320px;line-height:1.7">Long-term trend tracking across discipline, win rate, hold quality and more — built from your weekly agent memory.</div>
+      </div>`;
+  } else if (p === 'weekly') {
     if (weeksEl)  weeksEl.style.display  = '';
     if (monthsEl) monthsEl.style.display = 'none';
     if (labelEl)  labelEl.textContent = 'Recent Weeks';
@@ -5452,7 +5529,7 @@ async function loadAgentReport(weekEnding, clickedEl) {
         ${['agent2','agent1','manager'].filter(t => byType[t]).map((t,i) =>
           `<button onclick="switchAgentTab('${t}')" id="agent-tab-${t}"
             style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;padding:10px 18px;background:none;border:none;border-bottom:2px solid ${i===0?'var(--green)':'transparent'};color:${i===0?'var(--text)':'var(--muted)'};cursor:pointer;font-weight:${i===0?'500':'400'}">
-            ${t === 'agent1' ? 'Psychology Agent' : t === 'agent2' ? 'Performance Agent' : 'Manager Agent'}
+            ${t === 'agent1' ? 'Psychology' : t === 'agent2' ? 'Performance' : 'Manager'}
           </button>`
         ).join('')}
       </div>
@@ -5514,15 +5591,8 @@ function renderAgentTabContent(type, report) {
     const severityBorder= s => s === 'CRITICAL' ? 'rgba(138,53,53,0.35)' : s === 'ESCALATING' ? 'rgba(240,180,41,0.3)' : 'rgba(74,79,94,0.3)';
 
     return `
-      ${rf.level ? `
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:${riskBg};border:1px solid ${riskBorder};border-radius:4px;margin-bottom:20px">
-          <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:${riskColor};font-weight:600">${escHtml(rf.level)}</span>
-          <span style="width:1px;height:12px;background:${riskBorder};flex-shrink:0"></span>
-          <span style="font-family:var(--font-mono);font-size:10px;color:${riskColor};opacity:0.85">${escHtml(rf.reason || '')}</span>
-        </div>` : ''}
-
       ${stats.length ? `
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-bottom:${kf.verdict_context ? '10px' : '28px'}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-bottom:${kf.verdict_context || rf.level ? '12px' : '28px'}">
           ${stats.map(s => `
             <div style="padding:12px 14px;background:var(--surface);border-radius:4px">
               <div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">${s.label}</div>
@@ -5531,11 +5601,18 @@ function renderAgentTabContent(type, report) {
         </div>` : ''}
 
       ${kf.verdict_context ? `
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-bottom:28px;padding-left:2px">${escHtml(kf.verdict_context)}</div>` : ''}
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--text);opacity:0.75;margin-bottom:${rf.level ? '14px' : '28px'};padding:10px 14px;background:var(--surface);border-left:2px solid rgba(117,104,184,0.35);border-radius:0 4px 4px 0">${escHtml(kf.verdict_context)}</div>` : ''}
+
+      ${rf.level ? `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:${riskBg};border:1px solid ${riskBorder};border-radius:4px;margin-bottom:28px">
+          <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:${riskColor};font-weight:600">${escHtml(rf.level)}</span>
+          <span style="width:1px;height:12px;background:${riskBorder};flex-shrink:0"></span>
+          <span style="font-family:var(--font-mono);font-size:10px;color:${riskColor};opacity:0.85">${escHtml(rf.reason || '')}</span>
+        </div>` : ''}
 
       ${resolutionCheck.length ? `
         <div style="margin-bottom:24px">
-          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text);opacity:0.5;margin-bottom:10px">Prior Focus — Resolution</div>
+          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple);font-weight:500;margin-bottom:10px">Prior Focus — Resolution</div>
           ${resolutionCheck.map(r => `
             <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 12px;margin-bottom:6px;background:var(--surface);border-radius:4px;border-left:2px solid ${r.resolved ? 'rgba(37,145,134,0.5)' : 'rgba(138,53,53,0.4)'}">
               <span style="font-family:var(--font-mono);font-size:11px;color:${r.resolved ? 'var(--green)' : 'var(--red)'};flex-shrink:0;margin-top:1px">${r.resolved ? '✓' : '✗'}</span>
@@ -5548,7 +5625,7 @@ function renderAgentTabContent(type, report) {
 
       ${patternFlags.length ? `
         <div style="margin-bottom:24px">
-          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text);opacity:0.5;margin-bottom:10px">Pattern Flags</div>
+          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple);font-weight:500;margin-bottom:10px">Pattern Flags</div>
           ${patternFlags.map(f => `
             <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 12px;margin-bottom:6px;background:${severityBg(f.severity)};border:1px solid ${severityBorder(f.severity)};border-radius:4px">
               <span style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.08em;color:${severityColor(f.severity)};font-weight:600;flex-shrink:0;margin-top:2px;white-space:nowrap">${escHtml(f.severity || '')} ×${f.weeks_recurring || '?'}w</span>
@@ -5558,7 +5635,7 @@ function renderAgentTabContent(type, report) {
 
       ${content.trajectory_note ? `
         <div>
-          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text);opacity:0.5;margin-bottom:10px">Trajectory Note</div>
+          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple);font-weight:500;margin-bottom:10px">Trajectory Note</div>
           <div style="font-family:var(--font-mono);font-size:11px;color:var(--text);line-height:1.7;padding:14px 16px;background:var(--surface);border-left:2px solid rgba(117,104,184,0.4);border-radius:0 4px 4px 0">${escHtml(content.trajectory_note)}</div>
         </div>` : ''}
     `;
@@ -5937,7 +6014,7 @@ function renderInlineAgentSection(weekEnding, reports) {
         return `<div style="display:grid;grid-template-columns:${focus.length && themes.length ? '1fr 1fr' : '1fr'};gap:20px;margin-bottom:24px">
           ${focus.length ? `
             <div>
-              <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text);opacity:0.55;font-weight:600;margin-bottom:10px">Focus Next Week</div>
+              <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple);font-weight:500;margin-bottom:10px">Focus Next Week</div>
               ${focus.map(f => `
                 <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
                   <span style="color:var(--green);font-size:10px;margin-top:1px;flex-shrink:0">▸</span>
@@ -5946,7 +6023,7 @@ function renderInlineAgentSection(weekEnding, reports) {
             </div>` : ''}
           ${themes.length ? `
             <div>
-              <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text);opacity:0.55;font-weight:600;margin-bottom:10px">Unresolved Themes</div>
+              <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple);font-weight:500;margin-bottom:10px">Unresolved Themes</div>
               <div style="display:flex;flex-direction:column;gap:6px">
                 ${themes.map(t => `
                   <div style="display:flex;align-items:center;gap:8px;padding:7px 12px;background:rgba(117,104,184,0.1);border:1px solid rgba(117,104,184,0.3);border-radius:3px">
@@ -5962,7 +6039,7 @@ function renderInlineAgentSection(weekEnding, reports) {
         ${['agent2','agent1','manager'].filter(t => byType[t]).map((t, i) =>
           `<button onclick="switchAgentTab('${t}')" id="agent-tab-${t}"
             style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;padding:10px 18px;background:none;border:none;border-bottom:2px solid ${i===0?'var(--green)':'transparent'};color:${i===0?'var(--text)':'var(--muted)'};cursor:pointer;font-weight:${i===0?'500':'400'}">
-            ${t === 'agent1' ? 'Psychology Agent' : t === 'agent2' ? 'Performance Agent' : 'Manager Agent'}
+            ${t === 'agent1' ? 'Psychology' : t === 'agent2' ? 'Performance' : 'Manager'}
           </button>`
         ).join('')}
       </div>
@@ -6047,7 +6124,7 @@ function renderAIReportText(el, text) {
 
   if (focusContent.trim()) {
     html += `<div style="margin-top:20px;padding:14px 18px;background:var(--surface2);border:1px solid var(--border);border-left:2px solid rgba(117,104,184,0.4);border-radius:4px">
-      <div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple);opacity:0.7;margin-bottom:8px">Focus for next week</div>
+      <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple);font-weight:500;margin-bottom:8px">Focus for next week</div>
       <div style="font-size:12px;line-height:1.7;opacity:0.8">${focusContent.trim().replace(/\n/g,'<br>')}</div>
     </div>`;
   }
@@ -6061,7 +6138,7 @@ function renderAIReportText(el, text) {
       const focus = text.substring(idx + focusMatch[0].length).trim();
       html = `<div style="margin-bottom:16px;line-height:1.8;opacity:0.85">${main.replace(/\n\n/g,'</p><p style="margin-top:12px">').replace(/\n/g,'<br>')}</div>
         <div style="padding:14px 18px;background:var(--surface2);border:1px solid var(--border);border-left:2px solid rgba(117,104,184,0.4);border-radius:4px">
-          <div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple);opacity:0.7;margin-bottom:6px">Focus for next week</div>
+          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple);font-weight:500;margin-bottom:6px">Focus for next week</div>
           <div style="font-size:12px;line-height:1.7;opacity:0.8">${focus}</div>
         </div>`;
     } else {

@@ -168,7 +168,7 @@ serve(async (req) => {
   const RULE_LABELS: Record<string, string> = {
     rules_trend: 'Trend', rules_market_cond: 'Market Conditions', rules_top_bottom: 'No Top/Bottom Picking',
     rules_plays: 'Playbook Only', rules_execution: 'Execution', rules_focus: 'Focus',
-    rules_consol: 'Consolidation', rules_dll: 'Risk Manager Respected', rules_cooloff: 'Cool-Off',
+    rules_consol: 'Consolidation', rules_dll: 'Risk Management', rules_cooloff: 'Cool-Off',
   };
 
   const ruleByDay = (tradingDays || []).map((d: Record<string, unknown>) => {
@@ -181,8 +181,15 @@ serve(async (req) => {
     sum + RULE_COLS.filter((k) => d[k] === 'Broke' || d[k] === 'broke').length, 0);
   const computedDisciplinePct = totalRuleSlots > 0 ? Math.round(((totalRuleSlots - brokenCount) / totalRuleSlots) * 100) : null;
 
+  // Map camelCase rule_compliance rule names to human-readable labels
+  const RULE_LABELS_CAMEL: Record<string, string> = {
+    rulesTrend: 'Trend', rulesMarketCond: 'Market Conditions', rulesTopBottom: 'No Top/Bottom Picking',
+    rulesPlays: 'Playbook Only', rulesExecution: 'Execution', rulesFocus: 'Focus',
+    rulesConsol: 'Consolidation', rulesDLL: 'Risk Management', rulesCooloff: 'Cool-Off',
+  };
+
   const brokenNotes = (ruleNotes || [])
-    .map((r: Record<string, unknown>) => `${r.date} — ${r.rule}: ${r.notes}`)
+    .map((r: Record<string, unknown>) => `${r.date} — ${RULE_LABELS_CAMEL[r.rule as string] || r.rule}: ${r.notes}`)
     .join('\n') || 'None';
 
   // ── Missed plays from trading_days ─────────────────────────────────────────
