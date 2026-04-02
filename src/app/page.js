@@ -1107,7 +1107,7 @@ function MarketPrep({ onBack }) {
   // Check-in state (moved from MentalGame)
   const [ws, setWs] = useState(""); const [wr, setWr] = useState("");
   const [ms, setMs] = useState([0, 0]); // [selfAwareness, connectedness] 1-5
-  const [oc, setOc] = useState([false, false, false]); const [ss, setSs] = useState([0,0,0,0,0]); const [cs, setCs] = useState(false);
+  const [oc, setOc] = useState([false, false, false]); const [ss, setSs] = useState([0,0,0,0,0]); const [ah, setAh] = useState(0); const [cs, setCs] = useState(false);
   const wg = getWhoopGate(ws, wr);
   const maxS = Math.max(...ss); const sg = maxS>5?"RED":maxS>3?"AMBER":"GREEN";
   const minMs = ms[0] > 0 && ms[1] > 0 ? Math.min(ms[0], ms[1]) : 0;
@@ -1220,7 +1220,7 @@ function MarketPrep({ onBack }) {
       loadData(`checkin-${k}`, null),
       loadPrepForInstrument("NQ"),
     ]);
-    if (ch) { setWs(ch.whoopSleep||""); setWr(ch.whoopRecovery||""); setMs(ch.mentalScores||[0,0]); setOc(ch.otherChecks||[false,false,false,false]); setSs(ch.schemaScores||[0,0,0,0,0]); setCs(true); }
+    if (ch) { setWs(ch.whoopSleep||""); setWr(ch.whoopRecovery||""); setMs(ch.mentalScores||[0,0]); setOc(ch.otherChecks||[false,false,false,false]); setSs(ch.schemaScores||[0,0,0,0,0]); setAh(ch.accountHealth||0); setCs(true); }
     setLoading(false);
     // Load review + instruments + log in background (non-blocking)
     (async () => {
@@ -1237,7 +1237,7 @@ function MarketPrep({ onBack }) {
     })();
   })(); }, []);
 
-  const saveCheckin = async () => { await saveData(`checkin-${todayKey()}`, { whoopSleep:ws, whoopRecovery:wr, mentalScores:ms, otherChecks:oc, schemaScores:ss, whoopGate:wg, timestamp:new Date().toISOString() }); setCs(true); };
+  const saveCheckin = async () => { await saveData(`checkin-${todayKey()}`, { whoopSleep:ws, whoopRecovery:wr, mentalScores:ms, otherChecks:oc, schemaScores:ss, accountHealth:ah, whoopGate:wg, timestamp:new Date().toISOString() }); setCs(true); };
   const savePrep = async () => {
     await saveData(prepKey(instrument), { ...prep, instrument, timestamp:new Date().toISOString() });
     setPrepSaved(true);
@@ -1435,6 +1435,21 @@ function MarketPrep({ onBack }) {
             })}
           </Card>
           <Card style={{ marginBottom:18 }}><SectionLabel text="Readiness" color="rgba(255,255,255,0.25)" />{["Eating Healthy and Staying Hydrated","Gym/Run Routine On Track","Breathwork/Meditated Today (10m+)","Read Mental Game Foundation"].map((item,i) => <div key={i} onClick={()=>{const n=[...oc];n[i]=!n[i];setOc(n);setCs(false);}} style={{display:"flex",alignItems:"center",gap:16,padding:"14px 0",borderBottom:i<3?"1px solid rgba(255,255,255,0.04)":"none",cursor:"pointer",fontSize:16,color:oc[i]?"#2DD4BF":"rgba(255,255,255,0.5)",userSelect:"none"}}><div style={{width:28,height:28,borderRadius:9,flexShrink:0,border:oc[i]?"none":"2px solid rgba(255,255,255,0.12)",background:oc[i]?"#2DD4BF":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#fff"}}>{oc[i]?"✓":""}</div>{item}</div>)}</Card>
+          <Card style={{ marginBottom:18 }}>
+            <SectionLabel text="Account Health" color="rgba(255,255,255,0.25)" />
+            <div style={{ display:"flex", gap:8, marginBottom: ah > 0 ? 12 : 0 }}>
+              {[1,2,3,4,5].map(n => {
+                const selected = ah === n;
+                const color = n <= 2 ? "#E94560" : n === 3 ? "#F48C06" : "#10B981";
+                return <button key={n} onClick={() => { setAh(selected ? 0 : n); setCs(false); }} style={{ flex:1, padding:"14px 0", borderRadius:12, cursor:"pointer", fontFamily:"'JetBrains Mono', monospace", fontSize:18, fontWeight:700, transition:"all 0.15s", background: selected ? `${color}22` : "rgba(255,255,255,0.03)", border: selected ? `1px solid ${color}66` : "1px solid rgba(255,255,255,0.07)", color: selected ? color : "rgba(255,255,255,0.2)" }}>{n}</button>;
+              })}
+            </div>
+            {ah > 0 && <div style={{ padding:"10px 14px", borderRadius:10, background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", fontSize:13, color:"rgba(255,255,255,0.4)", lineHeight:1.7 }}>
+              {ah <= 2 && "In drawdown. Reduce size, protect capital."}
+              {ah === 3 && "Neutral. Trade standard size."}
+              {ah >= 4 && "Healthy. Full size available."}
+            </div>}
+          </Card>
           <Card style={{ marginBottom:18 }}><SectionLabel text="Emotional Baseline" color="#4361EE" /><p style={{fontSize:14,color:"rgba(255,255,255,0.25)",marginBottom:22,lineHeight:1.6}}>Score ≥5 means your emotional triggers are heightened. Patterns are closer to the surface.</p>
             {CHECKIN_QUESTIONS.map((item,i) => { const v=ss[i]; const color=v>5?"#E94560":v>3?"#F48C06":"#10B981"; return <div key={i} style={{marginBottom:22}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><span style={{fontSize:15,color:"rgba(255,255,255,0.6)",flex:1}}>{item.q}</span><span style={{fontFamily:"'JetBrains Mono', monospace",fontSize:11,color:"rgba(255,255,255,0.2)",marginRight:14,letterSpacing:1}}>{item.schema}</span><span style={{fontFamily:"'JetBrains Mono', monospace",fontWeight:700,fontSize:22,color,width:40,textAlign:"center"}}>{v}</span></div><div style={{position:"relative"}}><div style={{position:"absolute",top:"50%",left:0,right:0,height:5,borderRadius:3,background:"rgba(255,255,255,0.06)",transform:"translateY(-50%)"}} /><div style={{position:"absolute",top:"50%",left:0,width:`${v*10}%`,height:5,borderRadius:3,background:color,transform:"translateY(-50%)",transition:"all 0.15s"}} /><input type="range" min={0} max={10} value={v} onChange={e=>{const n=[...ss];n[i]=parseInt(e.target.value);setSs(n);setCs(false);}} style={{width:"100%",background:"transparent",position:"relative",zIndex:2,WebkitAppearance:"none",appearance:"none",height:24}} /></div></div>; })}
             <div style={{background:fgc.g,borderRadius:16,padding:"18px 20px",textAlign:"center",border:`1px solid ${fgc.c}33`,marginTop:22}}><div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginBottom:6}}><span style={{fontSize:28,filter:`drop-shadow(0 0 8px ${fgc.c})`,color:fgc.c}}>{fgc.i}</span><span style={{fontFamily:"'JetBrains Mono', monospace",fontWeight:700,fontSize:26,color:fgc.c,letterSpacing:3}}>{fg}</span><span style={{fontFamily:"'JetBrains Mono', monospace",fontWeight:600,fontSize:11,color:fgc.c,letterSpacing:2,opacity:0.8}}>{fgc.l}</span></div><div style={{fontSize:14,color:"rgba(255,255,255,0.4)"}}>{fgc.m}</div>{dp.length>0&&<div style={{fontSize:11,color:"rgba(255,255,255,0.2)",marginTop:6,fontFamily:"'JetBrains Mono', monospace"}}>Driven by: {dp.join(" + ")}</div>}</div>
@@ -1513,26 +1528,6 @@ function MarketPrep({ onBack }) {
               <div><span style={{color:"#10B981"}}>●</span> 85–120 Active · run your playbook</div>
               <div><span style={{color:"#E94560"}}>●</span> &gt;120 Hot · A-setups only, adjust size</div>
               <div style={{ marginTop:10, paddingTop:8, borderTop:"1px solid rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.25)", fontStyle:"italic", fontFamily:"inherit" }}>The market does not need high RVOL to grind all day. Low RVOL can still trend.</div>
-            </div>}
-          </Card>
-
-          {/* ACCOUNT HEALTH */}
-          <Card style={{ marginBottom: 18 }}>
-            <SectionLabel text="Account Health" color="rgba(255,255,255,0.25)" />
-            <p style={{ fontSize:13, color:"rgba(255,255,255,0.25)", marginBottom:16, lineHeight:1.6 }}>Current account state. Helps frame position sizing for the session.</p>
-            <div style={{ display:"flex", gap:8, marginBottom:14 }}>
-              {[1,2,3,4,5].map(n => {
-                const selected = prep.accountHealth === n;
-                const color = n <= 2 ? "#E94560" : n === 3 ? "#F48C06" : "#10B981";
-                return (
-                  <button key={n} onClick={() => { up("accountHealth", selected ? 0 : n); }} style={{ flex:1, padding:"14px 0", borderRadius:12, cursor:"pointer", fontFamily:"'JetBrains Mono', monospace", fontSize:18, fontWeight:700, transition:"all 0.15s", background: selected ? `${color}22` : "rgba(255,255,255,0.03)", border: selected ? `1px solid ${color}66` : "1px solid rgba(255,255,255,0.07)", color: selected ? color : "rgba(255,255,255,0.2)" }}>{n}</button>
-                );
-              })}
-            </div>
-            {prep.accountHealth > 0 && <div style={{ padding:"10px 14px", borderRadius:10, background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", fontSize:13, color:"rgba(255,255,255,0.4)", lineHeight:1.7 }}>
-              {prep.accountHealth <= 2 && "In drawdown. Reduce size, protect capital."}
-              {prep.accountHealth === 3 && "Neutral. Trade standard size."}
-              {prep.accountHealth >= 4 && "Healthy. Full size available."}
             </div>}
           </Card>
 
