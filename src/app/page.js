@@ -1544,120 +1544,6 @@ function MarketPrep({ onBack }) {
             </div>}
           </Card>
 
-          {/* HTF CONTEXT - SPLIT INTO TREND + PRICE ACTION */}
-          <Card style={{ marginBottom: 18 }}>
-            <SectionLabel text="HTF / Context" color="#4361EE" />
-            <div style={{ marginTop:12, marginBottom:6, fontFamily:"'JetBrains Mono', monospace", fontSize:10, letterSpacing:2, color:"rgba(255,255,255,0.3)", fontWeight:600 }}>TREND (EMAs)</div>
-            <SelectField label="EMAs (Weekly)" value={prep.emasW} options={["Bullish","Bearish","Neutral"]} onChange={v => up("emasW", v)} />
-            <SelectField label="EMAs (Daily)" value={prep.emasD} options={["Bullish","Bearish","Neutral"]} onChange={v => up("emasD", v)} />
-            <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"8px 0 16px" }} />
-            <div style={{ marginBottom:6, fontFamily:"'JetBrains Mono', monospace", fontSize:10, letterSpacing:2, color:"rgba(255,255,255,0.3)", fontWeight:600 }}>PRICE ACTION</div>
-            <SelectField label="Weekly Candle" value={prep.weeklyCandle} options={["Bullish","Bearish","Neutral"]} onChange={v => up("weeklyCandle", v)} />
-            <SelectField label="Prior Daily Candle Close" value={prep.priorDaily} options={["Bullish","Bearish","Neutral"]} onChange={v => up("priorDaily", v)} />
-          </Card>
-
-          {/* VALUE & VOLUME */}
-          <Card style={{ marginBottom: 18 }}>
-            <SectionLabel text="Value & Volume" color="#A855F7" />
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", marginBottom: 16, lineHeight: 1.6 }}>Confirm each profile has been reviewed and levels marked.</p>
-            <Checkbox label="Prior Day Profile reviewed" checked={prep.profilePriorDay} onChange={v => up("profilePriorDay", v)} color="#2DD4BF" />
-            <Checkbox label="Developing Day Profile noted" checked={prep.profileDevDay} onChange={v => up("profileDevDay", v)} color="#2DD4BF" />
-            <Checkbox label="Prior Week Profile reviewed" checked={prep.profilePriorWeek} onChange={v => up("profilePriorWeek", v)} color="#2DD4BF" />
-            <Checkbox label="Developing Week Profile noted" checked={prep.profileDevWeek} onChange={v => up("profileDevWeek", v)} color="#2DD4BF" />
-            <Checkbox label="Supply / Demand levels marked" checked={prep.sdLevels} onChange={v => up("sdLevels", v)} color="#2DD4BF" />
-            <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"16px 0" }} />
-            <div style={{ marginBottom:6, fontFamily:"'JetBrains Mono', monospace", fontSize:10, letterSpacing:2, color:"rgba(255,255,255,0.3)", fontWeight:600 }}>AUCTION READ</div>
-            <SelectField label="Where is price trying to go?" value={prep.auctionDirection} options={["Up","Down","Sideways"]} onChange={v => up("auctionDirection", v)} />
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: -10, marginBottom: 14, paddingLeft: 2, fontStyle: "italic" }}>(Where is price not going? Tapers and rejections help frame this.)</div>
-            <SelectField label="Is it doing a good job of getting there?" value={prep.auctionConviction} options={["Yes","No","Unclear"]} onChange={v => up("auctionConviction", v)} />
-            <SelectField label="Where will market open vs yesterday's value?" value={prep.openVsValue} options={["Above Value","Inside Value","Below Value"]} onChange={v => up("openVsValue", v)} />
-            <div style={{ marginTop: 10, background: "rgba(244,140,6,0.06)", borderRadius: 14, padding: 14, borderLeft: "3px solid rgba(244,140,6,0.4)" }}>
-              <div style={{ fontSize: 13, color: "#F48C06", fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, letterSpacing: 1, marginBottom: 6 }}>LIVE REMINDER</div>
-              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.7 }}>Reassess the developing volume profile as it builds throughout the session. Zones form live, not just pre-session.</div>
-            </div>
-          </Card>
-
-          {/* INTRADAY */}
-          <Card style={{ marginBottom: 18 }}>
-            <SectionLabel text="Intraday" color="#2DD4BF" />
-            <SelectField label="4H/1H 9EMA" value={prep.ema4h1h} options={["Bullish","Bearish","Neutral"]} onChange={v => up("ema4h1h", v)} />
-            <SelectField label="4H/1H Price Action" value={prep.pa4h1h} options={["Bullish","Bearish","Neutral"]} onChange={v => up("pa4h1h", v)} />
-            <SelectField label="Single Prints" value={prep.singlePrints} options={["Yes","No"]} onChange={v => up("singlePrints", v)} />
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 8 }}>Anomaly?</label>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {["Poor High/Low","Excess","Naked POC","None"].map(o => {
-                  const anomalies = Array.isArray(prep.anomaly) ? prep.anomaly : prep.anomaly ? [prep.anomaly] : [];
-                  const isSelected = anomalies.includes(o);
-                  const toggle = () => {
-                    if (o === "None") { up("anomaly", isSelected ? [] : ["None"]); }
-                    else {
-                      let next = isSelected ? anomalies.filter(a => a !== o) : [...anomalies.filter(a => a !== "None"), o];
-                      up("anomaly", next);
-                    }
-                  };
-                  return <button key={o} onClick={toggle} style={{
-                    flex: 1, minWidth: "22%", padding: "12px 8px", borderRadius: 12,
-                    border: `1px solid ${isSelected ? (o === "None" ? "rgba(255,255,255,0.15)" : "rgba(244,140,6,0.4)") : "rgba(255,255,255,0.06)"}`,
-                    background: isSelected ? (o === "None" ? "rgba(255,255,255,0.05)" : "rgba(244,140,6,0.1)") : "rgba(255,255,255,0.03)",
-                    color: isSelected ? (o === "None" ? "rgba(255,255,255,0.6)" : "#F48C06") : "rgba(255,255,255,0.3)",
-                    fontSize: 12, fontWeight: isSelected ? 700 : 500, cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s",
-                  }}>{o}</button>;
-                })}
-              </div>
-            </div>
-            <SelectField label="Session Rotation Factor" value={prep.rotationFactor} options={["Pushing Up","Pushing Down","Neutral"]} onChange={v => up("rotationFactor", v)} />
-          </Card>
-
-          {/* CONTEXT SUMMARY BAR */}
-          {(() => {
-            const combine = (a, b) => { if (a && b) return a === b ? a : "Mixed"; return a || b || null; };
-            const dc = (v) => !v ? null : v === "Bullish" || v === "Up" || v === "Pushing Up" ? "#10B981" : v === "Bearish" || v === "Down" || v === "Pushing Down" ? "#E94560" : v === "Mixed" ? "#F48C06" : "rgba(255,255,255,0.4)";
-            const dl = (v) => !v ? null : v === "Bullish" || v === "Up" || v === "Pushing Up" ? "▲" : v === "Bearish" || v === "Down" || v === "Pushing Down" ? "▼" : v === "Mixed" ? "◆" : "—";
-            const wTrend = prep.emasW || null;
-            const dCombined = combine(prep.emasD, prep.priorDaily);
-            const intCombined = combine(prep.ema4h1h, prep.pa4h1h);
-            const auc = prep.auctionDirection ? `${prep.auctionDirection}${prep.auctionConviction ? ` (${prep.auctionConviction})` : ""}` : null;
-            const aucColor = prep.auctionDirection === "Up" ? "#10B981" : prep.auctionDirection === "Down" ? "#E94560" : prep.auctionDirection === "Sideways" ? "rgba(255,255,255,0.4)" : null;
-            const hasData = vixR || rvolR || wTrend || dCombined || intCombined || auc;
-            if (!hasData) return null;
-            return (
-              <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: "14px 18px", marginBottom: 18, border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(255,255,255,0.25)", fontWeight: 600, marginBottom: 10 }}>SESSION CONTEXT</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", fontFamily: "'JetBrains Mono', monospace", fontSize: 12, lineHeight: 2 }}>
-                  <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 700 }}>{instrument}</span>
-                  {vixR && <span style={{ color: vixR.color }}>VIX: {vixR.label}</span>}
-                  {rvolR && <span style={{ color: rvolR.color }}>RVOL: {rvolR.label}</span>}
-                  {wTrend && <span>W: <span style={{ color: dc(wTrend), fontWeight: 700 }}>{dl(wTrend)} {wTrend}</span></span>}
-                  {dCombined && <span>D: <span style={{ color: dc(dCombined), fontWeight: 700 }}>{dl(dCombined)} {dCombined}</span></span>}
-                  {intCombined && <span>Intra: <span style={{ color: dc(intCombined), fontWeight: 700 }}>{dl(intCombined)} {intCombined}</span></span>}
-                  {auc && <span>Auction: <span style={{ color: aucColor, fontWeight: 700 }}>{auc}</span></span>}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* SCENARIOS */}
-          <Card style={{ marginBottom: 18 }}>
-            <SectionLabel text="Session Plays" />
-            {[["Bullish", "#10B981", [["bull1", "bull1Invalid", "Bullish Play 1"], ["bull2", "bull2Invalid", "Bullish Play 2"]]],
-              ["Bearish", "#E94560", [["bear1", "bear1Invalid", "Bearish Play 1"], ["bear2", "bear2Invalid", "Bearish Play 2"]]]].map(([direction, color, plays]) => (
-              <div key={direction} style={{ marginBottom: 20 }}>
-                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 1.5, color, fontWeight: 600, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ width: 12, height: 2, background: color, borderRadius: 1 }} />{direction.toUpperCase()}
-                </div>
-                {plays.map(([key, invalidKey, label]) => (
-                  <div key={key} style={{ marginBottom: 12 }}>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.35)", display: "block", marginBottom: 6 }}>{label}</label>
-                    <textarea value={prep[key] || ""} onChange={e => up(key, e.target.value)} placeholder="Key levels, conditions, how to act..." rows={3} style={{ width:"100%", padding:14, borderRadius:14, border: prep[key] ? `1px solid ${color}22` : "1px solid rgba(255,255,255,0.08)", background: prep[key] ? `${color}04` : "rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.7)", fontSize:15, fontFamily:"inherit", resize:"vertical", boxSizing:"border-box", lineHeight: 1.7 }} />
-                    <input type="text" value={prep[invalidKey] || ""} onChange={e => up(invalidKey, e.target.value)} placeholder="Invalidation:" style={{ width:"100%", padding:"10px 14px", borderRadius:10, border: prep[invalidKey] ? `1px solid ${color}15` : "1px solid rgba(255,255,255,0.06)", background: prep[invalidKey] ? `${color}03` : "rgba(255,255,255,0.02)", color:"rgba(255,255,255,0.5)", fontSize:13, fontFamily:"'JetBrains Mono', monospace", boxSizing:"border-box", marginTop:6 }} />
-                  </div>
-                ))}
-              </div>
-            ))}
-            <div style={{ background:"rgba(255,255,255,0.03)", borderRadius:12, padding:"12px 16px", border:"1px solid rgba(255,255,255,0.06)", fontSize:13, color:"rgba(255,255,255,0.3)", fontStyle:"italic", lineHeight:1.7 }}>My edge is at the extremes. No trades in the middle of the range, wait for price to reach my levels.</div>
-          </Card>
-
           {/* PREVIOUS LESSONS */}
           {prevLessons && <div style={{ background: "rgba(16,185,129,0.06)", borderRadius: 16, padding: 18, marginBottom: 18, borderLeft: "3px solid rgba(16,185,129,0.4)" }}>
             <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "rgba(16,185,129,0.5)", letterSpacing: 1.5, fontWeight: 600, marginBottom: 10 }}>LESSONS FROM {formatDate(prevLessons.date).toUpperCase()}</div>
@@ -1742,47 +1628,6 @@ function MarketPrep({ onBack }) {
             </div>
           </Card>
 
-          {/* SCENARIO REVIEW */}
-          <Card style={{ marginBottom: 18 }}>
-            <SectionLabel text="Play Review" />
-            {[["Bullish Play 1", "bull1", "bull1Invalid", "bull1Result", "bull1Traded", "bull1WhyNot", "#10B981"],
-              ["Bullish Play 2", "bull2", "bull2Invalid", "bull2Result", "bull2Traded", "bull2WhyNot", "#10B981"],
-              ["Bearish Play 1", "bear1", "bear1Invalid", "bear1Result", "bear1Traded", "bear1WhyNot", "#E94560"],
-              ["Bearish Play 2", "bear2", "bear2Invalid", "bear2Result", "bear2Traded", "bear2WhyNot", "#E94560"]].map(([label, scenKey, invalidKey, resultKey, tradedKey, whyNotKey, color]) => {
-              const scenario = reviewPrepData?.[scenKey] || prep[scenKey];
-              const invalidation = reviewPrepData?.[invalidKey] || prep[invalidKey];
-              if (!scenario) return null;
-              return (
-                <div key={label} style={{ marginBottom: 18, paddingBottom: 18, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: 4, background: color, flexShrink: 0 }} />
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.5)", letterSpacing: 0.5 }}>{label}</span>
-                  </div>
-                  <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, marginBottom: 6, marginLeft: 16 }}>{scenario}</div>
-                  {invalidation && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: "'JetBrains Mono', monospace", marginBottom: 10, marginLeft: 16 }}>Invalidation: {invalidation}</div>}
-                  <div style={{ marginLeft: 16 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.35)", marginBottom: 6 }}>Did this play out?</div>
-                    <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-                      {["Played Out","Partially","Didn't Play Out"].map(o => <button key={o} onClick={() => ur(resultKey, review[resultKey] === o ? "" : o)} style={{ flex:1, padding:"10px 6px", borderRadius:10, border: `1px solid ${review[resultKey] === o ? (o === "Played Out" ? "rgba(16,185,129,0.4)" : o === "Partially" ? "rgba(244,140,6,0.4)" : "rgba(233,69,96,0.4)") : "rgba(255,255,255,0.06)"}`, background: review[resultKey] === o ? (o === "Played Out" ? "rgba(16,185,129,0.1)" : o === "Partially" ? "rgba(244,140,6,0.1)" : "rgba(233,69,96,0.1)") : "rgba(255,255,255,0.03)", color: review[resultKey] === o ? (o === "Played Out" ? "#10B981" : o === "Partially" ? "#F48C06" : "#E94560") : "rgba(255,255,255,0.3)", fontSize:11, fontWeight: review[resultKey] === o ? 700 : 500, cursor:"pointer", fontFamily:"inherit" }}>{o}</button>)}
-                    </div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.35)", marginBottom: 6 }}>Did you trade it?</div>
-                    <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-                      {["Yes","No","N/A"].map(o => <button key={o} onClick={() => ur(tradedKey, review[tradedKey] === o ? "" : o)} style={{ flex:1, padding:"10px 6px", borderRadius:10, border: `1px solid ${review[tradedKey] === o ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.06)"}`, background: review[tradedKey] === o ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)", color: review[tradedKey] === o ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.3)", fontSize:11, fontWeight: review[tradedKey] === o ? 700 : 500, cursor:"pointer", fontFamily:"inherit" }}>{o}</button>)}
-                    </div>
-                    {review[tradedKey] === "No" && <input type="text" value={review[whyNotKey] || ""} onChange={e => ur(whyNotKey, e.target.value)} placeholder="Why not?" style={{ width:"100%", padding:"10px 14px", borderRadius:10, border:"1px solid rgba(255,255,255,0.06)", background:"rgba(255,255,255,0.03)", color:"rgba(255,255,255,0.5)", fontSize:13, fontFamily:"inherit", boxSizing:"border-box", marginTop:4 }} />}
-                  </div>
-                </div>
-              );
-            })}
-          </Card>
-
-          {/* SESSION CHARACTER */}
-          <Card style={{ marginBottom: 18 }}>
-            <SectionLabel text="Session Character" color="rgba(255,255,255,0.4)" />
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", marginBottom: 12, lineHeight: 1.6 }}>How did price actually move today? Describe the session character in 1-2 sentences — balance, trend, rotational, mixed etc. This context helps the AI understand your R scores.</p>
-            <textarea value={review.sessionCharacter || ""} onChange={e => ur("sessionCharacter", e.target.value)} placeholder='e.g. "Opened in balance, rotated VAH/VAL for first hour then broke out with strong imbalance up rest of session."' rows={3} style={{ width:"100%", padding:14, borderRadius:14, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.7)", fontSize:15, fontFamily:"inherit", resize:"vertical", boxSizing:"border-box", lineHeight:1.7 }} />
-          </Card>
-
           {/* POST-SESSION MENTAL CHECK */}
           <Card style={{ marginBottom: 18 }}>
             <SectionLabel text="Post-Session Mental Check" color="#A855F7" />
@@ -1827,19 +1672,6 @@ function MarketPrep({ onBack }) {
                 {review[key] === "Broke" && <input type="text" value={review[noteKey] || ""} onChange={e => ur(noteKey, e.target.value)} placeholder="What happened?" style={{ width:"100%", padding:"10px 14px", borderRadius:10, border:"1px solid rgba(233,69,96,0.2)", background:"rgba(233,69,96,0.04)", color:"rgba(255,255,255,0.5)", fontSize:13, fontFamily:"inherit", boxSizing:"border-box", marginTop:6 }} />}
               </div>
             ))}
-          </Card>
-
-          {/* BIGGEST LESSON & TOMORROW */}
-          <Card style={{ marginBottom: 18 }}>
-            <SectionLabel text="Lessons" color="#10B981" />
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 8 }}>Biggest lesson from today</label>
-              <textarea value={review.biggestLesson} onChange={e => ur("biggestLesson", e.target.value)} placeholder='e.g. "Today I was influenced by price and disregarded my plan and bias."' rows={2} style={{ width:"100%", padding:14, borderRadius:14, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.7)", fontSize:15, fontFamily:"inherit", resize:"vertical", boxSizing:"border-box", lineHeight:1.7 }} />
-            </div>
-            <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 8 }}>Tomorrow I will...</label>
-              <textarea value={review.tomorrowWill} onChange={e => ur("tomorrowWill", e.target.value)} placeholder='e.g. "Have a clear invalidation to plan/bias and see price as opportunity until invalidation."' rows={2} style={{ width:"100%", padding:14, borderRadius:14, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.7)", fontSize:15, fontFamily:"inherit", resize:"vertical", boxSizing:"border-box", lineHeight:1.7 }} />
-            </div>
           </Card>
 
           {/* WIND DOWN */}
