@@ -185,7 +185,10 @@ function LandingPage({ onNavigate }) {
         <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 4, color: "rgba(45,212,191,0.5)", fontWeight: 600 }}>LIBERTRADE</div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
           <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: -1, color: "rgba(255,255,255,0.85)" }}>Trading Desk</div>
-          <a href="/analytics" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(45,212,191,0.45)", fontWeight: 600, textDecoration: "none", border: "1px solid rgba(45,212,191,0.12)", padding: "8px 14px", borderRadius: 10, background: "rgba(45,212,191,0.04)", transition: "all 0.2s", display: "flex", alignItems: "center", gap: 6, textTransform: "uppercase", flexShrink: 0 }}>Analytics →</a>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <a href="https://trade-wiki.vercel.app" target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(45,212,191,0.45)", fontWeight: 600, textDecoration: "none", border: "1px solid rgba(45,212,191,0.12)", padding: "8px 14px", borderRadius: 10, background: "rgba(45,212,191,0.04)", transition: "all 0.2s", display: "flex", alignItems: "center", gap: 6, textTransform: "uppercase", flexShrink: 0 }}>Wiki →</a>
+            <a href="/analytics" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(45,212,191,0.45)", fontWeight: 600, textDecoration: "none", border: "1px solid rgba(45,212,191,0.12)", padding: "8px 14px", borderRadius: 10, background: "rgba(45,212,191,0.04)", transition: "all 0.2s", display: "flex", alignItems: "center", gap: 6, textTransform: "uppercase", flexShrink: 0 }}>Analytics →</a>
+          </div>
         </div>
         <div style={{ fontSize: 15, color: "rgba(255,255,255,0.25)", marginTop: 10, lineHeight: 1.7 }}>My system works when I follow it. These tools help me follow it.</div>
       </div>
@@ -1157,6 +1160,7 @@ function MarketPrep({ onBack }) {
   });
   const [reviewSaved, setReviewSaved] = useState(false);
   const [reviewPrepData, setReviewPrepData] = useState(null);
+  const [reviewDate, setReviewDate] = useState(todayKey());
 
   const ur = (k, v) => { setReview(r => ({...r, [k]: v})); setReviewSaved(false); };
 
@@ -1244,15 +1248,24 @@ function MarketPrep({ onBack }) {
     if (!savedInstruments.includes(instrument)) setSavedInstruments([...savedInstruments, instrument]);
   };
   const saveReview = async () => {
-    await saveData(`review-${todayKey()}-${instrument}`, { ...review, instrument, timestamp:new Date().toISOString() });
+    await saveData(`review-${reviewDate}-${instrument}`, { ...review, instrument, timestamp:new Date().toISOString() });
     setReviewSaved(true);
   };
-  const loadReviewForInstrument = async (inst) => {
-    const rv = await loadData(`review-${todayKey()}-${inst}`, null);
+  const loadReviewForDate = async (inst, date) => {
+    const rv = await loadData(`review-${date}-${inst}`, null);
     if (rv) { setReview(rv); setReviewSaved(true); }
     else { setReview({ focusRating:0, bull1Result:"", bull1Traded:"", bull1WhyNot:"", bull2Result:"", bull2Traded:"", bull2WhyNot:"", bear1Result:"", bear1Traded:"", bear1WhyNot:"", bear2Result:"", bear2Traded:"", bear2WhyNot:"", rulesTrend:"", rulesMarketCond:"", rulesTopBottom:"", rulesPlays:"", rulesExecution:"", rulesFocus:"", rulesConsol:"", rulesDLL:"", rulesCooloff:"", rulesTrendNote:"", rulesMarketCondNote:"", rulesTopBottomNote:"", rulesPlaysNote:"", rulesExecutionNote:"", rulesFocusNote:"", rulesConsolNote:"", rulesDLLNote:"", rulesCooloffNote:"", postEmotional:0, postDecision:0, postPhysical:0, biggestLesson:"", tomorrowWill:"", sessionCharacter:"" }); setReviewSaved(false); }
-    const rp = await loadData(prepKey(inst, todayKey()), null);
+    const rp = await loadData(prepKey(inst, date), null);
     if (rp) setReviewPrepData(rp);
+  };
+  const loadReviewForInstrument = async (inst) => { await loadReviewForDate(inst, reviewDate); };
+  const navigateReviewDate = async (delta) => {
+    const parts = reviewDate.split("-");
+    const d = new Date(parts[0], parts[1]-1, parts[2]);
+    d.setDate(d.getDate() + delta);
+    const newDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    setReviewDate(newDate);
+    await loadReviewForDate(instrument, newDate);
   };
 
   const loadLogEntry = async (entry) => {
@@ -1705,7 +1718,14 @@ function MarketPrep({ onBack }) {
 
         {/* SESSION REVIEW TAB */}
         {tab === "review" && <div style={{ animation: "fadeIn 0.3s ease" }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}><SectionLabel text="Session Review" /><span style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:12, color:"rgba(255,255,255,0.2)" }}>{todayKey()} · {instrument}</span></div>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+            <SectionLabel text="Session Review" />
+            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+              <button onClick={() => navigateReviewDate(-1)} style={{ padding:"6px 10px", borderRadius:8, background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.4)", fontSize:14, cursor:"pointer", fontFamily:"inherit", lineHeight:1 }}>‹</button>
+              <span style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:11, color:"rgba(255,255,255,0.3)", minWidth:90, textAlign:"center" }}>{formatDate(reviewDate)}</span>
+              <button onClick={() => navigateReviewDate(1)} disabled={reviewDate >= todayKey()} style={{ padding:"6px 10px", borderRadius:8, background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.08)", color: reviewDate >= todayKey() ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.4)", fontSize:14, cursor: reviewDate >= todayKey() ? "default" : "pointer", fontFamily:"inherit", lineHeight:1 }}>›</button>
+            </div>
+          </div>
 
           {/* SESSION FOCUS RATING */}
           <Card style={{ marginBottom: 18 }}>
