@@ -4072,7 +4072,14 @@ function parseRTraderCSV(text) {
   const idxQty      = headers.indexOf('Qty To Fill');
   const idxSymbol   = headers.indexOf('Symbol');
   const idxPrice    = headers.indexOf('Avg Fill Price');
-  const idxTime     = headers.indexOf('Update Time (SAPST)');
+  const idxTime     = (() => {
+    for (const name of ['Update Time (SAPST)', 'Update Time (ESAST)', 'Create Time (SAPST)', 'Create Time (ESAST)']) {
+      const idx = headers.indexOf(name);
+      if (idx >= 0) return idx;
+    }
+    return headers.findIndex(h => /^Update Time/i.test(h) || /^Create Time/i.test(h));
+  })();
+  if (idxTime < 0) throw new Error('Could not find Update Time or Create Time column in Completed Orders');
 
   const orders = [];
   for (let i = completedStart + 1; i < lines.length; i++) {
