@@ -1170,7 +1170,7 @@ textarea:focus, input:focus, select:focus {
 }
 
 .pm-mantra-card {
-  margin-bottom: 0;
+  margin-bottom: 16px;
 }
 
 .pm-mantra-title {
@@ -1184,7 +1184,7 @@ textarea:focus, input:focus, select:focus {
 .pm-mantra-input { margin-top: 12px; }
 
 .pm-reminders-panel {
-  margin-top: 12px;
+  margin-top: 4px;
   margin-bottom: 16px;
   padding: 16px 18px;
   background: rgba(22, 23, 30, 0.45);
@@ -1203,7 +1203,7 @@ textarea:focus, input:focus, select:focus {
   font-size: 9px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--text);
   margin-bottom: 4px;
 }
 
