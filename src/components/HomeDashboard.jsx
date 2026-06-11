@@ -62,36 +62,48 @@ function ReadinessTrend({ sessions, onHistory }) {
   }, [sessions]);
 
   const chart = useMemo(() => {
-    if (points.length < 2) return null;
+    if (points.length === 0) return null;
     const w = 280;
     const h = 80;
     const pad = 8;
     const min = 0;
     const max = 100;
     const coords = points.map((s, i) => {
-      const x = pad + (i / (points.length - 1)) * (w - pad * 2);
+      const x =
+        points.length === 1
+          ? w / 2
+          : pad + (i / (points.length - 1)) * (w - pad * 2);
       const y = pad + (1 - (s.readinessScore - min) / (max - min)) * (h - pad * 2);
       return { x, y, session: s };
     });
-    const line = coords.map((p) => `${p.x},${p.y}`).join(" ");
+    const line = points.length >= 2 ? coords.map((p) => `${p.x},${p.y}`).join(" ") : null;
     return { w, h, coords, line };
   }, [points]);
 
-  if (points.length < 2) return null;
+  const subline =
+    points.length === 0
+      ? "No scored sessions yet"
+      : points.length === 1
+        ? "Last session"
+        : `Last ${points.length} sessions`;
 
   return (
     <section className="home-panel home-trend-panel">
       <div className="home-panel-head">
         <div>
           <h3 className="home-panel-title">Readiness trend</h3>
-          <p className="home-panel-sub">Last {points.length} sessions</p>
+          <p className="home-panel-sub">{subline}</p>
         </div>
         <button type="button" className="home-panel-link" onClick={onHistory}>History →</button>
       </div>
-      {chart && (
+      {points.length === 0 ? (
+        <p className="home-panel-empty">Complete pre-market check-ins to see your trend.</p>
+      ) : (
         <div className="home-trend-chart-wrap">
           <svg viewBox={`0 0 ${chart.w} ${chart.h}`} className="home-trend-chart" preserveAspectRatio="none">
-            <polyline points={chart.line} fill="none" stroke="var(--green)" strokeWidth="2" />
+            {chart.line && (
+              <polyline points={chart.line} fill="none" stroke="var(--green)" strokeWidth="2" />
+            )}
             {chart.coords.map((p) => (
               <circle key={p.session.date} cx={p.x} cy={p.y} r="3" fill="var(--green)" />
             ))}
