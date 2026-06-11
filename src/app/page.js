@@ -6,6 +6,7 @@ import DailyPlan from "../components/DailyPlan";
 import PostMarketReview from "../components/PostMarketReview";
 import HistoryPage from "../components/HistoryPage";
 import HistoryDayDetail from "../components/HistoryDayDetail";
+import HomeDashboard from "../components/HomeDashboard";
 
 // ═══════════════════════════════════════════════════════════
 // SHARED COMPONENTS
@@ -1960,38 +1961,6 @@ function Sidebar({ section, onNavigate, open, onClose }) {
   );
 }
 
-function HomePage({ onNavigate }) {
-  const dateStr = new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", year: "numeric" }).toUpperCase();
-  const cards = [
-    { id: "premarket", title: "Pre-Market", desc: "Eighteen inputs across four dimensions. Your ReadinessScore before the open." },
-    { id: "dailyplan", title: "Daily Plan", desc: "Pre-commit to bias, levels, setups, and risk before the bell." },
-    { id: "postmarket", title: "Post-Market", desc: "Import rTrader CSV, review performance, and close out the session." },
-    { id: "history", title: "History", desc: "Walk back through past sessions — readiness, plan, and review." },
-    { id: "desk", title: "Trade Desk", desc: "Education, playbooks, mental game, and session tools." },
-    { id: "analytics", title: "Analytics", desc: "P&L, reports, journal, and trade statistics." },
-    { id: "wiki", title: "Wiki", desc: "Knowledge base and trading reference." },
-  ];
-  return (
-    <div className="home-page">
-      <div className="home-date">{dateStr}</div>
-      <div className="home-brand">
-        <div className="home-wordmark">Liber<span>trade</span></div>
-        <div className="home-subtitle">Trading Desk</div>
-      </div>
-      <div className="home-section-label">Quick access</div>
-      <div className="home-cards">
-        {cards.map(card => (
-          <button key={card.id} className="home-card" onClick={() => onNavigate(card.id)}>
-            <div className="home-card-title">{card.title}</div>
-            <div className="home-card-desc">{card.desc}</div>
-          </button>
-        ))}
-      </div>
-      <div className="home-tagline">&ldquo;The recognition is where the pattern breaks.&rdquo;</div>
-    </div>
-  );
-}
-
 function SettingsPlaceholder() {
   return (
     <div className="settings-placeholder">
@@ -2009,11 +1978,13 @@ export default function App() {
   const [page, setPage] = useState("landing");
   const [section, setSection] = useState("home");
   const [historyDate, setHistoryDate] = useState(null);
+  const [homeKey, setHomeKey] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const goToSection = (id) => {
     setSection(id);
     if (id !== "history") setHistoryDate(null);
+    if (id === "home") setHomeKey((k) => k + 1);
     if (id === "desk") setPage("landing");
   };
 
@@ -2033,7 +2004,16 @@ export default function App() {
       <Sidebar section={section} onNavigate={goToSection} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="main-content">
-        {section === "home" && <HomePage onNavigate={goToSection} />}
+        {section === "home" && (
+          <HomeDashboard
+            key={homeKey}
+            onNavigate={goToSection}
+            onOpenHistoryDay={(date) => {
+              setHistoryDate(date);
+              setSection("history");
+            }}
+          />
+        )}
         {section === "premarket" && <PreMarketCheckIn onBack={() => setSection("home")} />}
         {section === "dailyplan" && <DailyPlan onBack={() => setSection("home")} />}
         {section === "postmarket" && <PostMarketReview onBack={() => setSection("home")} />}

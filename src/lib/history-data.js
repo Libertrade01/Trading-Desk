@@ -103,7 +103,39 @@ export async function deleteSessionDay(dateKey) {
   await supabase.from("trades").delete().eq("date", dateKey);
 }
 
-export function parseDateKey(dateKey) {
+export function todayKey() {
+  return new Date().toISOString().split("T")[0];
+}
+
+export function isStepComplete(data) {
+  return !!(data?.savedAt);
+}
+
+export function getTimeContext() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "morning";
+  if (hour < 17) return "afternoon";
+  return "evening";
+}
+
+export function formatGreetingDate() {
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  }).toUpperCase();
+}
+
+export function formatHeaderDate() {
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).toUpperCase();
+}
+
+function parseDateKey(dateKey) {
   return new Date(`${dateKey}T12:00:00`);
 }
 
