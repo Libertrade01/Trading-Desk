@@ -1,6 +1,7 @@
 "use client";
 import { storage } from "../lib/supabase";
 import { useState, useEffect, useCallback } from "react";
+import PreMarketCheckIn from "../components/PreMarketCheckIn";
 
 // ═══════════════════════════════════════════════════════════
 // SHARED COMPONENTS
@@ -183,12 +184,8 @@ function LandingPage({ onNavigate }) {
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: "40px 24px", animation: "fadeIn 0.4s ease" }}>
       <div style={{ marginBottom: 48 }}>
         <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 4, color: "rgba(45,212,191,0.5)", fontWeight: 600 }}>LIBERTRADE</div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
+        <div style={{ marginTop: 6 }}>
           <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: -1, color: "rgba(255,255,255,0.85)" }}>Trading Desk</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <a href="https://trade-wiki.vercel.app" target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(160,160,160,0.7)", fontWeight: 600, textDecoration: "none", border: "1px solid rgba(160,160,160,0.15)", padding: "8px 14px", borderRadius: 10, background: "rgba(160,160,160,0.04)", transition: "all 0.2s", display: "flex", alignItems: "center", gap: 6, textTransform: "uppercase", flexShrink: 0 }}>Wiki →</a>
-            <a href="/analytics" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 2, color: "rgba(160,160,160,0.7)", fontWeight: 600, textDecoration: "none", border: "1px solid rgba(160,160,160,0.15)", padding: "8px 14px", borderRadius: 10, background: "rgba(160,160,160,0.04)", transition: "all 0.2s", display: "flex", alignItems: "center", gap: 6, textTransform: "uppercase", flexShrink: 0 }}>Analytics →</a>
-          </div>
         </div>
         <div style={{ fontSize: 15, color: "rgba(255,255,255,0.25)", marginTop: 10, lineHeight: 1.7 }}>My system works when I follow it. These tools help me follow it.</div>
       </div>
@@ -1893,30 +1890,146 @@ function MentalGameFramework({ onBack }) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// APP SHELL & SIDEBAR
+// ═══════════════════════════════════════════════════════════
+
+const NAV_ITEMS = [
+  { id: "home", label: "Home", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="5" height="5" rx="0.5"/><rect x="9" y="2" width="5" height="5" rx="0.5"/><rect x="2" y="9" width="5" height="5" rx="0.5"/><rect x="9" y="9" width="5" height="5" rx="0.5"/></svg>
+  )},
+  { type: "label", text: "Today" },
+  { id: "premarket", label: "Pre-Market", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/></svg>
+  )},
+  { type: "label", text: "Reference" },
+  { id: "desk", label: "Trade Desk", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+  )},
+  { id: "analytics", label: "Analytics", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="9" width="3" height="5" rx="0.5"/><rect x="6.5" y="5" width="3" height="9" rx="0.5"/><rect x="11" y="2" width="3" height="12" rx="0.5"/></svg>
+  )},
+  { id: "wiki", label: "Wiki", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 2.5h10v11H3z"/><path d="M5.5 2.5v11M8 2.5v11M10.5 2.5v11"/></svg>
+  )},
+  { id: "settings", label: "Settings", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>
+  )},
+];
+
+function Sidebar({ section, onNavigate, open, onClose }) {
+  return (
+    <>
+      <div className={`sidebar-overlay${open ? " visible" : ""}`} onClick={onClose} />
+      <aside className={`sidebar${open ? " open" : ""}`}>
+        <div className="sidebar-brand">
+          <div className="sidebar-wordmark">Liber<span>trade</span></div>
+          <div className="sidebar-brand-sub">Trading Desk</div>
+        </div>
+        <nav className="sidebar-nav">
+          {NAV_ITEMS.map((item, i) => item.type === "label" ? (
+            <div key={`label-${i}`} className="sidebar-nav-label">{item.text}</div>
+          ) : (
+            <button
+              key={item.id}
+              className={`sidebar-nav-item${section === item.id ? " active" : ""}`}
+              onClick={() => { onNavigate(item.id); onClose(); }}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
+          <div className="sidebar-footer-label">Libertrade</div>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+function HomePage({ onNavigate }) {
+  const dateStr = new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", year: "numeric" }).toUpperCase();
+  const cards = [
+    { id: "premarket", title: "Pre-Market", desc: "Eighteen inputs across four dimensions. Your ReadinessScore before the open." },
+    { id: "desk", title: "Trade Desk", desc: "Education, playbooks, mental game, and session tools." },
+    { id: "analytics", title: "Analytics", desc: "P&L, reports, journal, and trade statistics." },
+    { id: "wiki", title: "Wiki", desc: "Knowledge base and trading reference." },
+  ];
+  return (
+    <div className="home-page">
+      <div className="home-date">{dateStr}</div>
+      <div className="home-brand">
+        <div className="home-wordmark">Liber<span>trade</span></div>
+        <div className="home-subtitle">Trading Desk</div>
+      </div>
+      <div className="home-section-label">Quick access</div>
+      <div className="home-cards">
+        {cards.map(card => (
+          <button key={card.id} className="home-card" onClick={() => onNavigate(card.id)}>
+            <div className="home-card-title">{card.title}</div>
+            <div className="home-card-desc">{card.desc}</div>
+          </button>
+        ))}
+      </div>
+      <div className="home-tagline">&ldquo;The recognition is where the pattern breaks.&rdquo;</div>
+    </div>
+  );
+}
+
+function SettingsPlaceholder() {
+  return (
+    <div className="settings-placeholder">
+      <h2>Settings</h2>
+      <p>Coming soon.</p>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
 // ROOT APP
 // ═══════════════════════════════════════════════════════════
 
 export default function App() {
   const [page, setPage] = useState("landing");
+  const [section, setSection] = useState("home");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const goToSection = (id) => {
+    setSection(id);
+    if (id === "desk") setPage("landing");
+  };
 
   return (
-    <div className="app-shell" style={{ fontFamily: "system-ui, -apple-system, sans-serif", background: "#000000", minHeight: "100vh", width: "100%", color: "#fff" }}>
+    <div className="app-layout">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
         input[type="range"] { -webkit-appearance: none; appearance: none; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: #fff; cursor: pointer; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
         input[type="number"] { -moz-appearance: textfield; }
         input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        textarea:focus, input:focus, select:focus { outline: none; border-color: rgba(45,212,191,0.4) !important; box-shadow: 0 0 0 3px rgba(45,212,191,0.08); }
-        ::-webkit-scrollbar { width: 0; height: 0; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
-      {page === "landing" && <LandingPage onNavigate={setPage} />}
-      {page === "prep" && <MarketPrep onBack={() => setPage("landing")} />}
-      {page === "playbook" && <Playbook onBack={() => setPage("landing")} />}
-      {page === "mental" && <MentalGameFramework onBack={() => setPage("landing")} />}
-      {page === "fundamentals" && <MarketFundamentals onBack={() => setPage("landing")} />}
+
+      <button className="sidebar-toggle" onClick={() => setSidebarOpen(o => !o)} aria-label="Toggle menu">
+        <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 5h12M3 9h12M3 13h12"/></svg>
+      </button>
+
+      <Sidebar section={section} onNavigate={goToSection} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      <main className="main-content">
+        {section === "home" && <HomePage onNavigate={goToSection} />}
+        {section === "premarket" && <PreMarketCheckIn onBack={() => setSection("home")} />}
+        {section === "desk" && (
+          <div className="app-shell" style={{ fontFamily: "system-ui, -apple-system, sans-serif", color: "#fff" }}>
+            {page === "landing" && <LandingPage onNavigate={setPage} />}
+            {page === "prep" && <MarketPrep onBack={() => setPage("landing")} />}
+            {page === "playbook" && <Playbook onBack={() => setPage("landing")} />}
+            {page === "mental" && <MentalGameFramework onBack={() => setPage("landing")} />}
+            {page === "fundamentals" && <MarketFundamentals onBack={() => setPage("landing")} />}
+          </div>
+        )}
+        {section === "analytics" && <iframe className="embed-frame" src="/analytics" title="Analytics" />}
+        {section === "wiki" && <iframe className="embed-frame" src="https://trade-wiki.vercel.app" title="Wiki" />}
+        {section === "settings" && <SettingsPlaceholder />}
+      </main>
     </div>
   );
 }

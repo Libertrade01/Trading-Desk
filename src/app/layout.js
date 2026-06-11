@@ -4,7 +4,7 @@ export const metadata = {
   title: 'Trade Desk',
   description: 'Libertrade Trading Desk',
   manifest: '/manifest.json',
-  themeColor: '#000000',
+  themeColor: '#111217',
   viewport: {
     width: 'device-width',
     initialScale: 1,

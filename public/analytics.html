@@ -1636,7 +1636,7 @@
         <button id="nav-reports" onclick="showPage('reports')" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:5px 14px;border-radius:3px;border:none;cursor:pointer;background:none;color:var(--muted);transition:all 0.15s">Reports</button>
       </div>
     </div>
-    <a href="/" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);text-decoration:none;border:1px solid rgba(45,212,191,0.15);padding:5px 14px;border-radius:4px;background:rgba(45,212,191,0.04);transition:all 0.15s;opacity:0.6">← Trade Desk</a>
+    <a id="back-to-desk" href="/" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);text-decoration:none;border:1px solid rgba(45,212,191,0.15);padding:5px 14px;border-radius:4px;background:rgba(45,212,191,0.04);transition:all 0.15s;opacity:0.6">← Trade Desk</a>
     <div class="topbar-right">
       <div class="accounts-filter" id="accounts-chips"></div>
       <select id="type-filter-select" class="date-input" onchange="setTypeFilter(this.value)" style="padding:4px 10px;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;">
@@ -2062,6 +2062,12 @@
 </div>
 
 <script>
+// Hide back link when embedded in app shell sidebar
+if (window.self !== window.top) {
+  const backLink = document.getElementById('back-to-desk');
+  if (backLink) backLink.style.display = 'none';
+}
+
 // ── Config ────────────────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://uzbsuyknfnzqwdpzspfs.supabase.co';
 
