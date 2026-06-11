@@ -1179,6 +1179,48 @@ textarea:focus, input:focus, select:focus {
 
 .pm-mantra-input { margin-top: 12px; }
 
+.pm-reminders-block {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.pm-reminders-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.pm-reminders-hint {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+  margin-bottom: 12px;
+  opacity: 0.85;
+}
+
+.pm-reminders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pm-reminders-list .pm-toggle-field {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.pm-reminders-list .pm-field-label {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
 .pm-footer {
   margin-top: 28px;
   padding-top: 8px;
@@ -2360,6 +2402,27 @@ textarea:focus, input:focus, select:focus {
   font-size: 13px;
   line-height: 1.6;
   color: var(--text);
+}
+
+.history-reminders-block {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.history-reminders-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.history-reminders-list li {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .history-plan-tags {

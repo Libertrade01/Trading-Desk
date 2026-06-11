@@ -182,20 +182,20 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                   { label: "Meditation", value: yesNo(pre.meditation) },
                 ]}
               />
-              {(pre.unlockAccounts || pre.checkCpu || pre.selectRiskBracketOrder) && (
-                <StatGrid
-                  title="Reminders"
-                  items={[
-                    ...(pre.unlockAccounts ? [{ label: "Unlock accounts", value: "Yes" }] : []),
-                    ...(pre.checkCpu ? [{ label: "Check CPU", value: "Yes" }] : []),
-                    ...(pre.selectRiskBracketOrder ? [{ label: "Risk bracket order", value: "Yes" }] : []),
-                  ]}
-                />
-              )}
               {pre.mantra && (
                 <div className="history-notes-block">
                   <div className="history-notes-label">Notes</div>
                   <p>{pre.mantra}</p>
+                </div>
+              )}
+              {(pre.unlockAccounts || pre.checkCpu || pre.selectRiskBracketOrder) && (
+                <div className="history-reminders-block">
+                  <div className="history-notes-label">Reminders</div>
+                  <ul className="history-reminders-list">
+                    {pre.unlockAccounts && <li>Unlock accounts</li>}
+                    {pre.checkCpu && <li>Check CPU</li>}
+                    {pre.selectRiskBracketOrder && <li>Risk bracket order</li>}
+                  </ul>
                 </div>
               )}
             </>
