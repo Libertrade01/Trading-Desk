@@ -19,15 +19,28 @@ const WORKFLOW_STEPS = [
   { id: "postmarket", label: "Post-Market", desc: "Import trades and close the session" },
 ];
 
-function StepStatus({ complete, score }) {
-  if (complete) {
-    return (
-      <span className="home-task-status home-task-status--done">
-        {score != null ? `Complete · ${score}` : "Complete"}
-      </span>
-    );
-  }
-  return <span className="home-task-status home-task-status--pending">Not started</span>;
+function TaskPill({ complete }) {
+  return (
+    <span className={`home-task-pill${complete ? " done" : ""}`}>
+      {complete ? "Done" : "Open"}
+    </span>
+  );
+}
+
+function buildProgressSubline(preComplete, planComplete, postComplete) {
+  const done = [];
+  const open = [];
+  if (preComplete) done.push("Pre-market");
+  else open.push("Pre-market");
+  if (planComplete) done.push("Plan");
+  else open.push("Plan");
+  if (postComplete) done.push("Review");
+  else open.push("Review");
+
+  const parts = [];
+  if (done.length) parts.push(`${done.join(", ")} done`);
+  if (open.length) parts.push(`${open.join(" and ")} still open`);
+  return parts.join(" · ");
 }
 
 function StageDots({ pre, plan, post }) {
@@ -64,16 +77,18 @@ function ReadinessTrend({ sessions, onHistory }) {
     return { w, h, coords, line };
   }, [points]);
 
+  if (points.length < 2) return null;
+
   return (
     <section className="home-panel home-trend-panel">
       <div className="home-panel-head">
         <div>
           <h3 className="home-panel-title">Readiness trend</h3>
-          <p className="home-panel-sub">Last {Math.max(points.length, 0)} sessions</p>
+          <p className="home-panel-sub">Last {points.length} sessions</p>
         </div>
         <button type="button" className="home-panel-link" onClick={onHistory}>History →</button>
       </div>
-      {chart ? (
+      {chart && (
         <div className="home-trend-chart-wrap">
           <svg viewBox={`0 0 ${chart.w} ${chart.h}`} className="home-trend-chart" preserveAspectRatio="none">
             <polyline points={chart.line} fill="none" stroke="var(--green)" strokeWidth="2" />
@@ -87,8 +102,6 @@ function ReadinessTrend({ sessions, onHistory }) {
             ))}
           </div>
         </div>
-      ) : (
-        <p className="home-panel-empty">Complete pre-market check-ins to see your trend.</p>
       )}
     </section>
   );
@@ -143,10 +156,14 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
     ? "You did the work today."
     : completedCount === 0
       ? "Start the day with intention."
-      : "Keep going — finish today's workflow.";
+      : `${completedCount} of 3 complete`;
   const greetingSub = allComplete
-    ? "All required tasks logged. Optional: share your day."
-    : `${completedCount} of 3 tasks complete.`;
+    ? "All required tasks logged."
+    : completedCount === 0
+      ? "Pre-market, plan, and review — log each step."
+      : buildProgressSubline(preComplete, planComplete, postComplete);
+
+  const pnlTone = today?.netPnl > 0 ? "positive" : today?.netPnl < 0 ? "negative" : "neutral";
 
   const preStreak = useMemo(() => countStreak(sessions, "pre"), [sessions]);
   const preTotal = sessions.filter((s) => isStepComplete(s.pre)).length;
@@ -185,9 +202,34 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
       <div className="home-dashboard-inner">
         <header className="home-greeting">
           <div className="home-greeting-eyebrow">{greetingEyebrow}</div>
-          <h1 className="home-greeting-title">{greetingHeadline}</h1>
+          <h1 className={`home-greeting-title${allComplete ? " home-greeting-title--complete" : completedCount > 0 ? " home-greeting-title--progress" : ""}`}>
+            {greetingHeadline}
+          </h1>
           <p className="home-greeting-sub">{greetingSub}</p>
         </header>
+
+        <div className="home-dash-row">
+          <div className="home-dash-stat">
+            <div className="home-dash-stat-label">Net P&amp;L today</div>
+            <div className={`home-dash-stat-value ${pnlTone}`}>
+              {today?.netPnl != null ? formatUsd(today.netPnl, { signed: true }) : "—"}
+            </div>
+          </div>
+          <div className="home-dash-stat">
+            <div className="home-dash-stat-label">Readiness</div>
+            <div className={`home-dash-stat-value${today?.readinessScore != null ? " positive" : " neutral"}`}>
+              {today?.readinessScore ?? "—"}
+            </div>
+          </div>
+          <div className="home-dash-stat">
+            <div className="home-dash-stat-label">Pre-market streak</div>
+            <div className="home-dash-stat-value neutral">{preStreak} days</div>
+          </div>
+          <div className="home-dash-stat">
+            <div className="home-dash-stat-label">Tasks complete</div>
+            <div className="home-dash-stat-value neutral">{completedCount} / 3</div>
+          </div>
+        </div>
 
         <div className="home-dashboard-grid">
           <div className="home-main-col">
@@ -208,29 +250,25 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                 </div>
               </section>
             ) : (
-              <section className="home-hero-card home-hero-card--tasks">
-                <div className="home-hero-badge home-hero-badge--progress">Today&apos;s workflow</div>
-                <ul className="home-task-list">
-                  {WORKFLOW_STEPS.map((step) => {
-                    const complete = step.id === "premarket" ? preComplete : step.id === "dailyplan" ? planComplete : postComplete;
-                    const score = step.id === "premarket" ? today?.readinessScore : null;
-                    return (
-                      <li key={step.id}>
-                        <button type="button" className="home-task-row" onClick={() => onNavigate(step.id)}>
-                          <span className={`home-task-check${complete ? " done" : ""}`} aria-hidden="true">
-                            {complete ? "✓" : ""}
-                          </span>
-                          <span className="home-task-body">
+              <section className="home-workflow-section">
+                <div className="home-workflow-eyebrow">Today&apos;s workflow</div>
+                <div className="home-hero-card home-hero-card--tasks">
+                  <ul className="home-task-list">
+                    {WORKFLOW_STEPS.map((step) => {
+                      const complete = step.id === "premarket" ? preComplete : step.id === "dailyplan" ? planComplete : postComplete;
+                      const score = step.id === "premarket" && complete ? today?.readinessScore : null;
+                      return (
+                        <li key={step.id}>
+                          <button type="button" className="home-task-row" onClick={() => onNavigate(step.id)}>
+                            <TaskPill complete={complete} />
                             <span className="home-task-label">{step.label}</span>
-                            <span className="home-task-desc">{step.desc}</span>
-                          </span>
-                          <StepStatus complete={complete} score={score} />
-                          <span className="home-task-arrow">→</span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
+                            <span className="home-task-score">{score != null ? score : ""}</span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               </section>
             )}
 

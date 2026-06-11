@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home Design Preview — Libertrade</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Syne:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #111217;
+      --surface: #16171f;
+      --surface2: #1b1c24;
+      --border: #252730;
+      --border2: #2e3038;
+      --text: #e8e9ed;
+      --muted: #8b909a;
+      --green: #259186;
+      --green-dim: rgba(37, 145, 134, 0.1);
+      --green-border: rgba(37, 145, 134, 0.45);
+      --blue: #6b9fd4;
+      --blue-dim: rgba(107, 159, 212, 0.12);
+      --blue-border: rgba(107, 159, 212, 0.5);
+      --problem: #c47;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      line-height: 1.5;
+      padding: 32px 24px 64px;
+    }
+    .wrap { max-width: 1280px; margin: 0 auto; }
+    h1 { font-size: 22px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.02em; }
+    .intro { color: var(--muted); font-size: 14px; margin-bottom: 28px; max-width: 720px; }
+    h2 {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 36px 0 14px;
+    }
+
+    /* Color swatches */
+    .swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .swatch {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 11px;
+    }
+    .swatch-block {
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .swatch-label { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.06em; }
+    .swatch-hex { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text); }
+
+    /* Mini dashboard row */
+    .dash-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .dash-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .dash-stat-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .dash-stat-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 20px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+    .dash-stat-value.positive { color: var(--green); }
+    .dash-stat-value.neutral { color: var(--text); }
+
+    /* Side-by-side options grid */
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 960px) {
+      .options-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .options-grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+    }
+    .card.problem {
+      border-color: rgba(204, 68, 119, 0.4);
+      background: rgba(204, 68, 119, 0.04);
+    }
+    .card.rec {
+      border-color: var(--green-border);
+      background: rgba(37, 145, 134, 0.06);
+    }
+    .card-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .card-tag.problem { color: var(--problem); }
+    .card-tag.rec { color: var(--green); }
+    .card-tag.neutral { color: var(--muted); }
+    .card-name { font-size: 13px; font-weight: 600; margin-bottom: 14px; }
+    .eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .sub { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Headline variants */
+    .hl-current {
+      font-family: 'Instrument Serif', serif;
+      font-size: 28px;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--text);
+      border-left: 3px solid var(--problem);
+      padding-left: 12px;
+    }
+    .hl-a {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+    }
+    .hl-b {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.25;
+    }
+    .hl-c {
+      font-family: 'DM Mono', monospace;
+      font-size: 30px;
+      font-weight: 500;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      color: var(--text);
+    }
+    .hl-d {
+      font-family: 'Instrument Serif', serif;
+      font-size: 30px;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      font-style: italic;
+    }
+
+    /* Task mock */
+    .mock {
+      margin-top: 12px;
+      padding: 12px;
+      background: var(--surface2);
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    .mock-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .row:last-child { border-bottom: none; }
+    .pill {
+      font-family: 'DM Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .pill.done {
+      border-color: rgba(37, 145, 134, 0.5);
+      color: var(--green);
+      background: var(--green-dim);
+    }
+    .score {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--green);
+      text-align: right;
+    }
+    .task-label { font-weight: 500; }
+
+    /* Stage dots demo */
+    .stage-dots {
+      display: flex;
+      gap: 6px;
+      margin-top: 12px;
+    }
+    .stage-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid var(--border2);
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+    }
+    .stage-dot.on {
+      border-color: var(--blue-border);
+      background: var(--blue-dim);
+      color: var(--blue);
+    }
+
+    /* Links footer */
+    .links {
+      margin-top: 40px;
+      padding: 16px 18px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .links-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .links a {
+      display: block;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--green);
+      text-decoration: none;
+      margin-bottom: 6px;
+      word-break: break-all;
+    }
+    .links a:hover { text-decoration: underline; }
+    .links-note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .span-2 { grid-column: span 2; }
+    @media (max-width: 960px) {
+      .span-2 { grid-column: span 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Home dashboard — design preview</h1>
+    <p class="intro">Full-color Libertrade brand preview. Compare headline directions side-by-side before we change the app. Cursor canvas uses host theme (grayscale) — this HTML shows real brand colors.</p>
+
+    <h2>Brand palette</h2>
+    <div class="swatches">
+      <div class="swatch">
+        <div class="swatch-block" style="background:#111217"></div>
+        <div><div class="swatch-label">Background</div><div class="swatch-hex">#111217</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#16171f"></div>
+        <div><div class="swatch-label">Surface</div><div class="swatch-hex">#16171f</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#252730"></div>
+        <div><div class="swatch-label">Border</div><div class="swatch-hex">#252730</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#259186"></div>
+        <div><div class="swatch-label">Green accent</div><div class="swatch-hex">#259186</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#6b9fd4"></div>
+        <div><div class="swatch-label">Blue (stage dots)</div><div class="swatch-hex">#6b9fd4</div></div>
+      </div>
+    </div>
+
+    <h2>Mini dashboard row</h2>
+    <div class="dash-row">
+      <div class="dash-stat">
+        <div class="dash-stat-label">Net P&amp;L today</div>
+        <div class="dash-stat-value positive">+$842.50</div>
+      </div>
+      <div class="dash-stat">
+        <div class="dash-stat-label">Readiness</div>
+        <div class="dash-stat-value positive">49</div>
+      </div>
+      <div class="dash-stat">
+        <div class="dash-stat-label">Pre-market streak</div>
+        <div class="dash-stat-value neutral">12 days</div>
+      </div>
+      <div class="dash-stat">
+        <div class="dash-stat-label">Tasks complete</div>
+        <div class="dash-stat-value neutral">1 / 3</div>
+      </div>
+    </div>
+
+    <h2>Headline options — side by side</h2>
+    <div class="options-grid">
+      <!-- 1. CURRENT (problem) -->
+      <div class="card problem">
+        <div class="card-tag problem">Current · Problem</div>
+        <div class="card-name">Instrument Serif motivational</div>
+        <div class="eyebrow">Evening · Thursday, June 11</div>
+        <div class="hl-current">Keep going — finish today's workflow.</div>
+        <p class="sub">1 of 3 tasks complete.</p>
+        <p class="note">Serif + editorial copy clashes with mono data rows below. This is what feels off.</p>
+      </div>
+
+      <!-- 2. Option A -->
+      <div class="card">
+        <div class="card-tag neutral">Option A</div>
+        <div class="card-name">DM Sans semibold</div>
+        <div class="eyebrow">Evening · Thursday, June 11</div>
+        <div class="hl-a">Keep going — finish today's workflow.</div>
+        <p class="sub">1 of 3 tasks complete.</p>
+        <p class="note">Matches Pre-Market &amp; Analytics data UI. Clean sans headline.</p>
+      </div>
+
+      <!-- 3. Option B -->
+      <div class="card">
+        <div class="card-tag neutral">Option B</div>
+        <div class="card-name">Syne uppercase</div>
+        <div class="eyebrow">Evening · Thursday, June 11</div>
+        <div class="hl-b">Keep going — finish today's workflow.</div>
+        <p class="sub">1 of 3 tasks complete.</p>
+        <p class="note">Wordmark family — bold identity, less editorial.</p>
+      </div>
+
+      <!-- 4. Option C (recommended) -->
+      <div class="card rec">
+        <div class="card-tag rec">Option C · Recommended</div>
+        <div class="card-name">Status-first mono</div>
+        <div class="eyebrow">Evening · Thursday, June 11</div>
+        <div class="hl-c">1 of 3 complete</div>
+        <p class="sub">Pre-market done · Plan and review still open.</p>
+        <p class="note">Lead with progress number. Desk feel, not magazine.</p>
+      </div>
+
+      <!-- 5. Option D -->
+      <div class="card">
+        <div class="card-tag neutral">Option D · Complete state only</div>
+        <div class="card-name">Serif italic when done</div>
+        <div class="eyebrow">Evening · Thursday, June 11</div>
+        <div class="hl-d">You did the work today.</div>
+        <p class="sub">All required tasks logged.</p>
+        <p class="note">Reserve serif for completion / celebration only.</p>
+      </div>
+
+      <!-- 6. Recommended mock -->
+      <div class="card rec span-2">
+        <div class="card-tag rec">Recommended mock</div>
+        <div class="card-name">Option C headline + task list + workflow card</div>
+        <div class="eyebrow">Evening · Thursday, June 11</div>
+        <div class="hl-c" style="font-size:26px">1 of 3 complete</div>
+        <p class="sub">Pre-market done · Plan and review still open.</p>
+        <div class="mock">
+          <div class="mock-label">Today's workflow</div>
+          <div class="row">
+            <span class="pill done">Done</span>
+            <span class="task-label">Pre-Market</span>
+            <span class="score">49</span>
+          </div>
+          <div class="row">
+            <span class="pill">Open</span>
+            <span class="task-label">Daily Plan</span>
+            <span class="score"></span>
+          </div>
+          <div class="row">
+            <span class="pill">Open</span>
+            <span class="task-label">Post-Market</span>
+            <span class="score"></span>
+          </div>
+        </div>
+        <div style="margin-top:14px">
+          <div class="mock-label">Recent session · stage dots (blue only here)</div>
+          <div class="stage-dots">
+            <span class="stage-dot on" title="Pre-Market">P</span>
+            <span class="stage-dot on" title="Daily Plan">L</span>
+            <span class="stage-dot" title="Post-Market">R</span>
+            <span style="margin-left:12px;font-family:'DM Mono',monospace;font-size:11px;color:var(--green)">+$842.50</span>
+          </div>
+        </div>
+        <p class="note">Green pills for done · score in its own column · no "COMPLETE · 49" inline · blue only on P/L/R stage dots · green P&amp;L.</p>
+      </div>
+    </div>
+
+    <div class="links">
+      <div class="links-title">Open this preview</div>
+      <a href="http://localhost:3000/home-design-preview.html">http://localhost:3000/home-design-preview.html</a>
+      <a href="https://libertrade-desk.vercel.app/home-design-preview.html">https://libertrade-desk.vercel.app/home-design-preview.html</a>
+      <p class="links-note">Cursor canvas uses host theme (grayscale). This HTML file shows Libertrade brand colors (#111217 bg, #259186 green, #6b9fd4 stage dots).</p>
+    </div>
+  </div>
+</body>
+</html>

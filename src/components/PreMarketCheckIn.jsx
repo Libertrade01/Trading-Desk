@@ -432,6 +432,22 @@ export default function PreMarketCheckIn({ onBack }) {
             </div>
           </section>
 
+          {/* 05 Reminders */}
+          <section className="pm-card">
+            <div className="pm-section-head">
+              <span className="pm-section-num">05</span>
+              <div>
+                <h2 className="pm-section-title">Reminders</h2>
+                <p className="pm-section-desc">Desk setup before the open. Not scored.</p>
+              </div>
+            </div>
+            <div className="pm-prep-grid">
+              <ToggleField label="Unlock Accounts" value={form.unlockAccounts} onChange={(v) => set("unlockAccounts", v)} />
+              <ToggleField label="Check CPU" value={form.checkCpu} onChange={(v) => set("checkCpu", v)} />
+              <ToggleField label="Select Risk Bracket Order" value={form.selectRiskBracketOrder} onChange={(v) => set("selectRiskBracketOrder", v)} />
+            </div>
+          </section>
+
           {/* Mantra */}
           <section className="pm-card">
             <h2 className="pm-mantra-title">My mantra for today</h2>

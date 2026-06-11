@@ -221,4 +221,7 @@ export const DEFAULT_PREMARKET_FORM = {
   mantra: "Wait for A+, Area then Execution.",
   standDownAcknowledged: false,
   standDownAcknowledgedAt: null,
+  unlockAccounts: false,
+  checkCpu: false,
+  selectRiskBracketOrder: false,
 };
