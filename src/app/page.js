@@ -2,6 +2,8 @@
 import { storage } from "../lib/supabase";
 import { useState, useEffect, useCallback } from "react";
 import PreMarketCheckIn from "../components/PreMarketCheckIn";
+import DailyPlan from "../components/DailyPlan";
+import PostMarketReview from "../components/PostMarketReview";
 
 // ═══════════════════════════════════════════════════════════
 // SHARED COMPONENTS
@@ -1901,6 +1903,12 @@ const NAV_ITEMS = [
   { id: "premarket", label: "Pre-Market", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/></svg>
   )},
+  { id: "dailyplan", label: "Daily Plan", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5" strokeLinecap="round"/></svg>
+  )},
+  { id: "postmarket", label: "Post-Market", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 12h12M4 9l3-3 2 2 4-4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  )},
   { type: "label", text: "Reference" },
   { id: "desk", label: "Trade Desk", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
@@ -1951,6 +1959,8 @@ function HomePage({ onNavigate }) {
   const dateStr = new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", year: "numeric" }).toUpperCase();
   const cards = [
     { id: "premarket", title: "Pre-Market", desc: "Eighteen inputs across four dimensions. Your ReadinessScore before the open." },
+    { id: "dailyplan", title: "Daily Plan", desc: "Pre-commit to bias, levels, setups, and risk before the bell." },
+    { id: "postmarket", title: "Post-Market", desc: "Import rTrader CSV, review performance, and close out the session." },
     { id: "desk", title: "Trade Desk", desc: "Education, playbooks, mental game, and session tools." },
     { id: "analytics", title: "Analytics", desc: "P&L, reports, journal, and trade statistics." },
     { id: "wiki", title: "Wiki", desc: "Knowledge base and trading reference." },
@@ -2017,6 +2027,8 @@ export default function App() {
       <main className="main-content">
         {section === "home" && <HomePage onNavigate={goToSection} />}
         {section === "premarket" && <PreMarketCheckIn onBack={() => setSection("home")} />}
+        {section === "dailyplan" && <DailyPlan onBack={() => setSection("home")} />}
+        {section === "postmarket" && <PostMarketReview onBack={() => setSection("home")} />}
         {section === "desk" && (
           <div className="app-shell" style={{ fontFamily: "system-ui, -apple-system, sans-serif", color: "#fff" }}>
             {page === "landing" && <LandingPage onNavigate={setPage} />}
