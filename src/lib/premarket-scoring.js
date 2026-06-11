@@ -1,49 +1,57 @@
 /**
  * Pre-Market ReadinessScore
  *
- * Composite (0–100):
- *   Emotional 35% · Physical 25% · Preparation 25% · External 15%
+ * Weighting rationale (discretionary intraday trading):
+ * - Emotional: largest composite share — FOMO, revenge, patience directly predict rule breaks and DLL hits.
+ * - Physical: recovery gate — poor sleep/HRV impairs impulse control; strong HRV is weighted highest here.
+ * - Preparation: pre-commitment — plan + levels reduce improvised trades mid-session.
+ * - External: acute stressors — financial pressure and distractions tilt sizing and focus more than vol label alone.
  *
- * Each dimension is 0–100, built from weighted sub-fields (1–10 sliders → ×10).
- * Risk sliders (FOMO, revenge, distractions, pressure) are inverted: higher input = lower score.
+ * Composite (0–100):
+ *   Emotional 38% · Physical 22% · Preparation 25% · External 15%
+ *
+ * Emotional sub-weights: Patience 28% · FOMO 18% · Revenge 14% · State 20% · Confidence 20%
+ * Physical sub-weights: HRV 26% · Sleep quality 24% · Sleep hours 18% · Energy 16% · Movement 8% · Hydrated 8%
+ * Preparation sub-weights: Plan written 28% · Key levels 24% · Routine 22% · News 14% · Meditation 12%
+ * External sub-weights: Financial pressure 38% · Distractions 37% · Market environment 25%
  */
 
 export const DIMENSION_WEIGHTS = {
-  emotional: 0.35,
-  physical: 0.25,
+  emotional: 0.38,
+  physical: 0.22,
   preparation: 0.25,
   external: 0.15,
 };
 
 export const EMOTIONAL_FIELD_WEIGHTS = {
-  emotionalState: 0.25,
-  confidence: 0.25,
-  patience: 0.25,
-  fomoRisk: 0.15,
-  revengeRisk: 0.10,
+  emotionalState: 0.20,
+  confidence: 0.20,
+  patience: 0.28,
+  fomoRisk: 0.18,
+  revengeRisk: 0.14,
 };
 
 export const PHYSICAL_FIELD_WEIGHTS = {
-  sleepHours: 0.20,
-  sleepQuality: 0.30,
-  energy: 0.25,
-  hydrated: 0.10,
-  caffeinated: 0.05,
-  movement: 0.10,
+  sleepHours: 0.18,
+  sleepQuality: 0.24,
+  energy: 0.16,
+  hydrated: 0.08,
+  hrvScore: 0.26,
+  movement: 0.08,
 };
 
 export const EXTERNAL_FIELD_WEIGHTS = {
-  marketEnvironment: 0.40,
-  externalDistractions: 0.30,
-  financialPressure: 0.30,
+  marketEnvironment: 0.25,
+  externalDistractions: 0.37,
+  financialPressure: 0.38,
 };
 
 export const PREPARATION_FIELD_WEIGHTS = {
-  reviewedKeyLevels: 0.20,
-  reviewedNews: 0.20,
-  dailyPlanWritten: 0.25,
-  followedRoutine: 0.25,
-  meditation: 0.10,
+  reviewedKeyLevels: 0.24,
+  reviewedNews: 0.14,
+  dailyPlanWritten: 0.28,
+  followedRoutine: 0.22,
+  meditation: 0.12,
 };
 
 export const MARKET_ENVIRONMENT_OPTIONS = [
@@ -87,6 +95,13 @@ export function sleepHoursToScore(hours) {
   return 90;
 }
 
+/** HRV recovery score 0–100% maps directly to physical sub-score */
+export function hrvScoreToScore(value) {
+  const v = Number(value);
+  if (Number.isNaN(v)) return 50;
+  return Math.round(Math.max(0, Math.min(100, v)));
+}
+
 export function toggleToScore(on) {
   return on ? 100 : 0;
 }
@@ -114,7 +129,7 @@ export function scorePhysical(fields) {
     sleepQuality: sliderToScore(fields.sleepQuality),
     energy: sliderToScore(fields.energy),
     hydrated: toggleToScore(fields.hydrated),
-    caffeinated: toggleToScore(fields.caffeinated),
+    hrvScore: hrvScoreToScore(fields.hrvScore),
     movement: toggleToScore(fields.movement),
   };
   return { score: weightedSum(scores, PHYSICAL_FIELD_WEIGHTS), fields: scores };
@@ -190,8 +205,8 @@ export const DEFAULT_PREMARKET_FORM = {
   sleepHours: 7,
   sleepQuality: 7,
   energy: 5,
+  hrvScore: 70,
   hydrated: true,
-  caffeinated: true,
   movement: false,
   marketEnvironment: "High volatility",
   externalDistractions: 3,

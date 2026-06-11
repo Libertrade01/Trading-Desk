@@ -332,9 +332,24 @@ export default function PreMarketCheckIn({ onBack }) {
               value={form.energy}
               onChange={(v) => set("energy", v)}
             />
+            <div className="pm-field">
+              <div className="pm-field-label">HRV</div>
+              <div className="pm-field-hint">Recovery score from your wearable (0–100%)</div>
+              <div className="pm-hrv-input-row">
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={form.hrvScore}
+                  onChange={(e) => set("hrvScore", e.target.value)}
+                  className="pm-number-input pm-hrv-input"
+                />
+                <span className="pm-hrv-suffix">%</span>
+              </div>
+            </div>
             <div className="pm-toggle-row">
               <ToggleField label="Hydrated" hint="Water in" value={form.hydrated} onChange={(v) => set("hydrated", v)} />
-              <ToggleField label="Caffeinated" hint="Had your cup" value={form.caffeinated} onChange={(v) => set("caffeinated", v)} />
               <ToggleField label="Movement" hint="Walk, stretch, or workout" value={form.movement} onChange={(v) => set("movement", v)} />
             </div>
           </section>
@@ -466,7 +481,7 @@ export default function PreMarketCheckIn({ onBack }) {
                 <DimBar label="Preparation" value={scores.preparation} />
               </div>
               <p className="pm-score-footnote">
-                Your score updates as you fill in the form. The composite is weighted: emotional 35% · physical 25% · prep 25% · external 15%.
+                Your score updates as you fill in the form. Weighted: emotional 38% · physical 22% · prep 25% · external 15%.
               </p>
             </div>
 

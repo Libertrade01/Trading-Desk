@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import PreMarketCheckIn from "../components/PreMarketCheckIn";
 import DailyPlan from "../components/DailyPlan";
 import PostMarketReview from "../components/PostMarketReview";
+import HistoryPage from "../components/HistoryPage";
+import HistoryDayDetail from "../components/HistoryDayDetail";
 
 // ═══════════════════════════════════════════════════════════
 // SHARED COMPONENTS
@@ -1910,6 +1912,9 @@ const NAV_ITEMS = [
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 12h12M4 9l3-3 2 2 4-4" strokeLinecap="round" strokeLinejoin="round"/></svg>
   )},
   { type: "label", text: "Reference" },
+  { id: "history", label: "History", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5v4l2.5 1.5" strokeLinecap="round"/></svg>
+  )},
   { id: "desk", label: "Trade Desk", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
   )},
@@ -1961,6 +1966,7 @@ function HomePage({ onNavigate }) {
     { id: "premarket", title: "Pre-Market", desc: "Eighteen inputs across four dimensions. Your ReadinessScore before the open." },
     { id: "dailyplan", title: "Daily Plan", desc: "Pre-commit to bias, levels, setups, and risk before the bell." },
     { id: "postmarket", title: "Post-Market", desc: "Import rTrader CSV, review performance, and close out the session." },
+    { id: "history", title: "History", desc: "Walk back through past sessions — readiness, plan, and review." },
     { id: "desk", title: "Trade Desk", desc: "Education, playbooks, mental game, and session tools." },
     { id: "analytics", title: "Analytics", desc: "P&L, reports, journal, and trade statistics." },
     { id: "wiki", title: "Wiki", desc: "Knowledge base and trading reference." },
@@ -2002,10 +2008,12 @@ function SettingsPlaceholder() {
 export default function App() {
   const [page, setPage] = useState("landing");
   const [section, setSection] = useState("home");
+  const [historyDate, setHistoryDate] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const goToSection = (id) => {
     setSection(id);
+    if (id !== "history") setHistoryDate(null);
     if (id === "desk") setPage("landing");
   };
 
@@ -2029,6 +2037,16 @@ export default function App() {
         {section === "premarket" && <PreMarketCheckIn onBack={() => setSection("home")} />}
         {section === "dailyplan" && <DailyPlan onBack={() => setSection("home")} />}
         {section === "postmarket" && <PostMarketReview onBack={() => setSection("home")} />}
+        {section === "history" && !historyDate && (
+          <HistoryPage onSelectDay={setHistoryDate} onBack={() => setSection("home")} />
+        )}
+        {section === "history" && historyDate && (
+          <HistoryDayDetail
+            date={historyDate}
+            onBack={() => setHistoryDate(null)}
+            onDeleted={() => setHistoryDate(null)}
+          />
+        )}
         {section === "desk" && (
           <div className="app-shell" style={{ fontFamily: "system-ui, -apple-system, sans-serif", color: "#fff" }}>
             {page === "landing" && <LandingPage onNavigate={setPage} />}
