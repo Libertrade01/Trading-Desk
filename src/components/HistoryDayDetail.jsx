@@ -183,8 +183,8 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                 ]}
               />
               {pre.mantra && (
-                <div className="history-notes-block">
-                  <div className="history-notes-label">Notes</div>
+                <div className="history-mantra-block">
+                  <div className="history-notes-label">Mantra</div>
                   <p>{pre.mantra}</p>
                 </div>
               )}
@@ -192,9 +192,9 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                 <div className="history-reminders-block">
                   <div className="history-notes-label">Reminders</div>
                   <ul className="history-reminders-list">
-                    {pre.unlockAccounts && <li>Unlock accounts</li>}
+                    {pre.unlockAccounts && <li>Unlock Accounts</li>}
                     {pre.checkCpu && <li>Check CPU</li>}
-                    {pre.selectRiskBracketOrder && <li>Risk bracket order</li>}
+                    {pre.selectRiskBracketOrder && <li>Select Risk Bracket Order</li>}
                   </ul>
                 </div>
               )}

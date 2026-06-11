@@ -1169,6 +1169,10 @@ textarea:focus, input:focus, select:focus {
   cursor: pointer;
 }
 
+.pm-mantra-card {
+  margin-bottom: 0;
+}
+
 .pm-mantra-title {
   font-family: var(--font-serif);
   font-size: 20px;
@@ -1179,10 +1183,19 @@ textarea:focus, input:focus, select:focus {
 
 .pm-mantra-input { margin-top: 12px; }
 
-.pm-reminders-block {
-  margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border);
+.pm-reminders-panel {
+  margin-top: 12px;
+  margin-bottom: 16px;
+  padding: 16px 18px;
+  background: rgba(22, 23, 30, 0.45);
+  border: 1px dashed var(--border2);
+  border-radius: 6px;
+}
+
+.pm-reminders-head {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
 }
 
 .pm-reminders-eyebrow {
@@ -1198,7 +1211,7 @@ textarea:focus, input:focus, select:focus {
   font-size: 11px;
   color: var(--muted);
   line-height: 1.4;
-  margin-bottom: 12px;
+  margin-bottom: 0;
   opacity: 0.85;
 }
 
@@ -2381,6 +2394,7 @@ textarea:focus, input:focus, select:focus {
   font-weight: 500;
 }
 
+.history-mantra-block,
 .history-notes-block,
 .history-text-block {
   margin-top: 14px;
@@ -2405,9 +2419,11 @@ textarea:focus, input:focus, select:focus {
 }
 
 .history-reminders-block {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px dashed var(--border2);
+  border-radius: 6px;
+  background: rgba(22, 23, 30, 0.35);
 }
 
 .history-reminders-list {

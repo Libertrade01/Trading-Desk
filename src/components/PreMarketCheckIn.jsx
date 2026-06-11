@@ -432,8 +432,8 @@ export default function PreMarketCheckIn({ onBack }) {
             </div>
           </section>
 
-          {/* Mantra + reminders */}
-          <section className="pm-card">
+          {/* Mantra */}
+          <section className="pm-card pm-mantra-card">
             <h2 className="pm-mantra-title">My mantra for today</h2>
             <p className="pm-section-desc">One line to anchor your session. It rides on your scorecard.</p>
             <input
@@ -442,14 +442,18 @@ export default function PreMarketCheckIn({ onBack }) {
               onChange={(e) => set("mantra", e.target.value)}
               className="pm-text-input pm-mantra-input"
             />
-            <div className="pm-reminders-block">
+          </section>
+
+          {/* Reminders — separate block, not scored */}
+          <section className="pm-reminders-panel" aria-label="Pre-market reminders">
+            <div className="pm-reminders-head">
               <div className="pm-reminders-eyebrow">Reminders</div>
               <p className="pm-reminders-hint">Desk setup before the open. Not scored.</p>
-              <div className="pm-reminders-list">
-                <ToggleField label="Unlock Accounts" value={form.unlockAccounts} onChange={(v) => set("unlockAccounts", v)} />
-                <ToggleField label="Check CPU" value={form.checkCpu} onChange={(v) => set("checkCpu", v)} />
-                <ToggleField label="Select Risk Bracket Order" value={form.selectRiskBracketOrder} onChange={(v) => set("selectRiskBracketOrder", v)} />
-              </div>
+            </div>
+            <div className="pm-reminders-list">
+              <ToggleField label="Unlock Accounts" value={form.unlockAccounts} onChange={(v) => set("unlockAccounts", v)} />
+              <ToggleField label="Check CPU" value={form.checkCpu} onChange={(v) => set("checkCpu", v)} />
+              <ToggleField label="Select Risk Bracket Order" value={form.selectRiskBracketOrder} onChange={(v) => set("selectRiskBracketOrder", v)} />
             </div>
           </section>
 
