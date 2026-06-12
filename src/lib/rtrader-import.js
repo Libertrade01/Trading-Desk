@@ -281,11 +281,19 @@ export async function importTradesToSupabase(trades, account, accountTypeOverrid
     };
   });
 
-  const { error } = await supabase.from("trades").upsert(rows, {
-    onConflict: "broker_trade_id",
-    ignoreDuplicates: true,
-  });
+  const dates = [...new Set(rows.map((r) => r.date))];
 
+  for (const date of dates) {
+    const { error: delError } = await supabase
+      .from("trades")
+      .delete()
+      .eq("date", date)
+      .eq("platform", "rTrader")
+      .eq("account_name", accountName);
+    if (delError) throw new Error(delError.message);
+  }
+
+  const { error } = await supabase.from("trades").insert(rows);
   if (error) throw new Error(error.message);
   return rows.length;
 }
