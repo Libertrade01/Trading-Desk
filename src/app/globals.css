@@ -1163,6 +1163,10 @@ textarea:focus, input:focus, select:focus {
   gap: 16px;
 }
 
+.pm-risk-dd-field {
+  margin-bottom: 16px;
+}
+
 .pm-risk-rails .pm-toggle-field {
   flex-direction: row;
   justify-content: space-between;

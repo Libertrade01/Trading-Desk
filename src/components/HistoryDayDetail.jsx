@@ -261,6 +261,12 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                 </div>
               )}
               <div className="history-risk-row">
+                {plan.ddFromHighWaterMark && (
+                  <div className="history-risk-chip">
+                    <span>DD from HWM</span>
+                    <strong>{plan.ddFromHighWaterMark}%</strong>
+                  </div>
+                )}
                 {plan.maxDailyLoss && (
                   <div className="history-risk-chip">
                     <span>Max loss</span>

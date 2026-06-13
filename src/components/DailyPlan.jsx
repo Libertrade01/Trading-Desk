@@ -336,6 +336,16 @@ export default function DailyPlan({ onBack }) {
               <p className="pm-section-desc">Pre-committing to limits before you&apos;re emotional about them.</p>
             </div>
           </div>
+          <div className="pm-field pm-risk-dd-field">
+            <div className="pm-field-label">DD from high water mark (%)</div>
+            <input
+              type="text"
+              value={form.ddFromHighWaterMark}
+              onChange={(e) => set("ddFromHighWaterMark", e.target.value)}
+              className="pm-text-input"
+              placeholder="This determines risk and sizing"
+            />
+          </div>
           <div className="pm-field-grid">
             <div>
               <div className="pm-field-label">Max daily loss ($)</div>

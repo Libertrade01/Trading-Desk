@@ -21,6 +21,7 @@ export const DEFAULT_DAILY_PLAN = {
   whyBias: "",
   keyLevels: [],
   setups: [],
+  ddFromHighWaterMark: "",
   maxDailyLoss: "",
   maxTrades: "",
   positionSize: "",
