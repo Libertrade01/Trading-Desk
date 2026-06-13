@@ -59,6 +59,31 @@ function TrashButton({ onClick }) {
   );
 }
 
+function ToggleField({ label, hint, value, onChange }) {
+  return (
+    <div className="pm-toggle-field">
+      <div>
+        <div className="pm-field-label">{label}</div>
+        {hint && <div className="pm-field-hint">{hint}</div>}
+      </div>
+      <button
+        type="button"
+        className={`pm-toggle${value ? " on" : ""}`}
+        onClick={() => onChange(!value)}
+        aria-pressed={value}
+      >
+        <span className="pm-toggle-knob" />
+      </button>
+    </div>
+  );
+}
+
+const RISK_RAILS_MESSAGE = "I can not trade until risk rails are in place";
+
+function riskRailsReady(form) {
+  return form.maxDailyLossSetInBroker && form.coldTurkeyBlockerSet;
+}
+
 export default function DailyPlan({ onBack }) {
   const [form, setForm] = useState(DEFAULT_DAILY_PLAN);
   const [loading, setLoading] = useState(true);
@@ -86,8 +111,18 @@ export default function DailyPlan({ onBack }) {
   }, []);
 
   const handleSave = async () => {
+    if (!riskRailsReady(form)) {
+      window.alert(RISK_RAILS_MESSAGE);
+      return false;
+    }
     await persistPlan(form);
     setSaved(true);
+    return true;
+  };
+
+  const handleReturn = async () => {
+    const ok = await handleSave();
+    if (ok) onBack();
   };
 
   const handleReset = () => {
@@ -319,6 +354,18 @@ export default function DailyPlan({ onBack }) {
               <input type="text" value={form.stopTradingAt} onChange={(e) => set("stopTradingAt", e.target.value)} className="pm-text-input" placeholder="11:00 AM ET, or after 2 losses" />
             </div>
           </div>
+          <div className="pm-risk-rails">
+            <ToggleField
+              label="Max Daily Loss Set in Broker"
+              value={form.maxDailyLossSetInBroker}
+              onChange={(v) => set("maxDailyLossSetInBroker", v)}
+            />
+            <ToggleField
+              label="Cold Turkey Blocker Set"
+              value={form.coldTurkeyBlockerSet}
+              onChange={(v) => set("coldTurkeyBlockerSet", v)}
+            />
+          </div>
         </section>
 
         {/* 05 Session rules & focus */}
@@ -367,7 +414,7 @@ export default function DailyPlan({ onBack }) {
               {saved ? "Updated" : "Update plan"}
             </button>
           </div>
-          <button type="button" className="pm-btn-return" onClick={() => { handleSave(); onBack(); }}>
+          <button type="button" className="pm-btn-return" onClick={handleReturn}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8l5 5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             Return to dashboard
           </button>

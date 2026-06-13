@@ -25,6 +25,8 @@ export const DEFAULT_DAILY_PLAN = {
   maxTrades: "",
   positionSize: "",
   stopTradingAt: "",
+  maxDailyLossSetInBroker: false,
+  coldTurkeyBlockerSet: false,
   sessionRules: "",
   oneThing: "",
 };

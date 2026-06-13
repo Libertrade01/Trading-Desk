@@ -279,6 +279,18 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                     <strong>{plan.stopTradingAt}</strong>
                   </div>
                 )}
+                {plan.maxDailyLossSetInBroker && (
+                  <div className="history-risk-chip">
+                    <span>Max loss in broker</span>
+                    <strong>Yes</strong>
+                  </div>
+                )}
+                {plan.coldTurkeyBlockerSet && (
+                  <div className="history-risk-chip">
+                    <span>Cold turkey blocker</span>
+                    <strong>Set</strong>
+                  </div>
+                )}
               </div>
               {plan.sessionRules && (
                 <div className="history-text-block">

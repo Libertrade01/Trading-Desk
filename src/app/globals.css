@@ -1154,6 +1154,22 @@ textarea:focus, input:focus, select:focus {
   gap: 16px;
 }
 
+.pm-risk-rails {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pm-risk-rails .pm-toggle-field {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
 .pm-custom-prep {
   margin-top: 18px;
   padding-top: 18px;
