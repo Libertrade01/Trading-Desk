@@ -349,7 +349,7 @@ export default function DailyPlan({ onBack }) {
           <div className="pm-field-grid">
             <div>
               <div className="pm-field-label">Max daily loss ($)</div>
-              <input type="text" value={form.maxDailyLoss} onChange={(e) => set("maxDailyLoss", e.target.value)} className="pm-text-input" />
+              <input type="text" value={form.maxDailyLoss} onChange={(e) => set("maxDailyLoss", e.target.value)} className="pm-text-input" placeholder="Must be set from broker" />
             </div>
             <div>
               <div className="pm-field-label">Max trades</div>

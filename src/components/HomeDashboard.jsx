@@ -6,22 +6,23 @@ import {
   loadAllSessions,
   todayKey,
   isStepComplete,
-  getTimeContext,
-  formatGreetingDate,
+  formatTimeEyebrow,
   formatHeaderDate,
   formatHistoryRowDate,
   formatUsd,
+  isWeekend,
+  getMarketStatus,
 } from "../lib/history-data";
 
 const WORKFLOW_STEPS = [
-  { id: "premarket", label: "Pre-Market", desc: "Readiness check-in before the open" },
-  { id: "dailyplan", label: "Daily Plan", desc: "Bias, levels, setups, and risk" },
-  { id: "postmarket", label: "Post-Market", desc: "Import trades and close the session" },
+  { id: "premarket", label: "Pre-Market" },
+  { id: "dailyplan", label: "Daily Plan" },
+  { id: "postmarket", label: "Post-Market" },
 ];
 
 function TaskPill({ complete }) {
   return (
-    <span className={`home-task-pill${complete ? " done" : ""}`}>
+    <span className={`home-task-pill${complete ? " done" : " open"}`}>
       {complete ? "Done" : "Open"}
     </span>
   );
@@ -43,12 +44,12 @@ function buildProgressSubline(preComplete, planComplete, postComplete) {
   return parts.join(" · ");
 }
 
-function StageDots({ pre, plan, post }) {
+function RecentStepPills({ pre, plan, post }) {
   return (
-    <span className="home-stage-dots">
-      <span className={`home-stage-dot${pre ? " on" : ""}`} title="Pre-Market">P</span>
-      <span className={`home-stage-dot${plan ? " on" : ""}`} title="Daily Plan">L</span>
-      <span className={`home-stage-dot${post ? " on" : ""}`} title="Post-Market">R</span>
+    <span className="home-recent-pills">
+      <span className={`home-recent-pill${pre ? " done" : ""}`}>Pre</span>
+      <span className={`home-recent-pill${plan ? " done" : ""}`}>Plan</span>
+      <span className={`home-recent-pill${post ? " done" : ""}`}>Rev</span>
     </span>
   );
 }
@@ -61,19 +62,19 @@ function ReadinessTrend({ sessions, onHistory }) {
       .reverse();
   }, [sessions]);
 
+  const lastPoint = points[points.length - 1];
+
   const chart = useMemo(() => {
     if (points.length === 0) return null;
     const w = 280;
     const h = 80;
     const pad = 8;
-    const min = 0;
-    const max = 100;
     const coords = points.map((s, i) => {
       const x =
         points.length === 1
           ? w / 2
           : pad + (i / (points.length - 1)) * (w - pad * 2);
-      const y = pad + (1 - (s.readinessScore - min) / (max - min)) * (h - pad * 2);
+      const y = pad + (1 - s.readinessScore / 100) * (h - pad * 2);
       return { x, y, session: s };
     });
     const line = points.length >= 2 ? coords.map((p) => `${p.x},${p.y}`).join(" ") : null;
@@ -83,8 +84,8 @@ function ReadinessTrend({ sessions, onHistory }) {
   const subline =
     points.length === 0
       ? "No scored sessions yet"
-      : points.length === 1
-        ? "Last session"
+      : points.length < 3
+        ? `Last score · ${lastPoint.readinessScore}`
         : `Last ${points.length} sessions`;
 
   return (
@@ -98,6 +99,16 @@ function ReadinessTrend({ sessions, onHistory }) {
       </div>
       {points.length === 0 ? (
         <p className="home-panel-empty">Complete pre-market check-ins to see your trend.</p>
+      ) : points.length < 3 ? (
+        <div className="home-trend-compact">
+          <div className="home-trend-hero-score">{lastPoint.readinessScore}</div>
+          <div className="home-trend-compact-meta">
+            <span>{formatHistoryRowDate(lastPoint.date).replace(/, \d{4}$/, "")}</span>
+            {points.length === 2 && (
+              <span className="home-trend-compact-note">Add one more session for a trend line.</span>
+            )}
+          </div>
+        </div>
       ) : (
         <div className="home-trend-chart-wrap">
           <svg viewBox={`0 0 ${chart.w} ${chart.h}`} className="home-trend-chart" preserveAspectRatio="none">
@@ -139,6 +150,12 @@ function countStreak(sessions, field) {
   return streak;
 }
 
+function stepComplete(stepId, preComplete, planComplete, postComplete) {
+  if (stepId === "premarket") return preComplete;
+  if (stepId === "dailyplan") return planComplete;
+  return postComplete;
+}
+
 export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
   const [today, setToday] = useState(null);
   const [sessions, setSessions] = useState([]);
@@ -161,19 +178,39 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
   const postComplete = isStepComplete(today?.post);
   const allComplete = preComplete && planComplete && postComplete;
   const completedCount = [preComplete, planComplete, postComplete].filter(Boolean).length;
+  const weekend = isWeekend();
+  const marketStatus = getMarketStatus();
 
-  const timeCtx = getTimeContext();
-  const greetingEyebrow = `${timeCtx} · ${formatGreetingDate()}`;
+  const nextStep = useMemo(() => {
+    if (allComplete) return null;
+    return WORKFLOW_STEPS.find(
+      (s) => !stepComplete(s.id, preComplete, planComplete, postComplete)
+    );
+  }, [allComplete, preComplete, planComplete, postComplete]);
+
+  const greetingEyebrow = formatTimeEyebrow();
   const greetingHeadline = allComplete
     ? "You did the work today."
     : completedCount === 0
-      ? "Start the day with intention."
+      ? weekend
+        ? "No session today."
+        : "Today's workflow"
       : `${completedCount} of 3 complete`;
   const greetingSub = allComplete
     ? "All required tasks logged."
     : completedCount === 0
-      ? "Pre-market, plan, and review — log each step."
+      ? weekend
+        ? "Review recent sessions or prep for the week ahead."
+        : null
       : buildProgressSubline(preComplete, planComplete, postComplete);
+
+  const greetingTitleClass = allComplete
+    ? " home-greeting-title--complete"
+    : completedCount > 0
+      ? " home-greeting-title--progress"
+      : weekend
+        ? ""
+        : " home-greeting-title--progress";
 
   const pnlTone = today?.netPnl > 0 ? "positive" : today?.netPnl < 0 ? "negative" : "neutral";
 
@@ -185,11 +222,72 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
     (s) => s.pre?.readinessScore != null && s.pre.readinessScore < 50
   ).length;
 
+  const dashStats = useMemo(() => {
+    const items = [];
+
+    if (!allComplete && nextStep) {
+      items.push({
+        key: "next",
+        label: "Next step",
+        value: nextStep.label,
+        clickable: true,
+        onClick: () => onNavigate(nextStep.id),
+      });
+    }
+
+    if (preComplete || allComplete) {
+      items.push({
+        key: "readiness",
+        label: "Readiness",
+        value:
+          today?.readinessScore != null
+            ? String(today.readinessScore)
+            : preComplete
+              ? "Logged"
+              : "Not logged",
+        tone: today?.readinessScore != null ? "positive" : "muted",
+      });
+    }
+
+    if (postComplete || today?.netPnl != null || allComplete) {
+      items.push({
+        key: "pnl",
+        label: "Net P&L today",
+        value:
+          today?.netPnl != null
+            ? formatUsd(today.netPnl, { signed: true })
+            : "No trades today",
+        tone: today?.netPnl != null ? pnlTone : "muted",
+      });
+    }
+
+    if (preStreak > 0 && (completedCount === 0 || allComplete)) {
+      items.push({
+        key: "streak",
+        label: "Pre-market streak",
+        value: `${preStreak} days`,
+        tone: "neutral",
+      });
+    }
+
+    return items;
+  }, [
+    allComplete,
+    nextStep,
+    preComplete,
+    postComplete,
+    today,
+    pnlTone,
+    preStreak,
+    completedCount,
+    onNavigate,
+  ]);
+
   const recent = sessions.slice(0, 7);
 
   const handleShare = async () => {
     const text = [
-      `Libertrade · ${formatGreetingDate()}`,
+      `Libertrade · ${formatHeaderDate()}`,
       `Readiness ${today?.readinessScore ?? "—"}`,
       today?.netPnl != null ? `Net P&L ${formatUsd(today.netPnl, { signed: true })}` : "",
       "Pre-market · Plan · Post-market complete.",
@@ -208,40 +306,18 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
     <div className="home-dashboard">
       <div className="pm-topbar">
         <span>{formatHeaderDate()}</span>
-        <span className="pm-live"><span className="pm-live-dot" />Live</span>
+        <span className={`pm-live${marketStatus.live ? "" : " pm-live--off"}`}>
+          <span className={`pm-live-dot${marketStatus.live ? "" : " pm-live-dot--off"}`} />
+          {marketStatus.label}
+        </span>
       </div>
 
       <div className="home-dashboard-inner">
         <header className="home-greeting">
           <div className="home-greeting-eyebrow">{greetingEyebrow}</div>
-          <h1 className={`home-greeting-title${allComplete ? " home-greeting-title--complete" : completedCount > 0 ? " home-greeting-title--progress" : ""}`}>
-            {greetingHeadline}
-          </h1>
-          <p className="home-greeting-sub">{greetingSub}</p>
+          <h1 className={`home-greeting-title${greetingTitleClass}`}>{greetingHeadline}</h1>
+          {greetingSub && <p className="home-greeting-sub">{greetingSub}</p>}
         </header>
-
-        <div className="home-dash-row">
-          <div className="home-dash-stat">
-            <div className="home-dash-stat-label">Net P&amp;L today</div>
-            <div className={`home-dash-stat-value ${pnlTone}`}>
-              {today?.netPnl != null ? formatUsd(today.netPnl, { signed: true }) : "—"}
-            </div>
-          </div>
-          <div className="home-dash-stat">
-            <div className="home-dash-stat-label">Readiness</div>
-            <div className={`home-dash-stat-value${today?.readinessScore != null ? " positive" : " neutral"}`}>
-              {today?.readinessScore ?? "—"}
-            </div>
-          </div>
-          <div className="home-dash-stat">
-            <div className="home-dash-stat-label">Pre-market streak</div>
-            <div className="home-dash-stat-value neutral">{preStreak} days</div>
-          </div>
-          <div className="home-dash-stat">
-            <div className="home-dash-stat-label">Tasks complete</div>
-            <div className="home-dash-stat-value neutral">{completedCount} / 3</div>
-          </div>
-        </div>
 
         <div className="home-dashboard-grid">
           <div className="home-main-col">
@@ -263,18 +339,23 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
               </section>
             ) : (
               <section className="home-workflow-section">
-                <div className="home-workflow-eyebrow">Today&apos;s workflow</div>
                 <div className="home-hero-card home-hero-card--tasks">
                   <ul className="home-task-list">
                     {WORKFLOW_STEPS.map((step) => {
-                      const complete = step.id === "premarket" ? preComplete : step.id === "dailyplan" ? planComplete : postComplete;
+                      const complete = stepComplete(step.id, preComplete, planComplete, postComplete);
+                      const isNext = nextStep?.id === step.id;
                       const score = step.id === "premarket" && complete ? today?.readinessScore : null;
                       return (
                         <li key={step.id}>
-                          <button type="button" className="home-task-row" onClick={() => onNavigate(step.id)}>
+                          <button
+                            type="button"
+                            className={`home-task-row${isNext ? " home-task-row--next" : ""}`}
+                            onClick={() => onNavigate(step.id)}
+                          >
                             <TaskPill complete={complete} />
                             <span className="home-task-label">{step.label}</span>
                             <span className="home-task-score">{score != null ? score : ""}</span>
+                            <span className="home-task-chevron" aria-hidden="true">›</span>
                           </button>
                         </li>
                       );
@@ -282,6 +363,30 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                   </ul>
                 </div>
               </section>
+            )}
+
+            {dashStats.length > 0 && (
+              <div className="home-dash-row">
+                {dashStats.map((stat) => (
+                  <div
+                    key={stat.key}
+                    className={`home-dash-stat${stat.clickable ? " home-dash-stat--clickable" : ""}`}
+                    onClick={stat.clickable ? stat.onClick : undefined}
+                    onKeyDown={
+                      stat.clickable
+                        ? (e) => {
+                            if (e.key === "Enter" || e.key === " ") stat.onClick();
+                          }
+                        : undefined
+                    }
+                    role={stat.clickable ? "button" : undefined}
+                    tabIndex={stat.clickable ? 0 : undefined}
+                  >
+                    <div className="home-dash-stat-label">{stat.label}</div>
+                    <div className={`home-dash-stat-value ${stat.tone || "neutral"}`}>{stat.value}</div>
+                  </div>
+                ))}
+              </div>
             )}
 
             {allComplete && (
@@ -299,29 +404,31 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
             <section className="home-panel">
               <div className="home-panel-head">
                 <h3 className="home-panel-title">Streaks</h3>
-                <span className="home-panel-meta">{Math.min(preTotal, 3)} earned →</span>
+                <span className="home-panel-meta">Milestone progress</span>
               </div>
               <ul className="home-streak-list">
                 <li>
-                  <span className="home-streak-icon">◷</span>
                   <span className="home-streak-name">Pre-market</span>
-                  <span className="home-streak-stat">{preTotal} total</span>
-                  <span className="home-streak-next">{Math.max(0, 7 - preStreak)} to 7</span>
+                  <span className="home-streak-stat">{preStreak} / 7 days</span>
+                  <div className="home-streak-bar">
+                    <div className="home-streak-bar-fill" style={{ width: `${Math.min(100, (preStreak / 7) * 100)}%` }} />
+                  </div>
                 </li>
                 <li>
-                  <span className="home-streak-icon">◷</span>
                   <span className="home-streak-name">Post-market</span>
-                  <span className="home-streak-stat">{postTotal} total</span>
-                  <span className="home-streak-next">{Math.max(0, 30 - postTotal)} to 30</span>
+                  <span className="home-streak-stat">{postTotal} / 30 days</span>
+                  <div className="home-streak-bar">
+                    <div className="home-streak-bar-fill" style={{ width: `${Math.min(100, (postTotal / 30) * 100)}%` }} />
+                  </div>
                 </li>
                 <li>
-                  <span className="home-streak-icon">◷</span>
                   <span className="home-streak-name">Plan</span>
-                  <span className="home-streak-stat">{planTotal} total</span>
-                  <span className="home-streak-next">{Math.max(0, 30 - planTotal)} to 30</span>
+                  <span className="home-streak-stat">{planTotal} / 30 days</span>
+                  <div className="home-streak-bar">
+                    <div className="home-streak-bar-fill" style={{ width: `${Math.min(100, (planTotal / 30) * 100)}%` }} />
+                  </div>
                 </li>
-                <li>
-                  <span className="home-streak-icon">⊘</span>
+                <li className="home-streak-list-item--muted">
                   <span className="home-streak-name">Stand-downs</span>
                   <span className="home-streak-stat">{standDownTotal} total</span>
                 </li>
@@ -335,6 +442,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                   <p className="home-panel-sub">Last 7 entries</p>
                 </div>
               </div>
+              <p className="home-recent-legend">Pre · Plan · Rev = workflow steps completed</p>
               {recent.length === 0 ? (
                 <p className="home-panel-empty">No sessions yet.</p>
               ) : (
@@ -349,12 +457,14 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                           onClick={() => onOpenHistoryDay(s.date)}
                         >
                           <span className="home-recent-date">{formatHistoryRowDate(s.date)}</span>
-                          <StageDots
+                          <RecentStepPills
                             pre={isStepComplete(s.pre)}
                             plan={isStepComplete(s.plan)}
                             post={isStepComplete(s.post)}
                           />
-                          <span className="home-recent-score">{s.readinessScore ?? "—"}</span>
+                          <span className="home-recent-score">
+                            {s.readinessScore ?? "—"}
+                          </span>
                           <span className={`home-recent-pnl ${pnlCls}`}>
                             {s.netPnl != null ? formatUsd(s.netPnl, { signed: true }) : "—"}
                           </span>
