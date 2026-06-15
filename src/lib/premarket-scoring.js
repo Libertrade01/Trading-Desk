@@ -218,7 +218,7 @@ export const DEFAULT_PREMARKET_FORM = {
   meditation: false,
   customPrepItem: "",
   customPrepChecked: false,
-  mantra: "Wait for A+, Area then Execution.",
+  mantra: "",
   standDownAcknowledged: false,
   standDownAcknowledgedAt: null,
   unlockAccounts: false,

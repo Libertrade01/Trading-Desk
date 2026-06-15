@@ -441,6 +441,7 @@ export default function PreMarketCheckIn({ onBack }) {
               value={form.mantra}
               onChange={(e) => set("mantra", e.target.value)}
               className="pm-text-input pm-mantra-input"
+              placeholder="Wait for A+, Area then Execution."
             />
           </section>
 
