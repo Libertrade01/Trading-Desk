@@ -1340,6 +1340,75 @@ textarea:focus, input:focus, select:focus {
 
 .pm-mantra-input { margin-top: 12px; }
 
+.pm-commitment {
+  margin: 8px 0 24px;
+  padding: 20px 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.pm-commitment--checked {
+  border-color: rgba(37, 145, 134, 0.45);
+  background: rgba(37, 145, 134, 0.05);
+}
+
+.pm-commitment-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.pm-commitment-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  cursor: pointer;
+}
+
+.pm-commitment-check input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 4px;
+  flex-shrink: 0;
+  accent-color: var(--green);
+  cursor: pointer;
+}
+
+.pm-commitment-text {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(17px, 2.2vw, 20px);
+  line-height: 1.45;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.pm-commitment-hint {
+  margin: 12px 0 0 32px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.history-commitment {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.history-commitment-text {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  margin: 6px 0 0;
+}
+
 .pm-reminders-panel {
   margin-top: 4px;
   margin-bottom: 16px;

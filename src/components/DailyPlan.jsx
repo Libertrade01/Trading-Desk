@@ -79,6 +79,9 @@ function ToggleField({ label, hint, value, onChange }) {
 }
 
 const RISK_RAILS_MESSAGE = "I can not trade until risk rails are in place";
+const COMMITMENT_MESSAGE = "Confirm your commitment before saving the plan.";
+const COMMITMENT_TEXT =
+  "I believe in myself and I respect myself enough to follow my plan.";
 
 function riskRailsReady(form) {
   return form.maxDailyLossSetInBroker && form.coldTurkeyBlockerSet;
@@ -113,6 +116,10 @@ export default function DailyPlan({ onBack }) {
   const handleSave = async () => {
     if (!riskRailsReady(form)) {
       window.alert(RISK_RAILS_MESSAGE);
+      return false;
+    }
+    if (!form.selfCommitmentAccepted) {
+      window.alert(COMMITMENT_MESSAGE);
       return false;
     }
     await persistPlan(form);
@@ -407,6 +414,21 @@ export default function DailyPlan({ onBack }) {
               rows={3}
             />
           </div>
+        </section>
+
+        <section
+          className={`pm-commitment${form.selfCommitmentAccepted ? " pm-commitment--checked" : ""}`}
+        >
+          <div className="pm-commitment-eyebrow">Commitment</div>
+          <label className="pm-commitment-check">
+            <input
+              type="checkbox"
+              checked={form.selfCommitmentAccepted}
+              onChange={(e) => set("selfCommitmentAccepted", e.target.checked)}
+            />
+            <span className="pm-commitment-text">{COMMITMENT_TEXT}</span>
+          </label>
+          <p className="pm-commitment-hint">Required to save today&apos;s plan.</p>
         </section>
 
         <div className="pm-footer">

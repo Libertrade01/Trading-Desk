@@ -310,6 +310,14 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                   <p>{plan.oneThing}</p>
                 </div>
               )}
+              {plan.selfCommitmentAccepted && (
+                <div className="history-commitment">
+                  <div className="history-notes-label">Commitment</div>
+                  <p className="history-commitment-text">
+                    I believe in myself and I respect myself enough to follow my plan.
+                  </p>
+                </div>
+              )}
             </>
           )}
         </SectionCard>

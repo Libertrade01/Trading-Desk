@@ -30,6 +30,7 @@ export const DEFAULT_DAILY_PLAN = {
   coldTurkeyBlockerSet: false,
   sessionRules: "",
   oneThing: "",
+  selfCommitmentAccepted: false,
 };
 
 export function newKeyLevel() {
