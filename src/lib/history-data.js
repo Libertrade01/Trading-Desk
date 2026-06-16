@@ -160,6 +160,14 @@ export function formatHeaderDate() {
   }).toUpperCase();
 }
 
+/** Home dashboard top bar: Tuesday, June 2026 */
+export function formatHomeBarDate(date = new Date()) {
+  const weekday = date.toLocaleDateString("en-US", { weekday: "long" });
+  const month = date.toLocaleDateString("en-US", { month: "long" });
+  const year = date.getFullYear();
+  return `${weekday}, ${month} ${year}`;
+}
+
 /** Poster-style date: 16 · 06 · 26 */
 export function formatPosterDate(date = new Date()) {
   const dd = String(date.getDate()).padStart(2, "0");

@@ -7,6 +7,7 @@ import {
   todayKey,
   isStepComplete,
   formatTimeEyebrow,
+  formatHomeBarDate,
   formatPosterDate,
   formatShortHistoryDate,
   formatUsd,
@@ -237,7 +238,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
       <div className="home-hybrid-stripe" aria-hidden="true" />
 
       <div className="home-hybrid-bar">
-        <span className="home-hybrid-date">{formatPosterDate()}</span>
+        <span className="home-hybrid-date">{formatHomeBarDate()}</span>
         <span className={`home-hybrid-live${marketStatus.live ? "" : " home-hybrid-live--off"}`}>
           {marketStatus.label}
         </span>
