@@ -160,6 +160,22 @@ export function formatHeaderDate() {
   }).toUpperCase();
 }
 
+/** Poster-style date: 16 · 06 · 26 */
+export function formatPosterDate(date = new Date()) {
+  const dd = String(date.getDate()).padStart(2, "0");
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const yy = String(date.getFullYear()).slice(-2);
+  return `${dd} · ${mm} · ${yy}`;
+}
+
+/** Compact history row: Jun 16 */
+export function formatShortHistoryDate(dateKey) {
+  return parseDateKey(dateKey).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
 function parseDateKey(dateKey) {
   return new Date(`${dateKey}T12:00:00`);
 }

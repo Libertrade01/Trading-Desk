@@ -7,8 +7,8 @@ import {
   todayKey,
   isStepComplete,
   formatTimeEyebrow,
-  formatHeaderDate,
-  formatHistoryRowDate,
+  formatPosterDate,
+  formatShortHistoryDate,
   formatUsd,
   isWeekend,
   getMarketStatus,
@@ -21,22 +21,17 @@ const WORKFLOW_STEPS = [
   { id: "postmarket", label: "Post-Market" },
 ];
 
-function TaskPill({ complete }) {
-  return (
-    <span className={`home-task-pill${complete ? " done" : " open"}`}>
-      {complete ? "Done" : "Open"}
-    </span>
-  );
+function buildProgressSubline(preComplete, planComplete, postComplete) {
+  const parts = [];
+  if (preComplete) parts.push("Pre-market done");
+  const open = [];
+  if (!planComplete) open.push("Plan");
+  if (!postComplete) open.push("Review");
+  if (open.length) parts.push(`${open.join(" + ")} open`);
+  return parts.join(" · ") || "All steps open";
 }
 
-function buildProgressSubline(preComplete, planComplete, postComplete, eyebrow) {
-  const done = [preComplete, planComplete, postComplete].filter(Boolean).length;
-  const parts = [`${done}/3 tasks`];
-  if (eyebrow) parts.push(eyebrow.toLowerCase());
-  return parts.join(" · ");
-}
-
-function ReadinessTrend({ sessions, onHistory }) {
+function ReadinessTrend({ sessions }) {
   const points = useMemo(() => {
     return sessions
       .filter((s) => s.readinessScore != null)
@@ -44,75 +39,59 @@ function ReadinessTrend({ sessions, onHistory }) {
       .reverse();
   }, [sessions]);
 
-  const lastPoint = points[points.length - 1];
-
   const chart = useMemo(() => {
-    if (points.length === 0) return null;
-    const w = 280;
+    if (points.length < 3) return null;
+    const w = 200;
     const h = 48;
-    const pad = 6;
+    const pad = 4;
     const coords = points.map((s, i) => {
       const x =
         points.length === 1
           ? w / 2
           : pad + (i / (points.length - 1)) * (w - pad * 2);
       const y = pad + (1 - s.readinessScore / 100) * (h - pad * 2);
-      return { x, y, session: s };
+      return { x, y };
     });
-    const line = points.length >= 2 ? coords.map((p) => `${p.x},${p.y}`).join(" ") : null;
-    const gridLines = [0.25, 0.5, 0.75].map((pct) => pad + pct * (h - pad * 2));
-    return { w, h, coords, line, gridLines, pad };
+    const line = coords.map((p) => `${p.x},${p.y}`).join(" ");
+    return { w, h, line };
   }, [points]);
 
-  const subline =
-    points.length === 0
-      ? "No scored sessions"
-      : points.length < 3
-        ? `Last · ${lastPoint.readinessScore}`
-        : `${points.length} sessions`;
+  if (points.length === 0) {
+    return (
+      <p className="home-panel-empty">
+        Complete pre-market check-ins to see your trend.
+      </p>
+    );
+  }
+
+  if (points.length < 3) {
+    const last = points[points.length - 1];
+    return (
+      <div className="home-trend-compact">
+        <div className="home-hybrid-stat-num">{last.readinessScore}</div>
+        <p className="home-trend-compact-note">
+          {points.length === 1 ? "First scored session" : "One more for trend line"}
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <section className="home-terminal-box home-trend-panel">
-      <div className="home-panel-head">
-        <div>
-          <h3 className="home-panel-title">Readiness / {points.length || 0} sessions</h3>
-          <p className="home-panel-sub">{subline}</p>
-        </div>
-        <button type="button" className="home-panel-link" onClick={onHistory}>History →</button>
-      </div>
-      {points.length === 0 ? (
-        <p className="home-panel-empty">Complete pre-market check-ins to see your trend.</p>
-      ) : points.length < 3 ? (
-        <div className="home-trend-compact">
-          <div className="home-trend-hero-score">{lastPoint.readinessScore}</div>
-          <div className="home-trend-compact-meta">
-            <span>{formatHistoryRowDate(lastPoint.date).replace(/, \d{4}$/, "")}</span>
-            {points.length === 2 && (
-              <span className="home-trend-compact-note">One more for trend line.</span>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="home-trend-chart-wrap home-trend-chart-wrap--terminal">
-          <svg viewBox={`0 0 ${chart.w} ${chart.h}`} className="home-trend-chart" preserveAspectRatio="none">
-            {chart.gridLines.map((y, i) => (
-              <line
-                key={i}
-                x1={chart.pad}
-                y1={y}
-                x2={chart.w - chart.pad}
-                y2={y}
-                stroke="var(--border)"
-                strokeWidth="1"
-              />
-            ))}
-            {chart.line && (
-              <polyline points={chart.line} fill="none" stroke="var(--green)" strokeWidth="2" />
-            )}
-          </svg>
-        </div>
-      )}
-    </section>
+    <div className="home-trend-chart-wrap">
+      <svg
+        viewBox={`0 0 ${chart.w} ${chart.h}`}
+        className="home-trend-chart"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <polyline
+          points={chart.line}
+          fill="none"
+          stroke="var(--green)"
+          strokeWidth="2.5"
+        />
+      </svg>
+    </div>
   );
 }
 
@@ -142,11 +121,44 @@ function stepComplete(stepId, preComplete, planComplete, postComplete) {
   return postComplete;
 }
 
-function formatTerminalPnl(value) {
+function formatDisplayPnl(value) {
   if (value == null) return "—";
   const abs = Math.abs(Math.round(value));
   const sign = value < 0 ? "−" : value > 0 ? "+" : "";
   return `${sign}${abs}`;
+}
+
+function heroCopy(allComplete, completedCount, weekend, timeEyebrow) {
+  if (allComplete) {
+    return {
+      eyebrow: "3 / 3 complete",
+      eyebrowMuted: false,
+      title: "Day complete.",
+      sub: "Process over outcomes.",
+    };
+  }
+  if (completedCount > 0) {
+    return {
+      eyebrow: `${completedCount} of 3 complete`,
+      eyebrowMuted: true,
+      title: `${timeEyebrow} underway.`,
+      sub: null, // filled by caller with actual step state
+    };
+  }
+  if (weekend) {
+    return {
+      eyebrow: "Weekend",
+      eyebrowMuted: true,
+      title: "Markets closed.",
+      sub: "Review recent sessions or prep for the week ahead.",
+    };
+  }
+  return {
+    eyebrow: "0 of 3 complete",
+    eyebrowMuted: true,
+    title: "Ready when you are.",
+    sub: "Pre-market, plan, and review still open.",
+  };
 }
 
 export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
@@ -173,6 +185,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
   const completedCount = [preComplete, planComplete, postComplete].filter(Boolean).length;
   const weekend = isWeekend();
   const marketStatus = getMarketStatus();
+  const timeEyebrow = formatTimeEyebrow();
 
   const nextStep = useMemo(() => {
     if (allComplete) return null;
@@ -181,102 +194,34 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
     );
   }, [allComplete, preComplete, planComplete, postComplete]);
 
-  const greetingEyebrow = formatTimeEyebrow();
-  const greetingHeadline = allComplete
-    ? "TODAY_COMPLETE"
-    : completedCount === 0
-      ? weekend
-        ? "NO_SESSION"
-        : "TODAY_WORKFLOW"
-      : `${completedCount}/3 COMPLETE`;
-  const greetingSub = allComplete
-    ? buildProgressSubline(preComplete, planComplete, postComplete, greetingEyebrow)
-    : completedCount === 0
-      ? weekend
-        ? "Review recent sessions or prep for the week ahead."
-        : `${completedCount}/3 tasks · ${greetingEyebrow.toLowerCase()}`
-      : buildProgressSubline(preComplete, planComplete, postComplete, greetingEyebrow);
+  const hero = heroCopy(allComplete, completedCount, weekend, timeEyebrow);
+  if (!allComplete && completedCount > 0) {
+    hero.sub = buildProgressSubline(preComplete, planComplete, postComplete);
+  }
 
-  const pnlTone = today?.netPnl > 0 ? "positive" : today?.netPnl < 0 ? "negative" : "neutral";
+  const pnlTone =
+    today?.netPnl > 0 ? "positive" : today?.netPnl < 0 ? "negative" : "neutral";
+  const pnlSmaller = today?.netPnl != null && today.netPnl < 0;
 
   const preStreak = useMemo(() => countStreak(sessions, "pre"), [sessions]);
-  const preTotal = sessions.filter((s) => isStepComplete(s.pre)).length;
-  const planTotal = sessions.filter((s) => isStepComplete(s.plan)).length;
-  const postTotal = sessions.filter((s) => isStepComplete(s.post)).length;
-  const standDownTotal = sessions.filter(
-    (s) => s.pre?.readinessScore != null && s.pre.readinessScore < 50
-  ).length;
+  const recent = sessions.slice(0, 3);
 
-  const dashStats = useMemo(() => {
-    const items = [];
-
-    if (!allComplete && nextStep) {
-      items.push({
-        key: "next",
-        label: "Next step",
-        value: nextStep.label,
-        clickable: true,
-        onClick: () => onNavigate(nextStep.id),
-      });
-    }
-
-    if (preComplete || allComplete) {
-      items.push({
-        key: "readiness",
-        label: "Readiness",
-        value:
-          today?.readinessScore != null
-            ? String(today.readinessScore)
-            : preComplete
-              ? "Logged"
-              : "—",
-        tone: today?.readinessScore != null ? "positive" : "muted",
-      });
-    }
-
-    if (postComplete || today?.netPnl != null || allComplete) {
-      items.push({
-        key: "pnl",
-        label: "Net P&L",
-        value:
-          today?.netPnl != null
-            ? formatTerminalPnl(today.netPnl)
-            : "No trades",
-        tone: today?.netPnl != null ? pnlTone : "muted",
-      });
-    }
-
-    if (preStreak > 0 && (completedCount === 0 || allComplete)) {
-      items.push({
-        key: "streak",
-        label: "Streak",
-        value: `${preStreak}d`,
-        tone: "neutral",
-      });
-    }
-
-    return items;
-  }, [
-    allComplete,
-    nextStep,
-    preComplete,
-    postComplete,
-    today,
-    pnlTone,
-    preStreak,
-    completedCount,
-    onNavigate,
-  ]);
-
-  const recent = sessions.slice(0, 5);
+  const showReadinessStat =
+    allComplete && (today?.readinessScore != null || preComplete);
+  const showPnlStat =
+    allComplete && (today?.netPnl != null || postComplete);
 
   const handleShare = async () => {
     const text = [
-      `Libertrade · ${formatHeaderDate()}`,
+      `Libertrade · ${formatPosterDate()}`,
       `Readiness ${today?.readinessScore ?? "—"}`,
-      today?.netPnl != null ? `Net P&L ${formatUsd(today.netPnl, { signed: true })}` : "",
+      today?.netPnl != null
+        ? `Net P&L ${formatUsd(today.netPnl, { signed: true })}`
+        : "",
       "Pre-market · Plan · Post-market complete.",
-    ].filter(Boolean).join("\n");
+    ]
+      .filter(Boolean)
+      .join("\n");
     try {
       if (navigator.share) await navigator.share({ text });
       else await navigator.clipboard.writeText(text);
@@ -288,155 +233,155 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
   if (loading) return <div className="pm-loading">Loading...</div>;
 
   return (
-    <div className="home-dashboard home-dashboard--terminal">
-      <div className="pm-topbar">
-        <span>{formatHeaderDate()}</span>
-        <span className={`pm-live${marketStatus.live ? "" : " pm-live--off"}`}>
-          <span className={`pm-live-dot${marketStatus.live ? "" : " pm-live-dot--off"}`} />
+    <div className="home-dashboard home-dashboard--hybrid">
+      <div className="home-hybrid-stripe" aria-hidden="true" />
+
+      <div className="home-hybrid-bar">
+        <span className="home-hybrid-date">{formatPosterDate()}</span>
+        <span className={`home-hybrid-live${marketStatus.live ? "" : " home-hybrid-live--off"}`}>
           {marketStatus.label}
         </span>
       </div>
 
       <div className="home-dashboard-inner">
-        <header className="home-terminal-head">
-          <div>
-            <h1 className="home-terminal-title">{greetingHeadline}</h1>
-            {greetingSub && <p className="home-terminal-sub">{greetingSub}</p>}
-          </div>
-        </header>
-
-        <HomeEventBanner />
-
-        <div className="home-dashboard-grid">
-          <div className="home-main-col">
-            {!allComplete && (
-              <section className="home-terminal-box home-workflow-section">
-                <ul className="home-task-list">
-                  {WORKFLOW_STEPS.map((step) => {
-                    const complete = stepComplete(step.id, preComplete, planComplete, postComplete);
-                    const isNext = nextStep?.id === step.id;
-                    const score = step.id === "premarket" && complete ? today?.readinessScore : null;
-                    return (
-                      <li key={step.id}>
-                        <button
-                          type="button"
-                          className={`home-task-row${isNext ? " home-task-row--next" : ""}`}
-                          onClick={() => onNavigate(step.id)}
-                        >
-                          <TaskPill complete={complete} />
-                          <span className="home-task-label">{step.label}</span>
-                          <span className="home-task-score">{score != null ? score : ""}</span>
-                          <span className="home-task-chevron" aria-hidden="true">›</span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </section>
-            )}
-
-            {dashStats.length > 0 && (
-              <div className="home-stat-grid">
-                {dashStats.map((stat) => (
-                  <div
-                    key={stat.key}
-                    className={`home-stat-cell${stat.clickable ? " home-stat-cell--clickable" : ""}`}
-                    onClick={stat.clickable ? stat.onClick : undefined}
-                    onKeyDown={
-                      stat.clickable
-                        ? (e) => {
-                            if (e.key === "Enter" || e.key === " ") stat.onClick();
-                          }
-                        : undefined
-                    }
-                    role={stat.clickable ? "button" : undefined}
-                    tabIndex={stat.clickable ? 0 : undefined}
-                  >
-                    <div className="home-stat-cell-label">{stat.label}</div>
-                    <div className={`home-stat-cell-value ${stat.tone || "neutral"}`}>{stat.value}</div>
-                  </div>
-                ))}
+        <div className="home-hybrid-body">
+          <header className="home-hybrid-hero">
+            <div className="home-hybrid-hero-copy">
+              <div
+                className={`home-hybrid-eyebrow${hero.eyebrowMuted ? " home-hybrid-eyebrow--muted" : ""}`}
+              >
+                {hero.eyebrow}
               </div>
-            )}
-
-            {allComplete && (
-              <>
-                <div className="home-status-bar">
-                  <span className="home-status-bar-key">STATUS</span>
-                  <span className="home-status-bar-sep">·</span>
-                  <span>Process over outcomes</span>
-                  <span className="home-status-bar-sep">·</span>
-                  <button type="button" className="home-status-bar-action" onClick={handleShare}>
-                    Share available
+              <h1 className="home-hybrid-title">{hero.title}</h1>
+              <p className="home-hybrid-sub">{hero.sub}</p>
+              {allComplete && (
+                <div className="home-hybrid-edit">
+                  <button type="button" onClick={() => onNavigate("premarket")}>
+                    Edit pre-market
+                  </button>
+                  <span className="home-hybrid-edit-sep">·</span>
+                  <button type="button" onClick={() => onNavigate("dailyplan")}>
+                    Edit plan
+                  </button>
+                  <span className="home-hybrid-edit-sep">·</span>
+                  <button type="button" onClick={() => onNavigate("postmarket")}>
+                    Edit review
+                  </button>
+                  <span className="home-hybrid-edit-sep">·</span>
+                  <button type="button" onClick={handleShare}>
+                    Share
                   </button>
                 </div>
-                <div className="home-edit-footer">
-                  <button type="button" onClick={() => onNavigate("premarket")}>Edit pre-market</button>
-                  <span className="home-edit-footer-sep">·</span>
-                  <button type="button" onClick={() => onNavigate("dailyplan")}>Edit plan</button>
-                  <span className="home-edit-footer-sep">·</span>
-                  <button type="button" onClick={() => onNavigate("postmarket")}>Edit review</button>
-                </div>
-              </>
-            )}
-
-            <ReadinessTrend sessions={sessions} onHistory={() => onNavigate("history")} />
-          </div>
-
-          <aside className="home-side-col">
-            <section className="home-terminal-box home-habits-panel">
-              <h3 className="home-panel-title">Habits</h3>
-              <div className="home-habit-row">
-                <span className="home-habit-label">Pre {preStreak}/7</span>
-                <div className="home-habit-bar">
-                  <div className="home-habit-bar-fill" style={{ width: `${Math.min(100, (preStreak / 7) * 100)}%` }} />
-                </div>
-              </div>
-              <div className="home-habit-row">
-                <span className="home-habit-label">Plan {planTotal}/30</span>
-                <div className="home-habit-bar">
-                  <div className="home-habit-bar-fill" style={{ width: `${Math.min(100, (planTotal / 30) * 100)}%` }} />
-                </div>
-              </div>
-              <div className="home-habit-row">
-                <span className="home-habit-label">Post {postTotal}/30</span>
-                <div className="home-habit-bar">
-                  <div className="home-habit-bar-fill" style={{ width: `${Math.min(100, (postTotal / 30) * 100)}%` }} />
-                </div>
-              </div>
-              {standDownTotal > 0 && (
-                <div className="home-habit-meta">Stand-downs · {standDownTotal} total</div>
               )}
+            </div>
 
-              <div className="home-habit-recent">
+            {allComplete && (showReadinessStat || showPnlStat) && (
+              <div className="home-hybrid-float-stats">
+                {showReadinessStat && (
+                  <div>
+                    <div
+                      className={`home-hybrid-stat-num${today?.readinessScore != null ? " positive" : ""}`}
+                    >
+                      {today?.readinessScore != null ? today.readinessScore : "—"}
+                    </div>
+                    <div className="home-hybrid-stat-cap">Readiness</div>
+                  </div>
+                )}
+                {showPnlStat && (
+                  <div>
+                    <div
+                      className={`home-hybrid-stat-num ${pnlTone}${pnlSmaller ? " sm" : ""}`}
+                    >
+                      {today?.netPnl != null
+                        ? formatDisplayPnl(today.netPnl)
+                        : "—"}
+                    </div>
+                    <div className="home-hybrid-stat-cap">Net P&amp;L</div>
+                  </div>
+                )}
+              </div>
+            )}
+          </header>
+
+          {!allComplete && (
+            <section className="home-hybrid-workflow" aria-label="Today's workflow">
+              <div className="home-hybrid-workflow-head">Today&apos;s workflow</div>
+              {WORKFLOW_STEPS.map((step) => {
+                const complete = stepComplete(
+                  step.id,
+                  preComplete,
+                  planComplete,
+                  postComplete
+                );
+                const isNext = nextStep?.id === step.id;
+                return (
+                  <button
+                    key={step.id}
+                    type="button"
+                    className={`home-hybrid-step${complete ? " done" : ""}${isNext ? " next" : ""}`}
+                    onClick={() => onNavigate(step.id)}
+                  >
+                    <span className="home-hybrid-step-icon" aria-hidden="true">
+                      {complete ? "✓" : isNext ? "→" : ""}
+                    </span>
+                    <span className="home-hybrid-step-label">{step.label}</span>
+                    {isNext && <span className="home-hybrid-step-badge">Next</span>}
+                  </button>
+                );
+              })}
+            </section>
+          )}
+
+          <HomeEventBanner />
+
+          {allComplete && (
+            <section className="home-hybrid-calm-block">
+              <div>
+                <h3 className="home-hybrid-block-label">Readiness trend</h3>
+                <ReadinessTrend sessions={sessions} />
+              </div>
+              <div>
+                <div className="home-hybrid-block-head">
+                  <h3 className="home-hybrid-block-label">Streak &amp; recent</h3>
+                  <button
+                    type="button"
+                    className="home-hybrid-block-link"
+                    onClick={() => onNavigate("history")}
+                  >
+                    History →
+                  </button>
+                </div>
+                {preStreak > 0 && (
+                  <p className="home-hybrid-streak-line">
+                    Pre-market · <strong>{preStreak} day streak</strong>
+                  </p>
+                )}
                 {recent.length === 0 ? (
                   <p className="home-panel-empty">No sessions yet.</p>
                 ) : (
-                  <ul className="home-habit-recent-list">
-                    {recent.map((s) => {
-                      const pnlCls = s.netPnl > 0 ? "pos" : s.netPnl < 0 ? "neg" : "dim";
-                      const shortDate = formatHistoryRowDate(s.date).replace(/, \d{4}$/, "");
-                      return (
-                        <li key={s.date}>
-                          <button
-                            type="button"
-                            className="home-habit-recent-row"
-                            onClick={() => onOpenHistoryDay(s.date)}
-                          >
-                            <span>{shortDate}</span>
-                            <strong>{s.readinessScore ?? "—"}</strong>
-                            <span className={`home-habit-recent-pnl ${pnlCls}`}>
-                              {s.netPnl != null ? formatTerminalPnl(s.netPnl) : "—"}
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                  recent.map((s) => {
+                    const pnlCls =
+                      s.netPnl > 0 ? "positive" : s.netPnl < 0 ? "negative" : "neutral";
+                    return (
+                      <button
+                        key={s.date}
+                        type="button"
+                        className="home-hybrid-recent-row"
+                        onClick={() => onOpenHistoryDay(s.date)}
+                      >
+                        <span>{formatShortHistoryDate(s.date)}</span>
+                        <span className={`home-hybrid-recent-pnl ${pnlCls}`}>
+                          {s.netPnl != null
+                            ? formatUsd(s.netPnl, { signed: true })
+                            : "—"}
+                        </span>
+                      </button>
+                    );
+                  })
                 )}
               </div>
             </section>
-          </aside>
+          )}
         </div>
       </div>
     </div>
