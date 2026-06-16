@@ -354,6 +354,13 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                 {preStreak > 0 && (
                   <p className="home-hybrid-streak-line">
                     Pre-market · <strong>{preStreak} day streak</strong>
+                    {today?.readinessScore != null && (
+                      <>
+                        {" "}
+                        · <strong className="home-hybrid-streak-ready">{today.readinessScore}</strong>{" "}
+                        <span className="home-hybrid-streak-ready-cap">ready today</span>
+                      </>
+                    )}
                   </p>
                 )}
                 {recent.length === 0 ? (
@@ -362,6 +369,8 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                   recent.map((s) => {
                     const pnlCls =
                       s.netPnl > 0 ? "positive" : s.netPnl < 0 ? "negative" : "neutral";
+                    const readyCls =
+                      s.readinessScore != null ? "scored" : "muted";
                     return (
                       <button
                         key={s.date}
@@ -369,7 +378,12 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                         className="home-hybrid-recent-row"
                         onClick={() => onOpenHistoryDay(s.date)}
                       >
-                        <span>{formatShortHistoryDate(s.date)}</span>
+                        <span className="home-hybrid-recent-date">
+                          {formatShortHistoryDate(s.date)}
+                        </span>
+                        <span className={`home-hybrid-recent-ready ${readyCls}`}>
+                          {s.readinessScore != null ? s.readinessScore : "—"}
+                        </span>
                         <span className={`home-hybrid-recent-pnl ${pnlCls}`}>
                           {s.netPnl != null
                             ? formatUsd(s.netPnl, { signed: true })
