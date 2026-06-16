@@ -58,7 +58,7 @@ function SliderField({ label, hint, minLabel, maxLabel, value, onChange }) {
     <div className="pm-field">
       <div className="pm-field-top">
         <div>
-          <div className="pm-field-label">{label}</div>
+          <div className="pm-field-label hybrid-label">{label}</div>
           {hint && <div className="pm-field-hint">{hint}</div>}
         </div>
         <div className="pm-field-value" style={{ color: tone }}>{value}</div>
@@ -78,7 +78,7 @@ function SessionSummary({ form, netPnl, winRate }) {
 
   return (
     <div className="pm-score-card">
-      <div className="pm-score-label">Session summary</div>
+      <div className="pm-score-label hybrid-label-sm">Session summary</div>
       <div className="pm-summary-net">
         <div className="pm-summary-net-label">Net P&amp;L</div>
         <div className="pm-summary-net-value" style={{ color: pnlTone }}>
@@ -224,8 +224,8 @@ export default function PostMarketReview({ onBack }) {
       <div className="premarket-grid postmarket-grid">
         <div className="pm-header">
           <button type="button" className="pm-back" onClick={onBack}>← Back to dashboard</button>
-          <div className="pm-eyebrow">Post-market · {sectionDate()}</div>
-          <h1 className="pm-title">Close out the session</h1>
+          <div className="pm-eyebrow hybrid-eyebrow">Post-market · {sectionDate()}</div>
+          <h1 className="pm-title hybrid-title">Close out the session</h1>
           <p className="pm-subtitle">Be honest. The flags only mean something if they&apos;re true.</p>
         </div>
 
@@ -275,7 +275,7 @@ export default function PostMarketReview({ onBack }) {
             <label className="pm-no-trade-check">
               <input type="checkbox" checked={form.noTradeToday} onChange={(e) => set("noTradeToday", e.target.checked)} />
               <div>
-                <div className="pm-field-label">I didn&apos;t trade today</div>
+                <div className="pm-field-label hybrid-label">I didn&apos;t trade today</div>
                 <div className="pm-field-hint">Honoring a low-readiness day or sitting out by choice. Counts as a stand-down when paired with low/mid morning readiness.</div>
               </div>
             </label>
@@ -286,18 +286,18 @@ export default function PostMarketReview({ onBack }) {
             <div className="pm-section-head">
               <span className="pm-section-num">01</span>
               <div>
-                <h2 className="pm-section-title">Performance</h2>
+                <h2 className="pm-section-title hybrid-section-title">Performance</h2>
                 <p className="pm-section-desc">The numbers from the session.</p>
               </div>
             </div>
             <div className="pm-perf-grid">
-              <div><div className="pm-field-label">Trades</div><input type="text" value={form.trades} onChange={(e) => set("trades", e.target.value)} className="pm-text-input" disabled={form.noTradeToday} /></div>
-              <div><div className="pm-field-label">Wins</div><input type="text" value={form.wins} onChange={(e) => set("wins", e.target.value)} className="pm-text-input" disabled={form.noTradeToday} /></div>
-              <div><div className="pm-field-label">Losses</div><input type="text" value={form.losses} onChange={(e) => set("losses", e.target.value)} className="pm-text-input" disabled={form.noTradeToday} /></div>
-              <div><div className="pm-field-label">Gross P&amp;L</div><input type="text" value={form.grossPnl} onChange={(e) => set("grossPnl", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
-              <div><div className="pm-field-label">Best winner</div><input type="text" value={form.bestWinner} onChange={(e) => set("bestWinner", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
-              <div><div className="pm-field-label">Worst loss</div><input type="text" value={form.worstLoss} onChange={(e) => set("worstLoss", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
-              <div className="pm-perf-full"><div className="pm-field-label">Commissions &amp; fees</div><input type="text" value={form.commissionsFees} onChange={(e) => set("commissionsFees", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
+              <div><div className="pm-field-label hybrid-label">Trades</div><input type="text" value={form.trades} onChange={(e) => set("trades", e.target.value)} className="pm-text-input" disabled={form.noTradeToday} /></div>
+              <div><div className="pm-field-label hybrid-label">Wins</div><input type="text" value={form.wins} onChange={(e) => set("wins", e.target.value)} className="pm-text-input" disabled={form.noTradeToday} /></div>
+              <div><div className="pm-field-label hybrid-label">Losses</div><input type="text" value={form.losses} onChange={(e) => set("losses", e.target.value)} className="pm-text-input" disabled={form.noTradeToday} /></div>
+              <div><div className="pm-field-label hybrid-label">Gross P&amp;L</div><input type="text" value={form.grossPnl} onChange={(e) => set("grossPnl", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
+              <div><div className="pm-field-label hybrid-label">Best winner</div><input type="text" value={form.bestWinner} onChange={(e) => set("bestWinner", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
+              <div><div className="pm-field-label hybrid-label">Worst loss</div><input type="text" value={form.worstLoss} onChange={(e) => set("worstLoss", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
+              <div className="pm-perf-full"><div className="pm-field-label hybrid-label">Commissions &amp; fees</div><input type="text" value={form.commissionsFees} onChange={(e) => set("commissionsFees", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
             </div>
             <p className="pm-perf-note">Enter your gross P&amp;L above and your total commissions &amp; fees here; your net is calculated automatically. On imported days this is filled from your CSV.</p>
           </section>
@@ -307,7 +307,7 @@ export default function PostMarketReview({ onBack }) {
             <div className="pm-section-head">
               <span className="pm-section-num">02</span>
               <div>
-                <h2 className="pm-section-title">Process adherence</h2>
+                <h2 className="pm-section-title hybrid-section-title">Process adherence</h2>
                 <p className="pm-section-desc">How well you executed your plan.</p>
               </div>
             </div>
@@ -322,7 +322,7 @@ export default function PostMarketReview({ onBack }) {
             <div className="pm-section-head">
               <span className="pm-section-num">03</span>
               <div>
-                <h2 className="pm-section-title">Behavioral flags</h2>
+                <h2 className="pm-section-title hybrid-section-title">Behavioral flags</h2>
                 <p className="pm-section-desc">Honest answers help. Pattern recognition over time only works if you&apos;re truthful.</p>
               </div>
             </div>
@@ -340,7 +340,7 @@ export default function PostMarketReview({ onBack }) {
             <div className="pm-section-head">
               <span className="pm-section-num">04</span>
               <div>
-                <h2 className="pm-section-title">After the close</h2>
+                <h2 className="pm-section-title hybrid-section-title">After the close</h2>
                 <p className="pm-section-desc">How you feel right now.</p>
               </div>
             </div>
@@ -351,18 +351,18 @@ export default function PostMarketReview({ onBack }) {
 
           {/* Journal */}
           <section className="pm-card">
-            <h2 className="pm-mantra-title">Journal</h2>
+            <h2 className="pm-mantra-title hybrid-section-title">Journal</h2>
             <p className="pm-section-desc">Three short prompts. Don&apos;t overthink them.</p>
             <div className="pm-field">
-              <div className="pm-field-label">What went well</div>
+              <div className="pm-field-label hybrid-label">What went well</div>
               <textarea value={form.wentWell} onChange={(e) => set("wentWell", e.target.value)} className="pm-textarea" rows={3} />
             </div>
             <div className="pm-field">
-              <div className="pm-field-label">What went wrong</div>
+              <div className="pm-field-label hybrid-label">What went wrong</div>
               <textarea value={form.wentWrong} onChange={(e) => set("wentWrong", e.target.value)} className="pm-textarea" rows={3} />
             </div>
             <div className="pm-field">
-              <div className="pm-field-label">One lesson</div>
+              <div className="pm-field-label hybrid-label">One lesson</div>
               <textarea value={form.oneLesson} onChange={(e) => set("oneLesson", e.target.value)} className="pm-textarea" placeholder="If today taught you one thing, what was it?" rows={3} />
             </div>
           </section>
@@ -395,7 +395,7 @@ function ToggleField({ label, hint, value, onChange }) {
   return (
     <div className="pm-toggle-field">
       <div>
-        <div className="pm-field-label">{label}</div>
+        <div className="pm-field-label hybrid-label">{label}</div>
         {hint && <div className="pm-field-hint">{hint}</div>}
       </div>
       <button type="button" className={`pm-toggle${value ? " on" : ""}`} onClick={() => onChange(!value)} aria-pressed={value}>

@@ -41,7 +41,7 @@ function ScoreRing({ score, size = 100 }) {
 function StatGrid({ title, items }) {
   return (
     <div className="history-stat-block">
-      <div className="history-stat-title">{title}</div>
+      <div className="history-stat-title hybrid-label-sm">{title}</div>
       <div className="history-stat-grid">
         {items.map((item) => (
           <div key={item.label} className="history-stat-item">
@@ -59,7 +59,7 @@ function SectionCard({ title, subtitle, children, action }) {
     <section className="history-section-card">
       <div className="history-section-head">
         <div>
-          <h2 className="history-section-title">{title}</h2>
+          <h2 className="history-section-title hybrid-section-title">{title}</h2>
           {subtitle && <p className="history-section-sub">{subtitle}</p>}
         </div>
         {action}
@@ -116,7 +116,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
         <button type="button" className="pm-back" onClick={onBack}>← Back to history</button>
         <div className="history-detail-header">
           <div>
-            <h1 className="history-detail-title">{formatDetailTitle(date)}</h1>
+            <h1 className="history-detail-title hybrid-title">{formatDetailTitle(date)}</h1>
             <div className="history-detail-meta">
               {session.readinessScore != null && (
                 <span>Score <strong>{session.readinessScore}</strong></span>
@@ -184,13 +184,13 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
               />
               {pre.mantra && (
                 <div className="history-mantra-block">
-                  <div className="history-notes-label">Mantra</div>
+                  <div className="history-notes-label hybrid-label-sm">Mantra</div>
                   <p>{pre.mantra}</p>
                 </div>
               )}
               {(pre.unlockAccounts || pre.checkCpu || pre.selectRiskBracketOrder) && (
                 <div className="history-reminders-block">
-                  <div className="history-notes-label">Reminders</div>
+                  <div className="history-notes-label hybrid-label-sm">Reminders</div>
                   <ul className="history-reminders-list">
                     {pre.unlockAccounts && <li>Unlock Accounts</li>}
                     {pre.checkCpu && <li>Check CPU</li>}
@@ -220,7 +220,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
               </div>
               {plan.whyBias && (
                 <div className="history-text-block">
-                  <div className="history-notes-label">Why this bias</div>
+                  <div className="history-notes-label hybrid-label-sm">Why this bias</div>
                   <p>{plan.whyBias}</p>
                 </div>
               )}
@@ -300,19 +300,19 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
               </div>
               {plan.sessionRules && (
                 <div className="history-text-block">
-                  <div className="history-notes-label">Session rules</div>
+                  <div className="history-notes-label hybrid-label-sm">Session rules</div>
                   <p>{plan.sessionRules}</p>
                 </div>
               )}
               {plan.oneThing && (
                 <div className="history-text-block">
-                  <div className="history-notes-label">The one thing</div>
+                  <div className="history-notes-label hybrid-label-sm">The one thing</div>
                   <p>{plan.oneThing}</p>
                 </div>
               )}
               {plan.selfCommitmentAccepted && (
                 <div className="history-commitment">
-                  <div className="history-notes-label">Commitment</div>
+                  <div className="history-notes-label hybrid-label-sm">Commitment</div>
                   <p className="history-commitment-text">
                     I believe in myself and I respect myself enough to follow my plan.
                   </p>
@@ -348,7 +348,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
             </div>
 
             <div className="history-process-row">
-              <div className="history-process-title">Process adherence (1–10)</div>
+              <div className="history-process-title hybrid-label-sm">Process adherence (1–10)</div>
               <div className="history-process-grid">
                 <div><span>Followed plan</span><strong>{post.followedPlan}</strong></div>
                 <div><span>Setup quality</span><strong>{post.setupQuality}</strong></div>
@@ -358,7 +358,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
             </div>
 
             <div className="history-flags-block">
-              <div className="history-flags-title">
+              <div className="history-flags-title hybrid-label-sm">
                 {raisedFlags.length
                   ? `${raisedFlags.length} behavioral flag${raisedFlags.length === 1 ? "" : "s"} raised`
                   : "No behavioral flags raised"}
@@ -373,7 +373,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
             </div>
 
             <div className="history-process-row">
-              <div className="history-process-title">After the close (1–10)</div>
+              <div className="history-process-title hybrid-label-sm">After the close (1–10)</div>
               <div className="history-process-grid history-process-grid--3">
                 <div><span>Emotional</span><strong>{post.emotionalState}</strong></div>
                 <div><span>Satisfaction</span><strong>{post.satisfaction}</strong></div>
@@ -383,15 +383,15 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
 
             <div className="history-journal-grid">
               <div className="history-journal-card">
-                <div className="history-notes-label">What went well</div>
+                <div className="history-notes-label hybrid-label-sm">What went well</div>
                 <p>{post.wentWell || "—"}</p>
               </div>
               <div className="history-journal-card">
-                <div className="history-notes-label">What went wrong</div>
+                <div className="history-notes-label hybrid-label-sm">What went wrong</div>
                 <p>{post.wentWrong || "—"}</p>
               </div>
               <div className="history-journal-card">
-                <div className="history-notes-label">One lesson</div>
+                <div className="history-notes-label hybrid-label-sm">One lesson</div>
                 <p>{post.oneLesson || "—"}</p>
               </div>
             </div>

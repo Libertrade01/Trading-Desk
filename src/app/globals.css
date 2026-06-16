@@ -21,6 +21,52 @@
   --font-display: 'Syne', sans-serif;
 }
 
+/* Shared hybrid/poster typography (home + workflow) */
+.hybrid-eyebrow {
+  font-family: var(--font-poster);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+.hybrid-eyebrow--muted { color: var(--amber); }
+
+.hybrid-title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 5vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+  color: #fff;
+}
+
+.hybrid-section-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.hybrid-label {
+  font-family: var(--font-poster);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hybrid-label-sm {
+  font-family: var(--font-poster);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
@@ -412,6 +458,7 @@ textarea:focus, input:focus, select:focus {
   margin-bottom: 24px;
 }
 
+.hybrid-eyebrow,
 .home-hybrid-eyebrow {
   font-family: var(--font-poster);
   font-size: 10px;
@@ -422,10 +469,12 @@ textarea:focus, input:focus, select:focus {
   margin-bottom: 12px;
 }
 
-.home-hybrid-eyebrow--muted {
+.home-hybrid-eyebrow--muted,
+.hybrid-eyebrow--muted {
   color: var(--amber);
 }
 
+.hybrid-title,
 .home-hybrid-title {
   font-family: var(--font-display);
   font-size: clamp(28px, 6vw, 36px);
@@ -659,6 +708,7 @@ textarea:focus, input:focus, select:focus {
   gap: 24px;
 }
 
+.hybrid-label-sm,
 .home-hybrid-block-label {
   font-family: var(--font-poster);
   font-size: 10px;
@@ -941,6 +991,107 @@ textarea:focus, input:focus, select:focus {
   padding-left: 36px;
 }
 
+.premarket-page.hybrid-page,
+.history-page.hybrid-page,
+.history-detail-page.hybrid-page {
+  background: #0a0b0f;
+}
+
+/* Poster typography on workflow pages */
+.hybrid-page .pm-eyebrow,
+.hybrid-page .history-eyebrow,
+.hybrid-page .pm-commitment-eyebrow,
+.hybrid-page .pm-reminders-eyebrow {
+  font-family: var(--font-poster);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+.hybrid-page .pm-title,
+.hybrid-page .history-title,
+.hybrid-page .history-detail-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+  color: #fff;
+}
+
+.hybrid-page .pm-section-title,
+.hybrid-page .pm-mantra-title,
+.hybrid-page .history-section-title,
+.hybrid-page .pm-standdown-title,
+.hybrid-page .pm-import-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.hybrid-page .pm-field-label,
+.hybrid-page .history-notes-label,
+.hybrid-page .history-stat-title,
+.hybrid-page .history-process-title,
+.hybrid-page .pm-score-label,
+.hybrid-page .pm-summary-net-label,
+.hybrid-page .pm-summary-flags-label,
+.hybrid-page .pm-summary-grid span,
+.hybrid-page .history-row-label,
+.hybrid-page .pm-dim-bar-header > span:first-child,
+.hybrid-page .history-flags-title {
+  font-family: var(--font-poster);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hybrid-page .pm-slider-labels,
+.hybrid-page .pm-section-num,
+.hybrid-page .pm-topbar,
+.hybrid-page .pm-back,
+.hybrid-page .pm-btn-link,
+.hybrid-page .pm-btn-share,
+.hybrid-page .pm-btn-return,
+.hybrid-page .pm-score-status,
+.hybrid-page .history-pre-status,
+.hybrid-page .history-stage-tag,
+.hybrid-page .pm-score-ring-denom {
+  font-family: var(--font-poster);
+}
+
+.hybrid-page .pm-field-value,
+.hybrid-page .pm-dim-bar-header > span:last-child,
+.hybrid-page .history-stat-item strong,
+.hybrid-page .history-detail-meta strong,
+.hybrid-page .history-row-value strong {
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.hybrid-page .pm-score-ring-num,
+.hybrid-page .pm-summary-net-value,
+.hybrid-page .history-score-num,
+.hybrid-page .pm-summary-grid strong,
+.hybrid-page .pm-summary-flags-count {
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+
+.hybrid-page .pm-dim-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+  font-size: 11px;
+}
+
+.hybrid-page .pm-import-title {
+  font-size: 16px;
+}
+
 /* ── Pre-Market check-in ── */
 .premarket-page {
   min-height: 100vh;
@@ -1097,7 +1248,7 @@ textarea:focus, input:focus, select:focus {
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--text);
+  color: #fff;
   margin-bottom: 4px;
 }
 
@@ -1125,7 +1276,7 @@ textarea:focus, input:focus, select:focus {
   font-family: var(--font-poster);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text);
   margin-bottom: 2px;
@@ -1346,7 +1497,7 @@ textarea:focus, input:focus, select:focus {
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--text);
+  color: #fff;
   margin-bottom: 6px;
 }
 
@@ -1490,9 +1641,10 @@ textarea:focus, input:focus, select:focus {
 .pm-btn-link,
 .pm-btn-share,
 .pm-btn-return {
-  font-family: var(--font-mono);
+  font-family: var(--font-poster);
   font-size: 10px;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   cursor: pointer;
   transition: all 0.15s;
@@ -1825,6 +1977,23 @@ textarea:focus, input:focus, select:focus {
 
 .pm-dim-bars { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
 
+.pm-dim-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+  font-size: 11px;
+}
+
+.pm-dim-bar-header > span:first-child {
+  font-family: var(--font-poster);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 .pm-dim-bar-header span:last-child {
   font-family: var(--font-mono);
   font-weight: 500;
@@ -1884,9 +2053,11 @@ textarea:focus, input:focus, select:focus {
 }
 
 .pm-import-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
   margin-bottom: 4px;
 }
 
@@ -2607,7 +2778,7 @@ textarea:focus, input:focus, select:focus {
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--text);
+  color: #fff;
   margin-bottom: 4px;
 }
 
@@ -2964,9 +3135,10 @@ textarea:focus, input:focus, select:focus {
 }
 
 .history-flags-title {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.08em;
+  font-family: var(--font-poster);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--amber);
   margin-bottom: 8px;

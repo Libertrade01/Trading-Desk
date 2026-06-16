@@ -63,7 +63,7 @@ function ToggleField({ label, hint, value, onChange }) {
   return (
     <div className="pm-toggle-field">
       <div>
-        <div className="pm-field-label">{label}</div>
+        <div className="pm-field-label hybrid-label">{label}</div>
         {hint && <div className="pm-field-hint">{hint}</div>}
       </div>
       <button
@@ -181,8 +181,8 @@ export default function DailyPlan({ onBack }) {
       <div className="daily-plan-content">
         <button type="button" className="pm-back" onClick={onBack}>← Back to dashboard</button>
 
-        <div className="pm-eyebrow">Daily plan · {sectionDate()}</div>
-        <h1 className="pm-title">Update today&apos;s plan</h1>
+        <div className="pm-eyebrow hybrid-eyebrow">Daily plan · {sectionDate()}</div>
+        <h1 className="pm-title hybrid-title">Update today&apos;s plan</h1>
         <p className="pm-subtitle">
           Pre-commit to bias, levels, setups, and risk before the bell. The market doesn&apos;t care about your plan, but you should.
         </p>
@@ -192,24 +192,24 @@ export default function DailyPlan({ onBack }) {
           <div className="pm-section-head">
             <span className="pm-section-num">01</span>
             <div>
-              <h2 className="pm-section-title">Bias &amp; context</h2>
+              <h2 className="pm-section-title hybrid-section-title">Bias &amp; context</h2>
               <p className="pm-section-desc">What you think the market is likely to do today, and how confident you are.</p>
             </div>
           </div>
           <div className="pm-field">
-            <div className="pm-field-label">Directional bias</div>
+            <div className="pm-field-label hybrid-label">Directional bias</div>
             <select value={form.directionalBias} onChange={(e) => set("directionalBias", e.target.value)} className="pm-select">
               {BIAS_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           </div>
           <div className="pm-field">
-            <div className="pm-field-label">Expected volatility</div>
+            <div className="pm-field-label hybrid-label">Expected volatility</div>
             <select value={form.expectedVolatility} onChange={(e) => set("expectedVolatility", e.target.value)} className="pm-select">
               {VOLATILITY_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           </div>
           <div className="pm-field">
-            <div className="pm-field-label">Why this bias</div>
+            <div className="pm-field-label hybrid-label">Why this bias</div>
             <textarea
               value={form.whyBias}
               onChange={(e) => set("whyBias", e.target.value)}
@@ -225,7 +225,7 @@ export default function DailyPlan({ onBack }) {
           <div className="pm-section-head">
             <span className="pm-section-num">02</span>
             <div>
-              <h2 className="pm-section-title">Key levels</h2>
+              <h2 className="pm-section-title hybrid-section-title">Key levels</h2>
               <p className="pm-section-desc">The prices that matter today. Mark them now so you don&apos;t have to remember in the heat of the moment.</p>
             </div>
           </div>
@@ -235,7 +235,7 @@ export default function DailyPlan({ onBack }) {
             form.keyLevels.map((level) => (
               <div key={level.id} className="pm-level-row">
                 <div>
-                  <div className="pm-field-label">Label</div>
+                  <div className="pm-field-label hybrid-label">Label</div>
                   <input
                     type="text"
                     value={level.label}
@@ -245,7 +245,7 @@ export default function DailyPlan({ onBack }) {
                   />
                 </div>
                 <div>
-                  <div className="pm-field-label">Price</div>
+                  <div className="pm-field-label hybrid-label">Price</div>
                   <input
                     type="text"
                     value={level.price}
@@ -255,7 +255,7 @@ export default function DailyPlan({ onBack }) {
                   />
                 </div>
                 <div>
-                  <div className="pm-field-label">Type</div>
+                  <div className="pm-field-label hybrid-label">Type</div>
                   <select
                     value={level.type}
                     onChange={(e) => updateLevel(level.id, { type: e.target.value })}
@@ -276,7 +276,7 @@ export default function DailyPlan({ onBack }) {
           <div className="pm-section-head">
             <span className="pm-section-num">03</span>
             <div>
-              <h2 className="pm-section-title">Setups</h2>
+              <h2 className="pm-section-title hybrid-section-title">Setups</h2>
               <p className="pm-section-desc">The specific patterns you&apos;ll trade. If a setup isn&apos;t here, you don&apos;t take it.</p>
             </div>
           </div>
@@ -287,7 +287,7 @@ export default function DailyPlan({ onBack }) {
               <div key={setup.id} className="pm-setup-card">
                 <TrashButton onClick={() => removeSetup(setup.id)} />
                 <div className="pm-field">
-                  <div className="pm-field-label">Setup name</div>
+                  <div className="pm-field-label hybrid-label">Setup name</div>
                   <input
                     type="text"
                     value={setup.name}
@@ -297,7 +297,7 @@ export default function DailyPlan({ onBack }) {
                   />
                 </div>
                 <div className="pm-field">
-                  <div className="pm-field-label">Conditions</div>
+                  <div className="pm-field-label hybrid-label">Conditions</div>
                   <textarea
                     value={setup.conditions}
                     onChange={(e) => updateSetup(setup.id, { conditions: e.target.value })}
@@ -308,7 +308,7 @@ export default function DailyPlan({ onBack }) {
                 </div>
                 <div className="pm-field-grid">
                   <div>
-                    <div className="pm-field-label">Target</div>
+                    <div className="pm-field-label hybrid-label">Target</div>
                     <input
                       type="text"
                       value={setup.target}
@@ -318,7 +318,7 @@ export default function DailyPlan({ onBack }) {
                     />
                   </div>
                   <div>
-                    <div className="pm-field-label">Stop</div>
+                    <div className="pm-field-label hybrid-label">Stop</div>
                     <input
                       type="text"
                       value={setup.stop}
@@ -339,12 +339,12 @@ export default function DailyPlan({ onBack }) {
           <div className="pm-section-head">
             <span className="pm-section-num">04</span>
             <div>
-              <h2 className="pm-section-title">Risk parameters</h2>
+              <h2 className="pm-section-title hybrid-section-title">Risk parameters</h2>
               <p className="pm-section-desc">Pre-committing to limits before you&apos;re emotional about them.</p>
             </div>
           </div>
           <div className="pm-field pm-risk-dd-field">
-            <div className="pm-field-label">DD from high water mark (%)</div>
+            <div className="pm-field-label hybrid-label">DD from high water mark (%)</div>
             <input
               type="text"
               value={form.ddFromHighWaterMark}
@@ -355,19 +355,19 @@ export default function DailyPlan({ onBack }) {
           </div>
           <div className="pm-field-grid">
             <div>
-              <div className="pm-field-label">Max daily loss ($)</div>
+              <div className="pm-field-label hybrid-label">Max daily loss ($)</div>
               <input type="text" value={form.maxDailyLoss} onChange={(e) => set("maxDailyLoss", e.target.value)} className="pm-text-input" placeholder="Must be set from broker" />
             </div>
             <div>
-              <div className="pm-field-label">Max trades</div>
+              <div className="pm-field-label hybrid-label">Max trades</div>
               <input type="text" value={form.maxTrades} onChange={(e) => set("maxTrades", e.target.value)} className="pm-text-input" />
             </div>
             <div>
-              <div className="pm-field-label">Position size</div>
+              <div className="pm-field-label hybrid-label">Position size</div>
               <input type="text" value={form.positionSize} onChange={(e) => set("positionSize", e.target.value)} className="pm-text-input" placeholder="2 MNQ" />
             </div>
             <div>
-              <div className="pm-field-label">Stop trading at</div>
+              <div className="pm-field-label hybrid-label">Stop trading at</div>
               <input type="text" value={form.stopTradingAt} onChange={(e) => set("stopTradingAt", e.target.value)} className="pm-text-input" placeholder="11:00 AM ET, or after 2 losses" />
             </div>
           </div>
@@ -390,12 +390,12 @@ export default function DailyPlan({ onBack }) {
           <div className="pm-section-head">
             <span className="pm-section-num">05</span>
             <div>
-              <h2 className="pm-section-title">Session rules &amp; focus</h2>
+              <h2 className="pm-section-title hybrid-section-title">Session rules &amp; focus</h2>
               <p className="pm-section-desc">The intent for today, in your own words.</p>
             </div>
           </div>
           <div className="pm-field">
-            <div className="pm-field-label">Session rules</div>
+            <div className="pm-field-label hybrid-label">Session rules</div>
             <textarea
               value={form.sessionRules}
               onChange={(e) => set("sessionRules", e.target.value)}
@@ -405,7 +405,7 @@ export default function DailyPlan({ onBack }) {
             />
           </div>
           <div className="pm-field">
-            <div className="pm-field-label">The one thing</div>
+            <div className="pm-field-label hybrid-label">The one thing</div>
             <textarea
               value={form.oneThing}
               onChange={(e) => set("oneThing", e.target.value)}
@@ -419,7 +419,7 @@ export default function DailyPlan({ onBack }) {
         <section
           className={`pm-commitment${form.selfCommitmentAccepted ? " pm-commitment--checked" : ""}`}
         >
-          <div className="pm-commitment-eyebrow">Commitment</div>
+          <div className="pm-commitment-eyebrow hybrid-eyebrow">Commitment</div>
           <label className="pm-commitment-check">
             <input
               type="checkbox"

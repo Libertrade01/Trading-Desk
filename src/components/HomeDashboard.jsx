@@ -249,11 +249,11 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
           <header className="home-hybrid-hero">
             <div className="home-hybrid-hero-copy">
               <div
-                className={`home-hybrid-eyebrow${hero.eyebrowMuted ? " home-hybrid-eyebrow--muted" : ""}`}
+                className={`home-hybrid-eyebrow hybrid-eyebrow${hero.eyebrowMuted ? " home-hybrid-eyebrow--muted hybrid-eyebrow--muted" : ""}`}
               >
                 {hero.eyebrow}
               </div>
-              <h1 className="home-hybrid-title">{hero.title}</h1>
+              <h1 className="home-hybrid-title hybrid-title">{hero.title}</h1>
               <p className="home-hybrid-sub">{hero.sub}</p>
               {allComplete && (
                 <div className="home-hybrid-edit">

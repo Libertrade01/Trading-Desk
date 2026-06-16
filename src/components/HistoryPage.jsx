@@ -42,10 +42,10 @@ export default function HistoryPage({ onSelectDay, onBack }) {
       <div className="history-content">
         <button type="button" className="pm-back" onClick={onBack}>← Back to dashboard</button>
 
-        <div className="history-eyebrow">
+        <div className="history-eyebrow hybrid-eyebrow">
           {sessions.length} session{sessions.length === 1 ? "" : "s"} logged
         </div>
-        <h1 className="history-title">History</h1>
+        <h1 className="history-title hybrid-title">History</h1>
         <p className="history-subtitle">Walk back through your sessions. Pattern recognition compounds.</p>
 
         {sessions.length === 0 ? (
@@ -64,7 +64,7 @@ export default function HistoryPage({ onSelectDay, onBack }) {
                   <span className="history-row-dot" />
                   <span className="history-row-date">{formatHistoryRowDate(session.date)}</span>
                   <span className="history-row-readiness">
-                    <span className="history-row-label">Readiness</span>
+                    <span className="history-row-label hybrid-label-sm">Readiness</span>
                     <span className="history-row-value">
                       {session.readinessScore != null ? (
                         <>
@@ -76,7 +76,7 @@ export default function HistoryPage({ onSelectDay, onBack }) {
                     </span>
                   </span>
                   <span className="history-row-pnl">
-                    <span className="history-row-label">P&amp;L</span>
+                    <span className="history-row-label hybrid-label-sm">P&amp;L</span>
                     <span className={`history-row-value ${pnlTone}`}>
                       {session.netPnl != null ? formatUsd(session.netPnl, { signed: true }) : "—"}
                     </span>

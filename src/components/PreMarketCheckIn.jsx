@@ -97,7 +97,7 @@ function SliderField({ label, hint, minLabel, maxLabel, value, onChange, inverte
     <div className="pm-field">
       <div className="pm-field-top">
         <div>
-          <div className="pm-field-label">{label}</div>
+          <div className="pm-field-label hybrid-label">{label}</div>
           {hint && <div className="pm-field-hint">{hint}</div>}
         </div>
         <div className="pm-field-value" style={{ color: sliderValueColor(value, inverted) }}>{value}</div>
@@ -122,7 +122,7 @@ function ToggleField({ label, hint, value, onChange }) {
   return (
     <div className="pm-toggle-field">
       <div>
-        <div className="pm-field-label">{label}</div>
+        <div className="pm-field-label hybrid-label">{label}</div>
         {hint && <div className="pm-field-hint">{hint}</div>}
       </div>
       <button
@@ -236,8 +236,8 @@ export default function PreMarketCheckIn({ onBack }) {
       <div className="premarket-grid">
         <div className="pm-header">
           <button type="button" className="pm-back" onClick={onBack}>← Back to dashboard</button>
-          <div className="pm-eyebrow">Pre-market · {sectionDate()}</div>
-          <h1 className="pm-title">Update today&apos;s check-in</h1>
+          <div className="pm-eyebrow hybrid-eyebrow">Pre-market · {sectionDate()}</div>
+          <h1 className="pm-title hybrid-title">Update today&apos;s check-in</h1>
           <p className="pm-subtitle">
             Eighteen inputs across four dimensions. Your ReadinessScore updates live as you fill it in.
           </p>
@@ -249,7 +249,7 @@ export default function PreMarketCheckIn({ onBack }) {
             <div className="pm-section-head">
               <span className="pm-section-num">01</span>
               <div>
-                <h2 className="pm-section-title">Emotional state</h2>
+                <h2 className="pm-section-title hybrid-section-title">Emotional state</h2>
                 <p className="pm-section-desc">How you arrive on the desk today.</p>
               </div>
             </div>
@@ -302,12 +302,12 @@ export default function PreMarketCheckIn({ onBack }) {
             <div className="pm-section-head">
               <span className="pm-section-num">02</span>
               <div>
-                <h2 className="pm-section-title">Physical state</h2>
+                <h2 className="pm-section-title hybrid-section-title">Physical state</h2>
                 <p className="pm-section-desc">The body the brain rents.</p>
               </div>
             </div>
             <div className="pm-field">
-              <div className="pm-field-label">Sleep (hours)</div>
+              <div className="pm-field-label hybrid-label">Sleep (hours)</div>
               <input
                 type="number"
                 min={0}
@@ -334,7 +334,7 @@ export default function PreMarketCheckIn({ onBack }) {
               onChange={(v) => set("energy", v)}
             />
             <div className="pm-field">
-              <div className="pm-field-label">HRV</div>
+              <div className="pm-field-label hybrid-label">HRV</div>
               <div className="pm-field-hint">Recovery score from your wearable (0–100%)</div>
               <div className="pm-hrv-input-row">
                 <input
@@ -360,12 +360,12 @@ export default function PreMarketCheckIn({ onBack }) {
             <div className="pm-section-head">
               <span className="pm-section-num">03</span>
               <div>
-                <h2 className="pm-section-title">External</h2>
+                <h2 className="pm-section-title hybrid-section-title">External</h2>
                 <p className="pm-section-desc">What the world is throwing at you.</p>
               </div>
             </div>
             <div className="pm-field">
-              <div className="pm-field-label">Market environment</div>
+              <div className="pm-field-label hybrid-label">Market environment</div>
               <select
                 value={form.marketEnvironment}
                 onChange={(e) => set("marketEnvironment", e.target.value)}
@@ -401,7 +401,7 @@ export default function PreMarketCheckIn({ onBack }) {
             <div className="pm-section-head">
               <span className="pm-section-num">04</span>
               <div>
-                <h2 className="pm-section-title">Preparation</h2>
+                <h2 className="pm-section-title hybrid-section-title">Preparation</h2>
                 <p className="pm-section-desc">The work you did before market open.</p>
               </div>
             </div>
@@ -436,7 +436,7 @@ export default function PreMarketCheckIn({ onBack }) {
 
           {/* Mantra */}
           <section className="pm-card pm-mantra-card">
-            <h2 className="pm-mantra-title">My mantra for today</h2>
+            <h2 className="pm-mantra-title hybrid-section-title">My mantra for today</h2>
             <p className="pm-section-desc">One line to anchor your session. It rides on your scorecard.</p>
             <input
               type="text"
@@ -450,7 +450,7 @@ export default function PreMarketCheckIn({ onBack }) {
           {/* Reminders — separate block, not scored */}
           <section className="pm-reminders-panel" aria-label="Pre-market reminders">
             <div className="pm-reminders-head">
-              <div className="pm-reminders-eyebrow">Reminders</div>
+              <div className="pm-reminders-eyebrow hybrid-eyebrow">Reminders</div>
               <p className="pm-reminders-hint">Desk setup before the open. Not scored.</p>
             </div>
             <div className="pm-reminders-list">
@@ -485,7 +485,7 @@ export default function PreMarketCheckIn({ onBack }) {
         <aside className="premarket-score-panel">
           <div className="pm-score-stack">
             <div className="pm-score-card">
-              <div className="pm-score-label">ReadinessScore</div>
+              <div className="pm-score-label hybrid-label-sm">ReadinessScore</div>
               <div className="pm-score-ring-wrap">
                 <ScoreRing score={scores.composite} />
               </div>
