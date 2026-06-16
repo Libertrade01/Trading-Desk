@@ -13,6 +13,7 @@ import {
   isWeekend,
   getMarketStatus,
 } from "../lib/history-data";
+import HomeEventBanner from "./HomeEventBanner";
 
 const WORKFLOW_STEPS = [
   { id: "premarket", label: "Pre-Market" },
@@ -318,6 +319,8 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
           <h1 className={`home-greeting-title${greetingTitleClass}`}>{greetingHeadline}</h1>
           {greetingSub && <p className="home-greeting-sub">{greetingSub}</p>}
         </header>
+
+        <HomeEventBanner />
 
         <div className="home-dashboard-grid">
           <div className="home-main-col">

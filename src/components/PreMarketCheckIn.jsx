@@ -9,6 +9,7 @@ import {
   DEFAULT_PREMARKET_FORM,
   MARKET_ENVIRONMENT_OPTIONS,
 } from "../lib/premarket-scoring";
+import MarketEventNudge from "./MarketEventNudge";
 
 async function loadData(key, fallback) {
   try {
@@ -404,6 +405,7 @@ export default function PreMarketCheckIn({ onBack }) {
                 <p className="pm-section-desc">The work you did before market open.</p>
               </div>
             </div>
+            <MarketEventNudge />
             <div className="pm-prep-grid">
               <ToggleField label="Reviewed key levels" value={form.reviewedKeyLevels} onChange={(v) => set("reviewedKeyLevels", v)} />
               <ToggleField label="Reviewed news / catalysts" value={form.reviewedNews} onChange={(v) => set("reviewedNews", v)} />
