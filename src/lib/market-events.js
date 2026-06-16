@@ -39,6 +39,36 @@ function daysBetween(a, b) {
   return Math.round(ms / 86400000);
 }
 
+function addDaysToDateKey(dateKey, days) {
+  const d = parseDateKey(dateKey);
+  d.setDate(d.getDate() + days);
+  return toDateKey(d);
+}
+
+function staticEventsForYear(year) {
+  return year === "2026" ? staticEvents2026 : [];
+}
+
+function preFomcEventsForDate(dateKey) {
+  const nextKey = addDaysToDateKey(dateKey, 1);
+  const fomcTomorrow = staticEventsForYear(dateKey.slice(0, 4)).find(
+    (e) => e.date === nextKey && e.kind === "fomc",
+  );
+  if (!fomcTomorrow) return [];
+
+  return [
+    {
+      date: dateKey,
+      kind: "prefomc",
+      label: "Pre FOMC",
+      timeET: null,
+      severity: "medium",
+      reminder: "FOMC tomorrow — reduce size, avoid holding into statement.",
+      source: "computed",
+    },
+  ];
+}
+
 function computedEventsForDate(dateKey) {
   const d = parseDateKey(dateKey);
   const events = [];
@@ -77,19 +107,19 @@ function computedEventsForDate(dateKey) {
         label: "Contract roll week",
         timeET: null,
         severity: "medium",
-        reminder: `Roll window — ${daysUntil} day${daysUntil === 1 ? "" : "s"} to expiry. Watch volume shift on ES/MNQ.`,
+        reminder: "Watch volume shifts.",
         source: "computed",
       });
     }
   }
 
+  events.push(...preFomcEventsForDate(dateKey));
+
   return events;
 }
 
 function staticEventsForDate(dateKey) {
-  const year = dateKey.slice(0, 4);
-  const pool = year === "2026" ? staticEvents2026 : [];
-  return pool
+  return staticEventsForYear(dateKey.slice(0, 4))
     .filter((e) => e.date === dateKey)
     .map((e) => ({ ...e, source: "static" }));
 }
