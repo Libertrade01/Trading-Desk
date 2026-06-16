@@ -33,15 +33,12 @@ export default function HomeEventBanner({ date = new Date() }) {
         const timeLabel = formatEventTimeET(event.timeET);
         const kind = KIND_LABELS[event.kind] || event.kind.toUpperCase();
         const hint = ribbonHint(event, timeLabel);
-        const severityClass =
-          event.severity === "high" ? " home-ribbon-tag--amber" : "";
-
         return (
           <div
             key={`${event.kind}-${event.label}`}
             className="home-ribbon"
           >
-            <span className={`home-ribbon-tag${severityClass}`}>{kind}</span>
+            <span className="home-ribbon-tag">{kind}</span>
             <span className="home-ribbon-text">{event.label}</span>
             {hint && <span className="home-ribbon-hint">{hint}</span>}
           </div>

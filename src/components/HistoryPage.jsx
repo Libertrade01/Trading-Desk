@@ -18,7 +18,7 @@ function StageTag({ label, active }) {
   );
 }
 
-export default function HistoryPage({ onSelectDay, onBack }) {
+export default function HistoryPage({ onSelectDay }) {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,8 +40,6 @@ export default function HistoryPage({ onSelectDay, onBack }) {
       </div>
 
       <div className="history-content">
-        <button type="button" className="pm-back" onClick={onBack}>← Back to dashboard</button>
-
         <div className="history-eyebrow hybrid-eyebrow">
           {sessions.length} session{sessions.length === 1 ? "" : "s"} logged
         </div>

@@ -5,7 +5,7 @@
  * - Emotional: largest composite share — FOMO, revenge, patience directly predict rule breaks and DLL hits.
  * - Physical: recovery gate — poor sleep/HRV impairs impulse control; strong HRV is weighted highest here.
  * - Preparation: pre-commitment — plan + levels reduce improvised trades mid-session.
- * - External: acute stressors — financial pressure and distractions tilt sizing and focus more than vol label alone.
+ * - External: acute stressors — financial pressure and distractions tilt sizing and focus.
  *
  * Composite (0–100):
  *   Emotional 38% · Physical 22% · Preparation 25% · External 15%
@@ -13,7 +13,7 @@
  * Emotional sub-weights: Patience 28% · FOMO 18% · Revenge 14% · State 20% · Confidence 20%
  * Physical sub-weights: HRV 26% · Sleep quality 24% · Sleep hours 18% · Energy 16% · Movement 8% · Hydrated 8%
  * Preparation sub-weights: Plan written 28% · Key levels 24% · Routine 22% · News 14% · Meditation 12%
- * External sub-weights: Financial pressure 38% · Distractions 37% · Market environment 25%
+ * External sub-weights: Financial pressure 51% · Distractions 49%
  */
 
 export const DIMENSION_WEIGHTS = {
@@ -41,9 +41,8 @@ export const PHYSICAL_FIELD_WEIGHTS = {
 };
 
 export const EXTERNAL_FIELD_WEIGHTS = {
-  marketEnvironment: 0.25,
-  externalDistractions: 0.37,
-  financialPressure: 0.38,
+  externalDistractions: 0.49,
+  financialPressure: 0.51,
 };
 
 export const PREPARATION_FIELD_WEIGHTS = {
@@ -53,18 +52,6 @@ export const PREPARATION_FIELD_WEIGHTS = {
   followedRoutine: 0.22,
   meditation: 0.12,
 };
-
-export const MARKET_ENVIRONMENT_OPTIONS = [
-  { value: "Low volatility", score: 90 },
-  { value: "Normal conditions", score: 80 },
-  { value: "Elevated volatility", score: 70 },
-  { value: "High volatility", score: 85 },
-  { value: "Extreme volatility", score: 50 },
-];
-
-const MARKET_ENV_SCORES = Object.fromEntries(
-  MARKET_ENVIRONMENT_OPTIONS.map((o) => [o.value, o.score])
-);
 
 /** Positive slider 1–10 → 10–100 */
 export function sliderToScore(value) {
@@ -137,7 +124,6 @@ export function scorePhysical(fields) {
 
 export function scoreExternal(fields) {
   const scores = {
-    marketEnvironment: MARKET_ENV_SCORES[fields.marketEnvironment] ?? 75,
     externalDistractions: riskSliderToScore(fields.externalDistractions),
     financialPressure: riskSliderToScore(fields.financialPressure),
   };
@@ -208,7 +194,6 @@ export const DEFAULT_PREMARKET_FORM = {
   hrvScore: 70,
   hydrated: true,
   movement: false,
-  marketEnvironment: "High volatility",
   externalDistractions: 3,
   financialPressure: 3,
   reviewedKeyLevels: false,

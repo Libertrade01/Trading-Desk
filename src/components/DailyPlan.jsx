@@ -79,12 +79,24 @@ function ToggleField({ label, hint, value, onChange }) {
 }
 
 const RISK_RAILS_MESSAGE = "I can not trade until risk rails are in place";
+const BIAS_CHECKLIST_MESSAGE =
+  "Complete the chart marks checklist (value area, nodes/LVNs, weekly profile) before saving the plan.";
 const COMMITMENT_MESSAGE = "Confirm your commitment before saving the plan.";
 const COMMITMENT_TEXT =
   "I believe in myself and I respect myself enough to follow my plan.";
+const BIAS_GUIDANCE =
+  "This is the bias of my plan — where is price in relation to these levels? Where is volume building and where does price not want to go?";
 
 function riskRailsReady(form) {
   return form.maxDailyLossSetInBroker && form.coldTurkeyBlockerSet;
+}
+
+function biasChecklistReady(form) {
+  return (
+    form.biasMarkedValueArea &&
+    form.biasMarkedNodesLvns &&
+    form.biasMarkedWeeklyProfile
+  );
 }
 
 export default function DailyPlan({ onBack }) {
@@ -116,6 +128,10 @@ export default function DailyPlan({ onBack }) {
   const handleSave = async () => {
     if (!riskRailsReady(form)) {
       window.alert(RISK_RAILS_MESSAGE);
+      return false;
+    }
+    if (!biasChecklistReady(form)) {
+      window.alert(BIAS_CHECKLIST_MESSAGE);
       return false;
     }
     if (!form.selfCommitmentAccepted) {
@@ -179,12 +195,10 @@ export default function DailyPlan({ onBack }) {
       </div>
 
       <div className="daily-plan-content">
-        <button type="button" className="pm-back" onClick={onBack}>← Back to dashboard</button>
-
         <div className="pm-eyebrow hybrid-eyebrow">Daily plan · {sectionDate()}</div>
-        <h1 className="pm-title hybrid-title">Update today&apos;s plan</h1>
+        <h1 className="hybrid-page-title">THE PLAN.</h1>
         <p className="pm-subtitle">
-          Pre-commit to bias, levels, setups, and risk before the bell. The market doesn&apos;t care about your plan, but you should.
+          Lock in bias, levels, and risk before the open.
         </p>
 
         {/* 01 Bias & context */}
@@ -197,15 +211,40 @@ export default function DailyPlan({ onBack }) {
             </div>
           </div>
           <div className="pm-field">
+            <div className="pm-field-label hybrid-label">Profiles</div>
+            <p className="pm-field-hint pm-bias-guidance">{BIAS_GUIDANCE}</p>
+            <div className="pm-bias-checklist">
+              <label className="pm-commitment-check">
+                <input
+                  type="checkbox"
+                  checked={form.biasMarkedValueArea}
+                  onChange={(e) => set("biasMarkedValueArea", e.target.checked)}
+                />
+                <span className="pm-commitment-text">Mark previous day Value Area</span>
+              </label>
+              <label className="pm-commitment-check">
+                <input
+                  type="checkbox"
+                  checked={form.biasMarkedNodesLvns}
+                  onChange={(e) => set("biasMarkedNodesLvns", e.target.checked)}
+                />
+                <span className="pm-commitment-text">Mark prominent nodes and LVNs</span>
+              </label>
+              <label className="pm-commitment-check">
+                <input
+                  type="checkbox"
+                  checked={form.biasMarkedWeeklyProfile}
+                  onChange={(e) => set("biasMarkedWeeklyProfile", e.target.checked)}
+                />
+                <span className="pm-commitment-text">Mark weekly profile levels</span>
+              </label>
+            </div>
+            <p className="pm-commitment-hint">All three required to save today&apos;s plan.</p>
+          </div>
+          <div className="pm-field">
             <div className="pm-field-label hybrid-label">Directional bias</div>
             <select value={form.directionalBias} onChange={(e) => set("directionalBias", e.target.value)} className="pm-select">
               {BIAS_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-            </select>
-          </div>
-          <div className="pm-field">
-            <div className="pm-field-label hybrid-label">Expected volatility</div>
-            <select value={form.expectedVolatility} onChange={(e) => set("expectedVolatility", e.target.value)} className="pm-select">
-              {VOLATILITY_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           </div>
           <div className="pm-field">
@@ -352,6 +391,12 @@ export default function DailyPlan({ onBack }) {
               className="pm-text-input"
               placeholder="This determines risk and sizing"
             />
+          </div>
+          <div className="pm-field">
+            <div className="pm-field-label hybrid-label">Expected volatility</div>
+            <select value={form.expectedVolatility} onChange={(e) => set("expectedVolatility", e.target.value)} className="pm-select">
+              {VOLATILITY_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+            </select>
           </div>
           <div className="pm-field-grid">
             <div>

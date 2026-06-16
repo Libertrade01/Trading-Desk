@@ -12,7 +12,6 @@ import {
   formatShortHistoryDate,
   formatUsd,
   isWeekend,
-  getMarketStatus,
 } from "../lib/history-data";
 import HomeEventBanner from "./HomeEventBanner";
 
@@ -184,7 +183,6 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
   const allComplete = preComplete && planComplete && postComplete;
   const completedCount = [preComplete, planComplete, postComplete].filter(Boolean).length;
   const weekend = isWeekend();
-  const marketStatus = getMarketStatus();
   const timeEyebrow = formatTimeEyebrow();
 
   const nextStep = useMemo(() => {
@@ -238,9 +236,6 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
 
       <div className="home-hybrid-bar">
         <span className="home-hybrid-date">{formatHomeBarDate()}</span>
-        <span className={`home-hybrid-live${marketStatus.live ? "" : " home-hybrid-live--off"}`}>
-          {marketStatus.label}
-        </span>
       </div>
 
       <div className="home-dashboard-inner">
@@ -255,7 +250,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                 {hero.eyebrow}
               </div>
               <h1
-                className={`home-hybrid-title hybrid-title${hero.poster ? " home-hybrid-title--poster" : ""}`}
+                className={`home-hybrid-title hybrid-title${hero.poster ? " hybrid-page-title home-hybrid-title--poster" : ""}`}
               >
                 {hero.title}
               </h1>
@@ -263,7 +258,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
               {allComplete && (
                 <div className="home-hybrid-stats-row">
                   {showReadinessStat && (
-                    <div>
+                    <div className="home-hybrid-stat">
                       <div
                         className={`home-hybrid-stat-num${today?.readinessScore != null ? " positive" : ""}`}
                       >
@@ -273,7 +268,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                     </div>
                   )}
                   {showPnlStat && (
-                    <div>
+                    <div className="home-hybrid-stat">
                       <div
                         className={`home-hybrid-stat-num ${pnlTone}${pnlSmaller ? " sm" : ""}`}
                       >
@@ -282,7 +277,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                       <div className="home-hybrid-stat-cap">P&amp;L</div>
                     </div>
                   )}
-                  <div>
+                  <div className="home-hybrid-stat home-hybrid-stat--subtle">
                     <div className="home-hybrid-stat-num neutral">{preStreak}</div>
                     <div className="home-hybrid-stat-cap">Streak</div>
                   </div>
@@ -350,7 +345,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
               </div>
               <div>
                 <div className="home-hybrid-block-head">
-                  <h3 className="home-hybrid-block-label">Streak &amp; recent</h3>
+                  <h3 className="home-hybrid-block-label">Recent</h3>
                   <button
                     type="button"
                     className="home-hybrid-block-link"
@@ -359,18 +354,6 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                     History →
                   </button>
                 </div>
-                {preStreak > 0 && (
-                  <p className="home-hybrid-streak-line">
-                    Pre-market · <strong>{preStreak} day streak</strong>
-                    {today?.readinessScore != null && (
-                      <>
-                        {" "}
-                        · <strong className="home-hybrid-streak-ready">{today.readinessScore}</strong>{" "}
-                        <span className="home-hybrid-streak-ready-cap">ready today</span>
-                      </>
-                    )}
-                  </p>
-                )}
                 {recent.length === 0 ? (
                   <p className="home-panel-empty">No sessions yet.</p>
                 ) : (

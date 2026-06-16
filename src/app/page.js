@@ -1993,6 +1993,8 @@ export default function App() {
       <style>{`
         input[type="range"] { -webkit-appearance: none; appearance: none; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: #fff; cursor: pointer; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+        input.pm-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #a8adb8; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
+        input.pm-slider::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #a8adb8; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
         input[type="number"] { -moz-appearance: textfield; }
         input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
       `}</style>
@@ -2018,7 +2020,7 @@ export default function App() {
         {section === "dailyplan" && <DailyPlan onBack={() => setSection("home")} />}
         {section === "postmarket" && <PostMarketReview onBack={() => setSection("home")} />}
         {section === "history" && !historyDate && (
-          <HistoryPage onSelectDay={setHistoryDate} onBack={() => setSection("home")} />
+          <HistoryPage onSelectDay={setHistoryDate} />
         )}
         {section === "history" && historyDate && (
           <HistoryDayDetail

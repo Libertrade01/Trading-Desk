@@ -167,7 +167,6 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
               <StatGrid
                 title="External"
                 items={[
-                  { label: "Market", value: pre.marketEnvironment },
                   { label: "Distractions", value: pre.externalDistractions },
                   { label: "Pressure", value: pre.financialPressure },
                 ]}

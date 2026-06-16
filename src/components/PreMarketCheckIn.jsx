@@ -7,7 +7,6 @@ import {
   readinessStatus,
   sliderValueColor,
   DEFAULT_PREMARKET_FORM,
-  MARKET_ENVIRONMENT_OPTIONS,
 } from "../lib/premarket-scoring";
 import MarketEventNudge from "./MarketEventNudge";
 
@@ -50,7 +49,7 @@ function sectionDate() {
 }
 
 function ScoreRing({ score }) {
-  const r = 54;
+  const r = 50;
   const c = 2 * Math.PI * r;
   const offset = c - (score / 100) * c;
   const tone = score >= 70 ? "var(--green)" : score >= 50 ? "var(--amber)" : "var(--red)";
@@ -71,8 +70,10 @@ function ScoreRing({ score }) {
         transform="rotate(-90 70 70)"
         style={{ transition: "stroke-dashoffset 0.4s ease, stroke 0.3s ease" }}
       />
-      <text x="70" y="66" textAnchor="middle" className="pm-score-ring-num">{score}</text>
-      <text x="70" y="86" textAnchor="middle" className="pm-score-ring-denom">/ 100</text>
+      <text x="70" textAnchor="middle">
+        <tspan x="70" y="55" dominantBaseline="middle" className="pm-score-ring-num">{score}</tspan>
+        <tspan x="70" y="86" dominantBaseline="middle" className="pm-score-ring-denom">/ 100</tspan>
+      </text>
     </svg>
   );
 }
@@ -235,11 +236,10 @@ export default function PreMarketCheckIn({ onBack }) {
 
       <div className="premarket-grid">
         <div className="pm-header">
-          <button type="button" className="pm-back" onClick={onBack}>← Back to dashboard</button>
           <div className="pm-eyebrow hybrid-eyebrow">Pre-market · {sectionDate()}</div>
-          <h1 className="pm-title hybrid-title">Update today&apos;s check-in</h1>
+          <h1 className="hybrid-page-title">CHECK IN.</h1>
           <p className="pm-subtitle">
-            Eighteen inputs across four dimensions. Your ReadinessScore updates live as you fill it in.
+            Be honest before the open. Your score updates as you go.
           </p>
         </div>
 
@@ -364,18 +364,6 @@ export default function PreMarketCheckIn({ onBack }) {
                 <p className="pm-section-desc">What the world is throwing at you.</p>
               </div>
             </div>
-            <div className="pm-field">
-              <div className="pm-field-label hybrid-label">Market environment</div>
-              <select
-                value={form.marketEnvironment}
-                onChange={(e) => set("marketEnvironment", e.target.value)}
-                className="pm-select"
-              >
-                {MARKET_ENVIRONMENT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.value}</option>
-                ))}
-              </select>
-            </div>
             <SliderField
               label="External distractions"
               hint="Calls, family, errands, life noise"
@@ -485,7 +473,7 @@ export default function PreMarketCheckIn({ onBack }) {
         <aside className="premarket-score-panel">
           <div className="pm-score-stack">
             <div className="pm-score-card">
-              <div className="pm-score-label hybrid-label-sm">ReadinessScore</div>
+              <div className="pm-score-label hybrid-label-sm">Readiness Score</div>
               <div className="pm-score-ring-wrap">
                 <ScoreRing score={scores.composite} />
               </div>

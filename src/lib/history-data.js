@@ -135,14 +135,6 @@ export function isTradingDay(date = new Date()) {
   return day >= 1 && day <= 5;
 }
 
-/** Rough session indicator for home top bar (weekends always off). */
-export function getMarketStatus(date = new Date()) {
-  if (isWeekend(date)) return { label: "Off hours", live: false };
-  const hour = date.getHours();
-  if (hour >= 9 && hour < 17) return { label: "Live", live: true };
-  return { label: "Off hours", live: false };
-}
-
 export function formatGreetingDate() {
   return new Date().toLocaleDateString("en-US", {
     weekday: "long",

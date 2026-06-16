@@ -223,10 +223,9 @@ export default function PostMarketReview({ onBack }) {
 
       <div className="premarket-grid postmarket-grid">
         <div className="pm-header">
-          <button type="button" className="pm-back" onClick={onBack}>← Back to dashboard</button>
           <div className="pm-eyebrow hybrid-eyebrow">Post-market · {sectionDate()}</div>
-          <h1 className="pm-title hybrid-title">Close out the session</h1>
-          <p className="pm-subtitle">Be honest. The flags only mean something if they&apos;re true.</p>
+          <h1 className="hybrid-page-title">CLOSE OUT.</h1>
+          <p className="pm-subtitle">Close the loop. What happened vs what you planned.</p>
         </div>
 
         <div className="premarket-form">
