@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home Dashboard — Refined Directions · Libertrade</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=Outfit:wght@400;500;600;700;800&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --lt-bg: #111217;
+      --lt-surface: #16171e;
+      --lt-border: #22242e;
+      --lt-text: #e8e9ed;
+      --lt-muted: #6b7280;
+      --lt-green: #259186;
+      --lt-red: #c45c5c;
+      --lt-amber: #c49060;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #07080a;
+      color: var(--lt-text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      padding: 40px 28px 96px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .page { max-width: 1600px; margin: 0 auto; }
+
+    /* ── Page intro ── */
+    .page-head { margin-bottom: 48px; max-width: 820px; }
+    .page-head h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      margin-bottom: 16px;
+      line-height: 1.1;
+    }
+    .page-head .lead {
+      font-size: 16px;
+      color: #9ca3af;
+      line-height: 1.65;
+      margin-bottom: 14px;
+    }
+    .page-head .note {
+      font-size: 13px;
+      color: var(--lt-muted);
+      line-height: 1.6;
+      padding: 16px 20px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--lt-border);
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+    .page-head .note strong { color: #b8bcc8; font-weight: 500; }
+    .page-head .pick-badge {
+      display: inline-block;
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--lt-green);
+      background: rgba(37,145,134,0.12);
+      border: 1px solid rgba(37,145,134,0.3);
+      padding: 4px 10px;
+      border-radius: 4px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    /* ── 3-column grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(340px, 1fr));
+      gap: 28px;
+    }
+    @media (max-width: 1100px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .dir-col { min-width: 0; }
+    .dir-num {
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--lt-muted);
+      margin-bottom: 6px;
+    }
+    .dir-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    .dir-vibe {
+      font-size: 12px;
+      color: var(--lt-muted);
+      line-height: 1.45;
+      margin-bottom: 20px;
+      max-width: 380px;
+    }
+
+    /* ── State pair wrapper ── */
+    .state-pair {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .state-label {
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--lt-muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .state-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--lt-border);
+    }
+    .state-label .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .state-label .dot.complete { background: var(--lt-green); box-shadow: 0 0 8px rgba(37,145,134,0.5); }
+    .state-label .dot.progress { background: var(--lt-amber); box-shadow: 0 0 8px rgba(196,144,96,0.4); }
+
+    .mock {
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .g { color: var(--lt-green); }
+    .r { color: var(--lt-red); }
+    .spark { height: 48px; position: relative; }
+    .spark svg { width: 100%; height: 100%; display: block; }
+
+    /* ══════════════════════════════════════
+       REFINED 01 · CINEMATIC
+       ══════════════════════════════════════ */
+    .r1.mock {
+      background: #0a0b0f;
+      border: 1px solid #1a1c24;
+      min-height: 520px;
+    }
+    .r1-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 32px;
+      font-size: 12px;
+      color: var(--lt-muted);
+      letter-spacing: 0.02em;
+    }
+    .r1-live {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--lt-green);
+      font-weight: 500;
+    }
+    .r1-live::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--lt-green);
+      box-shadow: 0 0 12px rgba(37,145,134,0.6);
+    }
+    .r1-body {
+      padding: 0 32px 36px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .r1-hero-zone {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 36px;
+      align-items: center;
+      padding: 36px 0 40px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 28px;
+    }
+    .r1-hero-eyebrow {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--lt-green);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .r1-hero-eyebrow.muted { color: var(--lt-amber); }
+    .r1-hero-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 0.98;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .r1-hero-sub {
+      font-size: 14px;
+      color: var(--lt-muted);
+      line-height: 1.5;
+    }
+    .r1-float-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      text-align: right;
+    }
+    .r1-big-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 60px;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 1;
+    }
+    .r1-big-num.smaller { font-size: 48px; }
+    .r1-big-label {
+      font-size: 13px;
+      color: var(--lt-muted);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+    .r1-ribbons { margin-bottom: 28px; }
+    .r1-ribbon {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .r1-ribbon:first-child { padding-top: 0; }
+    .r1-ribbon-tag {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--lt-green);
+      min-width: 68px;
+    }
+    .r1-ribbon-tag.amber { color: var(--lt-amber); }
+    .r1-ribbon-text {
+      font-size: 13px;
+      color: #b8bcc8;
+      flex: 1;
+    }
+    .r1-ribbon-hint {
+      font-size: 11px;
+      color: var(--lt-muted);
+    }
+    .r1-calm-block {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 24px 28px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+    .r1-block-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--lt-muted);
+      margin-bottom: 14px;
+      letter-spacing: 0.02em;
+    }
+    .r1-streak-line {
+      font-size: 14px;
+      color: var(--lt-muted);
+      margin-bottom: 16px;
+    }
+    .r1-streak-line strong { color: var(--lt-text); font-weight: 600; }
+    .r1-recent-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 9px 0;
+      font-size: 13px;
+      color: #9ca3af;
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+    .r1-recent-pnl { font-weight: 600; font-size: 13px; }
+
+    /* In-progress workflow card */
+    .r1-workflow {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+    .r1-workflow-head {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--lt-muted);
+      margin-bottom: 16px;
+    }
+    .r1-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      font-size: 14px;
+      color: var(--lt-muted);
+    }
+    .r1-step + .r1-step { border-top: 1px solid rgba(255,255,255,0.04); }
+    .r1-step.done { color: #9ca3af; }
+    .r1-step.done .r1-step-icon { background: var(--lt-green); color: #fff; }
+    .r1-step.next {
+      color: var(--lt-text);
+      background: rgba(37,145,134,0.08);
+      margin: 0 -12px;
+      padding: 12px;
+      border-radius: 8px;
+      border-top: none;
+    }
+    .r1-step.next + .r1-step { border-top: none; }
+    .r1-step-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+    .r1-step.next .r1-step-icon {
+      border-color: var(--lt-green);
+      background: rgba(37,145,134,0.2);
+      color: var(--lt-green);
+    }
+    .r1-step-label { flex: 1; }
+    .r1-step-badge {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--lt-green);
+      background: rgba(37,145,134,0.15);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    /* ══════════════════════════════════════
+       REFINED 04 · POSTER
+       ══════════════════════════════════════ */
+    .r4.mock {
+      background: #0e0f13;
+      border: none;
+      position: relative;
+      min-height: 520px;
+    }
+    .r4-stripe {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      background: var(--lt-green);
+    }
+    .r4-body {
+      padding: 36px 32px 36px 40px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .r4-date {
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--lt-muted);
+      margin-bottom: 32px;
+    }
+    .r4-status {
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--lt-green);
+      margin-bottom: 10px;
+    }
+    .r4-status.progress { color: var(--lt-amber); }
+    .r4-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 0.95;
+      text-transform: uppercase;
+      color: #fff;
+      margin-bottom: 28px;
+    }
+    .r4-progress-num {
+      font-family: 'Outfit', sans-serif;
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .r4-progress-sub {
+      font-size: 13px;
+      color: var(--lt-muted);
+      margin-bottom: 24px;
+    }
+    .r4-rule {
+      width: 40px;
+      height: 2px;
+      background: var(--lt-green);
+      margin-bottom: 28px;
+    }
+    .r4-stats-row {
+      display: flex;
+      gap: 36px;
+      margin-bottom: 28px;
+    }
+    .r4-stat-num {
+      font-family: 'Outfit', sans-serif;
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+    .r4-stat-num.sm { font-size: 36px; }
+    .r4-stat-cap {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--lt-muted);
+      margin-top: 6px;
+    }
+    .r4-steps { margin-bottom: 24px; }
+    .r4-step-line {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      padding: 8px 0;
+      font-size: 13px;
+      color: var(--lt-muted);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .r4-step-line.done { color: #7a8088; }
+    .r4-step-line.next { color: var(--lt-text); }
+    .r4-step-line.next strong { color: var(--lt-green); }
+    .r4-step-mark {
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      min-width: 14px;
+    }
+    .r4-step-mark.done { color: var(--lt-green); }
+    .r4-events {
+      margin-top: auto;
+      padding-top: 20px;
+      border-top: 1px solid var(--lt-border);
+    }
+    .r4-event-line {
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      color: #7a8088;
+      padding: 6px 0;
+      display: flex;
+      gap: 10px;
+    }
+    .r4-event-line strong {
+      color: var(--lt-green);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      font-size: 10px;
+      min-width: 72px;
+    }
+    .r4-event-line.amber strong { color: var(--lt-amber); }
+    .r4-footer-band {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid var(--lt-border);
+    }
+    .r4-trend-mini {
+      flex: 0 0 100px;
+      opacity: 0.75;
+    }
+    .r4-trend-mini svg polyline { stroke: var(--lt-green); stroke-width: 2; }
+    .r4-history {
+      flex: 1;
+      display: flex;
+      gap: 20px;
+      font-size: 11px;
+      color: var(--lt-muted);
+    }
+    .r4-history-item { white-space: nowrap; }
+    .r4-history-item .r { font-weight: 600; }
+    .r4-history-item .g { font-weight: 600; }
+
+    /* ══════════════════════════════════════
+       HYBRID · CINEMATIC + POSTER
+       ══════════════════════════════════════ */
+    .hy.mock {
+      background: #0a0b0f;
+      border: 1px solid #1a1c24;
+      position: relative;
+      min-height: 520px;
+    }
+    .hy-stripe {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      background: var(--lt-green);
+    }
+    .hy-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 32px 22px 40px;
+      font-size: 12px;
+      color: var(--lt-muted);
+    }
+    .hy-date {
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+    .hy-live {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--lt-green);
+      font-weight: 500;
+    }
+    .hy-live::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--lt-green);
+      box-shadow: 0 0 10px rgba(37,145,134,0.5);
+    }
+    .hy-body {
+      padding: 0 32px 36px 40px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .hy-hero-zone {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 32px;
+      align-items: center;
+      padding: 32px 0 36px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 24px;
+    }
+    .hy-hero-eyebrow {
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--lt-green);
+      margin-bottom: 12px;
+    }
+    .hy-hero-eyebrow.muted { color: var(--lt-amber); }
+    .hy-hero-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 0.98;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .hy-hero-sub {
+      font-size: 13px;
+      color: var(--lt-muted);
+      line-height: 1.5;
+    }
+    .hy-float-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      text-align: right;
+    }
+    .hy-stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 56px;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 1;
+    }
+    .hy-stat-num.sm { font-size: 44px; }
+    .hy-stat-cap {
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--lt-muted);
+      margin-top: 4px;
+    }
+    .hy-ribbons { margin-bottom: 24px; }
+    .hy-ribbon {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .hy-ribbon-tag {
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--lt-green);
+      min-width: 64px;
+    }
+    .hy-ribbon-tag.amber { color: var(--lt-amber); }
+    .hy-ribbon-text { font-size: 13px; color: #b8bcc8; flex: 1; }
+    .hy-ribbon-hint { font-size: 11px; color: var(--lt-muted); }
+    .hy-workflow {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin-bottom: 22px;
+    }
+    .hy-workflow-head {
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--lt-muted);
+      margin-bottom: 14px;
+    }
+    .hy-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 0;
+      font-size: 13px;
+      color: var(--lt-muted);
+    }
+    .hy-step + .hy-step { border-top: 1px solid rgba(255,255,255,0.04); }
+    .hy-step.done { color: #8a9098; }
+    .hy-step.done .hy-step-icon { background: var(--lt-green); border-color: var(--lt-green); color: #fff; }
+    .hy-step.next {
+      color: var(--lt-text);
+      background: rgba(37,145,134,0.08);
+      margin: 0 -10px;
+      padding: 11px 10px;
+      border-radius: 7px;
+      border-top: none;
+    }
+    .hy-step.next + .hy-step { border-top: none; }
+    .hy-step-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      flex-shrink: 0;
+    }
+    .hy-step.next .hy-step-icon {
+      border-color: var(--lt-green);
+      background: rgba(37,145,134,0.2);
+      color: var(--lt-green);
+    }
+    .hy-step-badge {
+      font-family: 'Outfit', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--lt-green);
+      background: rgba(37,145,134,0.15);
+      padding: 3px 7px;
+      border-radius: 3px;
+    }
+    .hy-calm-block {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .hy-block-label {
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--lt-muted);
+      margin-bottom: 12px;
+    }
+    .hy-streak-line {
+      font-size: 13px;
+      color: var(--lt-muted);
+      margin-bottom: 12px;
+    }
+    .hy-streak-line strong { color: var(--lt-text); }
+    .hy-recent-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 12px;
+      color: #9ca3af;
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+    .hy-recent-pnl { font-weight: 600; }
+
+    /* ── Footer links ── */
+    .page-links {
+      margin-top: 56px;
+      padding-top: 28px;
+      border-top: 1px solid var(--lt-border);
+      font-size: 13px;
+      color: var(--lt-muted);
+      line-height: 1.8;
+    }
+    .page-links strong { color: var(--lt-text); }
+    .page-links a { color: var(--lt-green); text-decoration: none; }
+    .page-links a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="page-head">
+      <h1>Refined home directions</h1>
+      <p class="lead">Three refined mockups built from design review feedback on Cinematic (01) and Poster (04), plus a Hybrid ship candidate. Each column shows <strong style="color:#b8bcc8;font-weight:500;">two states</strong> — a complete day and an in-progress day — so you can evaluate daily-use feel before React implementation.</p>
+      <div class="note">
+        <strong>Complete day</strong> · Jun 16 2026 · 3/3 rituals · Readiness 78 · P&amp;L −$771 · Streak 2d · ROLL + PRE FOMC events<br>
+        <strong>In-progress day</strong> · 1/3 complete · Pre-market done · Plan + Review open · Next step highlighted
+      </div>
+    </header>
+
+    <div class="grid">
+
+      <!-- REFINED 01 · CINEMATIC -->
+      <div class="dir-col">
+        <div class="dir-num">Refined 01</div>
+        <div class="dir-name">Cinematic</div>
+        <p class="dir-vibe">Generous hero, floating stats, slim ribbons, calm streak + history block. P&amp;L smaller than readiness on red days.</p>
+
+        <div class="state-pair">
+
+          <!-- Complete -->
+          <div>
+            <div class="state-label"><span class="dot complete"></span> Complete day</div>
+            <div class="mock r1">
+              <div class="r1-bar">
+                <span>Tuesday, June 16, 2026</span>
+                <span class="r1-live">Live</span>
+              </div>
+              <div class="r1-body">
+                <div class="r1-hero-zone">
+                  <div>
+                    <div class="r1-hero-eyebrow">3 / 3 complete</div>
+                    <h2 class="r1-hero-title">Day<br>complete.</h2>
+                    <p class="r1-hero-sub">Process over outcomes.</p>
+                  </div>
+                  <div class="r1-float-stats">
+                    <div>
+                      <div class="r1-big-num g">78</div>
+                      <div class="r1-big-label">Readiness</div>
+                    </div>
+                    <div>
+                      <div class="r1-big-num r smaller">−771</div>
+                      <div class="r1-big-label">Net P&amp;L</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="r1-ribbons">
+                  <div class="r1-ribbon">
+                    <span class="r1-ribbon-tag">ROLL</span>
+                    <span class="r1-ribbon-text">Contract roll week</span>
+                    <span class="r1-ribbon-hint">Watch volume</span>
+                  </div>
+                  <div class="r1-ribbon">
+                    <span class="r1-ribbon-tag amber">PRE FOMC</span>
+                    <span class="r1-ribbon-text">FOMC tomorrow</span>
+                    <span class="r1-ribbon-hint">Reduce size</span>
+                  </div>
+                </div>
+
+                <div class="r1-calm-block">
+                  <div>
+                    <div class="r1-block-label">Readiness trend</div>
+                    <div class="spark">
+                      <svg viewBox="0 0 200 48" preserveAspectRatio="none">
+                        <polyline points="0,38 50,28 100,20 150,14 200,8" fill="none" stroke="#259186" stroke-width="2.5"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="r1-block-label">Streak &amp; recent</div>
+                    <div class="r1-streak-line">Pre-market streak · <strong>2 days</strong></div>
+                    <div class="r1-recent-row"><span>Jun 16</span><span class="r1-recent-pnl r">−$771</span></div>
+                    <div class="r1-recent-row"><span>Jun 12</span><span class="r1-recent-pnl r">−$2,071</span></div>
+                    <div class="r1-recent-row"><span>Jun 11</span><span class="r1-recent-pnl g">+$412</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- In-progress -->
+          <div>
+            <div class="state-label"><span class="dot progress"></span> In-progress day</div>
+            <div class="mock r1">
+              <div class="r1-bar">
+                <span>Tuesday, June 16, 2026</span>
+                <span class="r1-live">Live</span>
+              </div>
+              <div class="r1-body">
+                <div class="r1-hero-zone">
+                  <div>
+                    <div class="r1-hero-eyebrow muted">1 of 3 complete</div>
+                    <h2 class="r1-hero-title">Morning<br>underway.</h2>
+                    <p class="r1-hero-sub">Pre-market logged. Plan and review still open.</p>
+                  </div>
+                </div>
+
+                <div class="r1-workflow">
+                  <div class="r1-workflow-head">Today's workflow</div>
+                  <div class="r1-step done">
+                    <span class="r1-step-icon">✓</span>
+                    <span class="r1-step-label">Pre-market</span>
+                  </div>
+                  <div class="r1-step next">
+                    <span class="r1-step-icon">→</span>
+                    <span class="r1-step-label">Session plan</span>
+                    <span class="r1-step-badge">Next</span>
+                  </div>
+                  <div class="r1-step">
+                    <span class="r1-step-icon"></span>
+                    <span class="r1-step-label">End-of-day review</span>
+                  </div>
+                </div>
+
+                <div class="r1-ribbons">
+                  <div class="r1-ribbon">
+                    <span class="r1-ribbon-tag">ROLL</span>
+                    <span class="r1-ribbon-text">Contract roll week</span>
+                    <span class="r1-ribbon-hint">Watch volume</span>
+                  </div>
+                  <div class="r1-ribbon">
+                    <span class="r1-ribbon-tag amber">PRE FOMC</span>
+                    <span class="r1-ribbon-text">FOMC tomorrow</span>
+                    <span class="r1-ribbon-hint">Reduce size</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- REFINED 04 · POSTER -->
+      <div class="dir-col">
+        <div class="dir-num">Refined 04</div>
+        <div class="dir-name">Poster</div>
+        <p class="dir-vibe">Swiss typography toned down for daily use. Accent stripe, date as 16 · 06 · 26, thin event lines, horizontal footer band.</p>
+
+        <div class="state-pair">
+
+          <!-- Complete -->
+          <div>
+            <div class="state-label"><span class="dot complete"></span> Complete day</div>
+            <div class="mock r4">
+              <div class="r4-stripe"></div>
+              <div class="r4-body">
+                <div class="r4-date">16 · 06 · 26</div>
+                <div class="r4-status">Complete</div>
+                <h2 class="r4-title">Day Done.</h2>
+                <div class="r4-rule"></div>
+                <div class="r4-stats-row">
+                  <div>
+                    <div class="r4-stat-num g">78</div>
+                    <div class="r4-stat-cap">Ready</div>
+                  </div>
+                  <div>
+                    <div class="r4-stat-num r sm">771</div>
+                    <div class="r4-stat-cap">P&amp;L</div>
+                  </div>
+                  <div>
+                    <div class="r4-stat-num">2</div>
+                    <div class="r4-stat-cap">Streak</div>
+                  </div>
+                </div>
+                <div class="r4-events">
+                  <div class="r4-event-line"><strong>ROLL</strong> Contract roll week</div>
+                  <div class="r4-event-line amber"><strong>PRE FOMC</strong> FOMC tomorrow — reduce size</div>
+                </div>
+                <div class="r4-footer-band">
+                  <div class="r4-trend-mini spark">
+                    <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+                      <polyline points="0,30 25,22 50,16 75,10 100,6" fill="none" stroke="#259186" stroke-width="2"/>
+                    </svg>
+                  </div>
+                  <div class="r4-history">
+                    <span class="r4-history-item">Jun 16 <span class="r">−771</span></span>
+                    <span class="r4-history-item">Jun 12 <span class="r">−2071</span></span>
+                    <span class="r4-history-item">Jun 11 <span class="g">+412</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- In-progress -->
+          <div>
+            <div class="state-label"><span class="dot progress"></span> In-progress day</div>
+            <div class="mock r4">
+              <div class="r4-stripe"></div>
+              <div class="r4-body">
+                <div class="r4-date">16 · 06 · 26</div>
+                <div class="r4-progress-num">1 / 3</div>
+                <p class="r4-progress-sub">Pre-market done · Plan + Review open</p>
+                <div class="r4-steps">
+                  <div class="r4-step-line done"><span class="r4-step-mark done">✓</span> Pre-market</div>
+                  <div class="r4-step-line next"><span class="r4-step-mark">→</span> <strong>Session plan</strong> — next</div>
+                  <div class="r4-step-line"><span class="r4-step-mark">·</span> End-of-day review</div>
+                </div>
+                <div class="r4-events">
+                  <div class="r4-event-line"><strong>ROLL</strong> Contract roll week</div>
+                  <div class="r4-event-line amber"><strong>PRE FOMC</strong> FOMC tomorrow — reduce size</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- HYBRID -->
+      <div class="dir-col">
+        <div class="dir-num">Hybrid</div>
+        <div class="dir-name">Cinematic + Poster<span class="pick-badge">Ship candidate</span></div>
+        <p class="dir-vibe">Cinematic layout with Poster accents — teal stripe, date format, uppercase stat captions. Best of both directions.</p>
+
+        <div class="state-pair">
+
+          <!-- Complete -->
+          <div>
+            <div class="state-label"><span class="dot complete"></span> Complete day</div>
+            <div class="mock hy">
+              <div class="hy-stripe"></div>
+              <div class="hy-bar">
+                <span class="hy-date">16 · 06 · 26</span>
+                <span class="hy-live">Live</span>
+              </div>
+              <div class="hy-body">
+                <div class="hy-hero-zone">
+                  <div>
+                    <div class="hy-hero-eyebrow">3 / 3 complete</div>
+                    <h2 class="hy-hero-title">Day<br>complete.</h2>
+                    <p class="hy-hero-sub">Process over outcomes.</p>
+                  </div>
+                  <div class="hy-float-stats">
+                    <div>
+                      <div class="hy-stat-num g">78</div>
+                      <div class="hy-stat-cap">Readiness</div>
+                    </div>
+                    <div>
+                      <div class="hy-stat-num r sm">−771</div>
+                      <div class="hy-stat-cap">Net P&amp;L</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="hy-ribbons">
+                  <div class="hy-ribbon">
+                    <span class="hy-ribbon-tag">ROLL</span>
+                    <span class="hy-ribbon-text">Contract roll week</span>
+                    <span class="hy-ribbon-hint">Watch volume</span>
+                  </div>
+                  <div class="hy-ribbon">
+                    <span class="hy-ribbon-tag amber">PRE FOMC</span>
+                    <span class="hy-ribbon-text">FOMC tomorrow</span>
+                    <span class="hy-ribbon-hint">Reduce size</span>
+                  </div>
+                </div>
+
+                <div class="hy-calm-block">
+                  <div>
+                    <div class="hy-block-label">Readiness trend</div>
+                    <div class="spark">
+                      <svg viewBox="0 0 200 48" preserveAspectRatio="none">
+                        <polyline points="0,38 50,28 100,20 150,14 200,8" fill="none" stroke="#259186" stroke-width="2.5"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="hy-block-label">Streak &amp; recent</div>
+                    <div class="hy-streak-line">Pre-market · <strong>2 day streak</strong></div>
+                    <div class="hy-recent-row"><span>Jun 16</span><span class="hy-recent-pnl r">−$771</span></div>
+                    <div class="hy-recent-row"><span>Jun 12</span><span class="hy-recent-pnl r">−$2,071</span></div>
+                    <div class="hy-recent-row"><span>Jun 11</span><span class="hy-recent-pnl g">+$412</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- In-progress -->
+          <div>
+            <div class="state-label"><span class="dot progress"></span> In-progress day</div>
+            <div class="mock hy">
+              <div class="hy-stripe"></div>
+              <div class="hy-bar">
+                <span class="hy-date">16 · 06 · 26</span>
+                <span class="hy-live">Live</span>
+              </div>
+              <div class="hy-body">
+                <div class="hy-hero-zone">
+                  <div>
+                    <div class="hy-hero-eyebrow muted">1 of 3 complete</div>
+                    <h2 class="hy-hero-title">Morning<br>underway.</h2>
+                    <p class="hy-hero-sub">Pre-market logged. Plan and review still open.</p>
+                  </div>
+                </div>
+
+                <div class="hy-workflow">
+                  <div class="hy-workflow-head">Today's workflow</div>
+                  <div class="hy-step done">
+                    <span class="hy-step-icon">✓</span>
+                    <span>Pre-market</span>
+                  </div>
+                  <div class="hy-step next">
+                    <span class="hy-step-icon">→</span>
+                    <span>Session plan</span>
+                    <span class="hy-step-badge">Next</span>
+                  </div>
+                  <div class="hy-step">
+                    <span class="hy-step-icon"></span>
+                    <span>End-of-day review</span>
+                  </div>
+                </div>
+
+                <div class="hy-ribbons">
+                  <div class="hy-ribbon">
+                    <span class="hy-ribbon-tag">ROLL</span>
+                    <span class="hy-ribbon-text">Contract roll week</span>
+                    <span class="hy-ribbon-hint">Watch volume</span>
+                  </div>
+                  <div class="hy-ribbon">
+                    <span class="hy-ribbon-tag amber">PRE FOMC</span>
+                    <span class="hy-ribbon-text">FOMC tomorrow</span>
+                    <span class="hy-ribbon-hint">Reduce size</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <footer class="page-links">
+      <strong>Preview URLs</strong><br>
+      Local: <a href="http://localhost:3000/home-refined-preview.html">http://localhost:3000/home-refined-preview.html</a><br>
+      Production: <a href="https://libertrade-desk.vercel.app/home-refined-preview.html">https://libertrade-desk.vercel.app/home-refined-preview.html</a><br><br>
+      <strong>Related</strong> · <a href="home-5-designs-preview.html">Original 5 directions</a>
+    </footer>
+  </div>
+</body>
+</html>
