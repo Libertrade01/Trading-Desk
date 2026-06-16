@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&family=Syne:wght@500;600;700;800&family=Barlow:wght@300;400;500&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&family=Syne:wght@500;600;700;800&family=Barlow:wght@300;400;500&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
 
 :root {
   --bg:        #111217;
@@ -23,9 +23,9 @@
 
 /* Shared hybrid/poster typography (home + workflow) */
 .hybrid-eyebrow {
-  font-family: var(--font-poster);
+  font-family: 'Outfit', var(--font-poster);
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--green);
@@ -34,7 +34,7 @@
 .hybrid-eyebrow--muted { color: var(--amber); }
 
 .hybrid-title {
-  font-family: var(--font-display);
+  font-family: 'Syne', var(--font-display);
   font-size: clamp(28px, 5vw, 36px);
   font-weight: 800;
   letter-spacing: -0.04em;
@@ -43,7 +43,7 @@
 }
 
 .hybrid-section-title {
-  font-family: var(--font-display);
+  font-family: 'Syne', var(--font-display);
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -51,7 +51,7 @@
 }
 
 .hybrid-label {
-  font-family: var(--font-poster);
+  font-family: 'Outfit', var(--font-poster);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -59,7 +59,7 @@
 }
 
 .hybrid-label-sm {
-  font-family: var(--font-poster);
+  font-family: 'Outfit', var(--font-poster);
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.14em;
@@ -400,10 +400,11 @@ textarea:focus, input:focus, select:focus {
 }
 
 .home-hybrid-date {
-  font-family: var(--font-poster);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
+  font-family: 'Outfit', var(--font-poster);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
   color: var(--muted);
 }
 
@@ -460,13 +461,18 @@ textarea:focus, input:focus, select:focus {
 
 .hybrid-eyebrow,
 .home-hybrid-eyebrow {
-  font-family: var(--font-poster);
+  font-family: 'Outfit', var(--font-poster);
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--green);
   margin-bottom: 12px;
+}
+
+.home-hybrid-eyebrow--poster {
+  font-weight: 600;
+  letter-spacing: 0.2em;
 }
 
 .home-hybrid-eyebrow--muted,
@@ -476,13 +482,65 @@ textarea:focus, input:focus, select:focus {
 
 .hybrid-title,
 .home-hybrid-title {
-  font-family: var(--font-display);
+  font-family: 'Syne', var(--font-display);
   font-size: clamp(28px, 6vw, 36px);
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 0.98;
   color: #fff;
   margin: 0 0 8px;
+}
+
+.home-hybrid-title--poster {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+  text-transform: uppercase;
+  margin-bottom: 0;
+}
+
+.home-hybrid-hero--complete {
+  display: block;
+  grid-template-columns: unset;
+}
+
+.home-hybrid-rule {
+  width: 40px;
+  height: 2px;
+  background: var(--green);
+  margin: 20px 0 28px;
+}
+
+.home-hybrid-stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 36px;
+  margin-bottom: 8px;
+}
+
+.home-hybrid-stats-row .home-hybrid-stat-num {
+  font-family: 'Syne', var(--font-display);
+  font-size: 56px;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  text-align: left;
+}
+
+.home-hybrid-stats-row .home-hybrid-stat-num.sm {
+  font-size: 44px;
+}
+
+.home-hybrid-stats-row .home-hybrid-stat-cap {
+  font-family: 'Outfit', var(--font-poster);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 6px;
+  text-align: left;
 }
 
 .home-hybrid-sub {
@@ -531,7 +589,7 @@ textarea:focus, input:focus, select:focus {
 }
 
 .home-hybrid-stat-num {
-  font-family: var(--font-display);
+  font-family: 'Syne', var(--font-display);
   font-size: clamp(40px, 8vw, 56px);
   font-weight: 800;
   letter-spacing: -0.05em;
@@ -548,7 +606,7 @@ textarea:focus, input:focus, select:focus {
 .home-hybrid-stat-num.neutral { color: var(--home-text, var(--text)); }
 
 .home-hybrid-stat-cap {
-  font-family: var(--font-poster);
+  font-family: 'Outfit', var(--font-poster);
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -762,9 +820,9 @@ textarea:focus, input:focus, select:focus {
 }
 
 .home-hybrid-streak-ready {
-  font-family: var(--font-display);
+  font-family: 'Syne', var(--font-display);
   color: var(--green);
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .home-hybrid-streak-ready-cap {
@@ -799,7 +857,7 @@ textarea:focus, input:focus, select:focus {
 }
 
 .home-hybrid-recent-ready {
-  font-family: var(--font-display);
+  font-family: 'Syne', var(--font-display);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -871,9 +929,25 @@ textarea:focus, input:focus, select:focus {
     padding: 0 20px 48px 28px;
   }
 
-  .home-hybrid-hero {
+  .home-hybrid-hero:not(.home-hybrid-hero--complete) {
     grid-template-columns: 1fr;
     gap: 24px;
+  }
+
+  .home-hybrid-title--poster {
+    font-size: clamp(28px, 8vw, 36px);
+  }
+
+  .home-hybrid-stats-row {
+    gap: 28px;
+  }
+
+  .home-hybrid-stats-row .home-hybrid-stat-num {
+    font-size: clamp(40px, 10vw, 56px);
+  }
+
+  .home-hybrid-stats-row .home-hybrid-stat-num.sm {
+    font-size: clamp(32px, 8vw, 44px);
   }
 
   .home-hybrid-float-stats {
@@ -1002,9 +1076,9 @@ textarea:focus, input:focus, select:focus {
 .hybrid-page .history-eyebrow,
 .hybrid-page .pm-commitment-eyebrow,
 .hybrid-page .pm-reminders-eyebrow {
-  font-family: var(--font-poster);
+  font-family: 'Outfit', var(--font-poster);
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--green);
@@ -1012,8 +1086,9 @@ textarea:focus, input:focus, select:focus {
 
 .hybrid-page .pm-title,
 .hybrid-page .history-title,
-.hybrid-page .history-detail-title {
-  font-family: var(--font-display);
+.hybrid-page .history-detail-title,
+.hybrid-page .hybrid-title {
+  font-family: 'Syne', var(--font-display);
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 0.98;
@@ -1024,8 +1099,9 @@ textarea:focus, input:focus, select:focus {
 .hybrid-page .pm-mantra-title,
 .hybrid-page .history-section-title,
 .hybrid-page .pm-standdown-title,
-.hybrid-page .pm-import-title {
-  font-family: var(--font-display);
+.hybrid-page .pm-import-title,
+.hybrid-page .hybrid-section-title {
+  font-family: 'Syne', var(--font-display);
   font-weight: 700;
   letter-spacing: -0.02em;
   color: #fff;
@@ -1041,8 +1117,10 @@ textarea:focus, input:focus, select:focus {
 .hybrid-page .pm-summary-grid span,
 .hybrid-page .history-row-label,
 .hybrid-page .pm-dim-bar-header > span:first-child,
-.hybrid-page .history-flags-title {
-  font-family: var(--font-poster);
+.hybrid-page .history-flags-title,
+.hybrid-page .hybrid-label,
+.hybrid-page .hybrid-label-sm {
+  font-family: 'Outfit', var(--font-poster);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1076,7 +1154,7 @@ textarea:focus, input:focus, select:focus {
 .hybrid-page .history-score-num,
 .hybrid-page .pm-summary-grid strong,
 .hybrid-page .pm-summary-flags-count {
-  font-family: var(--font-display);
+  font-family: 'Syne', var(--font-display);
   font-weight: 800;
 }
 
@@ -1191,9 +1269,9 @@ textarea:focus, input:focus, select:focus {
 .pm-back:hover { color: var(--text); }
 
 .pm-eyebrow {
-  font-family: var(--font-poster);
+  font-family: 'Outfit', var(--font-poster);
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--green);
@@ -1201,7 +1279,7 @@ textarea:focus, input:focus, select:focus {
 }
 
 .pm-title {
-  font-family: var(--font-display);
+  font-family: 'Syne', var(--font-display);
   font-size: clamp(28px, 5vw, 36px);
   font-weight: 800;
   color: #fff;
@@ -1244,7 +1322,7 @@ textarea:focus, input:focus, select:focus {
 }
 
 .pm-section-title {
-  font-family: var(--font-display);
+  font-family: 'Syne', var(--font-display);
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.02em;

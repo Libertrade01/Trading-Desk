@@ -122,20 +122,19 @@ function stepComplete(stepId, preComplete, planComplete, postComplete) {
   return postComplete;
 }
 
-function formatDisplayPnl(value) {
+function formatPosterPnl(value) {
   if (value == null) return "—";
-  const abs = Math.abs(Math.round(value));
-  const sign = value < 0 ? "−" : value > 0 ? "+" : "";
-  return `${sign}${abs}`;
+  return String(Math.abs(Math.round(value)));
 }
 
 function heroCopy(allComplete, completedCount, weekend, timeEyebrow) {
   if (allComplete) {
     return {
-      eyebrow: "3 / 3 complete",
+      eyebrow: "Complete",
       eyebrowMuted: false,
-      title: "Day complete.",
-      sub: "Process over outcomes.",
+      title: "Day Done.",
+      sub: null,
+      poster: true,
     };
   }
   if (completedCount > 0) {
@@ -246,15 +245,50 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
 
       <div className="home-dashboard-inner">
         <div className="home-hybrid-body">
-          <header className="home-hybrid-hero">
+          <header
+            className={`home-hybrid-hero${allComplete ? " home-hybrid-hero--complete" : ""}`}
+          >
             <div className="home-hybrid-hero-copy">
               <div
-                className={`home-hybrid-eyebrow hybrid-eyebrow${hero.eyebrowMuted ? " home-hybrid-eyebrow--muted hybrid-eyebrow--muted" : ""}`}
+                className={`home-hybrid-eyebrow hybrid-eyebrow${hero.eyebrowMuted ? " home-hybrid-eyebrow--muted hybrid-eyebrow--muted" : ""}${hero.poster ? " home-hybrid-eyebrow--poster" : ""}`}
               >
                 {hero.eyebrow}
               </div>
-              <h1 className="home-hybrid-title hybrid-title">{hero.title}</h1>
-              <p className="home-hybrid-sub">{hero.sub}</p>
+              <h1
+                className={`home-hybrid-title hybrid-title${hero.poster ? " home-hybrid-title--poster" : ""}`}
+              >
+                {hero.title}
+              </h1>
+              {allComplete && <div className="home-hybrid-rule" aria-hidden="true" />}
+              {allComplete && (
+                <div className="home-hybrid-stats-row">
+                  {showReadinessStat && (
+                    <div>
+                      <div
+                        className={`home-hybrid-stat-num${today?.readinessScore != null ? " positive" : ""}`}
+                      >
+                        {today?.readinessScore != null ? today.readinessScore : "—"}
+                      </div>
+                      <div className="home-hybrid-stat-cap">Ready</div>
+                    </div>
+                  )}
+                  {showPnlStat && (
+                    <div>
+                      <div
+                        className={`home-hybrid-stat-num ${pnlTone}${pnlSmaller ? " sm" : ""}`}
+                      >
+                        {formatPosterPnl(today?.netPnl)}
+                      </div>
+                      <div className="home-hybrid-stat-cap">P&amp;L</div>
+                    </div>
+                  )}
+                  <div>
+                    <div className="home-hybrid-stat-num neutral">{preStreak}</div>
+                    <div className="home-hybrid-stat-cap">Streak</div>
+                  </div>
+                </div>
+              )}
+              {hero.sub && <p className="home-hybrid-sub">{hero.sub}</p>}
               {allComplete && (
                 <div className="home-hybrid-edit">
                   <button type="button" onClick={() => onNavigate("premarket")}>
@@ -275,33 +309,6 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                 </div>
               )}
             </div>
-
-            {allComplete && (showReadinessStat || showPnlStat) && (
-              <div className="home-hybrid-float-stats">
-                {showReadinessStat && (
-                  <div>
-                    <div
-                      className={`home-hybrid-stat-num${today?.readinessScore != null ? " positive" : ""}`}
-                    >
-                      {today?.readinessScore != null ? today.readinessScore : "—"}
-                    </div>
-                    <div className="home-hybrid-stat-cap">Readiness</div>
-                  </div>
-                )}
-                {showPnlStat && (
-                  <div>
-                    <div
-                      className={`home-hybrid-stat-num ${pnlTone}${pnlSmaller ? " sm" : ""}`}
-                    >
-                      {today?.netPnl != null
-                        ? formatDisplayPnl(today.netPnl)
-                        : "—"}
-                    </div>
-                    <div className="home-hybrid-stat-cap">Net P&amp;L</div>
-                  </div>
-                )}
-              </div>
-            )}
           </header>
 
           {!allComplete && (
