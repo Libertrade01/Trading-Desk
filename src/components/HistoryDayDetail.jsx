@@ -111,7 +111,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
   const pnlTone = session.netPnl > 0 ? "pos" : session.netPnl < 0 ? "neg" : "dim";
 
   return (
-    <div className="history-detail-page">
+    <div className="history-detail-page hybrid-page">
       <div className="history-detail-top">
         <button type="button" className="pm-back" onClick={onBack}>← Back to history</button>
         <div className="history-detail-header">

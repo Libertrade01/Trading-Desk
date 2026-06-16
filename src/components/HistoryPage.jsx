@@ -33,7 +33,7 @@ export default function HistoryPage({ onSelectDay, onBack }) {
   if (loading) return <div className="pm-loading">Loading...</div>;
 
   return (
-    <div className="history-page">
+    <div className="history-page hybrid-page">
       <div className="pm-topbar">
         <span>{headerDate()}</span>
         <span className="pm-live"><span className="pm-live-dot" />Live</span>

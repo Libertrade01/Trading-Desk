@@ -172,7 +172,7 @@ export default function DailyPlan({ onBack }) {
   if (loading) return <div className="pm-loading">Loading...</div>;
 
   return (
-    <div className="premarket-page">
+    <div className="premarket-page hybrid-page">
       <div className="pm-topbar">
         <span>{headerDate()}</span>
         <span className="pm-live"><span className="pm-live-dot" />Live</span>
