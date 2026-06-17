@@ -794,8 +794,8 @@ textarea:focus, input:focus, select:focus {
 }
 
 .home-hybrid-step.done .home-hybrid-step-icon {
-  background: var(--green);
-  border-color: var(--green);
+  background: var(--brand);
+  border-color: var(--brand);
   color: #fff;
 }
 
