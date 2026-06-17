@@ -144,16 +144,6 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                 </div>
               )}
               <StatGrid
-                title="Emotional"
-                items={[
-                  { label: "State", value: pre.emotionalState },
-                  { label: "Confidence", value: pre.confidence },
-                  { label: "Patience", value: pre.patience },
-                  { label: "FOMO", value: pre.fomoRisk },
-                  { label: "Revenge", value: pre.revengeRisk },
-                ]}
-              />
-              <StatGrid
                 title="Physical"
                 items={[
                   { label: "Sleep", value: pre.sleepHours != null ? `${pre.sleepHours}h` : null },
@@ -162,6 +152,16 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                   { label: "HRV", value: pre.hrvScore != null && pre.hrvScore !== "" ? `${pre.hrvScore}%` : null },
                   { label: "Hydrated", value: yesNo(pre.hydrated) },
                   { label: "Movement", value: yesNo(pre.movement) },
+                ]}
+              />
+              <StatGrid
+                title="Mental"
+                items={[
+                  { label: "State", value: pre.emotionalState },
+                  { label: "Confidence", value: pre.confidence },
+                  { label: "Patience", value: pre.patience },
+                  { label: "FOMO", value: pre.fomoRisk },
+                  { label: "Revenge", value: pre.revengeRisk },
                 ]}
               />
               <StatGrid

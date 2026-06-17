@@ -211,7 +211,7 @@ export default function PreMarketCheckIn({ onBack }) {
   };
 
   const handleShare = async () => {
-    const text = `Pre-Market Check-in · ${todayKey()}\nReadinessScore: ${scores.composite}/100 (${status.label})\nEmotional ${scores.emotional} · Physical ${scores.physical} · External ${scores.external} · Prep ${scores.preparation}`;
+    const text = `Pre-Market Check-in · ${todayKey()}\nReadinessScore: ${scores.composite}/100 (${status.label})\nPhysical ${scores.physical} · Mental ${scores.emotional} · External ${scores.external} · Prep ${scores.preparation}`;
     try {
       if (navigator.share) {
         await navigator.share({ title: "Libertrade Pre-Market", text });
@@ -244,63 +244,10 @@ export default function PreMarketCheckIn({ onBack }) {
         </div>
 
         <div className="premarket-form">
-          {/* 01 Emotional */}
+          {/* 01 Physical */}
           <section className="pm-card">
             <div className="pm-section-head">
               <span className="pm-section-num">01</span>
-              <div>
-                <h2 className="pm-section-title hybrid-section-title">Emotional state</h2>
-                <p className="pm-section-desc">How you arrive on the desk today.</p>
-              </div>
-            </div>
-            <SliderField
-              label="Emotional state"
-              hint="Calm, centered, prepared (10) → reactive, off-balance (1)"
-              minLabel="Off"
-              maxLabel="Centered"
-              value={form.emotionalState}
-              onChange={(v) => set("emotionalState", v)}
-            />
-            <SliderField
-              label="Confidence"
-              hint="In your read of conditions today"
-              minLabel="Shaky"
-              maxLabel="Confident"
-              value={form.confidence}
-              onChange={(v) => set("confidence", v)}
-            />
-            <SliderField
-              label="Patience"
-              hint="Willingness to wait for A+ setups"
-              minLabel="Itchy"
-              maxLabel="Patient"
-              value={form.patience}
-              onChange={(v) => set("patience", v)}
-            />
-            <SliderField
-              label="FOMO risk"
-              hint="How likely to chase moves"
-              minLabel="None"
-              maxLabel="High"
-              value={form.fomoRisk}
-              onChange={(v) => set("fomoRisk", v)}
-              inverted
-            />
-            <SliderField
-              label="Revenge risk"
-              hint="Pressure from a recent loss"
-              minLabel="None"
-              maxLabel="High"
-              value={form.revengeRisk}
-              onChange={(v) => set("revengeRisk", v)}
-              inverted
-            />
-          </section>
-
-          {/* 02 Physical */}
-          <section className="pm-card">
-            <div className="pm-section-head">
-              <span className="pm-section-num">02</span>
               <div>
                 <h2 className="pm-section-title hybrid-section-title">Physical state</h2>
                 <p className="pm-section-desc">The body the brain rents.</p>
@@ -353,6 +300,59 @@ export default function PreMarketCheckIn({ onBack }) {
               <ToggleField label="Hydrated" hint="Water in" value={form.hydrated} onChange={(v) => set("hydrated", v)} />
               <ToggleField label="Movement" hint="Walk, stretch, or workout" value={form.movement} onChange={(v) => set("movement", v)} />
             </div>
+          </section>
+
+          {/* 02 Mental */}
+          <section className="pm-card">
+            <div className="pm-section-head">
+              <span className="pm-section-num">02</span>
+              <div>
+                <h2 className="pm-section-title hybrid-section-title">Mental state</h2>
+                <p className="pm-section-desc">How you arrive on the desk today.</p>
+              </div>
+            </div>
+            <SliderField
+              label="Mental state"
+              hint="Calm, centered, prepared (10) → reactive, off-balance (1)"
+              minLabel="Off"
+              maxLabel="Centered"
+              value={form.emotionalState}
+              onChange={(v) => set("emotionalState", v)}
+            />
+            <SliderField
+              label="Confidence"
+              hint="In your read of conditions today"
+              minLabel="Shaky"
+              maxLabel="Confident"
+              value={form.confidence}
+              onChange={(v) => set("confidence", v)}
+            />
+            <SliderField
+              label="Patience"
+              hint="Willingness to wait for A+ setups"
+              minLabel="Itchy"
+              maxLabel="Patient"
+              value={form.patience}
+              onChange={(v) => set("patience", v)}
+            />
+            <SliderField
+              label="FOMO risk"
+              hint="How likely to chase moves"
+              minLabel="None"
+              maxLabel="High"
+              value={form.fomoRisk}
+              onChange={(v) => set("fomoRisk", v)}
+              inverted
+            />
+            <SliderField
+              label="Revenge risk"
+              hint="Pressure from a recent loss"
+              minLabel="None"
+              maxLabel="High"
+              value={form.revengeRisk}
+              onChange={(v) => set("revengeRisk", v)}
+              inverted
+            />
           </section>
 
           {/* 03 External */}
@@ -479,13 +479,13 @@ export default function PreMarketCheckIn({ onBack }) {
               </div>
               <div className={`pm-score-status pm-score-status--${status.tone}`}>{status.label}</div>
               <div className="pm-dim-bars">
-                <DimBar label="Emotional" value={scores.emotional} />
                 <DimBar label="Physical" value={scores.physical} />
+                <DimBar label="Mental" value={scores.emotional} />
                 <DimBar label="External" value={scores.external} />
                 <DimBar label="Preparation" value={scores.preparation} />
               </div>
               <p className="pm-score-footnote">
-                Your score updates as you fill in the form. Weighted: emotional 38% · physical 22% · prep 25% · external 15%.
+                Your score updates as you fill in the form. Weighted: physical 22% · mental 38% · prep 25% · external 15%.
               </p>
             </div>
 

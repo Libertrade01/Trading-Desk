@@ -2,15 +2,15 @@
  * Pre-Market ReadinessScore
  *
  * Weighting rationale (discretionary intraday trading):
- * - Emotional: largest composite share — FOMO, revenge, patience directly predict rule breaks and DLL hits.
+ * - Mental (emotional key): largest composite share — FOMO, revenge, patience directly predict rule breaks and DLL hits.
  * - Physical: recovery gate — poor sleep/HRV impairs impulse control; strong HRV is weighted highest here.
  * - Preparation: pre-commitment — plan + levels reduce improvised trades mid-session.
  * - External: acute stressors — financial pressure and distractions tilt sizing and focus.
  *
  * Composite (0–100):
- *   Emotional 38% · Physical 22% · Preparation 25% · External 15%
+ *   Mental 38% · Physical 22% · Preparation 25% · External 15%
  *
- * Emotional sub-weights: Patience 28% · FOMO 18% · Revenge 14% · State 20% · Confidence 20%
+ * Mental sub-weights: Patience 28% · FOMO 18% · Revenge 14% · State 20% · Confidence 20%
  * Physical sub-weights: HRV 26% · Sleep quality 24% · Sleep hours 18% · Energy 16% · Movement 8% · Hydrated 8%
  * Preparation sub-weights: Plan written 28% · Key levels 24% · Routine 22% · News 14% · Meditation 12%
  * External sub-weights: Financial pressure 51% · Distractions 49%

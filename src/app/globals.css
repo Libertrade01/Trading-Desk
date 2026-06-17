@@ -482,6 +482,7 @@ textarea:focus, input:focus, select:focus {
 .home-hybrid-title.hybrid-page-title {
   font-size: clamp(32px, 5vw, 40px);
   line-height: 0.95;
+  text-transform: uppercase;
 }
 
 .home-hybrid-hero--complete {

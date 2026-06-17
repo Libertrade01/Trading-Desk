@@ -155,7 +155,7 @@ function heroCopy(allComplete, completedCount, weekend, timeEyebrow) {
   return {
     eyebrow: "0 of 3 complete",
     eyebrowMuted: true,
-    title: "Ready when you are.",
+    title: "READY WHEN YOU ARE.",
     sub: "Pre-market, plan, and review still open.",
   };
 }
@@ -250,7 +250,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                 {hero.eyebrow}
               </div>
               <h1
-                className={`home-hybrid-title hybrid-title${hero.poster ? " hybrid-page-title home-hybrid-title--poster" : ""}`}
+                className={`home-hybrid-title hybrid-title hybrid-page-title${hero.poster ? " home-hybrid-title--poster" : ""}`}
               >
                 {hero.title}
               </h1>
@@ -325,7 +325,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                     onClick={() => onNavigate(step.id)}
                   >
                     <span className="home-hybrid-step-icon" aria-hidden="true">
-                      {complete ? "✓" : isNext ? "→" : ""}
+                      {complete ? "✓" : ""}
                     </span>
                     <span className="home-hybrid-step-label">{step.label}</span>
                     {isNext && <span className="home-hybrid-step-badge">Next</span>}
