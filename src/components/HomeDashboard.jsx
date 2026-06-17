@@ -14,6 +14,7 @@ import {
   isWeekend,
 } from "../lib/history-data";
 import HomeEventBanner from "./HomeEventBanner";
+import ReadinessScoreWidget from "./ReadinessScoreWidget";
 
 const WORKFLOW_STEPS = [
   { id: "premarket", label: "Pre-Market" },
@@ -121,6 +122,16 @@ function stepComplete(stepId, preComplete, planComplete, postComplete) {
   return postComplete;
 }
 
+function stepData(stepId, today) {
+  if (stepId === "premarket") return today?.pre;
+  if (stepId === "dailyplan") return today?.plan;
+  return today?.post;
+}
+
+function stepStarted(stepId, today) {
+  return !!stepData(stepId, today);
+}
+
 function formatPosterPnl(value) {
   if (value == null) return "—";
   return String(Math.abs(Math.round(value)));
@@ -204,29 +215,14 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
   const preStreak = useMemo(() => countStreak(sessions, "pre"), [sessions]);
   const recent = sessions.slice(0, 3);
 
+  const morningUnderway = !allComplete && completedCount > 0;
+  const showHeroReadiness =
+    morningUnderway && today?.readinessScore != null;
+
   const showReadinessStat =
     allComplete && (today?.readinessScore != null || preComplete);
   const showPnlStat =
     allComplete && (today?.netPnl != null || postComplete);
-
-  const handleShare = async () => {
-    const text = [
-      `Libertrade · ${formatPosterDate()}`,
-      `Readiness ${today?.readinessScore ?? "—"}`,
-      today?.netPnl != null
-        ? `Net P&L ${formatUsd(today.netPnl, { signed: true })}`
-        : "",
-      "Pre-market · Plan · Post-market complete.",
-    ]
-      .filter(Boolean)
-      .join("\n");
-    try {
-      if (navigator.share) await navigator.share({ text });
-      else await navigator.clipboard.writeText(text);
-    } catch {
-      /* cancelled */
-    }
-  };
 
   if (loading) return <div className="pm-loading">Loading...</div>;
 
@@ -297,13 +293,18 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                   <button type="button" onClick={() => onNavigate("postmarket")}>
                     Edit review
                   </button>
-                  <span className="home-hybrid-edit-sep">·</span>
-                  <button type="button" onClick={handleShare}>
-                    Share
-                  </button>
                 </div>
               )}
             </div>
+            {showHeroReadiness && (
+              <ReadinessScoreWidget
+                score={today.readinessScore}
+                statusLabel={today.readinessLabel}
+                statusTone={today.readinessTone}
+                variant="compact"
+                className="home-hybrid-readiness"
+              />
+            )}
           </header>
 
           {!allComplete && (
@@ -317,19 +318,41 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                   postComplete
                 );
                 const isNext = nextStep?.id === step.id;
+                const started = stepStarted(step.id, today);
+                const showEdit = !isNext && started;
                 return (
-                  <button
+                  <div
                     key={step.id}
-                    type="button"
-                    className={`home-hybrid-step${complete ? " done" : ""}${isNext ? " next" : ""}`}
-                    onClick={() => onNavigate(step.id)}
+                    className={`home-hybrid-step${complete ? " done" : ""}${isNext ? " next" : ""}${started && !complete ? " partial" : ""}`}
                   >
-                    <span className="home-hybrid-step-icon" aria-hidden="true">
-                      {complete ? "✓" : ""}
-                    </span>
-                    <span className="home-hybrid-step-label">{step.label}</span>
-                    {isNext && <span className="home-hybrid-step-badge">Next</span>}
-                  </button>
+                    <button
+                      type="button"
+                      className="home-hybrid-step-hit"
+                      onClick={() => onNavigate(step.id)}
+                    >
+                      <span className="home-hybrid-step-icon" aria-hidden="true">
+                        {complete ? "✓" : ""}
+                      </span>
+                      <span className="home-hybrid-step-label">{step.label}</span>
+                    </button>
+                    {(isNext || showEdit) && (
+                      <span className="home-hybrid-step-action">
+                        {isNext ? (
+                          <span className="home-hybrid-step-badge">
+                            {completedCount === 0 ? "Start" : "Next"}
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="home-hybrid-step-edit"
+                            onClick={() => onNavigate(step.id)}
+                          >
+                            Edit
+                          </button>
+                        )}
+                      </span>
+                    )}
+                  </div>
                 );
               })}
             </section>

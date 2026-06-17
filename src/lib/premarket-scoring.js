@@ -5,7 +5,7 @@
  * - Mental (emotional key): largest composite share — FOMO, revenge, patience directly predict rule breaks and DLL hits.
  * - Physical: recovery gate — poor sleep/HRV impairs impulse control; strong HRV is weighted highest here.
  * - Preparation: pre-commitment — plan + levels reduce improvised trades mid-session.
- * - External: acute stressors — financial pressure and distractions tilt sizing and focus.
+ * - External: acute stressors — financial pressure, distractions, and self-reported focus tilt sizing and attention.
  *
  * Composite (0–100):
  *   Mental 38% · Physical 22% · Preparation 25% · External 15%
@@ -13,7 +13,7 @@
  * Mental sub-weights: Patience 28% · FOMO 18% · Revenge 14% · State 20% · Confidence 20%
  * Physical sub-weights: HRV 26% · Sleep quality 24% · Sleep hours 18% · Energy 16% · Movement 8% · Hydrated 8%
  * Preparation sub-weights: Plan written 28% · Key levels 24% · Routine 22% · News 14% · Meditation 12%
- * External sub-weights: Financial pressure 51% · Distractions 49%
+ * External sub-weights: Financial pressure 34% · Distractions 33% · Focus 33%
  */
 
 export const DIMENSION_WEIGHTS = {
@@ -41,8 +41,9 @@ export const PHYSICAL_FIELD_WEIGHTS = {
 };
 
 export const EXTERNAL_FIELD_WEIGHTS = {
-  externalDistractions: 0.49,
-  financialPressure: 0.51,
+  financialPressure: 0.34,
+  externalDistractions: 0.33,
+  generalFocusLevel: 0.33,
 };
 
 export const PREPARATION_FIELD_WEIGHTS = {
@@ -126,6 +127,7 @@ export function scoreExternal(fields) {
   const scores = {
     externalDistractions: riskSliderToScore(fields.externalDistractions),
     financialPressure: riskSliderToScore(fields.financialPressure),
+    generalFocusLevel: sliderToScore(fields.generalFocusLevel),
   };
   return { score: weightedSum(scores, EXTERNAL_FIELD_WEIGHTS), fields: scores };
 }
@@ -202,6 +204,7 @@ export const DEFAULT_PREMARKET_FORM = {
   movement: false,
   externalDistractions: 3,
   financialPressure: 3,
+  generalFocusLevel: 5,
   reviewedKeyLevels: false,
   reviewedNews: false,
   dailyPlanWritten: false,

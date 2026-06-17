@@ -7,6 +7,7 @@ import PostMarketReview from "../components/PostMarketReview";
 import HistoryPage from "../components/HistoryPage";
 import HistoryDayDetail from "../components/HistoryDayDetail";
 import HomeDashboard from "../components/HomeDashboard";
+import PropEconomics from "../components/PropEconomics";
 
 // ═══════════════════════════════════════════════════════════
 // SHARED COMPONENTS
@@ -1916,6 +1917,9 @@ const NAV_ITEMS = [
   { id: "history", label: "History", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5v4l2.5 1.5" strokeLinecap="round"/></svg>
   )},
+  { id: "propeconomics", label: "Prop Economics", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 12V6l6-3 6 3v6l-6 3-6-3z"/><path d="M8 3v10M2 6l6 3 6-3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  )},
   { id: "desk", label: "Trade Desk", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
   )},
@@ -2038,6 +2042,7 @@ export default function App() {
             {page === "fundamentals" && <MarketFundamentals onBack={() => setPage("landing")} />}
           </div>
         )}
+        {section === "propeconomics" && <PropEconomics />}
         {section === "analytics" && <iframe className="embed-frame" src="/analytics" title="Analytics" />}
         {section === "wiki" && <iframe className="embed-frame" src="https://trade-wiki.vercel.app" title="Wiki" />}
         {section === "settings" && <SettingsPlaceholder />}

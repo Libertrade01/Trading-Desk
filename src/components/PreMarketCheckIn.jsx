@@ -5,11 +5,11 @@ import { storage } from "../lib/supabase";
 import {
   computeReadinessScore,
   readinessStatus,
-  readinessScoreColor,
   sliderValueColor,
   DEFAULT_PREMARKET_FORM,
 } from "../lib/premarket-scoring";
 import MarketEventNudge from "./MarketEventNudge";
+import ReadinessScoreWidget from "./ReadinessScoreWidget";
 
 async function loadData(key, fallback) {
   try {
@@ -47,36 +47,6 @@ function sectionDate() {
     month: "long",
     day: "numeric",
   }).toUpperCase();
-}
-
-function ScoreRing({ score }) {
-  const r = 50;
-  const c = 2 * Math.PI * r;
-  const offset = c - (score / 100) * c;
-  const tone = readinessScoreColor(score);
-
-  return (
-    <svg width="140" height="140" viewBox="0 0 140 140" className="pm-score-ring">
-      <circle cx="70" cy="70" r={r} fill="none" stroke="var(--border)" strokeWidth="6" />
-      <circle
-        cx="70"
-        cy="70"
-        r={r}
-        fill="none"
-        stroke={tone}
-        strokeWidth="6"
-        strokeLinecap="round"
-        strokeDasharray={c}
-        strokeDashoffset={offset}
-        transform="rotate(-90 70 70)"
-        style={{ transition: "stroke-dashoffset 0.4s ease, stroke 0.3s ease" }}
-      />
-      <text x="70" textAnchor="middle">
-        <tspan x="70" y="55" dominantBaseline="middle" className="pm-score-ring-num" style={{ fill: tone }}>{score}</tspan>
-        <tspan x="70" y="86" dominantBaseline="middle" className="pm-score-ring-denom">/ 100</tspan>
-      </text>
-    </svg>
-  );
 }
 
 function DimBar({ label, value }) {
@@ -209,19 +179,6 @@ export default function PreMarketCheckIn({ onBack }) {
   const handleReset = () => {
     setForm(DEFAULT_PREMARKET_FORM);
     setSaved(false);
-  };
-
-  const handleShare = async () => {
-    const text = `Pre-Market Check-in · ${todayKey()}\nReadinessScore: ${scores.composite}/100 (${status.label})\nPhysical ${scores.physical} · Mental ${scores.emotional} · External ${scores.external} · Prep ${scores.preparation}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: "Libertrade Pre-Market", text });
-      } else {
-        await navigator.clipboard.writeText(text);
-      }
-    } catch {
-      /* user cancelled or unavailable */
-    }
   };
 
   if (loading) {
@@ -382,6 +339,14 @@ export default function PreMarketCheckIn({ onBack }) {
               onChange={(v) => set("financialPressure", v)}
               inverted
             />
+            <SliderField
+              label="General focus level"
+              hint="How sharp and present you feel right now"
+              minLabel="Scattered"
+              maxLabel="Locked in"
+              value={form.generalFocusLevel}
+              onChange={(v) => set("generalFocusLevel", v)}
+            />
           </section>
 
           {/* 04 Preparation */}
@@ -454,10 +419,6 @@ export default function PreMarketCheckIn({ onBack }) {
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2.5 8a5.5 5.5 0 019.3-4M13.5 8a5.5 5.5 0 01-9.3 4" strokeLinecap="round"/><path d="M2.5 3.5V8h4.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 Reset
               </button>
-              <button type="button" className="pm-btn-share" onClick={handleShare}>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="4" r="2"/><circle cx="4" cy="8" r="2"/><circle cx="12" cy="12" r="2"/><path d="M6 7l4-2M6 9l4 2"/></svg>
-                Share
-              </button>
               <button type="button" className="pm-btn-link" onClick={handleSave}>
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 2.5h10v11H3z"/><path d="M5 2.5V6h6V2.5"/></svg>
                 {saved ? "Updated" : "Update check-in"}
@@ -473,11 +434,12 @@ export default function PreMarketCheckIn({ onBack }) {
         <aside className="premarket-score-panel">
           <div className="pm-score-stack">
             <div className="pm-score-card">
-              <div className="pm-score-label hybrid-label-sm">Readiness Score</div>
-              <div className="pm-score-ring-wrap">
-                <ScoreRing score={scores.composite} />
-              </div>
-              <div className={`pm-score-status pm-score-status--${status.tone}`}>{status.label}</div>
+              <ReadinessScoreWidget
+                score={scores.composite}
+                statusLabel={status.label}
+                statusTone={status.tone}
+                variant="full"
+              />
               <div className="pm-dim-bars">
                 <DimBar label="Physical" value={scores.physical} />
                 <DimBar label="Mental" value={scores.emotional} />

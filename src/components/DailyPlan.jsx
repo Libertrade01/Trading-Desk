@@ -81,9 +81,11 @@ function ToggleField({ label, hint, value, onChange }) {
 const RISK_RAILS_MESSAGE = "I can not trade until risk rails are in place";
 const BIAS_CHECKLIST_MESSAGE =
   "Complete the chart marks checklist (value area, nodes/LVNs, weekly profile) before saving the plan.";
-const COMMITMENT_MESSAGE = "Confirm your commitment before saving the plan.";
+const COMMITMENT_MESSAGE = "Confirm both commitments before saving the plan.";
 const COMMITMENT_TEXT =
-  "I believe in myself and I respect myself enough to follow my plan.";
+  "I believe in myself and I respect myself enough to follow my plan. Following my plans allows me and my family to live our dream.";
+const COMMITMENT_TEXT_2 =
+  "I will not place any risk when I am not in a self-regulated state.";
 const BIAS_GUIDANCE =
   "This is the bias of my plan — where is price in relation to these levels? Where is volume building and where does price not want to go?";
 
@@ -97,6 +99,10 @@ function biasChecklistReady(form) {
     form.biasMarkedNodesLvns &&
     form.biasMarkedWeeklyProfile
   );
+}
+
+function commitmentsReady(form) {
+  return form.selfCommitmentAccepted && form.selfRegulatedCommitmentAccepted;
 }
 
 export default function DailyPlan({ onBack }) {
@@ -134,7 +140,7 @@ export default function DailyPlan({ onBack }) {
       window.alert(BIAS_CHECKLIST_MESSAGE);
       return false;
     }
-    if (!form.selfCommitmentAccepted) {
+    if (!commitmentsReady(form)) {
       window.alert(COMMITMENT_MESSAGE);
       return false;
     }
@@ -151,28 +157,6 @@ export default function DailyPlan({ onBack }) {
   const handleReset = () => {
     setForm(DEFAULT_DAILY_PLAN);
     setSaved(false);
-  };
-
-  const handleShare = async () => {
-    const levels = form.keyLevels.map((l) => `${l.label || "Level"}: ${l.price} (${l.type})`).join("\n");
-    const setups = form.setups.map((s) => s.name || "Setup").join(", ");
-    const text = [
-      `Daily Plan · ${todayKey()}`,
-      `Bias: ${form.directionalBias} · Vol: ${form.expectedVolatility}`,
-      form.whyBias ? `Context: ${form.whyBias}` : null,
-      levels ? `Levels:\n${levels}` : null,
-      setups ? `Setups: ${setups}` : null,
-      form.oneThing ? `Focus: ${form.oneThing}` : null,
-    ].filter(Boolean).join("\n");
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: "Libertrade Daily Plan", text });
-      } else {
-        await navigator.clipboard.writeText(text);
-      }
-    } catch {
-      /* cancelled */
-    }
   };
 
   const addLevel = () => set("keyLevels", [...form.keyLevels, newKeyLevel()]);
@@ -461,7 +445,7 @@ export default function DailyPlan({ onBack }) {
         </section>
 
         <section
-          className={`pm-commitment${form.selfCommitmentAccepted ? " pm-commitment--checked" : ""}`}
+          className={`pm-commitment${commitmentsReady(form) ? " pm-commitment--checked" : ""}`}
         >
           <div className="pm-commitment-eyebrow hybrid-eyebrow">Commitment</div>
           <label className="pm-commitment-check">
@@ -472,7 +456,15 @@ export default function DailyPlan({ onBack }) {
             />
             <span className="pm-commitment-text">{COMMITMENT_TEXT}</span>
           </label>
-          <p className="pm-commitment-hint">Required to save today&apos;s plan.</p>
+          <label className="pm-commitment-check">
+            <input
+              type="checkbox"
+              checked={form.selfRegulatedCommitmentAccepted}
+              onChange={(e) => set("selfRegulatedCommitmentAccepted", e.target.checked)}
+            />
+            <span className="pm-commitment-text">{COMMITMENT_TEXT_2}</span>
+          </label>
+          <p className="pm-commitment-hint">Both required to save today&apos;s plan.</p>
         </section>
 
         <div className="pm-footer">
@@ -480,10 +472,6 @@ export default function DailyPlan({ onBack }) {
             <button type="button" className="pm-btn-link" onClick={handleReset}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2.5 8a5.5 5.5 0 019.3-4M13.5 8a5.5 5.5 0 01-9.3 4" strokeLinecap="round"/><path d="M2.5 3.5V8h4.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Reset
-            </button>
-            <button type="button" className="pm-btn-share" onClick={handleShare}>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="4" r="2"/><circle cx="4" cy="8" r="2"/><circle cx="12" cy="12" r="2"/><path d="M6 7l4-2M6 9l4 2"/></svg>
-              Share
             </button>
             <button type="button" className="pm-btn-link" onClick={handleSave}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 2.5h10v11H3z"/><path d="M5 2.5V6h6V2.5"/></svg>

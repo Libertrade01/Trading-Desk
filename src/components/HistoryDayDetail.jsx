@@ -170,6 +170,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                 items={[
                   { label: "Distractions", value: pre.externalDistractions },
                   { label: "Pressure", value: pre.financialPressure },
+                  { label: "Focus", value: pre.generalFocusLevel },
                 ]}
               />
               <StatGrid
@@ -310,12 +311,19 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                   <p>{plan.oneThing}</p>
                 </div>
               )}
-              {plan.selfCommitmentAccepted && (
+              {(plan.selfCommitmentAccepted || plan.selfRegulatedCommitmentAccepted) && (
                 <div className="history-commitment">
                   <div className="history-notes-label hybrid-label-sm">Commitment</div>
-                  <p className="history-commitment-text">
-                    I believe in myself and I respect myself enough to follow my plan.
-                  </p>
+                  {plan.selfCommitmentAccepted && (
+                    <p className="history-commitment-text">
+                      I believe in myself and I respect myself enough to follow my plan. Following my plans allows me and my family to live our dream.
+                    </p>
+                  )}
+                  {plan.selfRegulatedCommitmentAccepted && (
+                    <p className="history-commitment-text">
+                      I will not place any risk when I am not in a self-regulated state.
+                    </p>
+                  )}
                 </div>
               )}
             </>

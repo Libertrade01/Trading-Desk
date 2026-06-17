@@ -34,6 +34,7 @@ export const DEFAULT_DAILY_PLAN = {
   sessionRules: "",
   oneThing: "",
   selfCommitmentAccepted: false,
+  selfRegulatedCommitmentAccepted: false,
 };
 
 export function newKeyLevel() {
