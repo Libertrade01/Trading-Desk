@@ -8,7 +8,9 @@
   --border2:   #2a2d38;
   --text:      #b8bcc8;
   --muted:     #4a4f5e;
-  --green:     #259186;
+  --brand:     #0065bd; /* Saltire sky blue — identity */
+  --brand-dim: #0065bd10;
+  --green:     #259186; /* success / ready / positive P&L */
   --green-dim: #25918610;
   --amber:     #9e7040;
   --red:       #8a3535;
@@ -28,7 +30,7 @@
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--green);
+  color: var(--brand);
 }
 
 .hybrid-eyebrow--muted { color: var(--amber); }
@@ -108,8 +110,8 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 
 textarea:focus, input:focus, select:focus {
   outline: none;
-  border-color: rgba(37, 145, 134, 0.4) !important;
-  box-shadow: 0 0 0 3px rgba(37, 145, 134, 0.08);
+  border-color: rgba(0, 101, 189, 0.4) !important;
+  box-shadow: 0 0 0 3px rgba(0, 101, 189, 0.08);
 }
 
 ::-webkit-scrollbar { width: 0; height: 0; }
@@ -157,7 +159,7 @@ textarea:focus, input:focus, select:focus {
 }
 
 .sidebar-wordmark span {
-  color: var(--green);
+  color: var(--brand);
 }
 
 .sidebar-brand-sub {
@@ -218,7 +220,7 @@ textarea:focus, input:focus, select:focus {
 
 .sidebar-nav-item.active .sidebar-nav-icon {
   opacity: 1;
-  color: var(--green);
+  color: var(--brand);
 }
 
 .sidebar-footer {
@@ -305,7 +307,7 @@ textarea:focus, input:focus, select:focus {
 }
 
 .home-wordmark span {
-  color: var(--green);
+  color: var(--brand);
 }
 
 .home-subtitle {
@@ -449,7 +451,7 @@ textarea:focus, input:focus, select:focus {
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--green);
+  color: var(--brand);
   margin-bottom: 12px;
 }
 
@@ -493,7 +495,7 @@ textarea:focus, input:focus, select:focus {
 .home-hybrid-rule {
   width: 40px;
   height: 2px;
-  background: var(--green);
+  background: var(--brand);
   margin: 20px 0 28px;
 }
 
@@ -711,7 +713,7 @@ textarea:focus, input:focus, select:focus {
 
 .home-hybrid-step.next {
   color: var(--home-text, var(--text));
-  background: rgba(37, 145, 134, 0.08);
+  background: rgba(0, 101, 189, 0.25);
   margin: 0 -10px;
   padding: 11px 10px;
   border-radius: 7px;
@@ -735,9 +737,9 @@ textarea:focus, input:focus, select:focus {
 }
 
 .home-hybrid-step.next .home-hybrid-step-icon {
-  border-color: var(--green);
-  background: rgba(37, 145, 134, 0.2);
-  color: var(--green);
+  border-color: rgba(0, 101, 189, 0.4);
+  background: rgba(0, 101, 189, 0.25);
+  color: var(--brand);
 }
 
 .home-hybrid-step-label {
@@ -750,8 +752,9 @@ textarea:focus, input:focus, select:focus {
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--green);
-  background: rgba(37, 145, 134, 0.15);
+  color: var(--brand);
+  background: rgba(0, 101, 189, 0.15);
+  border: 1px solid rgba(0, 101, 189, 0.4);
   padding: 3px 7px;
   border-radius: 3px;
   flex-shrink: 0;
@@ -1044,7 +1047,7 @@ textarea:focus, input:focus, select:focus {
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--green);
+  color: var(--brand);
 }
 
 .hybrid-page .hybrid-page-title,
@@ -1158,35 +1161,6 @@ textarea:focus, input:focus, select:focus {
   color: var(--muted);
 }
 
-.pm-live {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--green);
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: none;
-}
-
-.pm-live-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 10px rgba(37, 145, 134, 0.5);
-}
-
-.pm-live--off {
-  color: var(--muted);
-}
-
-.pm-live-dot--off {
-  background: var(--muted);
-  opacity: 0.5;
-}
-
 .premarket-grid {
   display: grid;
   grid-template-columns: 1fr 280px;
@@ -1242,7 +1216,7 @@ textarea:focus, input:focus, select:focus {
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--green);
+  color: var(--brand);
   margin-bottom: 12px;
 }
 
@@ -1274,7 +1248,7 @@ textarea:focus, input:focus, select:focus {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: var(--green);
+  color: var(--brand);
   line-height: 1;
   flex-shrink: 0;
   padding-top: 4px;
@@ -1442,15 +1416,18 @@ input.pm-slider::-moz-range-thumb {
   width: 44px;
   height: 24px;
   border-radius: 12px;
-  border: none;
+  border: 1px solid transparent;
   background: var(--border2);
   cursor: pointer;
   position: relative;
-  transition: background 0.2s;
+  transition: background 0.2s, border-color 0.2s;
   flex-shrink: 0;
 }
 
-.pm-toggle.on { background: var(--green); }
+.pm-toggle.on {
+  background: rgba(0, 101, 189, 0.25);
+  border-color: rgba(0, 101, 189, 0.4);
+}
 
 .pm-toggle-knob {
   position: absolute;
@@ -1465,6 +1442,56 @@ input.pm-slider::-moz-range-thumb {
 }
 
 .pm-toggle.on .pm-toggle-knob { transform: translateX(20px); }
+
+/* Form checkboxes — muted brand (matches .pm-toggle.on) */
+.pm-commitment-check input[type="checkbox"],
+.pm-standdown-check input[type="checkbox"],
+.pm-no-trade-check input[type="checkbox"],
+.pm-custom-check input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex-shrink: 0;
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  background: var(--surface2);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.pm-commitment-check input[type="checkbox"]:focus-visible,
+.pm-standdown-check input[type="checkbox"]:focus-visible,
+.pm-no-trade-check input[type="checkbox"]:focus-visible,
+.pm-custom-check input[type="checkbox"]:focus-visible {
+  outline: 2px solid rgba(0, 101, 189, 0.5);
+  outline-offset: 2px;
+}
+
+.pm-commitment-check input[type="checkbox"]:checked,
+.pm-standdown-check input[type="checkbox"]:checked,
+.pm-no-trade-check input[type="checkbox"]:checked,
+.pm-custom-check input[type="checkbox"]:checked {
+  background: rgba(0, 101, 189, 0.25);
+  border-color: rgba(0, 101, 189, 0.4);
+}
+
+.pm-commitment-check input[type="checkbox"]:checked::after,
+.pm-standdown-check input[type="checkbox"]:checked::after,
+.pm-no-trade-check input[type="checkbox"]:checked::after,
+.pm-custom-check input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
 
 .pm-prep-grid {
   display: grid;
@@ -1595,12 +1622,7 @@ input.pm-slider::-moz-range-thumb {
 }
 
 .pm-commitment-check input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
   margin-top: 4px;
-  flex-shrink: 0;
-  accent-color: var(--green);
-  cursor: pointer;
 }
 
 .pm-commitment-text {
@@ -1738,9 +1760,9 @@ input.pm-slider::-moz-range-thumb {
 .pm-btn-return {
   width: 100%;
   justify-content: center;
-  background: rgba(37, 145, 134, 0.2);
-  border: 1px solid rgba(37, 145, 134, 0.45);
-  color: var(--green);
+  background: rgba(0, 101, 189, 0.2);
+  border: 1px solid rgba(0, 101, 189, 0.45);
+  color: var(--brand);
   padding: 14px 24px;
   border-radius: 8px;
   font-size: 11px;
@@ -1748,12 +1770,12 @@ input.pm-slider::-moz-range-thumb {
 }
 
 .pm-btn-return:hover {
-  background: rgba(37, 145, 134, 0.32);
-  border-color: rgba(37, 145, 134, 0.6);
+  background: rgba(0, 101, 189, 0.32);
+  border-color: rgba(0, 101, 189, 0.6);
 }
 
 .pm-btn-return svg {
-  stroke: var(--green);
+  stroke: var(--brand);
 }
 
 /* ── Daily Plan ── */
@@ -1879,8 +1901,8 @@ input.pm-slider::-moz-range-thumb {
   left: 0;
   top: 0;
   bottom: 0;
-  width: 3px;
-  background: var(--green);
+  width: 2px;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .pm-score-label {
@@ -1909,7 +1931,6 @@ input.pm-slider::-moz-range-thumb {
   font-size: clamp(24px, 5vw, 28px);
   font-weight: 800;
   letter-spacing: -0.03em;
-  fill: #fff;
 }
 
 .pm-score-ring-denom {
@@ -2025,10 +2046,8 @@ input.pm-slider::-moz-range-thumb {
   cursor: pointer;
 }
 
-.pm-standdown-check input {
+.pm-standdown-check input[type="checkbox"] {
   margin-top: 2px;
-  flex-shrink: 0;
-  accent-color: var(--green);
 }
 
 .pm-standdown-check--acknowledged span {
@@ -2106,8 +2125,8 @@ input.pm-slider::-moz-range-thumb {
   justify-content: center;
   width: 52px;
   flex-shrink: 0;
-  color: var(--green);
-  background: rgba(37, 145, 134, 0.08);
+  color: var(--brand);
+  background: rgba(0, 101, 189, 0.08);
   border-right: 1px solid var(--border);
 }
 
@@ -2139,7 +2158,7 @@ input.pm-slider::-moz-range-thumb {
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.04em;
-  color: var(--green);
+  color: var(--brand);
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -2158,7 +2177,7 @@ input.pm-slider::-moz-range-thumb {
 .pm-import-msg {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--green);
+  color: var(--brand);
   margin-top: 10px;
 }
 
@@ -2176,10 +2195,10 @@ input.pm-slider::-moz-range-thumb {
   align-self: stretch;
   flex-shrink: 0;
   padding: 0 22px;
-  background: rgba(37, 145, 134, 0.15);
+  background: rgba(0, 101, 189, 0.15);
   border: none;
   border-left: 1px solid var(--border);
-  color: var(--green);
+  color: var(--brand);
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.1em;
@@ -2189,7 +2208,7 @@ input.pm-slider::-moz-range-thumb {
 }
 
 .pm-upload-btn:hover {
-  background: rgba(37, 145, 134, 0.28);
+  background: rgba(0, 101, 189, 0.28);
 }
 
 .pm-no-trade-card {
@@ -2203,9 +2222,8 @@ input.pm-slider::-moz-range-thumb {
   cursor: pointer;
 }
 
-.pm-no-trade-check input {
+.pm-no-trade-check input[type="checkbox"] {
   margin-top: 3px;
-  accent-color: var(--green);
 }
 
 .pm-perf-grid {
@@ -2332,7 +2350,7 @@ input.pm-slider::-moz-range-thumb {
 }
 
 .pm-btn-save-review {
-  background: var(--green);
+  background: var(--brand);
   border: none;
   color: #fff;
   font-family: var(--font-mono);
@@ -2587,8 +2605,8 @@ input.pm-slider::-moz-range-thumb {
   font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  background: var(--green);
-  color: var(--bg);
+  background: var(--brand);
+  color: #fff;
   border: none;
   padding: 8px 16px;
   border-radius: 4px;
@@ -2649,7 +2667,7 @@ input.pm-slider::-moz-range-thumb {
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--green);
+  color: var(--brand);
   margin-bottom: 12px;
 }
 
@@ -2873,7 +2891,6 @@ input.pm-slider::-moz-range-thumb {
   font-size: 28px;
   font-weight: 800;
   letter-spacing: -0.03em;
-  fill: #fff;
 }
 
 .history-score-denom {

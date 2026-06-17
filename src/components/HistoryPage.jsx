@@ -36,7 +36,6 @@ export default function HistoryPage({ onSelectDay }) {
     <div className="history-page hybrid-page">
       <div className="pm-topbar">
         <span>{headerDate()}</span>
-        <span className="pm-live"><span className="pm-live-dot" />Live</span>
       </div>
 
       <div className="history-content">

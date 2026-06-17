@@ -87,7 +87,7 @@ function ReadinessTrend({ sessions }) {
         <polyline
           points={chart.line}
           fill="none"
-          stroke="var(--green)"
+          stroke="var(--brand)"
           strokeWidth="2.5"
         />
       </svg>

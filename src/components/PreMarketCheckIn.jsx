@@ -5,6 +5,7 @@ import { storage } from "../lib/supabase";
 import {
   computeReadinessScore,
   readinessStatus,
+  readinessScoreColor,
   sliderValueColor,
   DEFAULT_PREMARKET_FORM,
 } from "../lib/premarket-scoring";
@@ -52,7 +53,7 @@ function ScoreRing({ score }) {
   const r = 50;
   const c = 2 * Math.PI * r;
   const offset = c - (score / 100) * c;
-  const tone = score >= 70 ? "var(--green)" : score >= 50 ? "var(--amber)" : "var(--red)";
+  const tone = readinessScoreColor(score);
 
   return (
     <svg width="140" height="140" viewBox="0 0 140 140" className="pm-score-ring">
@@ -71,7 +72,7 @@ function ScoreRing({ score }) {
         style={{ transition: "stroke-dashoffset 0.4s ease, stroke 0.3s ease" }}
       />
       <text x="70" textAnchor="middle">
-        <tspan x="70" y="55" dominantBaseline="middle" className="pm-score-ring-num">{score}</tspan>
+        <tspan x="70" y="55" dominantBaseline="middle" className="pm-score-ring-num" style={{ fill: tone }}>{score}</tspan>
         <tspan x="70" y="86" dominantBaseline="middle" className="pm-score-ring-denom">/ 100</tspan>
       </text>
     </svg>
@@ -231,7 +232,6 @@ export default function PreMarketCheckIn({ onBack }) {
     <div className="premarket-page hybrid-page">
       <div className="pm-topbar">
         <span>{headerDate()}</span>
-        <span className="pm-live"><span className="pm-live-dot" />Live</span>
       </div>
 
       <div className="premarket-grid">

@@ -175,6 +175,12 @@ export function readinessStatus(score) {
   return { label: "Stand down", tone: "red" };
 }
 
+export function readinessScoreColor(score) {
+  if (score >= 70) return "var(--green)";
+  if (score >= 50) return "var(--amber)";
+  return "var(--red)";
+}
+
 export function sliderValueColor(value, inverted = false) {
   const score = inverted ? riskSliderToScore(value) : sliderToScore(value);
   if (score >= 70) return "var(--green)";

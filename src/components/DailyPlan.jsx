@@ -191,7 +191,6 @@ export default function DailyPlan({ onBack }) {
     <div className="premarket-page hybrid-page">
       <div className="pm-topbar">
         <span>{headerDate()}</span>
-        <span className="pm-live"><span className="pm-live-dot" />Live</span>
       </div>
 
       <div className="daily-plan-content">

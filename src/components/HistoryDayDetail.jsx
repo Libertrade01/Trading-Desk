@@ -10,12 +10,13 @@ import {
   biasTag,
   volTag,
 } from "../lib/history-data";
+import { readinessScoreColor } from "../lib/premarket-scoring";
 
 function ScoreRing({ score, size = 100 }) {
   const r = 38;
   const c = 2 * Math.PI * r;
   const offset = c - (score / 100) * c;
-  const tone = score >= 70 ? "var(--green)" : score >= 50 ? "var(--amber)" : "var(--red)";
+  const tone = readinessScoreColor(score);
 
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" className="history-score-ring">
@@ -32,7 +33,7 @@ function ScoreRing({ score, size = 100 }) {
         strokeDashoffset={offset}
         transform="rotate(-90 50 50)"
       />
-      <text x="50" y="48" textAnchor="middle" className="history-score-num">{score}</text>
+      <text x="50" y="48" textAnchor="middle" className="history-score-num" style={{ fill: tone }}>{score}</text>
       <text x="50" y="62" textAnchor="middle" className="history-score-denom">/ 100</text>
     </svg>
   );
