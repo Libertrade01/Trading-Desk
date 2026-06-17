@@ -713,7 +713,7 @@ textarea:focus, input:focus, select:focus {
 
 .home-hybrid-step.next {
   color: var(--home-text, var(--text));
-  background: rgba(0, 101, 189, 0.25);
+  background: rgba(0, 101, 189, 0.05);
   margin: 0 -10px;
   padding: 11px 10px;
   border-radius: 7px;
@@ -737,8 +737,8 @@ textarea:focus, input:focus, select:focus {
 }
 
 .home-hybrid-step.next .home-hybrid-step-icon {
-  border-color: rgba(0, 101, 189, 0.4);
-  background: rgba(0, 101, 189, 0.25);
+  border-color: rgba(0, 101, 189, 0.28);
+  background: rgba(0, 101, 189, 0.12);
   color: var(--brand);
 }
 
@@ -752,9 +752,9 @@ textarea:focus, input:focus, select:focus {
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--brand);
-  background: rgba(0, 101, 189, 0.15);
-  border: 1px solid rgba(0, 101, 189, 0.4);
+  color: rgba(0, 101, 189, 0.85);
+  background: rgba(0, 101, 189, 0.08);
+  border: 1px solid rgba(0, 101, 189, 0.22);
   padding: 3px 7px;
   border-radius: 3px;
   flex-shrink: 0;
