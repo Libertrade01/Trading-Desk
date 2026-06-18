@@ -111,6 +111,97 @@ export function isStepComplete(data) {
   return !!(data?.savedAt);
 }
 
+/** Risk plan followed from post-market (riskPlanFollowed with legacy planProcessFollowed fallback). */
+export function getRiskPlanFollowed(post) {
+  if (!post) return null;
+  if (post.riskPlanFollowed === true || post.riskPlanFollowed === false) {
+    return post.riskPlanFollowed;
+  }
+  if (post.planProcessFollowed === true || post.planProcessFollowed === false) {
+    return post.planProcessFollowed;
+  }
+  return null;
+}
+
+/**
+ * Risk-adherence streak day outcome from a saved post-market review.
+ * - followed: riskPlanFollowed === true (legacy: planProcessFollowed)
+ * - broken: explicitly false
+ * - unknown: legacy save without the field (skipped when counting, never breaks retroactively)
+ * - unanswered: no saved post-market
+ */
+export function getProcessStreakDayStatus(session) {
+  const post = session?.post;
+  if (!post?.savedAt) return "unanswered";
+  const riskPlan = getRiskPlanFollowed(post);
+  if (riskPlan === true) return "followed";
+  if (riskPlan === false) return "broken";
+  return "unknown";
+}
+
+/**
+ * Consecutive trading days with risk plan followed, walking backward from asOfDateKey.
+ * Anchor day unanswered: skipped (streak not extended or broken until saved).
+ * Past day without post-market or unanswered: breaks streak.
+ * Legacy saves (no field): skipped — no credit, no retroactive break.
+ */
+export function countProcessStreakAsOf(sessions, asOfDateKey) {
+  const byDate = new Map(sessions.map((s) => [s.date, s]));
+  let streak = 0;
+  const d = new Date(`${asOfDateKey}T12:00:00`);
+
+  for (let i = 0; i < 365; i++) {
+    const key = d.toISOString().split("T")[0];
+
+    if (!isTradingDay(d)) {
+      d.setDate(d.getDate() - 1);
+      continue;
+    }
+
+    const status = getProcessStreakDayStatus(byDate.get(key));
+    const isAnchor = key === asOfDateKey;
+
+    if (status === "followed") {
+      streak += 1;
+      d.setDate(d.getDate() - 1);
+    } else if (status === "broken") {
+      break;
+    } else if (status === "unknown") {
+      d.setDate(d.getDate() - 1);
+    } else if (isAnchor) {
+      d.setDate(d.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
+
+/**
+ * Consecutive trading days with risk plan followed, walking backward from today.
+ */
+export function countProcessStreak(sessions) {
+  return countProcessStreakAsOf(sessions, todayKey());
+}
+
+/**
+ * Risk adherence streak display for a single history row (as of end of that trading day).
+ */
+export function getProcessStreakDisplayForDay(session, sessions) {
+  const status = getProcessStreakDayStatus(session);
+  if (status === "unanswered" || status === "unknown") {
+    return { type: "unanswered", streak: 0 };
+  }
+  if (status === "broken") {
+    return { type: "broken", streak: 0 };
+  }
+  return {
+    type: "followed",
+    streak: countProcessStreakAsOf(sessions, session.date),
+  };
+}
+
 export function getTimeContext() {
   const hour = new Date().getHours();
   if (hour < 12) return "morning";
@@ -133,6 +224,19 @@ export function isWeekend(date = new Date()) {
 export function isTradingDay(date = new Date()) {
   const day = date.getDay();
   return day >= 1 && day <= 5;
+}
+
+/** Next Mon–Fri date key after fromDate (local calendar). */
+export function nextTradingDayKey(fromDate = new Date()) {
+  const d = new Date(fromDate);
+  d.setHours(12, 0, 0, 0);
+  do {
+    d.setDate(d.getDate() + 1);
+  } while (!isTradingDay(d));
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 export function formatGreetingDate() {

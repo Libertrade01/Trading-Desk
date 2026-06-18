@@ -141,6 +141,9 @@ export default function PostMarketReview({ onBack }) {
       ]);
 
       let next = { ...DEFAULT_POSTMARKET, ...(savedReview || {}) };
+      if (next.riskPlanFollowed == null && next.planProcessFollowed != null) {
+        next.riskPlanFollowed = next.planProcessFollowed;
+      }
 
       if (dbTrades.length && !next.trades) {
         next = { ...next, ...computePerformanceFromDbTrades(dbTrades) };
@@ -313,6 +316,14 @@ export default function PostMarketReview({ onBack }) {
             <SliderField label="Setup quality" hint="Were the setups you took A+?" minLabel="Marginal" maxLabel="A+" value={form.setupQuality} onChange={(v) => set("setupQuality", v)} />
             <SliderField label="Risk discipline" hint="Stops respected, sizing right" minLabel="Loose" maxLabel="Tight" value={form.riskDiscipline} onChange={(v) => set("riskDiscipline", v)} />
             <SliderField label="Execution quality" hint="Entries, exits, fills" minLabel="Sloppy" maxLabel="Sharp" value={form.executionQuality} onChange={(v) => set("executionQuality", v)} />
+            <div className="pm-risk-block">
+              <ToggleField
+                label="Risk plan followed?"
+                hint="Be brutally honest — this is your risk adherence streak. Yes only if you followed your plan and respected every limit today. Serious traders close out clean."
+                value={form.riskPlanFollowed === true}
+                onChange={(on) => set("riskPlanFollowed", on)}
+              />
+            </div>
           </section>
 
           {/* 03 Behavioral flags */}

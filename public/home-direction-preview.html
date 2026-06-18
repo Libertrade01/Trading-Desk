@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home Directions A · B · C — Libertrade</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0e12;
+      --surface: #16171e;
+      --surface2: #1b1c24;
+      --border: #22242e;
+      --text: #e8e9ed;
+      --muted: #6b7280;
+      --green: #259186;
+      --red: #c45c5c;
+      --amber: #c49060;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #090a0d;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      line-height: 1.45;
+      padding: 28px 20px 64px;
+    }
+    .page-head { max-width: 1400px; margin: 0 auto 28px; }
+    .page-head h1 { font-size: 20px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.02em; }
+    .page-head p { color: var(--muted); font-size: 13px; margin: 0; max-width: 720px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; } }
+
+    .dir-col { min-width: 0; }
+    .dir-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dir-label strong { color: var(--text); font-weight: 500; }
+    .dir-tag {
+      font-size: 8px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .dir-vibe { font-size: 11px; color: var(--muted); margin: -4px 0 12px; }
+
+    /* Shared mock shell */
+    .mock {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      min-height: 640px;
+    }
+    .mock-topbar {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .mock-live { color: var(--green); display: flex; align-items: center; gap: 5px; }
+    .mock-live::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+    .mock-body { padding: 16px 14px 18px; }
+
+    /* ── A EDITORIAL ── */
+    .a-eyebrow { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .a-title { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 26px; font-weight: 400; color: var(--text); margin: 0 0 4px; line-height: 1.15; }
+    .a-sub { font-size: 11px; color: var(--muted); margin-bottom: 14px; }
+    .a-alert {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 10px 0 14px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .a-alert-bar { width: 2px; align-self: stretch; background: var(--green); border-radius: 1px; flex-shrink: 0; }
+    .a-alert-kind { font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.08em; color: var(--green); margin-bottom: 2px; }
+    .a-alert-text { font-size: 12px; color: var(--text); }
+    .a-alert-hint { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .a-snapshot {
+      padding: 16px 0;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .a-snapshot-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+    .a-snapshot-badge { font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+    .a-snapshot-serif { font-family: 'Instrument Serif', Georgia, serif; font-size: 18px; color: var(--text); margin-top: 4px; }
+    .a-snapshot-muted { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .a-stats { display: flex; gap: 20px; text-align: right; }
+    .a-stat-label { font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .a-stat-val { font-size: 18px; font-weight: 600; color: var(--text); margin-top: 2px; }
+    .a-stat-val.g { color: var(--green); }
+    .a-stat-val.r { color: var(--red); }
+    .a-footer { display: flex; gap: 14px; flex-wrap: wrap; font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); }
+    .a-panel { margin-top: 14px; }
+    .a-panel-title { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+    .a-trend-line { height: 48px; border-bottom: 1px solid var(--border); position: relative; margin-top: 8px; }
+    .a-trend-line svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .a-recent-row { display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--border); font-size: 11px; }
+    .a-recent-pnl.r { color: var(--red); font-family: 'DM Mono', monospace; }
+
+    /* ── B TERMINAL ── */
+    .b-head { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; margin-bottom: 12px; }
+    .b-title { font-family: 'JetBrains Mono', 'DM Mono', monospace; font-size: 14px; font-weight: 600; letter-spacing: -0.03em; color: var(--text); margin: 0; }
+    .b-sub { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .b-status { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--green); text-align: right; }
+    .b-alert {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      padding: 8px 10px;
+      background: rgba(37, 145, 134, 0.08);
+      border: 1px solid rgba(37, 145, 134, 0.35);
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+    .b-alert span { color: var(--green); }
+    .b-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+    }
+    .b-cell {
+      background: var(--surface);
+      padding: 10px 10px;
+    }
+    .b-cell-label { font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .b-cell-val { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 600; letter-spacing: -0.03em; color: var(--text); }
+    .b-cell-val.g { color: var(--green); }
+    .b-cell-val.r { color: var(--red); }
+    .b-complete-bar {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      padding: 6px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .b-complete-bar em { color: var(--text); font-style: normal; }
+    .b-split { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 8px; }
+    .b-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 10px;
+    }
+    .b-box-title { font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .b-bar { height: 3px; background: var(--border); margin: 6px 0; }
+    .b-bar-fill { height: 100%; background: var(--green); width: 28%; }
+    .b-row { display: flex; justify-content: space-between; font-family: 'DM Mono', monospace; font-size: 9px; padding: 4px 0; border-top: 1px solid var(--border); color: var(--muted); }
+    .b-row strong { color: var(--text); font-weight: 500; }
+    .b-row .r { color: var(--red); }
+
+    /* ── C LAYERED ── */
+    .c-greeting { margin-bottom: 12px; }
+    .c-eyebrow { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .c-title { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 24px; color: var(--text); margin: 0 0 4px; }
+    .c-sub { font-size: 11px; color: var(--muted); }
+    .c-card {
+      background: linear-gradient(180deg, #1a1b22 0%, #14151a 100%);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+    }
+    .c-card--alert {
+      border-color: rgba(37, 145, 134, 0.4);
+      background: linear-gradient(180deg, rgba(37,145,134,0.1) 0%, rgba(37,145,134,0.03) 100%);
+      padding: 12px 14px;
+    }
+    .c-alert-row { display: flex; align-items: center; gap: 8px; }
+    .c-pill { font-family: 'DM Mono', monospace; font-size: 8px; padding: 3px 7px; border-radius: 4px; border: 1px solid rgba(37,145,134,0.5); color: var(--green); }
+    .c-alert-label { font-size: 12px; font-weight: 500; color: var(--text); }
+    .c-alert-hint { font-size: 10px; color: var(--muted); margin-top: 6px; }
+    .c-snapshot-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .c-badge { font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); padding: 3px 8px; border-radius: 4px; background: rgba(37,145,134,0.12); border: 1px solid rgba(37,145,134,0.3); }
+    .c-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .c-metric {
+      background: rgba(0,0,0,0.25);
+      border-radius: 8px;
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .c-metric-label { font-family: 'DM Mono', monospace; font-size: 8px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    .c-metric-val { font-size: 20px; font-weight: 600; margin-top: 4px; color: var(--text); }
+    .c-metric-val.g { color: var(--green); }
+    .c-metric-val.r { color: var(--red); }
+    .c-tagline { font-size: 11px; color: var(--muted); margin-top: 10px; font-style: italic; font-family: 'Instrument Serif', Georgia, serif; font-size: 13px; }
+    .c-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .c-panel-title { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .c-streak { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .c-streak strong { color: var(--text); }
+    .c-progress { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 10px; }
+    .c-progress-fill { height: 100%; background: var(--green); width: 28%; border-radius: 2px; }
+    .c-recent { font-size: 11px; display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px solid var(--border); color: var(--muted); }
+    .c-recent .r { color: var(--red); font-family: 'DM Mono', monospace; }
+  </style>
+</head>
+<body>
+  <div class="page-head">
+    <h1>Home dashboard — pick a direction</h1>
+    <p>Three mockups using your current complete-day state (readiness 78, P&L −$771, roll week). Same data, different visual language. Open beside the live app to compare.</p>
+  </div>
+
+  <div class="grid">
+    <!-- A EDITORIAL -->
+    <div class="dir-col">
+      <div class="dir-label"><strong>A</strong> Editorial <span class="dir-tag">Recommended</span></div>
+      <p class="dir-vibe">Calm, premium — serif celebration, open layout, minimal boxes</p>
+      <div class="mock dir-a">
+        <div class="mock-topbar"><span>Tue, Jun 16, 2026</span><span class="mock-live">Live</span></div>
+        <div class="mock-body">
+          <div class="a-eyebrow">Afternoon</div>
+          <h2 class="a-title">You did the work today.</h2>
+          <p class="a-sub">All required tasks logged.</p>
+
+          <div class="a-alert">
+            <div class="a-alert-bar"></div>
+            <div>
+              <div class="a-alert-kind">ROLL</div>
+              <div class="a-alert-text">Contract roll week</div>
+              <div class="a-alert-hint">Watch volume shifts.</div>
+            </div>
+          </div>
+
+          <div class="a-snapshot">
+            <div class="a-snapshot-top">
+              <div>
+                <div class="a-snapshot-badge">Today complete</div>
+                <div class="a-snapshot-serif">Process over outcomes.</div>
+                <div class="a-snapshot-muted">Pre-market streak · 2 days</div>
+              </div>
+              <div class="a-stats">
+                <div><div class="a-stat-label">Readiness</div><div class="a-stat-val g">78</div></div>
+                <div><div class="a-stat-label">Net P&L</div><div class="a-stat-val r">−$771</div></div>
+              </div>
+            </div>
+            <div class="a-footer">
+              <span>Edit pre-market</span>
+              <span>Edit plan</span>
+              <span>Edit review</span>
+            </div>
+          </div>
+
+          <div class="a-panel">
+            <div class="a-panel-title">Readiness trend</div>
+            <div class="a-trend-line">
+              <svg viewBox="0 0 200 48" preserveAspectRatio="none"><polyline points="0,30 66,22 133,18 200,12" fill="none" stroke="#259186" stroke-width="2"/></svg>
+            </div>
+            <div class="a-recent-row"><span>Tue, Jun 16</span><span class="a-recent-pnl r">−$771.49</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B TERMINAL -->
+    <div class="dir-col">
+      <div class="dir-label"><strong>B</strong> Terminal</div>
+      <p class="dir-vibe">Trader desk — mono grid, dense data, color on numbers only</p>
+      <div class="mock dir-b">
+        <div class="mock-topbar"><span>TUE JUN 16 2026</span><span class="mock-live">LIVE</span></div>
+        <div class="mock-body">
+          <div class="b-head">
+            <div>
+              <h2 class="b-title">TODAY_COMPLETE</h2>
+              <div class="b-sub">3/3 tasks · afternoon session</div>
+            </div>
+            <div class="b-status">● LIVE</div>
+          </div>
+
+          <div class="b-alert"><span>ROLL</span> · Contract roll week · Watch volume shifts.</div>
+
+          <div class="b-grid">
+            <div class="b-cell"><div class="b-cell-label">Readiness</div><div class="b-cell-val g">78</div></div>
+            <div class="b-cell"><div class="b-cell-label">Net P&L</div><div class="b-cell-val r">−771</div></div>
+            <div class="b-cell"><div class="b-cell-label">Streak</div><div class="b-cell-val">2d</div></div>
+          </div>
+
+          <div class="b-complete-bar"><em>STATUS</em> · Process over outcomes · Share available</div>
+
+          <div class="b-split">
+            <div class="b-box">
+              <div class="b-box-title">Readiness / 4 sessions</div>
+              <div class="a-trend-line" style="height:40px;margin:0">
+                <svg viewBox="0 0 200 40" preserveAspectRatio="none"><polyline points="0,28 66,20 133,16 200,10" fill="none" stroke="#259186" stroke-width="2"/></svg>
+              </div>
+            </div>
+            <div class="b-box">
+              <div class="b-box-title">Habits</div>
+              <div style="font-size:9px;color:var(--muted);margin-bottom:4px">Pre 2/7</div>
+              <div class="b-bar"><div class="b-bar-fill"></div></div>
+              <div class="b-row"><span>Jun 16</span><strong>78</strong><span class="r">−771</span></div>
+              <div class="b-row"><span>Jun 12</span><strong>75</strong><span class="r">−2071</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C LAYERED -->
+    <div class="dir-col">
+      <div class="dir-label"><strong>C</strong> Layered</div>
+      <p class="dir-vibe">Modern SaaS — raised cards, inset depth, compact alerts</p>
+      <div class="mock dir-c">
+        <div class="mock-topbar"><span>Tuesday, Jun 16, 2026</span><span class="mock-live">Live</span></div>
+        <div class="mock-body">
+          <div class="c-greeting">
+            <div class="c-eyebrow">Afternoon</div>
+            <h2 class="c-title">You did the work today.</h2>
+            <p class="c-sub">All required tasks logged.</p>
+          </div>
+
+          <div class="c-card c-card--alert">
+            <div class="c-alert-row">
+              <span class="c-pill">ROLL</span>
+              <span class="c-alert-label">Contract roll week</span>
+            </div>
+            <div class="c-alert-hint">Watch volume shifts.</div>
+          </div>
+
+          <div class="c-card">
+            <div class="c-snapshot-head">
+              <span class="c-badge">Today complete</span>
+            </div>
+            <div class="c-metrics">
+              <div class="c-metric"><div class="c-metric-label">Readiness</div><div class="c-metric-val g">78</div></div>
+              <div class="c-metric"><div class="c-metric-label">Net P&L</div><div class="c-metric-val r">−$771</div></div>
+              <div class="c-metric"><div class="c-metric-label">Streak</div><div class="c-metric-val">2d</div></div>
+            </div>
+            <div class="c-tagline">Process over outcomes.</div>
+          </div>
+
+          <div class="c-two-col">
+            <div class="c-card" style="margin:0">
+              <div class="c-panel-title">Trend</div>
+              <div class="a-trend-line" style="height:36px;margin:0">
+                <svg viewBox="0 0 120 36" preserveAspectRatio="none"><polyline points="0,26 40,18 80,14 120,8" fill="none" stroke="#259186" stroke-width="2"/></svg>
+              </div>
+            </div>
+            <div class="c-card" style="margin:0">
+              <div class="c-panel-title">Recent</div>
+              <div class="c-streak">Pre-market <strong>2 / 7</strong></div>
+              <div class="c-progress"><div class="c-progress-fill"></div></div>
+              <div class="c-recent"><span>Jun 16</span><span class="r">−$771</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

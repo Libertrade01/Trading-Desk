@@ -13,6 +13,8 @@ const KIND_LABELS = {
   opex: "OPEX",
   roll: "ROLL",
   expiry: "EXPIRY",
+  holiday: "HOLIDAY",
+  halfday: "HALF DAY",
 };
 
 function ribbonHint(event, timeLabel) {
@@ -30,7 +32,7 @@ export default function HomeEventBanner({ date = new Date() }) {
   return (
     <div className="home-ribbons" aria-label="Today's market events">
       {events.map((event) => {
-        const timeLabel = formatEventTimeET(event.timeET);
+        const timeLabel = formatEventTimeET(event.closeET || event.timeET);
         const kind = KIND_LABELS[event.kind] || event.kind.toUpperCase();
         const hint = ribbonHint(event, timeLabel);
         return (

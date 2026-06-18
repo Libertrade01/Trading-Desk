@@ -379,6 +379,41 @@ textarea:focus, input:focus, select:focus {
 }
 
 /* ── Home dashboard (Hybrid · Cinematic + Poster) ── */
+.home-preview-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 7px 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--amber);
+  background: rgba(158, 112, 64, 0.12);
+  border-bottom: 1px solid rgba(158, 112, 64, 0.22);
+}
+
+.home-preview-banner-clear {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.home-preview-banner-clear:hover {
+  color: #fff;
+}
+
+.home-preview-start-link {
+  color: var(--brand);
+  text-decoration: none;
+  font-size: inherit;
+}
+
+.home-preview-start-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .home-dashboard {
   min-height: 100%;
   animation: fadeIn 0.4s ease;
@@ -488,10 +523,44 @@ textarea:focus, input:focus, select:focus {
 }
 
 .home-hybrid-hero--complete {
-  display: block;
-  grid-template-columns: unset;
+  align-items: end;
+  gap: 32px 56px;
 }
 
+.home-hybrid-hero-copy {
+  min-width: 0;
+}
+
+.home-hybrid-hero-aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.home-hybrid-streak {
+  text-align: right;
+}
+
+.home-hybrid-streak-label {
+  font-family: 'Outfit', var(--font-poster);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 10px;
+}
+
+.home-hybrid-streak-num {
+  font-family: 'Syne', var(--font-display);
+  font-size: clamp(56px, 14vw, 84px);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 0.88;
+  color: var(--brand);
+}
 .home-hybrid-rule {
   width: 40px;
   height: 2px;
@@ -866,6 +935,14 @@ textarea:focus, input:focus, select:focus {
   border: 1px solid rgba(0, 101, 189, 0.22);
   padding: 3px 7px;
   border-radius: 3px;
+  cursor: pointer;
+  appearance: none;
+}
+
+.home-hybrid-step-badge:hover {
+  color: var(--brand);
+  background: rgba(0, 101, 189, 0.14);
+  border-color: rgba(0, 101, 189, 0.35);
 }
 
 .home-hybrid-step-edit {
@@ -946,12 +1023,16 @@ textarea:focus, input:focus, select:focus {
   color: var(--home-text, var(--text));
 }
 
+.home-hybrid-recent-head,
 .home-hybrid-recent-row {
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
   gap: 16px;
   align-items: center;
+}
+
+.home-hybrid-recent-row {
   padding: 8px 0;
   font-size: 12px;
   color: #9ca3af;
@@ -962,6 +1043,23 @@ textarea:focus, input:focus, select:focus {
   text-align: left;
   cursor: pointer;
   transition: opacity 0.15s;
+}
+
+.home-hybrid-recent-head {
+  padding: 0 0 4px;
+  font-family: var(--font-poster);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0.7;
+  border: none;
+  cursor: default;
+}
+
+.home-hybrid-recent-head span:not(:first-child) {
+  text-align: right;
 }
 
 .home-hybrid-recent-date {
@@ -985,6 +1083,18 @@ textarea:focus, input:focus, select:focus {
   color: var(--muted);
   font-weight: 500;
 }
+
+.home-hybrid-recent-proc {
+  font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: right;
+  min-width: 32px;
+}
+
+.home-hybrid-recent-proc.positive { color: var(--brand); }
+.home-hybrid-recent-proc.broken { color: rgba(233, 69, 96, 0.55); }
+.home-hybrid-recent-proc.muted { color: var(--muted); font-weight: 500; }
 
 .home-hybrid-recent-pnl {
   font-weight: 600;
@@ -1041,13 +1151,22 @@ textarea:focus, input:focus, select:focus {
     padding: 0 20px 48px 28px;
   }
 
-  .home-hybrid-hero:not(.home-hybrid-hero--complete) {
+  .home-hybrid-hero {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 28px;
+  }
+
+  .home-hybrid-hero-aside {
+    align-items: flex-end;
+    width: 100%;
+  }
+
+  .home-hybrid-streak-num {
+    font-size: clamp(52px, 18vw, 72px);
   }
 
   .home-hybrid-readiness {
-    justify-self: start;
+    justify-self: end;
     opacity: 0.92;
   }
 
@@ -1688,6 +1807,19 @@ input.pm-slider::-moz-range-thumb {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.pm-risk-block {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.pm-risk-block .pm-toggle-field {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 
 .pm-risk-dd-field {

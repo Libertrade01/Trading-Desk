@@ -1,17 +1,21 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import {
   loadSessionDay,
   loadAllSessions,
   todayKey,
   isStepComplete,
+  countProcessStreak,
+  getProcessStreakDisplayForDay,
   formatTimeEyebrow,
   formatHomeBarDate,
-  formatPosterDate,
   formatShortHistoryDate,
   formatUsd,
   isWeekend,
+  nextTradingDayKey,
 } from "../lib/history-data";
 import HomeEventBanner from "./HomeEventBanner";
 import ReadinessScoreWidget from "./ReadinessScoreWidget";
@@ -96,26 +100,6 @@ function ReadinessTrend({ sessions }) {
   );
 }
 
-function countStreak(sessions, field) {
-  const done = new Set(
-    sessions.filter((s) => isStepComplete(s[field])).map((s) => s.date)
-  );
-  let streak = 0;
-  const d = new Date(`${todayKey()}T12:00:00`);
-  for (let i = 0; i < 365; i++) {
-    const key = d.toISOString().split("T")[0];
-    if (done.has(key)) {
-      streak += 1;
-      d.setDate(d.getDate() - 1);
-    } else if (i === 0) {
-      d.setDate(d.getDate() - 1);
-    } else {
-      break;
-    }
-  }
-  return streak;
-}
-
 function stepComplete(stepId, preComplete, planComplete, postComplete) {
   if (stepId === "premarket") return preComplete;
   if (stepId === "dailyplan") return planComplete;
@@ -135,6 +119,71 @@ function stepStarted(stepId, today) {
 function formatPosterPnl(value) {
   if (value == null) return "—";
   return String(Math.abs(Math.round(value)));
+}
+
+function ProcessStreakBlock({ count }) {
+  return (
+    <div
+      className="home-hybrid-streak"
+      title="Consecutive trading days you followed your risk plan (post-market yes)"
+    >
+      <div
+        className="home-hybrid-streak-num"
+        aria-label={`${count} day risk adherence streak`}
+      >
+        {count}
+      </div>
+      <div className="home-hybrid-streak-label">Risk adherence streak</div>
+    </div>
+  );
+}
+
+const PREVIEW_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function parsePreviewDate(raw) {
+  if (!raw || !PREVIEW_DATE_RE.test(raw)) return null;
+  const [y, m, d] = raw.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  if (
+    date.getFullYear() !== y ||
+    date.getMonth() !== m - 1 ||
+    date.getDate() !== d
+  ) {
+    return null;
+  }
+  return raw;
+}
+
+function dateFromKey(dateKey) {
+  return new Date(`${dateKey}T12:00:00`);
+}
+
+function formatPreviewBannerLabel(dateKey) {
+  return dateFromKey(dateKey).toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function readPreviewParamsFromLocation() {
+  if (typeof window === "undefined") return { preview: null, previewDate: null };
+  const params = new URLSearchParams(window.location.search);
+  return {
+    preview: params.get("preview"),
+    previewDate: params.get("previewDate"),
+  };
+}
+
+function usePreviewSearchParams() {
+  const searchParams = useSearchParams();
+  const fromRouter = {
+    preview: searchParams.get("preview"),
+    previewDate: searchParams.get("previewDate"),
+  };
+  if (fromRouter.preview || fromRouter.previewDate) return fromRouter;
+  return readPreviewParamsFromLocation();
 }
 
 function heroCopy(allComplete, completedCount, weekend, timeEyebrow) {
@@ -171,29 +220,54 @@ function heroCopy(allComplete, completedCount, weekend, timeEyebrow) {
   };
 }
 
-export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
+export default function HomeDashboard({
+  onNavigate,
+  onOpenHistoryDay,
+  preview: previewProp,
+  previewDate: previewDateProp,
+}) {
+  const fromHook = usePreviewSearchParams();
+  const preview = previewProp ?? fromHook.preview;
+  const previewDateRaw = previewDateProp ?? fromHook.previewDate;
+  const previewFreshDay = preview === "fresh-day";
+  const previewDate = parsePreviewDate(previewDateRaw);
+  const effectiveDateKey = previewFreshDay
+    ? previewDate ?? nextTradingDayKey(new Date())
+    : previewDate ?? todayKey();
+  const showPreviewBanner = previewFreshDay || !!previewDate;
+  const effectiveDate = useMemo(
+    () => dateFromKey(effectiveDateKey),
+    [effectiveDateKey]
+  );
+
   const [today, setToday] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
+      setLoading(true);
       const [todaySession, all] = await Promise.all([
-        loadSessionDay(todayKey()),
+        loadSessionDay(effectiveDateKey),
         loadAllSessions(),
       ]);
+      if (cancelled) return;
       setToday(todaySession);
       setSessions(all);
       setLoading(false);
     })();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [effectiveDateKey]);
 
-  const preComplete = isStepComplete(today?.pre);
-  const planComplete = isStepComplete(today?.plan);
-  const postComplete = isStepComplete(today?.post);
+  const preComplete = previewFreshDay ? false : isStepComplete(today?.pre);
+  const planComplete = previewFreshDay ? false : isStepComplete(today?.plan);
+  const postComplete = previewFreshDay ? false : isStepComplete(today?.post);
   const allComplete = preComplete && planComplete && postComplete;
   const completedCount = [preComplete, planComplete, postComplete].filter(Boolean).length;
-  const weekend = isWeekend();
+  const weekend = isWeekend(effectiveDate);
   const timeEyebrow = formatTimeEyebrow();
 
   const nextStep = useMemo(() => {
@@ -212,8 +286,9 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
     today?.netPnl > 0 ? "positive" : today?.netPnl < 0 ? "negative" : "neutral";
   const pnlSmaller = today?.netPnl != null && today.netPnl < 0;
 
-  const preStreak = useMemo(() => countStreak(sessions, "pre"), [sessions]);
+  const processStreak = useMemo(() => countProcessStreak(sessions), [sessions]);
   const recent = sessions.slice(0, 3);
+  const workflowToday = previewFreshDay ? null : today;
 
   const morningUnderway = !allComplete && completedCount > 0;
   const showHeroReadiness =
@@ -228,10 +303,24 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
 
   return (
     <div className="home-dashboard home-dashboard--hybrid">
+      {showPreviewBanner && (
+        <div className="home-preview-banner" role="status">
+          <span>
+            Preview:{" "}
+            {previewFreshDay
+              ? `Start of day — ${formatPreviewBannerLabel(effectiveDateKey)}`
+              : formatPreviewBannerLabel(effectiveDateKey)}
+          </span>
+          <Link href="/" className="home-preview-banner-clear">
+            Clear
+          </Link>
+        </div>
+      )}
+
       <div className="home-hybrid-stripe" aria-hidden="true" />
 
       <div className="home-hybrid-bar">
-        <span className="home-hybrid-date">{formatHomeBarDate()}</span>
+        <span className="home-hybrid-date">{formatHomeBarDate(effectiveDate)}</span>
       </div>
 
       <div className="home-dashboard-inner">
@@ -251,7 +340,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                 {hero.title}
               </h1>
               {allComplete && <div className="home-hybrid-rule" aria-hidden="true" />}
-              {allComplete && (
+              {allComplete && (showReadinessStat || showPnlStat) && (
                 <div className="home-hybrid-stats-row">
                   {showReadinessStat && (
                     <div className="home-hybrid-stat">
@@ -273,10 +362,6 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                       <div className="home-hybrid-stat-cap">P&amp;L</div>
                     </div>
                   )}
-                  <div className="home-hybrid-stat home-hybrid-stat--subtle">
-                    <div className="home-hybrid-stat-num neutral">{preStreak}</div>
-                    <div className="home-hybrid-stat-cap">Streak</div>
-                  </div>
                 </div>
               )}
               {hero.sub && <p className="home-hybrid-sub">{hero.sub}</p>}
@@ -293,18 +378,29 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                   <button type="button" onClick={() => onNavigate("postmarket")}>
                     Edit review
                   </button>
+                  {!previewFreshDay && (
+                    <>
+                      <span className="home-hybrid-edit-sep">·</span>
+                      <Link href="/?preview=fresh-day" className="home-preview-start-link">
+                        Preview start of day
+                      </Link>
+                    </>
+                  )}
                 </div>
               )}
             </div>
-            {showHeroReadiness && (
-              <ReadinessScoreWidget
-                score={today.readinessScore}
-                statusLabel={today.readinessLabel}
-                statusTone={today.readinessTone}
-                variant="compact"
-                className="home-hybrid-readiness"
-              />
-            )}
+            <aside className="home-hybrid-hero-aside">
+              <ProcessStreakBlock count={processStreak} />
+              {showHeroReadiness && (
+                <ReadinessScoreWidget
+                  score={today.readinessScore}
+                  statusLabel={today.readinessLabel}
+                  statusTone={today.readinessTone}
+                  variant="compact"
+                  className="home-hybrid-readiness"
+                />
+              )}
+            </aside>
           </header>
 
           {!allComplete && (
@@ -318,7 +414,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                   postComplete
                 );
                 const isNext = nextStep?.id === step.id;
-                const started = stepStarted(step.id, today);
+                const started = stepStarted(step.id, workflowToday);
                 const showEdit = !isNext && started;
                 return (
                   <div
@@ -338,9 +434,13 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                     {(isNext || showEdit) && (
                       <span className="home-hybrid-step-action">
                         {isNext ? (
-                          <span className="home-hybrid-step-badge">
+                          <button
+                            type="button"
+                            className="home-hybrid-step-badge"
+                            onClick={() => onNavigate(step.id)}
+                          >
                             {completedCount === 0 ? "Start" : "Next"}
-                          </span>
+                          </button>
                         ) : (
                           <button
                             type="button"
@@ -380,32 +480,50 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                 {recent.length === 0 ? (
                   <p className="home-panel-empty">No sessions yet.</p>
                 ) : (
-                  recent.map((s) => {
-                    const pnlCls =
-                      s.netPnl > 0 ? "positive" : s.netPnl < 0 ? "negative" : "neutral";
-                    const readyCls =
-                      s.readinessScore != null ? "scored" : "muted";
-                    return (
-                      <button
-                        key={s.date}
-                        type="button"
-                        className="home-hybrid-recent-row"
-                        onClick={() => onOpenHistoryDay(s.date)}
-                      >
-                        <span className="home-hybrid-recent-date">
-                          {formatShortHistoryDate(s.date)}
-                        </span>
-                        <span className={`home-hybrid-recent-ready ${readyCls}`}>
-                          {s.readinessScore != null ? s.readinessScore : "—"}
-                        </span>
-                        <span className={`home-hybrid-recent-pnl ${pnlCls}`}>
-                          {s.netPnl != null
-                            ? formatUsd(s.netPnl, { signed: true })
-                            : "—"}
-                        </span>
-                      </button>
-                    );
-                  })
+                  <>
+                    <div className="home-hybrid-recent-head" aria-hidden="true">
+                      <span>Date</span>
+                      <span>Ready</span>
+                      <span>Risk</span>
+                      <span>P&amp;L</span>
+                    </div>
+                    {recent.map((s) => {
+                      const pnlCls =
+                        s.netPnl > 0 ? "positive" : s.netPnl < 0 ? "negative" : "neutral";
+                      const readyCls =
+                        s.readinessScore != null ? "scored" : "muted";
+                      const proc = getProcessStreakDisplayForDay(s, sessions);
+                      const procCls =
+                        proc.type === "followed"
+                          ? "positive"
+                          : proc.type === "broken"
+                            ? "broken"
+                            : "muted";
+                      return (
+                        <button
+                          key={s.date}
+                          type="button"
+                          className="home-hybrid-recent-row"
+                          onClick={() => onOpenHistoryDay(s.date)}
+                        >
+                          <span className="home-hybrid-recent-date">
+                            {formatShortHistoryDate(s.date)}
+                          </span>
+                          <span className={`home-hybrid-recent-ready ${readyCls}`}>
+                            {s.readinessScore != null ? s.readinessScore : "—"}
+                          </span>
+                          <span className={`home-hybrid-recent-proc ${procCls}`}>
+                            {proc.type === "unanswered" ? "—" : proc.streak}
+                          </span>
+                          <span className={`home-hybrid-recent-pnl ${pnlCls}`}>
+                            {s.netPnl != null
+                              ? formatUsd(s.netPnl, { signed: true })
+                              : "—"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </>
                 )}
               </div>
             </section>

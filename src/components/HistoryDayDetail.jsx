@@ -9,6 +9,7 @@ import {
   formatUsd,
   biasTag,
   volTag,
+  getRiskPlanFollowed,
 } from "../lib/history-data";
 import { readinessScoreColor } from "../lib/premarket-scoring";
 
@@ -110,6 +111,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
 
   const { pre, plan, post } = session;
   const pnlTone = session.netPnl > 0 ? "pos" : session.netPnl < 0 ? "neg" : "dim";
+  const riskPlanFollowed = getRiskPlanFollowed(post);
 
   return (
     <div className="history-detail-page hybrid-page">
@@ -362,6 +364,16 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                 <div><span>Setup quality</span><strong>{post.setupQuality}</strong></div>
                 <div><span>Risk discipline</span><strong>{post.riskDiscipline}</strong></div>
                 <div><span>Execution</span><strong>{post.executionQuality}</strong></div>
+                <div>
+                  <span>Risk plan followed</span>
+                  <strong>
+                    {riskPlanFollowed === true
+                      ? "Yes"
+                      : riskPlanFollowed === false
+                        ? "No"
+                        : "—"}
+                  </strong>
+                </div>
               </div>
             </div>
 
@@ -381,8 +393,8 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
             </div>
 
             <div className="history-process-row">
-              <div className="history-process-title hybrid-label-sm">After the close (1–10)</div>
-              <div className="history-process-grid history-process-grid--3">
+              <div className="history-process-title hybrid-label-sm">After the close</div>
+              <div className="history-process-grid">
                 <div><span>Emotional</span><strong>{post.emotionalState}</strong></div>
                 <div><span>Satisfaction</span><strong>{post.satisfaction}</strong></div>
                 <div><span>Frustration</span><strong>{post.frustration}</strong></div>

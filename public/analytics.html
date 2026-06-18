@@ -907,6 +907,12 @@
   }
   .modal-overlay.open .modal { transform: translateY(0); }
 
+  /* Above side panels (drawer-overlay 449, .trade-panel 450) */
+  #delete-day-modal-overlay,
+  #journal-modal-overlay {
+    z-index: 600;
+  }
+
   .modal-header {
     padding: 16px 20px; border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between;
@@ -2964,9 +2970,9 @@ let _deleteDayTarget = null;
 function openDeleteDayModal(date) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
   _deleteDayTarget = date;
-  const count = (_dailyPnlData && _dailyPnlData.byDate[date]) ? _dailyPnlData.byDate[date].count : 0;
+  const fallbackCount = (_dailyPnlData && _dailyPnlData.byDate[date]) ? _dailyPnlData.byDate[date].count : 0;
   document.getElementById('delete-day-message').innerHTML =
-    'Permanently delete <strong style="color:var(--text)">' + count + ' trade' + (count === 1 ? '' : 's') + '</strong> on <strong style="color:var(--text)">' + date + '</strong>, plus the trading day record and rule compliance for that date. Journal entries are kept.';
+    'Loading trade count…';
   document.getElementById('delete-day-date-label').textContent = date;
   const input = document.getElementById('delete-day-confirm-input');
   input.value = '';
@@ -2974,6 +2980,20 @@ function openDeleteDayModal(date) {
   updateDeleteDayConfirmBtn();
   document.getElementById('delete-day-modal-overlay').classList.add('open');
   setTimeout(() => input.focus(), 100);
+
+  fetch(`${SUPABASE_URL}/rest/v1/trades?select=id&date=eq.${date}`, { headers: HEADERS })
+    .then(res => res.ok ? res.json() : Promise.reject(new Error('Could not load trades')))
+    .then(rows => {
+      if (_deleteDayTarget !== date) return;
+      const count = Array.isArray(rows) ? rows.length : fallbackCount;
+      document.getElementById('delete-day-message').innerHTML =
+        'Permanently delete <strong style="color:var(--text)">' + count + ' trade' + (count === 1 ? '' : 's') + '</strong> on <strong style="color:var(--text)">' + date + '</strong>, plus the trading day record and rule compliance for that date. Journal entries are kept.';
+    })
+    .catch(() => {
+      if (_deleteDayTarget !== date) return;
+      document.getElementById('delete-day-message').innerHTML =
+        'Permanently delete <strong style="color:var(--text)">' + fallbackCount + ' trade' + (fallbackCount === 1 ? '' : 's') + '</strong> on <strong style="color:var(--text)">' + date + '</strong>, plus the trading day record and rule compliance for that date. Journal entries are kept.';
+    });
 }
 
 function closeDeleteDayModal() {

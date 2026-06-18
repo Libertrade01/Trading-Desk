@@ -1,0 +1,100 @@
+[
+  {
+    "date": "2026-01-01",
+    "kind": "holiday",
+    "label": "New Year's Day",
+    "closure": "full",
+    "severity": "high",
+    "reminder": "NYSE closed all day."
+  },
+  {
+    "date": "2026-01-19",
+    "kind": "holiday",
+    "label": "Martin Luther King Jr. Day",
+    "closure": "full",
+    "severity": "high",
+    "reminder": "NYSE closed all day."
+  },
+  {
+    "date": "2026-02-16",
+    "kind": "holiday",
+    "label": "Presidents' Day",
+    "closure": "full",
+    "severity": "high",
+    "reminder": "NYSE closed all day."
+  },
+  {
+    "date": "2026-04-03",
+    "kind": "holiday",
+    "label": "Good Friday",
+    "closure": "full",
+    "severity": "high",
+    "reminder": "NYSE closed all day."
+  },
+  {
+    "date": "2026-05-25",
+    "kind": "holiday",
+    "label": "Memorial Day",
+    "closure": "full",
+    "severity": "high",
+    "reminder": "NYSE closed all day."
+  },
+  {
+    "date": "2026-06-19",
+    "kind": "holiday",
+    "label": "Juneteenth",
+    "closure": "full",
+    "severity": "high",
+    "reminder": "NYSE closed all day."
+  },
+  {
+    "date": "2026-07-03",
+    "kind": "holiday",
+    "label": "Independence Day (observed)",
+    "closure": "full",
+    "severity": "high",
+    "reminder": "NYSE closed all day."
+  },
+  {
+    "date": "2026-09-07",
+    "kind": "holiday",
+    "label": "Labor Day",
+    "closure": "full",
+    "severity": "high",
+    "reminder": "NYSE closed all day."
+  },
+  {
+    "date": "2026-11-26",
+    "kind": "holiday",
+    "label": "Thanksgiving",
+    "closure": "full",
+    "severity": "high",
+    "reminder": "NYSE closed all day."
+  },
+  {
+    "date": "2026-11-27",
+    "kind": "halfday",
+    "label": "Day after Thanksgiving",
+    "closure": "half",
+    "closeET": "13:00",
+    "severity": "medium",
+    "reminder": "NYSE early close at 1:00 PM ET."
+  },
+  {
+    "date": "2026-12-24",
+    "kind": "halfday",
+    "label": "Christmas Eve",
+    "closure": "half",
+    "closeET": "13:00",
+    "severity": "medium",
+    "reminder": "NYSE early close at 1:00 PM ET."
+  },
+  {
+    "date": "2026-12-25",
+    "kind": "holiday",
+    "label": "Christmas",
+    "closure": "full",
+    "severity": "high",
+    "reminder": "NYSE closed all day."
+  }
+]

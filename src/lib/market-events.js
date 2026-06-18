@@ -1,4 +1,5 @@
 import staticEvents2026 from "../data/market-events-2026.json";
+import marketHolidays2026 from "../data/market-holidays-2026.json";
 
 const SEVERITY_ORDER = { high: 0, medium: 1, low: 2 };
 
@@ -47,6 +48,67 @@ function addDaysToDateKey(dateKey, days) {
 
 function staticEventsForYear(year) {
   return year === "2026" ? staticEvents2026 : [];
+}
+
+function holidaysForYear(year) {
+  return year === "2026" ? marketHolidays2026 : [];
+}
+
+/** First day to show a holiday ribbon (inclusive). */
+export function displayStartForHoliday(holidayDateKey) {
+  const d = parseDateKey(holidayDateKey);
+  const dow = d.getDay();
+
+  if (dow === 1) {
+    return addDaysToDateKey(holidayDateKey, -5);
+  }
+
+  const daysFromMonday = dow === 0 ? 6 : dow - 1;
+  return addDaysToDateKey(holidayDateKey, -daysFromMonday);
+}
+
+/** Last day to show a holiday ribbon (inclusive — holiday date itself). */
+export function displayEndForHoliday(holidayDateKey) {
+  return holidayDateKey;
+}
+
+/** "Friday, June 19" from a holiday date key (not the viewing date). */
+export function formatHolidayDateLabel(holidayDateKey) {
+  return parseDateKey(holidayDateKey).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+/** Holiday ribbon label: "Monday, January 19 — Martin Luther King Jr. Day" */
+export function formatHolidayDisplayLabel(holidayDateKey, name) {
+  return `${formatHolidayDateLabel(holidayDateKey)} — ${name}`;
+}
+
+function isDateInHolidayWindow(viewingDateKey, holidayDateKey) {
+  const start = displayStartForHoliday(holidayDateKey);
+  const end = displayEndForHoliday(holidayDateKey);
+  return viewingDateKey >= start && viewingDateKey <= end;
+}
+
+export function holidayEventsForDate(dateKey) {
+  const holidays = holidaysForYear(dateKey.slice(0, 4));
+
+  return holidays
+    .filter((h) => isDateInHolidayWindow(dateKey, h.date))
+    .map((h) => ({
+      date: dateKey,
+      kind: h.kind,
+      label: formatHolidayDisplayLabel(h.date, h.label),
+      closure: h.closure,
+      closeET: h.closeET ?? null,
+      timeET: h.closeET ?? null,
+      severity: h.severity,
+      reminder: h.reminder,
+      holidayDate: h.date,
+      source: "holiday",
+    }));
 }
 
 function preFomcEventsForDate(dateKey) {
@@ -126,7 +188,11 @@ function staticEventsForDate(dateKey) {
 
 export function getMarketEventsForDate(date = new Date()) {
   const dateKey = typeof date === "string" ? date : toDateKey(date);
-  const merged = [...staticEventsForDate(dateKey), ...computedEventsForDate(dateKey)];
+  const merged = [
+    ...staticEventsForDate(dateKey),
+    ...computedEventsForDate(dateKey),
+    ...holidayEventsForDate(dateKey),
+  ];
 
   merged.sort((a, b) => {
     const sev = (SEVERITY_ORDER[a.severity] ?? 9) - (SEVERITY_ORDER[b.severity] ?? 9);
