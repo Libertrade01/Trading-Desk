@@ -379,41 +379,6 @@ textarea:focus, input:focus, select:focus {
 }
 
 /* ── Home dashboard (Hybrid · Cinematic + Poster) ── */
-.home-preview-banner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 7px 16px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.02em;
-  color: var(--amber);
-  background: rgba(158, 112, 64, 0.12);
-  border-bottom: 1px solid rgba(158, 112, 64, 0.22);
-}
-
-.home-preview-banner-clear {
-  color: var(--text);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.home-preview-banner-clear:hover {
-  color: #fff;
-}
-
-.home-preview-start-link {
-  color: var(--brand);
-  text-decoration: none;
-  font-size: inherit;
-}
-
-.home-preview-start-link:hover {
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
 .home-dashboard {
   min-height: 100%;
   animation: fadeIn 0.4s ease;
@@ -560,6 +525,13 @@ textarea:focus, input:focus, select:focus {
   letter-spacing: -0.05em;
   line-height: 0.88;
   color: var(--brand);
+}
+
+.home-hybrid-streak-goal {
+  font-size: 0.3em;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: rgba(255, 255, 255, 0.32);
 }
 .home-hybrid-rule {
   width: 40px;
@@ -1027,8 +999,9 @@ textarea:focus, input:focus, select:focus {
 .home-hybrid-recent-row {
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr auto auto auto;
-  gap: 16px;
+  /* Fixed metric columns so header/body rows share the same track positions */
+  grid-template-columns: minmax(0, 1fr) 2.25rem 2.5rem 5rem;
+  column-gap: 16px;
   align-items: center;
 }
 
@@ -1058,8 +1031,16 @@ textarea:focus, input:focus, select:focus {
   cursor: default;
 }
 
-.home-hybrid-recent-head span:not(:first-child) {
-  text-align: right;
+.home-hybrid-recent-col-ready,
+.home-hybrid-recent-ready,
+.home-hybrid-recent-col-risk,
+.home-hybrid-recent-proc {
+  justify-self: center;
+}
+
+.home-hybrid-recent-col-pnl,
+.home-hybrid-recent-pnl {
+  justify-self: end;
 }
 
 .home-hybrid-recent-date {
@@ -1071,8 +1052,6 @@ textarea:focus, input:focus, select:focus {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  text-align: right;
-  min-width: 28px;
 }
 
 .home-hybrid-recent-ready.scored {
@@ -1088,8 +1067,6 @@ textarea:focus, input:focus, select:focus {
   font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace;
   font-size: 11px;
   font-weight: 600;
-  text-align: right;
-  min-width: 32px;
 }
 
 .home-hybrid-recent-proc.positive { color: var(--brand); }
@@ -1098,8 +1075,6 @@ textarea:focus, input:focus, select:focus {
 
 .home-hybrid-recent-pnl {
   font-weight: 600;
-  text-align: right;
-  min-width: 64px;
 }
 
 .home-hybrid-recent-row:hover {

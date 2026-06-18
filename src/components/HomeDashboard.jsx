@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import {
   loadSessionDay,
   loadAllSessions,
@@ -15,7 +13,6 @@ import {
   formatShortHistoryDate,
   formatUsd,
   isWeekend,
-  nextTradingDayKey,
 } from "../lib/history-data";
 import HomeEventBanner from "./HomeEventBanner";
 import ReadinessScoreWidget from "./ReadinessScoreWidget";
@@ -121,6 +118,8 @@ function formatPosterPnl(value) {
   return String(Math.abs(Math.round(value)));
 }
 
+const RISK_STREAK_GOAL = 21;
+
 function ProcessStreakBlock({ count }) {
   return (
     <div
@@ -129,61 +128,18 @@ function ProcessStreakBlock({ count }) {
     >
       <div
         className="home-hybrid-streak-num"
-        aria-label={`${count} day risk adherence streak`}
+        aria-label={`${count} of ${RISK_STREAK_GOAL} day risk adherence streak`}
       >
         {count}
+        <span className="home-hybrid-streak-goal">/{RISK_STREAK_GOAL}</span>
       </div>
       <div className="home-hybrid-streak-label">Risk adherence streak</div>
     </div>
   );
 }
 
-const PREVIEW_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-function parsePreviewDate(raw) {
-  if (!raw || !PREVIEW_DATE_RE.test(raw)) return null;
-  const [y, m, d] = raw.split("-").map(Number);
-  const date = new Date(y, m - 1, d);
-  if (
-    date.getFullYear() !== y ||
-    date.getMonth() !== m - 1 ||
-    date.getDate() !== d
-  ) {
-    return null;
-  }
-  return raw;
-}
-
 function dateFromKey(dateKey) {
   return new Date(`${dateKey}T12:00:00`);
-}
-
-function formatPreviewBannerLabel(dateKey) {
-  return dateFromKey(dateKey).toLocaleDateString("en-GB", {
-    weekday: "long",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function readPreviewParamsFromLocation() {
-  if (typeof window === "undefined") return { preview: null, previewDate: null };
-  const params = new URLSearchParams(window.location.search);
-  return {
-    preview: params.get("preview"),
-    previewDate: params.get("previewDate"),
-  };
-}
-
-function usePreviewSearchParams() {
-  const searchParams = useSearchParams();
-  const fromRouter = {
-    preview: searchParams.get("preview"),
-    previewDate: searchParams.get("previewDate"),
-  };
-  if (fromRouter.preview || fromRouter.previewDate) return fromRouter;
-  return readPreviewParamsFromLocation();
 }
 
 function heroCopy(allComplete, completedCount, weekend, timeEyebrow) {
@@ -220,21 +176,8 @@ function heroCopy(allComplete, completedCount, weekend, timeEyebrow) {
   };
 }
 
-export default function HomeDashboard({
-  onNavigate,
-  onOpenHistoryDay,
-  preview: previewProp,
-  previewDate: previewDateProp,
-}) {
-  const fromHook = usePreviewSearchParams();
-  const preview = previewProp ?? fromHook.preview;
-  const previewDateRaw = previewDateProp ?? fromHook.previewDate;
-  const previewFreshDay = preview === "fresh-day";
-  const previewDate = parsePreviewDate(previewDateRaw);
-  const effectiveDateKey = previewFreshDay
-    ? previewDate ?? nextTradingDayKey(new Date())
-    : previewDate ?? todayKey();
-  const showPreviewBanner = previewFreshDay || !!previewDate;
+export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
+  const effectiveDateKey = todayKey();
   const effectiveDate = useMemo(
     () => dateFromKey(effectiveDateKey),
     [effectiveDateKey]
@@ -262,9 +205,9 @@ export default function HomeDashboard({
     };
   }, [effectiveDateKey]);
 
-  const preComplete = previewFreshDay ? false : isStepComplete(today?.pre);
-  const planComplete = previewFreshDay ? false : isStepComplete(today?.plan);
-  const postComplete = previewFreshDay ? false : isStepComplete(today?.post);
+  const preComplete = isStepComplete(today?.pre);
+  const planComplete = isStepComplete(today?.plan);
+  const postComplete = isStepComplete(today?.post);
   const allComplete = preComplete && planComplete && postComplete;
   const completedCount = [preComplete, planComplete, postComplete].filter(Boolean).length;
   const weekend = isWeekend(effectiveDate);
@@ -288,7 +231,6 @@ export default function HomeDashboard({
 
   const processStreak = useMemo(() => countProcessStreak(sessions), [sessions]);
   const recent = sessions.slice(0, 3);
-  const workflowToday = previewFreshDay ? null : today;
 
   const morningUnderway = !allComplete && completedCount > 0;
   const showHeroReadiness =
@@ -303,20 +245,6 @@ export default function HomeDashboard({
 
   return (
     <div className="home-dashboard home-dashboard--hybrid">
-      {showPreviewBanner && (
-        <div className="home-preview-banner" role="status">
-          <span>
-            Preview:{" "}
-            {previewFreshDay
-              ? `Start of day — ${formatPreviewBannerLabel(effectiveDateKey)}`
-              : formatPreviewBannerLabel(effectiveDateKey)}
-          </span>
-          <Link href="/" className="home-preview-banner-clear">
-            Clear
-          </Link>
-        </div>
-      )}
-
       <div className="home-hybrid-stripe" aria-hidden="true" />
 
       <div className="home-hybrid-bar">
@@ -378,14 +306,6 @@ export default function HomeDashboard({
                   <button type="button" onClick={() => onNavigate("postmarket")}>
                     Edit review
                   </button>
-                  {!previewFreshDay && (
-                    <>
-                      <span className="home-hybrid-edit-sep">·</span>
-                      <Link href="/?preview=fresh-day" className="home-preview-start-link">
-                        Preview start of day
-                      </Link>
-                    </>
-                  )}
                 </div>
               )}
             </div>
@@ -414,7 +334,7 @@ export default function HomeDashboard({
                   postComplete
                 );
                 const isNext = nextStep?.id === step.id;
-                const started = stepStarted(step.id, workflowToday);
+                const started = stepStarted(step.id, today);
                 const showEdit = !isNext && started;
                 return (
                   <div
@@ -482,10 +402,10 @@ export default function HomeDashboard({
                 ) : (
                   <>
                     <div className="home-hybrid-recent-head" aria-hidden="true">
-                      <span>Date</span>
-                      <span>Ready</span>
-                      <span>Risk</span>
-                      <span>P&amp;L</span>
+                      <span className="home-hybrid-recent-date">Date</span>
+                      <span className="home-hybrid-recent-col-ready">Ready</span>
+                      <span className="home-hybrid-recent-col-risk">Risk</span>
+                      <span className="home-hybrid-recent-col-pnl">P&amp;L</span>
                     </div>
                     {recent.map((s) => {
                       const pnlCls =
