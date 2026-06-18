@@ -1,0 +1,104 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const NAV_ITEMS = [
+  { id: "home", href: "/", label: "Home", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="5" height="5" rx="0.5"/><rect x="9" y="2" width="5" height="5" rx="0.5"/><rect x="2" y="9" width="5" height="5" rx="0.5"/><rect x="9" y="9" width="5" height="5" rx="0.5"/></svg>
+  )},
+  { type: "label", text: "Today" },
+  { id: "premarket", href: "/premarket", label: "Pre-Market", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/></svg>
+  )},
+  { id: "dailyplan", href: "/plan", label: "Daily Plan", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5" strokeLinecap="round"/></svg>
+  )},
+  { id: "postmarket", href: "/postmarket", label: "Post-Market", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 12h12M4 9l3-3 2 2 4-4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  )},
+  { type: "label", text: "Reference" },
+  { id: "history", href: "/history", label: "History", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5v4l2.5 1.5" strokeLinecap="round"/></svg>
+  )},
+  { id: "propeconomics", href: "/prop-economics", label: "Prop Economics", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 12V6l6-3 6 3v6l-6 3-6-3z"/><path d="M8 3v10M2 6l6 3 6-3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  )},
+  { id: "desk", href: "/desk", label: "Trade Desk", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+  )},
+  { id: "analytics", href: "/analytics", label: "Analytics", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="9" width="3" height="5" rx="0.5"/><rect x="6.5" y="5" width="3" height="9" rx="0.5"/><rect x="11" y="2" width="3" height="12" rx="0.5"/></svg>
+  )},
+  { id: "wiki", href: "/wiki", label: "Wiki", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 2.5h10v11H3z"/><path d="M5.5 2.5v11M8 2.5v11M10.5 2.5v11"/></svg>
+  )},
+  { id: "settings", href: "/settings", label: "Settings", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>
+  )},
+];
+
+function isNavActive(pathname, item) {
+  if (item.id === "home") return pathname === "/";
+  if (item.id === "history") return pathname === "/history" || pathname.startsWith("/history/");
+  return pathname === item.href || pathname.startsWith(`${item.href}/`);
+}
+
+function Sidebar({ pathname, open, onClose }) {
+  return (
+    <>
+      <div className={`sidebar-overlay${open ? " visible" : ""}`} onClick={onClose} />
+      <aside className={`sidebar${open ? " open" : ""}`}>
+        <div className="sidebar-brand">
+          <div className="sidebar-wordmark">Liber<span>trade</span></div>
+          <div className="sidebar-brand-sub">Trading Desk</div>
+        </div>
+        <nav className="sidebar-nav">
+          {NAV_ITEMS.map((item, i) => item.type === "label" ? (
+            <div key={`label-${i}`} className="sidebar-nav-label">{item.text}</div>
+          ) : (
+            <Link
+              key={item.id}
+              href={item.href}
+              className={`sidebar-nav-item${isNavActive(pathname, item) ? " active" : ""}`}
+              onClick={onClose}
+            >
+              {item.icon}
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
+          <div className="sidebar-footer-label">Libertrade</div>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+export default function AppShell({ children }) {
+  const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  return (
+    <div className="app-layout">
+      <style>{`
+        input[type="range"] { -webkit-appearance: none; appearance: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: #fff; cursor: pointer; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+        input.pm-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #a8adb8; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
+        input.pm-slider::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #a8adb8; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
+        input[type="number"] { -moz-appearance: textfield; }
+        input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+      `}</style>
+
+      <button className="sidebar-toggle" onClick={() => setSidebarOpen((o) => !o)} aria-label="Toggle menu">
+        <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 5h12M3 9h12M3 13h12"/></svg>
+      </button>
+
+      <Sidebar pathname={pathname} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      <main className="main-content">{children}</main>
+    </div>
+  );
+}

@@ -1,13 +1,6 @@
 "use client";
 import { storage } from "../lib/supabase";
 import { useState, useEffect, useCallback } from "react";
-import PreMarketCheckIn from "../components/PreMarketCheckIn";
-import DailyPlan from "../components/DailyPlan";
-import PostMarketReview from "../components/PostMarketReview";
-import HistoryPage from "../components/HistoryPage";
-import HistoryDayDetail from "../components/HistoryDayDetail";
-import HomeDashboard from "../components/HomeDashboard";
-import PropEconomics from "../components/PropEconomics";
 
 // ═══════════════════════════════════════════════════════════
 // SHARED COMPONENTS
@@ -1895,158 +1888,16 @@ function MentalGameFramework({ onBack }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════
-// APP SHELL & SIDEBAR
-// ═══════════════════════════════════════════════════════════
-
-const NAV_ITEMS = [
-  { id: "home", label: "Home", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="5" height="5" rx="0.5"/><rect x="9" y="2" width="5" height="5" rx="0.5"/><rect x="2" y="9" width="5" height="5" rx="0.5"/><rect x="9" y="9" width="5" height="5" rx="0.5"/></svg>
-  )},
-  { type: "label", text: "Today" },
-  { id: "premarket", label: "Pre-Market", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/></svg>
-  )},
-  { id: "dailyplan", label: "Daily Plan", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5" strokeLinecap="round"/></svg>
-  )},
-  { id: "postmarket", label: "Post-Market", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 12h12M4 9l3-3 2 2 4-4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-  )},
-  { type: "label", text: "Reference" },
-  { id: "history", label: "History", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5v4l2.5 1.5" strokeLinecap="round"/></svg>
-  )},
-  { id: "propeconomics", label: "Prop Economics", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 12V6l6-3 6 3v6l-6 3-6-3z"/><path d="M8 3v10M2 6l6 3 6-3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-  )},
-  { id: "desk", label: "Trade Desk", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
-  )},
-  { id: "analytics", label: "Analytics", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="9" width="3" height="5" rx="0.5"/><rect x="6.5" y="5" width="3" height="9" rx="0.5"/><rect x="11" y="2" width="3" height="12" rx="0.5"/></svg>
-  )},
-  { id: "wiki", label: "Wiki", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 2.5h10v11H3z"/><path d="M5.5 2.5v11M8 2.5v11M10.5 2.5v11"/></svg>
-  )},
-  { id: "settings", label: "Settings", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>
-  )},
-];
-
-function Sidebar({ section, onNavigate, open, onClose }) {
-  return (
-    <>
-      <div className={`sidebar-overlay${open ? " visible" : ""}`} onClick={onClose} />
-      <aside className={`sidebar${open ? " open" : ""}`}>
-        <div className="sidebar-brand">
-          <div className="sidebar-wordmark">Liber<span>trade</span></div>
-          <div className="sidebar-brand-sub">Trading Desk</div>
-        </div>
-        <nav className="sidebar-nav">
-          {NAV_ITEMS.map((item, i) => item.type === "label" ? (
-            <div key={`label-${i}`} className="sidebar-nav-label">{item.text}</div>
-          ) : (
-            <button
-              key={item.id}
-              className={`sidebar-nav-item${section === item.id ? " active" : ""}`}
-              onClick={() => { onNavigate(item.id); onClose(); }}
-            >
-              {item.icon}
-              {item.label}
-            </button>
-          ))}
-        </nav>
-        <div className="sidebar-footer">
-          <div className="sidebar-footer-label">Libertrade</div>
-        </div>
-      </aside>
-    </>
-  );
-}
-
-function SettingsPlaceholder() {
-  return (
-    <div className="settings-placeholder">
-      <h2>Settings</h2>
-      <p>Coming soon.</p>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════
-// ROOT APP
-// ═══════════════════════════════════════════════════════════
-
-export default function App() {
+export default function TradeDeskApp() {
   const [page, setPage] = useState("landing");
-  const [section, setSection] = useState("home");
-  const [historyDate, setHistoryDate] = useState(null);
-  const [homeKey, setHomeKey] = useState(0);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const goToSection = (id) => {
-    setSection(id);
-    if (id !== "history") setHistoryDate(null);
-    if (id === "home") setHomeKey((k) => k + 1);
-    if (id === "desk") setPage("landing");
-  };
 
   return (
-    <div className="app-layout">
-      <style>{`
-        input[type="range"] { -webkit-appearance: none; appearance: none; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: #fff; cursor: pointer; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
-        input.pm-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #a8adb8; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
-        input.pm-slider::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #a8adb8; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
-        input[type="number"] { -moz-appearance: textfield; }
-        input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-      `}</style>
-
-      <button className="sidebar-toggle" onClick={() => setSidebarOpen(o => !o)} aria-label="Toggle menu">
-        <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 5h12M3 9h12M3 13h12"/></svg>
-      </button>
-
-      <Sidebar section={section} onNavigate={goToSection} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-      <main className="main-content">
-        {section === "home" && (
-          <HomeDashboard
-            key={homeKey}
-            onNavigate={goToSection}
-            onOpenHistoryDay={(date) => {
-              setHistoryDate(date);
-              setSection("history");
-            }}
-          />
-        )}
-        {section === "premarket" && <PreMarketCheckIn onBack={() => setSection("home")} />}
-        {section === "dailyplan" && <DailyPlan onBack={() => setSection("home")} />}
-        {section === "postmarket" && <PostMarketReview onBack={() => setSection("home")} />}
-        {section === "history" && !historyDate && (
-          <HistoryPage onSelectDay={setHistoryDate} />
-        )}
-        {section === "history" && historyDate && (
-          <HistoryDayDetail
-            date={historyDate}
-            onBack={() => setHistoryDate(null)}
-            onDeleted={() => setHistoryDate(null)}
-          />
-        )}
-        {section === "desk" && (
-          <div className="app-shell" style={{ fontFamily: "system-ui, -apple-system, sans-serif", color: "#fff" }}>
-            {page === "landing" && <LandingPage onNavigate={setPage} />}
-            {page === "prep" && <MarketPrep onBack={() => setPage("landing")} />}
-            {page === "playbook" && <Playbook onBack={() => setPage("landing")} />}
-            {page === "mental" && <MentalGameFramework onBack={() => setPage("landing")} />}
-            {page === "fundamentals" && <MarketFundamentals onBack={() => setPage("landing")} />}
-          </div>
-        )}
-        {section === "propeconomics" && <PropEconomics />}
-        {section === "analytics" && <iframe className="embed-frame" src="/analytics" title="Analytics" />}
-        {section === "wiki" && <iframe className="embed-frame" src="https://trade-wiki.vercel.app" title="Wiki" />}
-        {section === "settings" && <SettingsPlaceholder />}
-      </main>
+    <div className="app-shell" style={{ fontFamily: "system-ui, -apple-system, sans-serif", color: "#fff" }}>
+      {page === "landing" && <LandingPage onNavigate={setPage} />}
+      {page === "prep" && <MarketPrep onBack={() => setPage("landing")} />}
+      {page === "playbook" && <Playbook onBack={() => setPage("landing")} />}
+      {page === "mental" && <MentalGameFramework onBack={() => setPage("landing")} />}
+      {page === "fundamentals" && <MarketFundamentals onBack={() => setPage("landing")} />}
     </div>
   );
 }
