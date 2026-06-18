@@ -1075,6 +1075,15 @@
     margin-top: 2px;
   }
   .jp-delete-btn:hover { color: var(--red); }
+  .day-delete-btn {
+    background: none; border: none; color: var(--muted);
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.06em;
+    text-transform: uppercase; cursor: pointer; padding: 4px 8px;
+    border-radius: 3px; transition: color 0.15s, background 0.15s;
+    justify-self: end;
+  }
+  .day-delete-btn:hover { color: var(--red); background: rgba(138,53,53,0.1); }
+  #delete-day-confirm-input:focus { outline: none; border-color: var(--red); }
 
   /* ── Trades Table ── */
   .trades-table {
@@ -1843,12 +1852,39 @@
   <div class="drawer-overlay" id="daily-pnl-panel-overlay" onclick="closeDailyPnlPanel()" style="z-index:449"></div>
 
   <!-- Daily P&L Panel -->
-  <div class="trade-panel" id="daily-pnl-panel" style="width:min(560px,92vw)">
+  <div class="trade-panel" id="daily-pnl-panel" style="width:min(640px,92vw)">
     <div class="panel-header">
       <span class="panel-title">All Days — Daily P&L</span>
       <button class="panel-close" onclick="closeDailyPnlPanel()">✕</button>
     </div>
     <div class="panel-body" id="daily-pnl-panel-body" style="padding:20px 28px"></div>
+  </div>
+
+  <!-- Delete Day Confirmation Modal -->
+  <div class="modal-overlay" id="delete-day-modal-overlay" onclick="if(event.target===this)closeDeleteDayModal()">
+    <div class="modal" style="max-width:440px">
+      <div class="modal-header">
+        <span class="modal-title">Delete Trading Day</span>
+        <button class="modal-close" onclick="closeDeleteDayModal()">✕</button>
+      </div>
+      <div style="padding:20px 24px">
+        <p id="delete-day-message" style="font-family:var(--font-body);font-size:13px;color:var(--text-dim);line-height:1.55;margin:0 0 16px"></p>
+        <label style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Type <span id="delete-day-date-label" style="color:var(--text)"></span> to confirm</label>
+        <input id="delete-day-confirm-input" type="text" placeholder="YYYY-MM-DD" autocomplete="off"
+          style="width:100%;font-family:var(--font-mono);font-size:12px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:8px 10px;border-radius:3px;box-sizing:border-box"
+          oninput="updateDeleteDayConfirmBtn()">
+        <div id="delete-day-error" style="font-family:var(--font-mono);font-size:10px;color:var(--red);margin-top:10px;display:none"></div>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-footer-left">This cannot be undone</div>
+        <div class="modal-footer-right">
+          <button onclick="closeDeleteDayModal()" style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.07em;text-transform:uppercase;background:var(--surface2);border:1px solid var(--border2);color:var(--muted);padding:8px 16px;border-radius:3px;cursor:pointer">Cancel</button>
+          <button id="delete-day-confirm-btn" onclick="executeDeleteDay()" disabled
+            style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.07em;text-transform:uppercase;background:rgba(138,53,53,0.12);border:1px solid rgba(138,53,53,0.3);color:#c26060;padding:8px 16px;border-radius:3px;cursor:pointer;opacity:0.45"
+            onmouseover="if(!this.disabled)this.style.background='rgba(138,53,53,0.22)'" onmouseout="if(!this.disabled)this.style.background='rgba(138,53,53,0.12)'">Delete Day</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Trade Panel Overlay -->
@@ -2844,7 +2880,7 @@ function renderPnlChart(trades) {
 
 var _dailyPnlData = null;
 
-function buildDailyPnlRows(dates, byDate, cols) {
+function buildDailyPnlRows(dates, byDate, cols, showDelete) {
   return dates.map(d => {
     const { pnl, count, gate, seqIds, soloCount } = byDate[d];
     const seq     = (seqIds ? seqIds.size : 0) + (soloCount || 0);
@@ -2855,12 +2891,16 @@ function buildDailyPnlRows(dates, byDate, cols) {
     const dateObj = new Date(d + 'T12:00:00');
     const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const dateLabel = dayNames[dateObj.getDay()] + ' ' + dateObj.getDate() + ' ' + monthNames[dateObj.getMonth()];
+    const deleteBtn = showDelete
+      ? '<button class="day-delete-btn" onclick="event.stopPropagation();openDeleteDayModal(\'' + d + '\')" title="Delete all trades for ' + d + '">Delete</button>'
+      : '';
     return '<div style="display:grid;grid-template-columns:' + cols + ';gap:8px;padding:7px 0;border-bottom:1px solid var(--border);align-items:center">'
       + '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-align:left">' + dateLabel + '</span>'
       + '<span style="font-family:var(--font-mono);font-size:9px;color:' + gateCol + ';text-align:center">' + (gate || '—') + '</span>'
       + '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-align:center">' + count + '</span>'
       + '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-align:center">' + seq + '</span>'
       + '<span style="font-family:var(--font-mono);font-size:11px;font-weight:500;color:' + pnlCol + ';text-align:right">' + pnlStr + '</span>'
+      + (showDelete ? deleteBtn : '')
       + '</div>';
   }).join('');
 }
@@ -2905,17 +2945,112 @@ function openDailyPnlPanel() {
     return;
   }
   const { byDate, allSorted } = _dailyPnlData;
-  const cols = '130px 55px 40px 40px 85px';
-  const colAligns = ['left','center','center','center','right'];
+  const cols = '130px 55px 40px 40px 85px 64px';
+  const colAligns = ['left','center','center','center','right','right'];
   const header = '<div style="display:grid;grid-template-columns:' + cols + ';gap:8px;padding:0 0 10px;border-bottom:1px solid var(--border);margin-bottom:4px">'
-    + ['Date','Gate','Trd','Seq','P&L'].map((h,i) => '<span style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-align:' + colAligns[i] + '">' + h + '</span>').join('')
+    + ['Date','Gate','Trd','Seq','P&L',''].map((h,i) => '<span style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-align:' + colAligns[i] + '">' + h + '</span>').join('')
     + '</div>';
-  body.innerHTML = header + buildDailyPnlRows(allSorted, byDate, cols);
+  body.innerHTML = header + buildDailyPnlRows(allSorted, byDate, cols, true);
 }
 
 function closeDailyPnlPanel() {
   document.getElementById('daily-pnl-panel-overlay').classList.remove('open');
   document.getElementById('daily-pnl-panel').classList.remove('open');
+}
+
+// ── Delete Day & All Trades ───────────────────────────────────────────────────
+let _deleteDayTarget = null;
+
+function openDeleteDayModal(date) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+  _deleteDayTarget = date;
+  const count = (_dailyPnlData && _dailyPnlData.byDate[date]) ? _dailyPnlData.byDate[date].count : 0;
+  document.getElementById('delete-day-message').innerHTML =
+    'Permanently delete <strong style="color:var(--text)">' + count + ' trade' + (count === 1 ? '' : 's') + '</strong> on <strong style="color:var(--text)">' + date + '</strong>, plus the trading day record and rule compliance for that date. Journal entries are kept.';
+  document.getElementById('delete-day-date-label').textContent = date;
+  const input = document.getElementById('delete-day-confirm-input');
+  input.value = '';
+  document.getElementById('delete-day-error').style.display = 'none';
+  updateDeleteDayConfirmBtn();
+  document.getElementById('delete-day-modal-overlay').classList.add('open');
+  setTimeout(() => input.focus(), 100);
+}
+
+function closeDeleteDayModal() {
+  _deleteDayTarget = null;
+  document.getElementById('delete-day-modal-overlay').classList.remove('open');
+  document.getElementById('delete-day-error').style.display = 'none';
+}
+
+function updateDeleteDayConfirmBtn() {
+  const btn = document.getElementById('delete-day-confirm-btn');
+  const match = _deleteDayTarget && document.getElementById('delete-day-confirm-input').value.trim() === _deleteDayTarget;
+  btn.disabled = !match;
+  btn.style.opacity = match ? '1' : '0.45';
+  btn.style.cursor = match ? 'pointer' : 'not-allowed';
+}
+
+async function executeDeleteDay() {
+  const date = _deleteDayTarget;
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+  if (document.getElementById('delete-day-confirm-input').value.trim() !== date) return;
+
+  const btn = document.getElementById('delete-day-confirm-btn');
+  const errEl = document.getElementById('delete-day-error');
+  btn.disabled = true;
+  btn.textContent = 'Deleting…';
+  errEl.style.display = 'none';
+
+  try {
+    const tradesRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/trades?select=id&date=eq.${date}`,
+      { headers: HEADERS }
+    );
+    if (!tradesRes.ok) throw new Error('Could not load trades: ' + (await tradesRes.text()));
+
+    const trades = await tradesRes.json();
+    const tradeIds = (trades || []).map(t => t.id).filter(Boolean);
+
+    if (tradeIds.length) {
+      const idsFilter = `in.(${tradeIds.join(',')})`;
+      const [linksRes, notesRes] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/trade_tag_links?trade_id=${idsFilter}`, { method: 'DELETE', headers: HEADERS }),
+        fetch(`${SUPABASE_URL}/rest/v1/trade_notes?trade_id=${idsFilter}`, { method: 'DELETE', headers: HEADERS }),
+      ]);
+      if (!linksRes.ok) console.warn('trade_tag_links delete:', await linksRes.text());
+      if (!notesRes.ok) console.warn('trade_notes delete:', await notesRes.text());
+    }
+
+    const delTradesRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/trades?date=eq.${date}`,
+      { method: 'DELETE', headers: HEADERS }
+    );
+    if (!delTradesRes.ok) throw new Error('Failed to delete trades: ' + (await delTradesRes.text()));
+
+    await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/trading_days?date=eq.${date}`, { method: 'DELETE', headers: HEADERS }),
+      fetch(`${SUPABASE_URL}/rest/v1/rule_compliance?date=eq.${date}`, { method: 'DELETE', headers: HEADERS }),
+    ]);
+
+    closeDeleteDayModal();
+    closeDailyPnlPanel();
+
+    if (document.getElementById('trade-panel').classList.contains('open')) {
+      await loadPanelTrades();
+    }
+    if (currentTradeId && allPanelTrades.every(t => t.id !== currentTradeId)) {
+      closeTradeDetail();
+    }
+
+    await loadAndRender();
+    loadToday();
+  } catch (e) {
+    errEl.textContent = e.message || 'Delete failed. Check your connection or permissions.';
+    errEl.style.display = 'block';
+  } finally {
+    btn.textContent = 'Delete Day';
+    updateDeleteDayConfirmBtn();
+  }
 }
 
 function renderBaskets(trades) {
