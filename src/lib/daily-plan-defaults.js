@@ -1,3 +1,5 @@
+export { VALID_SETUPS } from "./setup-options";
+
 export const BIAS_OPTIONS = [
   "Long bias",
   "Short bias",

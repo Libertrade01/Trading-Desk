@@ -6,6 +6,7 @@ import {
   BIAS_OPTIONS,
   VOLATILITY_OPTIONS,
   LEVEL_TYPE_OPTIONS,
+  VALID_SETUPS,
   DEFAULT_DAILY_PLAN,
   newKeyLevel,
   newSetup,
@@ -300,6 +301,11 @@ export default function DailyPlan({ onBack }) {
             <div>
               <h2 className="pm-section-title hybrid-section-title">Setups</h2>
               <p className="pm-section-desc">The specific patterns you&apos;ll trade. If a setup isn&apos;t here, you don&apos;t take it.</p>
+              <ul className="pm-valid-setups">
+                {VALID_SETUPS.map((setup) => (
+                  <li key={setup}>{setup}</li>
+                ))}
+              </ul>
             </div>
           </div>
           {form.setups.length === 0 ? (

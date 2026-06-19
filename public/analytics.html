@@ -1935,13 +1935,6 @@
         <select id="trade-filter-setup" onchange="filterTrades()"
           style="font-family:var(--font-mono);font-size:10px;background:var(--surface2);border:1px solid var(--border2);color:var(--muted);padding:5px 10px;border-radius:3px;cursor:pointer">
           <option value="">All Setups</option>
-          <option value="HVE Fade">HVE Fade</option>
-          <option value="Imbalance Pullback">Imbalance Pullback</option>
-          <option value="Peak & Fail">Peak & Fail</option>
-          <option value="Break & Retest">Break & Retest</option>
-          <option value="VWAP Retest">VWAP Retest</option>
-          <option value="OR Mid (5m)">OR Mid (5m)</option>
-          <option value="No Setup / Improvised">No Setup / Improvised</option>
         </select>
         <select id="trade-filter-mgmt" onchange="filterTrades()"
           style="font-family:var(--font-mono);font-size:10px;background:var(--surface2);border:1px solid var(--border2);color:var(--muted);padding:5px 10px;border-radius:3px;cursor:pointer">
@@ -2044,13 +2037,6 @@
           <select id="td-setup" onchange="saveSetup()"
             style="width:100%;font-family:var(--font-mono);font-size:11px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:7px 10px;border-radius:3px;cursor:pointer">
             <option value=""></option>
-            <option value="HVE Fade">HVE Fade</option>
-            <option value="Imbalance Pullback">Imbalance Pullback</option>
-            <option value="Peak & Fail">Peak & Fail</option>
-            <option value="Break & Retest">Break & Retest</option>
-            <option value="VWAP Retest">VWAP Retest</option>
-            <option value="OR Mid (5m)">OR Mid (5m)</option>
-            <option value="No Setup / Improvised">No Setup / Improvised</option>
           </select>
           <div id="td-setup-saved" style="font-family:var(--font-mono);font-size:9px;color:var(--teal);opacity:0;transition:opacity 0.3s;margin-top:4px">Saved</div>
         </div>
@@ -2112,6 +2098,51 @@ if (window.self !== window.top) {
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://uzbsuyknfnzqwdpzspfs.supabase.co';
+
+// Keep in sync with src/lib/setup-options.js
+const VALID_SETUPS = [
+  'Peak and Fail (PAF)',
+  'Break and Retest (BAR)',
+  'LVN continuation',
+  'VWAP in trend',
+];
+const SETUP_IMPROVISED = 'Improvised';
+const SETUP_INVALID = 'Invalid / Not a Setup';
+const SETUP_SHORT_LABELS = {
+  'Peak and Fail (PAF)': 'PAF',
+  'Break and Retest (BAR)': 'BAR',
+  'LVN continuation': 'LVN',
+  'VWAP in trend': 'VWAP',
+  [SETUP_IMPROVISED]: 'Improv.',
+  [SETUP_INVALID]: 'Invalid',
+};
+
+function setupOptionsHtml(shortLabels, emptyLabel, includeEmpty) {
+  var html = '';
+  if (includeEmpty !== false) {
+    html += '<option value="">' + (emptyLabel || '') + '</option>';
+  }
+  VALID_SETUPS.forEach(function(s) {
+    var label = shortLabels ? SETUP_SHORT_LABELS[s] : s;
+    html += '<option value="' + s.replace(/"/g, '&quot;') + '">' + label + '</option>';
+  });
+  html += '<option value="' + SETUP_IMPROVISED + '">' + (shortLabels ? SETUP_SHORT_LABELS[SETUP_IMPROVISED] : SETUP_IMPROVISED) + '</option>';
+  html += '<option value="' + SETUP_INVALID + '">' + (shortLabels ? SETUP_SHORT_LABELS[SETUP_INVALID] : SETUP_INVALID) + '</option>';
+  return html;
+}
+
+function populateSetupSelect(el, shortLabels) {
+  if (!el) return;
+  var first = el.options[0];
+  var firstLabel = first ? first.textContent : '';
+  var firstValue = first ? first.value : '';
+  el.innerHTML = '<option value="' + firstValue + '">' + firstLabel + '</option>' + setupOptionsHtml(shortLabels, '', false);
+}
+
+function initSetupSelects() {
+  populateSetupSelect(document.getElementById('trade-filter-setup'), false);
+  populateSetupSelect(document.getElementById('td-setup'), false);
+}
 
 // ── Accounts State ────────────────────────────────────────────────────────────
 let accounts = [];          // [{id, name, starting_balance, active}]
@@ -3759,7 +3790,7 @@ async function signOut() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  // Dashboard init is driven by auth state — nothing to do here
+  initSetupSelects();
 });
 
 function renderDiscipline(days, trades) {
@@ -4481,8 +4512,7 @@ function renderImportRows() {
     rows += ' style="width:56px;padding:3px 6px;font-size:10px;font-family:var(--font-mono);background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:3px;text-align:center"';
     rows += ' oninput="pendingTrades[this.dataset.idx].stop_loss_points = this.value ? parseFloat(this.value) : null"></td>';
     rows += '<td><select data-idx="' + i + '" style="width:80px;padding:3px 4px;font-size:10px;font-family:var(--font-mono);background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:3px;cursor:pointer" onchange="pendingTrades[this.dataset.idx].setup = this.value || null">';
-    rows += '<option value="">—</option>';
-    rows += '<option value="HVE Fade">HVE</option>' +'<option value="Imbalance Pullback">Im.PB</option>' +'<option value="Peak & Fail">P&F</option>' +'<option value="Break & Retest">B&R</option>' +'<option value="VWAP Retest">VWAP</option>' +'<option value="OR Mid (5m)">OR Mid</option>' +'<option value="No Setup / Improvised">Improv.</option>' + '';
+    rows += setupOptionsHtml(true, '—');
     rows += '</select></td>';
     rows += '<td><select data-idx="' + i + '" style="width:80px;padding:3px 4px;font-size:10px;font-family:var(--font-mono);background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:3px;cursor:pointer" onchange="pendingTrades[this.dataset.idx].management = this.value || null">';
     rows += '<option value="">—</option>';

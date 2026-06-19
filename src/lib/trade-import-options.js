@@ -1,15 +1,11 @@
 export const DEFAULT_RISK_KEY = "libertrade_default_risk";
 
-export const SETUP_OPTIONS = [
-  { value: "", label: "—" },
-  { value: "HVE Fade", label: "HVE" },
-  { value: "Imbalance Pullback", label: "Im.PB" },
-  { value: "Peak & Fail", label: "P&F" },
-  { value: "Break & Retest", label: "B&R" },
-  { value: "VWAP Retest", label: "VWAP" },
-  { value: "OR Mid (5m)", label: "OR Mid" },
-  { value: "No Setup / Improvised", label: "Improv." },
-];
+export {
+  VALID_SETUPS,
+  SETUP_IMPROVISED,
+  SETUP_INVALID,
+  SETUP_OPTIONS,
+} from "./setup-options";
 
 export const MGMT_OPTIONS = [
   { value: "", label: "—" },
