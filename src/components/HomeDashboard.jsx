@@ -7,6 +7,7 @@ import {
   todayKey,
   isStepComplete,
   countProcessStreak,
+  countPlaybookStreak,
   getProcessStreakDisplayForDay,
   formatTimeEyebrow,
   formatHomeBarDate,
@@ -16,6 +17,17 @@ import {
 } from "../lib/history-data";
 import HomeEventBanner from "./HomeEventBanner";
 import ReadinessScoreWidget from "./ReadinessScoreWidget";
+import { playbookAdherenceLabel } from "../lib/setup-adherence";
+import {
+  loadRecoveryState,
+  getRecoveryStatus,
+  formatRecoveryUsd,
+  seedRecoveryDemo,
+} from "../lib/dll-recovery";
+import { loadDllSettings } from "../lib/dll-recovery-settings";
+
+/** Set localStorage to "750" to demo recovery UI; remove key to disable. */
+const DEMO_RECOVERY_KEY = "libertrade_demo_recovery";
 
 const WORKFLOW_STEPS = [
   { id: "premarket", label: "Pre-Market" },
@@ -120,20 +132,35 @@ function formatPosterPnl(value) {
 
 const RISK_STREAK_GOAL = 21;
 
-function ProcessStreakBlock({ count }) {
+function ProcessStreaksPanel({ riskCount, playbookCount }) {
   return (
     <div
-      className="home-hybrid-streak"
-      title="Consecutive trading days you followed your risk plan (post-market yes)"
+      className="home-process-streaks"
+      title="Risk: consecutive days you followed your risk plan. Playbook: consecutive days with no invalid or untagged trades."
     >
-      <div
-        className="home-hybrid-streak-num"
-        aria-label={`${count} of ${RISK_STREAK_GOAL} day risk adherence streak`}
-      >
-        {count}
-        <span className="home-hybrid-streak-goal">/{RISK_STREAK_GOAL}</span>
+      <div className="home-process-streaks-eyebrow hybrid-eyebrow">Process streaks</div>
+      <div className="home-process-streaks-pillars">
+        <div className="home-process-streak-pillar">
+          <div
+            className="home-process-streak-num home-process-streak-num--risk"
+            aria-label={`${riskCount} of ${RISK_STREAK_GOAL} day risk adherence streak`}
+          >
+            {riskCount}
+            <span className="home-process-streak-goal">/{RISK_STREAK_GOAL}</span>
+          </div>
+          <div className="home-process-streak-label">Risk</div>
+        </div>
+        <div className="home-process-streak-pillar home-process-streak-pillar--divider">
+          <div
+            className="home-process-streak-num home-process-streak-num--playbook"
+            aria-label={`${playbookCount} of ${RISK_STREAK_GOAL} day playbook process streak`}
+          >
+            {playbookCount}
+            <span className="home-process-streak-goal">/{RISK_STREAK_GOAL}</span>
+          </div>
+          <div className="home-process-streak-label">Playbook</div>
+        </div>
       </div>
-      <div className="home-hybrid-streak-label">Risk adherence streak</div>
     </div>
   );
 }
@@ -186,11 +213,28 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
   const [today, setToday] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [recoveryStatus, setRecoveryStatus] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
+
+      if (typeof window !== "undefined" && !localStorage.getItem(DEMO_RECOVERY_KEY)) {
+        localStorage.setItem(DEMO_RECOVERY_KEY, "750");
+      }
+
+      let recoveryState = await loadRecoveryState();
+      const dllSettings = await loadDllSettings();
+      if (
+        typeof window !== "undefined" &&
+        localStorage.getItem(DEMO_RECOVERY_KEY) === "750" &&
+        !recoveryState.active
+      ) {
+        await seedRecoveryDemo(750);
+        recoveryState = await loadRecoveryState();
+      }
+
       const [todaySession, all] = await Promise.all([
         loadSessionDay(effectiveDateKey),
         loadAllSessions(),
@@ -198,6 +242,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
       if (cancelled) return;
       setToday(todaySession);
       setSessions(all);
+      setRecoveryStatus(getRecoveryStatus(recoveryState, dllSettings));
       setLoading(false);
     })();
     return () => {
@@ -230,6 +275,11 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
   const pnlSmaller = today?.netPnl != null && today.netPnl < 0;
 
   const processStreak = useMemo(() => countProcessStreak(sessions), [sessions]);
+  const playbookStreak = useMemo(() => countPlaybookStreak(sessions), [sessions]);
+  const todayPlaybookLabel = useMemo(
+    () => playbookAdherenceLabel(today?.playbookAdherence),
+    [today?.playbookAdherence]
+  );
   const recent = sessions.slice(0, 3);
 
   const morningUnderway = !allComplete && completedCount > 0;
@@ -240,6 +290,8 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
     allComplete && (today?.readinessScore != null || preComplete);
   const showPnlStat =
     allComplete && (today?.netPnl != null || postComplete);
+  const showPlaybookStat =
+    today?.playbookAdherence?.total > 0 && todayPlaybookLabel;
 
   if (loading) return <div className="pm-loading">Loading...</div>;
 
@@ -268,7 +320,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                 {hero.title}
               </h1>
               {allComplete && <div className="home-hybrid-rule" aria-hidden="true" />}
-              {allComplete && (showReadinessStat || showPnlStat) && (
+              {allComplete && (showReadinessStat || showPnlStat || showPlaybookStat) && (
                 <div className="home-hybrid-stats-row">
                   {showReadinessStat && (
                     <div className="home-hybrid-stat">
@@ -278,6 +330,22 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                         {today?.readinessScore != null ? today.readinessScore : "—"}
                       </div>
                       <div className="home-hybrid-stat-cap">Ready</div>
+                    </div>
+                  )}
+                  {showPlaybookStat && (
+                    <div className="home-hybrid-stat">
+                      <div
+                        className={`home-hybrid-stat-num ${
+                          todayPlaybookLabel.tone === "green"
+                            ? "positive"
+                            : todayPlaybookLabel.tone === "amber"
+                              ? "neutral"
+                              : "negative"
+                        }`}
+                      >
+                        {today.playbookAdherence.playbookRate}%
+                      </div>
+                      <div className="home-hybrid-stat-cap">Playbook</div>
                     </div>
                   )}
                   {showPnlStat && (
@@ -293,6 +361,9 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
                 </div>
               )}
               {hero.sub && <p className="home-hybrid-sub">{hero.sub}</p>}
+              {!allComplete && today?.playbookAdherence?.total > 0 && todayPlaybookLabel && (
+                <p className="home-hybrid-sub home-hybrid-sub--playbook">{todayPlaybookLabel.text}</p>
+              )}
               {allComplete && (
                 <div className="home-hybrid-edit">
                   <button type="button" onClick={() => onNavigate("premarket")}>
@@ -310,7 +381,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
               )}
             </div>
             <aside className="home-hybrid-hero-aside">
-              <ProcessStreakBlock count={processStreak} />
+              <ProcessStreaksPanel riskCount={processStreak} playbookCount={playbookStreak} />
               {showHeroReadiness && (
                 <ReadinessScoreWidget
                   score={today.readinessScore}
@@ -379,6 +450,57 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
           )}
 
           <HomeEventBanner />
+
+          {recoveryStatus?.active && (
+            <div className="dll-recovery-banner" role="status" aria-label="DLL recovery mode">
+              <div className="dll-recovery-banner-eyebrow hybrid-eyebrow">Recovery mode</div>
+              <div className="dll-recovery-banner-stats">
+                <div className="dll-recovery-banner-stat">
+                  <span className="dll-recovery-banner-stat-label">Today max</span>
+                  <span className="dll-recovery-banner-stat-value dll-recovery-banner-stat-value--accent">
+                    {formatRecoveryUsd(recoveryStatus.effectiveMaxDailyLoss)}
+                  </span>
+                </div>
+                <div className="dll-recovery-banner-stat dll-recovery-banner-stat--divider">
+                  <span className="dll-recovery-banner-stat-label">Drawdown</span>
+                  <span className="dll-recovery-banner-stat-value">
+                    {formatRecoveryUsd(recoveryStatus.cumulativeDrawdown)}
+                  </span>
+                </div>
+                <div className="dll-recovery-banner-stat dll-recovery-banner-stat--divider">
+                  <span className="dll-recovery-banner-stat-label">Recovered</span>
+                  <span className="dll-recovery-banner-stat-value">
+                    {formatRecoveryUsd(recoveryStatus.recoveredSoFar)}
+                    <span className="dll-recovery-banner-stat-sub">
+                      / {formatRecoveryUsd(recoveryStatus.recoveryTarget)}
+                    </span>
+                  </span>
+                </div>
+              </div>
+              <div className="dll-recovery-banner-progress">
+                <div
+                  className="dll-recovery-banner-track"
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={recoveryStatus.recoveryTarget}
+                  aria-valuenow={recoveryStatus.recoveredSoFar}
+                  aria-label="Recovery progress"
+                >
+                  <div
+                    className="dll-recovery-banner-fill"
+                    style={{ width: `${recoveryStatus.progressPct}%` }}
+                  />
+                </div>
+                <div className="dll-recovery-banner-progress-meta">
+                  <span>
+                    {formatRecoveryUsd(recoveryStatus.recoveredSoFar)} of{" "}
+                    {formatRecoveryUsd(recoveryStatus.recoveryTarget)} recovered
+                  </span>
+                  <span>{recoveryStatus.progressPct}%</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {allComplete && (
             <section className="home-hybrid-calm-block">

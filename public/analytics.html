@@ -1805,6 +1805,7 @@
       </div>
       <div class="modal-summary" id="import-summary"></div>
       <div id="import-warnings"></div>
+      <div id="import-setup-banner" style="display:none;padding:10px 20px;font-family:var(--font-mono);font-size:11px;color:var(--text);background:rgba(158,112,64,0.08);border-bottom:1px solid var(--border)"></div>
       <div class="modal-body">
         <table class="preview-table" id="import-table">
           <thead>
@@ -2142,6 +2143,104 @@ function populateSetupSelect(el, shortLabels) {
 function initSetupSelects() {
   populateSetupSelect(document.getElementById('trade-filter-setup'), false);
   populateSetupSelect(document.getElementById('td-setup'), false);
+}
+
+function categorizeSetup(value) {
+  if (value == null || String(value).trim() === '') return 'untagged';
+  if (VALID_SETUPS.indexOf(value) >= 0) return 'playbook';
+  if (value === SETUP_IMPROVISED) return 'improvised';
+  if (value === SETUP_INVALID) return 'invalid';
+  return 'invalid';
+}
+
+function summarizeSetupAdherence(trades) {
+  var s = { total: 0, playbook: 0, improvised: 0, invalid: 0, untagged: 0, playbookRate: null, processPass: false, purePlaybook: false };
+  if (!trades || !trades.length) return s;
+  trades.forEach(function(t) {
+    var cat = categorizeSetup(t.setup);
+    s.total += 1;
+    s[cat] += 1;
+  });
+  s.playbookRate = Math.round((s.playbook / s.total) * 100);
+  s.processPass = s.invalid === 0 && s.untagged === 0;
+  s.purePlaybook = s.processPass && s.improvised === 0 && s.playbook === s.total;
+  return s;
+}
+
+function validateImportSetupTags(trades) {
+  var s = summarizeSetupAdherence(trades);
+  if (s.untagged > 0) {
+    return {
+      ok: false,
+      summary: s,
+      message: s.untagged + ' trade' + (s.untagged === 1 ? '' : 's') + ' still need a setup tag. Tag every trade — use Improvised or Invalid if it was not a playbook setup.',
+    };
+  }
+  return { ok: true, summary: s };
+}
+
+function formatPlaybookBreakdown(summary) {
+  if (!summary || !summary.total) return '';
+  var parts = [];
+  if (summary.playbook) parts.push(summary.playbook + ' playbook');
+  if (summary.improvised) parts.push(summary.improvised + ' improvised');
+  if (summary.invalid) parts.push(summary.invalid + ' invalid');
+  if (summary.untagged) parts.push(summary.untagged + ' untagged');
+  return parts.join(' · ');
+}
+
+function updateImportSetupSummary() {
+  var s = summarizeSetupAdherence(pendingTrades);
+  var check = validateImportSetupTags(pendingTrades);
+  var note = document.getElementById('import-footer-note');
+  var btn = document.getElementById('confirm-import-btn');
+  var banner = document.getElementById('import-setup-banner');
+  if (note && pendingTrades.length) {
+    note.textContent = pendingTrades.length + ' trades · ' + formatPlaybookBreakdown(s);
+  }
+  if (btn) btn.disabled = !check.ok;
+  if (banner) {
+    banner.innerHTML = pendingTrades.length
+      ? '<strong>Setup tags:</strong> ' + (formatPlaybookBreakdown(s) || '—') +
+        (check.ok ? '' : ' · <span style="color:var(--red)">Tag every trade before importing</span>')
+      : '';
+    banner.style.display = pendingTrades.length ? 'block' : 'none';
+  }
+}
+
+function renderPlaybookAdherence(trades) {
+  var el = document.getElementById('playbook-adherence-section');
+  if (!el) return;
+  var s = summarizeSetupAdherence(trades);
+  if (!s.total) {
+    el.innerHTML = '<div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);line-height:1.6">Import trades and tag every setup to track playbook adherence. Untagged trades cannot be imported.</div>';
+    return;
+  }
+
+  var statusColor = !s.processPass ? 'var(--red)' : (s.purePlaybook ? 'var(--green)' : 'var(--amber)');
+  var statusText = !s.processPass
+    ? (s.invalid + ' invalid trade' + (s.invalid === 1 ? '' : 's') + ' — process adherence failed')
+    : (s.purePlaybook ? '100% playbook setups' : s.improvised + ' improvised · process pass');
+
+  var rows = [
+    ['Playbook', s.playbook, 'var(--green)'],
+    ['Improvised', s.improvised, 'var(--amber)'],
+    ['Invalid', s.invalid, 'var(--red)'],
+    ['Untagged', s.untagged, 'var(--muted)'],
+  ].filter(function(r) { return r[1] > 0; }).map(function(r) {
+    return '<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">' +
+      '<span style="font-family:var(--font-mono);font-size:11px;color:var(--text)">' + r[0] + '</span>' +
+      '<span style="font-family:var(--font-num);font-size:16px;color:' + r[2] + '">' + r[1] + '</span>' +
+    '</div>';
+  }).join('');
+
+  el.innerHTML =
+    '<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px">' +
+      '<div><div style="font-family:var(--font-num);font-size:36px;font-weight:300;color:' + statusColor + '">' + s.playbookRate + '%</div>' +
+      '<div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)">playbook rate</div></div>' +
+      '<div style="font-family:var(--font-mono);font-size:11px;color:' + statusColor + ';text-align:right;max-width:240px;line-height:1.5">' + statusText + '</div>' +
+    '</div>' +
+    '<div>' + rows + '</div>';
 }
 
 // ── Accounts State ────────────────────────────────────────────────────────────
@@ -2665,6 +2764,12 @@ function render() {
     </div>
   </div>`);
 
+  // ── Section: Playbook Adherence
+  html.push(`<div class="card">
+    <div class="card-title">Playbook Adherence</div>
+    <div id="playbook-adherence-section"></div>
+  </div>`);
+
   // ── Section 8: Process Discipline Score
   html.push(`<div class="card">
     <div class="card-title">Process Discipline Score</div>
@@ -2744,6 +2849,7 @@ function render() {
     ['renderSequence',     () => renderSequence(trades)],
     ['renderRecovery',     () => renderRecovery(trades)],
     ['renderRecentTrades', () => renderRecentTrades(trades)],
+    ['renderPlaybookAdherence', () => renderPlaybookAdherence(trades)],
     ['renderDiscipline',   () => renderDiscipline(days, trades)],
     ['renderJournal',      () => renderJournal()],
     ['renderLessons',      () => renderLessons()],
@@ -4474,11 +4580,12 @@ function showImportPreview(trades, openPosition, missingSymbols, filename) {
   renderImportRows();
 
   document.getElementById('import-footer-note').textContent =
-    trades.length + ' trades · ' + winners + ' winners · $' + totalComm.toFixed(2) + ' total commission';
+    trades.length + ' trades · ' + winners + ' winners';
 
   document.getElementById('import-modal').classList.add('open');
   var typeEl = document.getElementById('import-acct-type');
   if (typeEl && activeAcct) typeEl.value = activeAcct.account_type || 'eval';
+  updateImportSetupSummary();
 }
 
 function renderImportRows() {
@@ -4511,7 +4618,7 @@ function renderImportRows() {
     rows += ' data-idx="' + i + '"';
     rows += ' style="width:56px;padding:3px 6px;font-size:10px;font-family:var(--font-mono);background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:3px;text-align:center"';
     rows += ' oninput="pendingTrades[this.dataset.idx].stop_loss_points = this.value ? parseFloat(this.value) : null"></td>';
-    rows += '<td><select data-idx="' + i + '" style="width:80px;padding:3px 4px;font-size:10px;font-family:var(--font-mono);background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:3px;cursor:pointer" onchange="pendingTrades[this.dataset.idx].setup = this.value || null">';
+    rows += '<td><select data-idx="' + i + '" style="width:80px;padding:3px 4px;font-size:10px;font-family:var(--font-mono);background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:3px;cursor:pointer" onchange="pendingTrades[this.dataset.idx].setup = this.value || null; updateImportSetupSummary();">';
     rows += setupOptionsHtml(true, '—');
     rows += '</select></td>';
     rows += '<td><select data-idx="' + i + '" style="width:80px;padding:3px 4px;font-size:10px;font-family:var(--font-mono);background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:3px;cursor:pointer" onchange="pendingTrades[this.dataset.idx].management = this.value || null">';
@@ -4530,6 +4637,14 @@ function renderImportRows() {
     rows += '</tr>';
   }
   tbody.innerHTML = rows;
+  tbody.querySelectorAll('select[data-idx]').forEach(function(sel) {
+    var idx = sel.getAttribute('data-idx');
+    var val = pendingTrades[idx] && pendingTrades[idx].setup ? pendingTrades[idx].setup : '';
+    sel.value = val;
+    var tr = sel.closest('tr');
+    if (tr && !val) tr.style.outline = '1px solid rgba(220, 80, 80, 0.55)';
+  });
+  updateImportSetupSummary();
 }
 
 function applyDefaultRisk() {
@@ -4552,6 +4667,11 @@ function closeImportModal() {
 
 async function confirmImport() {
   if (!pendingTrades.length) return;
+  var check = validateImportSetupTags(pendingTrades);
+  if (!check.ok) {
+    alert(check.message);
+    return;
+  }
   const btn = document.getElementById('confirm-import-btn');
   btn.textContent = 'Importing...'; btn.disabled = true;
 

@@ -241,7 +241,7 @@ export function computePerformanceFromDbTrades(rows) {
 export async function fetchTradesForDate(dateKey) {
   const { data, error } = await supabase
     .from("trades")
-    .select("gross_pnl, net_pnl, commission, date")
+    .select("gross_pnl, net_pnl, commission, date, setup")
     .eq("date", dateKey);
   if (error) {
     console.error("fetchTradesForDate:", error);

@@ -11,6 +11,14 @@ import {
   newKeyLevel,
   newSetup,
 } from "../lib/daily-plan-defaults";
+import {
+  loadRecoveryState,
+  getRecoveryStatus,
+  formatRecoveryProgress,
+  formatRecoveryUsd,
+  validatePlanMaxDailyLoss,
+} from "../lib/dll-recovery";
+import { loadDllSettings, DEFAULT_DLL_SETTINGS } from "../lib/dll-recovery-settings";
 
 async function loadData(key, fallback) {
   try {
@@ -110,6 +118,8 @@ export default function DailyPlan({ onBack }) {
   const [form, setForm] = useState(DEFAULT_DAILY_PLAN);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
+  const [recoveryStatus, setRecoveryStatus] = useState(null);
+  const [dllSettings, setDllSettings] = useState(DEFAULT_DLL_SETTINGS);
 
   const set = useCallback((key, value) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -118,19 +128,39 @@ export default function DailyPlan({ onBack }) {
 
   useEffect(() => {
     (async () => {
-      const data = await loadData(`daily-plan-${todayKey()}`, null);
-      if (data) setForm({ ...DEFAULT_DAILY_PLAN, ...data });
+      const [data, recoveryState, settings] = await Promise.all([
+        loadData(`daily-plan-${todayKey()}`, null),
+        loadRecoveryState(),
+        loadDllSettings(),
+      ]);
+      setDllSettings(settings);
+      const status = getRecoveryStatus(recoveryState, settings);
+      setRecoveryStatus(status);
+
+      let next = { ...DEFAULT_DAILY_PLAN, ...(data || {}) };
+      if (
+        status.active &&
+        (!next.maxDailyLoss || !next.dllRecoveryApplied)
+      ) {
+        next = {
+          ...next,
+          maxDailyLoss: String(status.effectiveMaxDailyLoss),
+          dllRecoveryApplied: false,
+        };
+      }
+      setForm(next);
       setLoading(false);
     })();
   }, []);
 
-  const persistPlan = useCallback(async (formData) => {
+  const persistPlan = useCallback(async (formData, recoveryActive = recoveryStatus?.active) => {
     await saveData(`daily-plan-${todayKey()}`, {
       date: todayKey(),
       ...formData,
+      dllRecoveryApplied: recoveryActive ? true : formData.dllRecoveryApplied,
       savedAt: new Date().toISOString(),
     });
-  }, []);
+  }, [recoveryStatus]);
 
   const handleSave = async () => {
     if (!riskRailsReady(form)) {
@@ -145,7 +175,19 @@ export default function DailyPlan({ onBack }) {
       window.alert(COMMITMENT_MESSAGE);
       return false;
     }
-    await persistPlan(form);
+
+    const recoveryState = await loadRecoveryState();
+    const settings = await loadDllSettings();
+    setDllSettings(settings);
+    const status = getRecoveryStatus(recoveryState, settings);
+    setRecoveryStatus(status);
+    const dllCheck = validatePlanMaxDailyLoss(form.maxDailyLoss, recoveryState, settings);
+    if (!dllCheck.ok) {
+      window.alert(dllCheck.message);
+      return false;
+    }
+
+    await persistPlan(form, status.active);
     setSaved(true);
     return true;
   };
@@ -184,6 +226,18 @@ export default function DailyPlan({ onBack }) {
         <p className="pm-subtitle">
           Lock in bias, levels, and risk before the open.
         </p>
+
+        {recoveryStatus?.active && (
+          <div className="daily-plan-recovery-notice">
+            <div className="daily-plan-recovery-notice-label hybrid-label-sm">DLL recovery mode</div>
+            <p>
+              Use max daily loss of {formatRecoveryUsd(recoveryStatus.effectiveMaxDailyLoss)} today (half DLL).
+              {formatRecoveryProgress(recoveryStatus)
+                ? ` ${formatRecoveryProgress(recoveryStatus)}.`
+                : ""}
+            </p>
+          </div>
+        )}
 
         {/* 01 Bias & context */}
         <section className="pm-card">
@@ -391,6 +445,11 @@ export default function DailyPlan({ onBack }) {
             <div>
               <div className="pm-field-label hybrid-label">Max daily loss ($)</div>
               <input type="text" value={form.maxDailyLoss} onChange={(e) => set("maxDailyLoss", e.target.value)} className="pm-text-input" placeholder="Must be set from broker" />
+              <p className="pm-field-hint">
+                {recoveryStatus?.active
+                  ? `Recovery limit: ${formatRecoveryUsd(recoveryStatus.effectiveMaxDailyLoss)} max — plan won't save above this.`
+                  : `Full-size limit: ${formatRecoveryUsd(dllSettings.fullDll)} max — plan won't save above this.`}
+              </p>
             </div>
             <div>
               <div className="pm-field-label hybrid-label">Max trades</div>

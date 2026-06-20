@@ -1,6 +1,7 @@
 import { storage, supabase } from "./supabase";
 import { computeReadinessScore, readinessStatus } from "./premarket-scoring";
 import { computePerformanceFromDbTrades, fetchTradesForDate } from "./rtrader-import";
+import { summarizeSetupAdherence } from "./setup-adherence";
 
 const KEYS = {
   pre: "premarket-checkin-",
@@ -79,6 +80,7 @@ export async function loadSessionDay(dateKey) {
     plan,
     post,
     trades,
+    playbookAdherence: trades.length ? summarizeSetupAdherence(trades) : null,
     hasPre: !!pre,
     hasPlan: !!plan,
     hasPost: !!post,
@@ -183,6 +185,59 @@ export function countProcessStreakAsOf(sessions, asOfDateKey) {
  */
 export function countProcessStreak(sessions) {
   return countProcessStreakAsOf(sessions, todayKey());
+}
+
+/**
+ * Playbook process day from trade tags.
+ * - skip: no trades
+ * - followed: no invalid / untagged (improvised allowed)
+ * - broken: invalid or untagged trades
+ * - pending: anchor day only — trades exist but still untagged
+ */
+export function getPlaybookStreakDayStatus(session) {
+  const trades = session?.trades || [];
+  if (!trades.length) return "skip";
+  const adherence = summarizeSetupAdherence(trades);
+  if (adherence.untagged > 0) return "pending";
+  if (adherence.processPass) return "followed";
+  return "broken";
+}
+
+export function countPlaybookStreakAsOf(sessions, asOfDateKey) {
+  const byDate = new Map(sessions.map((s) => [s.date, s]));
+  let streak = 0;
+  const d = new Date(`${asOfDateKey}T12:00:00`);
+
+  for (let i = 0; i < 365; i++) {
+    const key = d.toISOString().split("T")[0];
+
+    if (!isTradingDay(d)) {
+      d.setDate(d.getDate() - 1);
+      continue;
+    }
+
+    const status = getPlaybookStreakDayStatus(byDate.get(key));
+    const isAnchor = key === asOfDateKey;
+
+    if (status === "followed") {
+      streak += 1;
+      d.setDate(d.getDate() - 1);
+    } else if (status === "broken") {
+      break;
+    } else if (status === "pending" && isAnchor) {
+      d.setDate(d.getDate() - 1);
+    } else if (status === "skip") {
+      d.setDate(d.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
+
+export function countPlaybookStreak(sessions) {
+  return countPlaybookStreakAsOf(sessions, todayKey());
 }
 
 /**

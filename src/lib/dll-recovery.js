@@ -1,0 +1,224 @@
+import { storage } from "./supabase";
+import { loadDllSettings, DEFAULT_DLL_SETTINGS } from "./dll-recovery-settings";
+
+export const DLL_RECOVERY_KEY = "dll-recovery-state";
+
+function round2(n) {
+  return Math.round(n * 100) / 100;
+}
+
+function emptyState() {
+  return {
+    active: false,
+    startedAt: null,
+    cumulativeDrawdown: 0,
+    recoveredSoFar: 0,
+    recoveryTarget: 0,
+    days: {},
+    exitedAt: null,
+    lastUpdated: null,
+  };
+}
+
+export async function loadRecoveryState() {
+  try {
+    const r = await storage.get(DLL_RECOVERY_KEY);
+    if (!r?.value) return emptyState();
+    const parsed = JSON.parse(r.value);
+    return { ...emptyState(), ...parsed, days: parsed.days || {} };
+  } catch {
+    return emptyState();
+  }
+}
+
+export async function saveRecoveryState(state) {
+  await storage.set(DLL_RECOVERY_KEY, JSON.stringify(state));
+}
+
+function recomputeFromDays(days, settings) {
+  const { fullDll } = settings;
+  const sortedKeys = Object.keys(days).sort();
+
+  let active = false;
+  let startedAt = null;
+  let cumulativeDrawdown = 0;
+  let recoveredSoFar = 0;
+  let recoveryTarget = 0;
+  let exitedAt = null;
+
+  for (const key of sortedKeys) {
+    const net = days[key]?.netPnl;
+    if (net == null || Number.isNaN(net)) continue;
+
+    if (!active) {
+      if (net <= -fullDll) {
+        active = true;
+        startedAt = key;
+        cumulativeDrawdown = net < 0 ? round2(Math.abs(net)) : 0;
+        recoveredSoFar = 0;
+        recoveryTarget = round2(cumulativeDrawdown * 0.5);
+        exitedAt = null;
+      }
+      continue;
+    }
+
+    if (net > 0) {
+      recoveredSoFar = round2(recoveredSoFar + net);
+    } else if (net < 0) {
+      cumulativeDrawdown = round2(cumulativeDrawdown + Math.abs(net));
+      recoveryTarget = round2(cumulativeDrawdown * 0.5);
+    }
+
+    if (recoveryTarget > 0 && recoveredSoFar >= recoveryTarget) {
+      active = false;
+      exitedAt = key;
+      startedAt = null;
+      cumulativeDrawdown = 0;
+      recoveredSoFar = 0;
+      recoveryTarget = 0;
+    }
+  }
+
+  return {
+    active,
+    startedAt,
+    cumulativeDrawdown: active ? cumulativeDrawdown : 0,
+    recoveredSoFar: active ? recoveredSoFar : 0,
+    recoveryTarget: active ? recoveryTarget : 0,
+    days,
+    exitedAt: active ? null : exitedAt,
+  };
+}
+
+export function isRecoveryActive(state) {
+  return !!state?.active;
+}
+
+export function getEffectiveMaxDailyLoss(state, settings = DEFAULT_DLL_SETTINGS) {
+  return isRecoveryActive(state) ? settings.halfDll : settings.fullDll;
+}
+
+export function getRecoveryStatus(state, settings = DEFAULT_DLL_SETTINGS) {
+  const active = isRecoveryActive(state);
+  const target = state?.recoveryTarget || 0;
+  const recovered = state?.recoveredSoFar || 0;
+  const drawdown = state?.cumulativeDrawdown || 0;
+  const progressPct =
+    target > 0 ? Math.min(100, Math.round((recovered / target) * 100)) : 0;
+
+  return {
+    active,
+    startedAt: state?.startedAt || null,
+    cumulativeDrawdown: drawdown,
+    recoveredSoFar: recovered,
+    recoveryTarget: target,
+    progressPct,
+    remaining: active ? round2(Math.max(0, target - recovered)) : 0,
+    effectiveMaxDailyLoss: getEffectiveMaxDailyLoss(state, settings),
+    fullDll: settings.fullDll,
+    halfDll: settings.halfDll,
+    recoveryEnabled: settings.recoveryEnabled,
+  };
+}
+
+export function formatRecoveryProgress(status) {
+  if (!status?.active) return "";
+  return `${formatRecoveryUsd(status.recoveredSoFar)} of ${formatRecoveryUsd(status.recoveryTarget)} recovered`;
+}
+
+export function formatRecoveryUsd(n) {
+  if (n == null || Number.isNaN(n)) return "—";
+  const abs = Math.abs(n).toFixed(0);
+  return n >= 0 ? `$${abs}` : `-$${abs}`;
+}
+
+export function parseMaxDailyLossValue(raw) {
+  if (raw == null || raw === "") return null;
+  const cleaned = String(raw).replace(/[$,\s]/g, "");
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? round2(Math.abs(n)) : null;
+}
+
+/** Block save when plan max daily loss exceeds effective DLL (half or full). */
+export function validatePlanMaxDailyLoss(rawMaxDailyLoss, recoveryState, settings = DEFAULT_DLL_SETTINGS) {
+  const parsed = parseMaxDailyLossValue(rawMaxDailyLoss);
+  const status = getRecoveryStatus(recoveryState, settings);
+  const limit = status.effectiveMaxDailyLoss;
+
+  if (parsed == null) {
+    return {
+      ok: false,
+      parsed: null,
+      limit,
+      inRecovery: status.active,
+      message: "Enter your max daily loss from the broker before saving.",
+    };
+  }
+
+  if (parsed > limit) {
+    return {
+      ok: false,
+      parsed,
+      limit,
+      inRecovery: status.active,
+      message: status.active
+        ? `Max daily loss is ${formatRecoveryUsd(parsed)} but recovery mode allows ${formatRecoveryUsd(limit)} at most. Set your broker limit to ${formatRecoveryUsd(limit)} or less before saving.`
+        : `Max daily loss is ${formatRecoveryUsd(parsed)} but your full-size DLL is ${formatRecoveryUsd(limit)}. Set your broker limit to ${formatRecoveryUsd(limit)} or less before saving.`,
+    };
+  }
+
+  return { ok: true, parsed, limit, inRecovery: status.active, message: "" };
+}
+
+export async function loadRecoveryWithSettings() {
+  const [state, settings] = await Promise.all([
+    loadRecoveryState(),
+    loadDllSettings(),
+  ]);
+  return {
+    state,
+    settings,
+    status: getRecoveryStatus(state, settings),
+  };
+}
+
+/** Dev/demo: seed an active recovery from a single full-DLL loss day. */
+export async function seedRecoveryDemo(drawdown = 750, dateKey = null) {
+  const settings = await loadDllSettings();
+  const lossDay =
+    dateKey ||
+    new Date(Date.now() - 86400000).toISOString().split("T")[0];
+  const days = { [lossDay]: { netPnl: round2(-Math.abs(drawdown)) } };
+  const recomputed = recomputeFromDays(days, settings);
+
+  const next = {
+    ...recomputed,
+    lastUpdated: new Date().toISOString(),
+  };
+
+  await saveRecoveryState(next);
+  return getRecoveryStatus(next, settings);
+}
+
+export async function evaluateDay(dateKey, netPnl) {
+  const settings = await loadDllSettings();
+  const current = await loadRecoveryState();
+
+  if (!settings.recoveryEnabled) {
+    return getRecoveryStatus(current, settings);
+  }
+  if (netPnl == null || Number.isNaN(netPnl)) {
+    return getRecoveryStatus(current, settings);
+  }
+
+  const days = { ...(current.days || {}), [dateKey]: { netPnl: round2(netPnl) } };
+  const recomputed = recomputeFromDays(days, settings);
+
+  const next = {
+    ...recomputed,
+    lastUpdated: new Date().toISOString(),
+  };
+
+  await saveRecoveryState(next);
+  return getRecoveryStatus(next, settings);
+}

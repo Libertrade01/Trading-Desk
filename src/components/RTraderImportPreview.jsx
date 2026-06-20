@@ -9,6 +9,11 @@ import {
   POST_EXIT_OPTIONS,
   ACCOUNT_TYPE_OPTIONS,
 } from "../lib/trade-import-options";
+import {
+  summarizeSetupAdherence,
+  validateImportSetupTags,
+  formatPlaybookBreakdown,
+} from "../lib/setup-adherence";
 
 function formatMoney(n, { signed = false } = {}) {
   const abs = Math.abs(n).toFixed(2);
@@ -60,7 +65,9 @@ export default function RTraderImportPreview({
     const totalComm = pendingTrades.reduce((s, t) => s + t.commission, 0);
     const totalNet = pendingTrades.reduce((s, t) => s + t.net_pnl, 0);
     const winners = pendingTrades.filter((t) => t.net_pnl > 0).length;
-    return { totalRaw, totalComm, totalNet, winners };
+    const setupSummary = summarizeSetupAdherence(pendingTrades);
+    const importCheck = validateImportSetupTags(pendingTrades);
+    return { totalRaw, totalComm, totalNet, winners, setupSummary, importCheck };
   }, [pendingTrades]);
 
   const updateTrade = (idx, patch) => {
@@ -77,6 +84,11 @@ export default function RTraderImportPreview({
 
   const handleConfirm = async () => {
     if (!pendingTrades.length || importing) return;
+    const check = validateImportSetupTags(pendingTrades);
+    if (!check.ok) {
+      window.alert(check.message);
+      return;
+    }
     setImporting(true);
     try {
       await onConfirm(pendingTrades, accountType);
@@ -134,6 +146,15 @@ export default function RTraderImportPreview({
           </div>
         )}
 
+        {pendingTrades.length > 0 && (
+          <div className={`import-setup-summary${totals.importCheck.ok ? "" : " import-setup-summary--blocked"}`}>
+            <strong>Setup tags:</strong> {formatPlaybookBreakdown(totals.setupSummary) || "—"}
+            {!totals.importCheck.ok && (
+              <span className="import-setup-summary-warn"> · Tag every trade before importing</span>
+            )}
+          </div>
+        )}
+
         <div className="import-modal-body">
           <table className="import-preview-table">
             <thead>
@@ -161,8 +182,9 @@ export default function RTraderImportPreview({
                 const pnlCls = t.net_pnl > 0 ? "pos" : t.net_pnl < 0 ? "neg" : "dim";
                 const rawCls = t.raw_pnl > 0 ? "pos" : t.raw_pnl < 0 ? "neg" : "dim";
                 const dirColor = t.direction === "LONG" ? "var(--green)" : "var(--red)";
+                const untagged = !t.setup;
                 return (
-                  <tr key={`${t.entry_time}-${t.symbol}-${i}`}>
+                  <tr key={`${t.entry_time}-${t.symbol}-${i}`} className={untagged ? "import-row--untagged" : ""}>
                     <td className="dim">{i + 1}</td>
                     <td>{formatLimaTime(t.entry_time)}</td>
                     <td>{formatLimaTime(t.exit_time)}</td>
@@ -242,7 +264,7 @@ export default function RTraderImportPreview({
 
         <div className="import-modal-footer">
           <div className="import-footer-note">
-            {pendingTrades.length} trades · {totals.winners} winners · {formatMoney(totals.totalComm)} total commission
+            {pendingTrades.length} trades · {totals.winners} winners · {formatPlaybookBreakdown(totals.setupSummary)}
           </div>
           <div className="import-footer-actions">
             <div className="import-footer-field">
@@ -270,7 +292,7 @@ export default function RTraderImportPreview({
               />
             </div>
             <button type="button" className="import-btn-secondary" onClick={onClose} disabled={importing}>Cancel</button>
-            <button type="button" className="import-btn-primary" onClick={handleConfirm} disabled={importing || !pendingTrades.length}>
+            <button type="button" className="import-btn-primary" onClick={handleConfirm} disabled={importing || !pendingTrades.length || !totals.importCheck.ok}>
               {importing ? "Importing..." : "Confirm & Import"}
             </button>
           </div>

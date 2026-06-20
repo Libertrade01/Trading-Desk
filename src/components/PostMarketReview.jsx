@@ -12,7 +12,21 @@ import {
   importTradesToSupabase,
   getMissingCommissionSymbols,
 } from "../lib/rtrader-import";
+import {
+  summarizeSetupAdherence,
+  validateImportSetupTags,
+  formatPlaybookBreakdown,
+  playbookAdherenceLabel,
+} from "../lib/setup-adherence";
 import RTraderImportPreview from "./RTraderImportPreview";
+import {
+  evaluateDay,
+  loadRecoveryState,
+  getRecoveryStatus,
+  formatRecoveryProgress,
+  formatRecoveryUsd,
+} from "../lib/dll-recovery";
+import { loadDllSettings } from "../lib/dll-recovery-settings";
 
 async function loadData(key, fallback) {
   try {
@@ -72,13 +86,39 @@ function SliderField({ label, hint, minLabel, maxLabel, value, onChange }) {
   );
 }
 
-function SessionSummary({ form, netPnl, winRate }) {
+function SessionSummary({ form, netPnl, winRate, setupAdherence, adherenceLabel }) {
   const flagsRaised = BEHAVIORAL_FLAGS.filter((f) => form[f.key]).length;
   const pnlTone = netPnl > 0 ? "var(--green)" : netPnl < 0 ? "var(--red)" : "var(--text)";
+  const adherenceTone =
+    adherenceLabel?.tone === "green"
+      ? "var(--green)"
+      : adherenceLabel?.tone === "amber"
+        ? "var(--amber)"
+        : adherenceLabel?.tone === "red"
+          ? "var(--red)"
+          : "var(--muted)";
 
   return (
     <div className="pm-score-card">
       <div className="pm-score-label hybrid-label-sm">Session summary</div>
+      {setupAdherence?.total > 0 && adherenceLabel && (
+        <div className="pm-playbook-adherence" style={{ borderColor: adherenceTone }}>
+          <div className="pm-playbook-adherence-label hybrid-label-sm">Playbook adherence</div>
+          <div className="pm-playbook-adherence-value" style={{ color: adherenceTone }}>
+            {adherenceLabel.text}
+          </div>
+          {!setupAdherence.processPass && (
+            <p className="pm-playbook-adherence-note">
+              Only playbook setups count. Invalid trades break process adherence.
+            </p>
+          )}
+          {setupAdherence.improvised > 0 && setupAdherence.processPass && (
+            <p className="pm-playbook-adherence-note">
+              Improvised trades are allowed occasionally — aim for playbook only.
+            </p>
+          )}
+        </div>
+      )}
       <div className="pm-summary-net">
         <div className="pm-summary-net-label">Net P&amp;L</div>
         <div className="pm-summary-net-value" style={{ color: pnlTone }}>
@@ -109,6 +149,8 @@ export default function PostMarketReview({ onBack }) {
   const [showHelp, setShowHelp] = useState(false);
   const [importPreview, setImportPreview] = useState(null);
   const [importMsg, setImportMsg] = useState("");
+  const [dayTrades, setDayTrades] = useState([]);
+  const [recoveryStatus, setRecoveryStatus] = useState(null);
   const fileRef = useRef(null);
 
   const set = useCallback((key, value) => {
@@ -132,6 +174,32 @@ export default function PostMarketReview({ onBack }) {
     return `${Math.round((w / t) * 100)}%`;
   }, [form.trades, form.wins]);
 
+  const setupAdherence = useMemo(() => summarizeSetupAdherence(dayTrades), [dayTrades]);
+  const adherenceLabel = useMemo(() => playbookAdherenceLabel(setupAdherence), [setupAdherence]);
+
+  const reloadDayTrades = useCallback(async (dateKey = todayKey()) => {
+    const trades = await fetchTradesForDate(dateKey);
+    setDayTrades(trades);
+    return trades;
+  }, []);
+
+  const refreshRecoveryStatus = useCallback(async () => {
+    const [state, settings] = await Promise.all([
+      loadRecoveryState(),
+      loadDllSettings(),
+    ]);
+    setRecoveryStatus(getRecoveryStatus(state, settings));
+  }, []);
+
+  const maybeEvaluateRecovery = useCallback(async (computedNet, noTrade) => {
+    if (noTrade || computedNet == null || Number.isNaN(computedNet)) {
+      await refreshRecoveryStatus();
+      return;
+    }
+    const status = await evaluateDay(todayKey(), computedNet);
+    setRecoveryStatus(status);
+  }, [refreshRecoveryStatus]);
+
   useEffect(() => {
     (async () => {
       const dateKey = todayKey();
@@ -139,6 +207,8 @@ export default function PostMarketReview({ onBack }) {
         loadData(`postmarket-review-${dateKey}`, null),
         fetchTradesForDate(dateKey),
       ]);
+
+      setDayTrades(dbTrades);
 
       let next = { ...DEFAULT_POSTMARKET, ...(savedReview || {}) };
       if (next.riskPlanFollowed == null && next.planProcessFollowed != null) {
@@ -150,6 +220,11 @@ export default function PostMarketReview({ onBack }) {
       }
 
       setForm(next);
+      const [recoveryState, settings] = await Promise.all([
+        loadRecoveryState(),
+        loadDllSettings(),
+      ]);
+      setRecoveryStatus(getRecoveryStatus(recoveryState, settings));
       setLoading(false);
     })();
   }, []);
@@ -160,6 +235,7 @@ export default function PostMarketReview({ onBack }) {
     const computedNet = !Number.isNaN(gross)
       ? round2(gross - (Number.isNaN(comm) ? 0 : comm))
       : null;
+    const adherence = summarizeSetupAdherence(dayTrades);
 
     await saveData(`postmarket-review-${todayKey()}`, {
       date: todayKey(),
@@ -167,17 +243,28 @@ export default function PostMarketReview({ onBack }) {
       netPnl: computedNet,
       winRate,
       behavioralFlagsRaised: BEHAVIORAL_FLAGS.filter((f) => formData[f.key]).length,
+      playbookAdherence: adherence,
+      playbookProcessPass: adherence.total > 0 ? adherence.processPass : null,
       savedAt: new Date().toISOString(),
     });
-  }, [winRate]);
+    await maybeEvaluateRecovery(computedNet, formData.noTradeToday);
+  }, [winRate, dayTrades, maybeEvaluateRecovery]);
 
   const handleSave = async () => {
+    if (!form.noTradeToday && setupAdherence.untagged > 0) {
+      window.alert(
+        `${setupAdherence.untagged} trade${setupAdherence.untagged === 1 ? "" : "s"} still need a setup tag. Import again with every trade tagged, or update tags in Analytics.`
+      );
+      return false;
+    }
     await persistReview(form);
     setSaved(true);
+    return true;
   };
 
   const handleReset = () => {
     setForm(DEFAULT_POSTMARKET);
+    setDayTrades([]);
     setImportPreview(null);
     setImportMsg("");
     setSaved(false);
@@ -200,9 +287,15 @@ export default function PostMarketReview({ onBack }) {
   };
 
   const handleImportConfirm = async (trades, accountType) => {
+    const check = validateImportSetupTags(trades);
+    if (!check.ok) {
+      throw new Error(check.message);
+    }
+
     const count = await importTradesToSupabase(trades, importPreview?.account, accountType);
     const todayTrades = tradesForDate(trades, todayKey());
     const perf = computePerformanceFromTrades(todayTrades);
+    await reloadDayTrades();
     setForm((f) => ({
       ...f,
       ...perf,
@@ -210,9 +303,13 @@ export default function PostMarketReview({ onBack }) {
       lastImportAt: new Date().toISOString(),
       noTradeToday: todayTrades.length === 0 ? f.noTradeToday : false,
     }));
-    setImportMsg(`Imported ${count} trades · ${todayTrades.length} for today`);
+    const summary = summarizeSetupAdherence(todayTrades);
+    setImportMsg(`Imported ${count} trades · ${formatPlaybookBreakdown(summary)}`);
     setImportPreview(null);
     setSaved(false);
+    if (todayTrades.length > 0 && perf.netPnl != null && !Number.isNaN(perf.netPnl)) {
+      await maybeEvaluateRecovery(perf.netPnl, false);
+    }
   };
 
   if (loading) return <div className="pm-loading">Loading...</div>;
@@ -386,14 +483,33 @@ export default function PostMarketReview({ onBack }) {
             </button>
           </div>
 
-          <button type="button" className="pm-btn-return" onClick={() => { handleSave(); onBack(); }}>
+          <button type="button" className="pm-btn-return" onClick={async () => { const ok = await handleSave(); if (ok !== false) onBack(); }}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8l5 5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             Return to dashboard
           </button>
         </div>
 
         <aside className="premarket-score-panel">
-          <SessionSummary form={form} netPnl={netPnl} winRate={winRate} />
+          {recoveryStatus?.active && (
+            <div className="pm-dll-recovery-notice">
+              <div className="pm-dll-recovery-notice-label hybrid-label-sm">DLL recovery active</div>
+              <p>
+                Drawdown {formatRecoveryUsd(recoveryStatus.cumulativeDrawdown)} ·{" "}
+                {formatRecoveryProgress(recoveryStatus)}
+              </p>
+              <p className="pm-dll-recovery-notice-hint">
+                Max daily loss is {formatRecoveryUsd(recoveryStatus.effectiveMaxDailyLoss)} until you recover{" "}
+                {formatRecoveryUsd(recoveryStatus.remaining)} more.
+              </p>
+            </div>
+          )}
+          <SessionSummary
+            form={form}
+            netPnl={netPnl}
+            winRate={winRate}
+            setupAdherence={setupAdherence}
+            adherenceLabel={adherenceLabel}
+          />
         </aside>
       </div>
     </div>

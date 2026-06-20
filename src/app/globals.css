@@ -504,6 +504,69 @@ textarea:focus, input:focus, select:focus {
   flex-shrink: 0;
 }
 
+/* Dual-pillar process streaks (Option A+) */
+.home-process-streaks {
+  text-align: center;
+  min-width: min(100%, 268px);
+  padding: 12px 16px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  background: transparent;
+}
+
+.home-process-streaks-eyebrow {
+  margin-bottom: 10px;
+  color: var(--muted);
+  letter-spacing: 0.16em;
+}
+
+.home-process-streaks-pillars {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.home-process-streak-pillar {
+  padding: 2px 10px;
+}
+
+.home-process-streak-pillar--divider {
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.home-process-streak-num {
+  font-family: 'Syne', var(--font-display);
+  font-size: clamp(44px, 7vw, 64px);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 0.88;
+}
+
+.home-process-streak-num--risk {
+  color: var(--brand);
+}
+
+.home-process-streak-num--playbook {
+  color: rgba(255, 255, 255, 0.32);
+}
+
+.home-process-streak-goal {
+  font-size: 0.3em;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: rgba(255, 255, 255, 0.22);
+}
+
+.home-process-streak-label {
+  font-family: 'Outfit', var(--font-poster);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
 .home-hybrid-streak {
   text-align: right;
 }
@@ -776,6 +839,155 @@ textarea:focus, input:focus, select:focus {
   font-size: 11px;
   color: var(--muted);
   flex-shrink: 0;
+}
+
+.dll-recovery-banner {
+  margin-bottom: 20px;
+  padding: 10px 12px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: transparent;
+}
+
+.dll-recovery-banner-eyebrow {
+  margin-bottom: 8px;
+  font-size: 9px;
+  color: rgba(232, 168, 56, 0.75);
+  letter-spacing: 0.14em;
+}
+
+.dll-recovery-banner-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin-bottom: 10px;
+}
+
+.dll-recovery-banner-stat {
+  padding: 0 10px;
+  text-align: center;
+}
+
+.dll-recovery-banner-stat:first-child {
+  padding-left: 0;
+}
+
+.dll-recovery-banner-stat:last-child {
+  padding-right: 0;
+}
+
+.dll-recovery-banner-stat--divider {
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dll-recovery-banner-stat-label {
+  display: block;
+  font-family: 'Outfit', var(--font-poster);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.32);
+  margin-bottom: 3px;
+}
+
+.dll-recovery-banner-stat-value {
+  font-family: 'Outfit', var(--font-poster);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.dll-recovery-banner-stat-value--accent {
+  color: rgba(232, 168, 56, 0.85);
+}
+
+.dll-recovery-banner-stat-sub {
+  font-size: 0.92em;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.dll-recovery-banner-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dll-recovery-banner-track {
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.dll-recovery-banner-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: rgba(0, 212, 170, 0.55);
+  transition: width 0.35s ease;
+}
+
+.dll-recovery-banner-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.28);
+}
+
+@media (max-width: 480px) {
+  .dll-recovery-banner-stat {
+    padding: 0 6px;
+  }
+
+  .dll-recovery-banner-stat-value {
+    font-size: 12px;
+  }
+
+  .dll-recovery-banner-progress-meta {
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+
+.daily-plan-recovery-notice,
+.pm-dll-recovery-notice {
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(232, 168, 56, 0.25);
+  background: rgba(232, 168, 56, 0.06);
+}
+
+.daily-plan-recovery-notice {
+  margin-top: 8px;
+}
+
+.pm-dll-recovery-notice {
+  margin-bottom: 16px;
+}
+
+.daily-plan-recovery-notice-label,
+.pm-dll-recovery-notice-label {
+  color: #e8a838;
+  margin-bottom: 6px;
+}
+
+.daily-plan-recovery-notice p,
+.pm-dll-recovery-notice p {
+  font-size: 13px;
+  color: #b8bcc8;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.pm-dll-recovery-notice-hint {
+  margin-top: 6px !important;
+  font-size: 12px !important;
+  color: var(--muted) !important;
 }
 
 .home-hybrid-workflow {
@@ -1136,8 +1348,8 @@ textarea:focus, input:focus, select:focus {
     width: 100%;
   }
 
-  .home-hybrid-streak-num {
-    font-size: clamp(52px, 18vw, 72px);
+  .home-process-streak-num {
+    font-size: clamp(40px, 16vw, 58px);
   }
 
   .home-hybrid-readiness {
@@ -1169,6 +1381,14 @@ textarea:focus, input:focus, select:focus {
     width: 100%;
     padding-left: 76px;
   }
+}
+
+.settings-content {
+  max-width: 640px;
+}
+
+.settings-page .pm-footer {
+  justify-content: flex-end;
 }
 
 .settings-placeholder {
@@ -2599,6 +2819,37 @@ input.pm-slider::-moz-range-thumb {
   color: var(--muted);
 }
 
+.pm-playbook-adherence {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface2);
+}
+
+.pm-playbook-adherence-label {
+  margin-bottom: 6px;
+}
+
+.pm-playbook-adherence-value {
+  font-family: var(--font-poster);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.pm-playbook-adherence-note {
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.home-hybrid-sub--playbook {
+  color: var(--amber);
+}
+
 .pm-footer-postmarket {
   display: flex;
   align-items: center;
@@ -2782,6 +3033,31 @@ input.pm-slider::-moz-range-thumb {
 .import-preview-table td.neg { color: var(--red); }
 .import-preview-table td.dim { color: var(--muted); }
 .import-preview-table td.warn { color: var(--amber); }
+
+.import-setup-summary {
+  padding: 10px 20px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text);
+  background: rgba(37, 145, 134, 0.06);
+  border-bottom: 1px solid var(--border);
+}
+
+.import-setup-summary--blocked {
+  background: rgba(138, 53, 53, 0.08);
+}
+
+.import-setup-summary-warn {
+  color: var(--red);
+}
+
+.import-preview-table tr.import-row--untagged td {
+  background: rgba(138, 53, 53, 0.08);
+}
+
+.import-preview-table tr.import-row--untagged td:nth-child(13) {
+  box-shadow: inset 0 0 0 1px rgba(220, 80, 80, 0.45);
+}
 
 .import-cell-input,
 .import-cell-select {
