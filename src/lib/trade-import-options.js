@@ -1,5 +1,3 @@
-export const DEFAULT_RISK_KEY = "libertrade_default_risk";
-
 export {
   VALID_SETUPS,
   SETUP_IMPROVISED,

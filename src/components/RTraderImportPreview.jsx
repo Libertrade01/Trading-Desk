@@ -3,12 +3,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { formatLimaTime } from "../lib/trade-time";
 import {
-  DEFAULT_RISK_KEY,
   SETUP_OPTIONS,
   MGMT_OPTIONS,
   POST_EXIT_OPTIONS,
   ACCOUNT_TYPE_OPTIONS,
 } from "../lib/trade-import-options";
+import { loadTraderSettings, saveTraderSettings } from "../lib/trader-settings";
 import {
   summarizeSetupAdherence,
   validateImportSetupTags,
@@ -42,23 +42,27 @@ export default function RTraderImportPreview({
   account,
   onConfirm,
 }) {
-  const savedDefaultRisk = useMemo(() => {
-    if (typeof window === "undefined") return 15;
-    return parseFloat(localStorage.getItem(DEFAULT_RISK_KEY) || "15") || 15;
-  }, [open]);
-
   const [pendingTrades, setPendingTrades] = useState([]);
-  const [defaultRisk, setDefaultRisk] = useState(savedDefaultRisk);
+  const [defaultRisk, setDefaultRisk] = useState("15");
   const [accountType, setAccountType] = useState(account?.account_type || "eval");
   const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     if (!open || !incomingTrades.length) return;
-    setPendingTrades(initTrades(incomingTrades, savedDefaultRisk));
-    setDefaultRisk(savedDefaultRisk);
-    setAccountType(account?.account_type || "eval");
-    setImporting(false);
-  }, [open, incomingTrades, account, savedDefaultRisk]);
+    let cancelled = false;
+    (async () => {
+      const settings = await loadTraderSettings();
+      if (cancelled) return;
+      const risk = settings.defaultRisk;
+      setDefaultRisk(String(risk));
+      setPendingTrades(initTrades(incomingTrades, risk));
+      setAccountType(account?.account_type || "eval");
+      setImporting(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, incomingTrades, account]);
 
   const totals = useMemo(() => {
     const totalRaw = pendingTrades.reduce((s, t) => s + t.raw_pnl, 0);
@@ -74,11 +78,12 @@ export default function RTraderImportPreview({
     setPendingTrades((rows) => rows.map((t, i) => (i === idx ? { ...t, ...patch } : t)));
   };
 
-  const applyDefaultRiskToAll = (val) => {
+  const applyDefaultRiskToAll = async (val) => {
     const parsed = parseFloat(val);
     setDefaultRisk(val);
     if (Number.isNaN(parsed) || parsed <= 0) return;
-    localStorage.setItem(DEFAULT_RISK_KEY, String(parsed));
+    const settings = await loadTraderSettings();
+    await saveTraderSettings({ ...settings, defaultRisk: parsed });
     setPendingTrades((rows) => rows.map((t) => ({ ...t, stop_loss_points: parsed })));
   };
 

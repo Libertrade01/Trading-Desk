@@ -10,7 +10,7 @@
 
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&family=Syne:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&family=Syne:wght@500;600;700;800&family=Barlow:wght@300;400;500&family=Outfit:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg:        #111217;
@@ -21,6 +21,8 @@
     --text:      #b8bcc8;
     --muted:     #4a4f5e;
     --dim:       #252733;
+    --brand:     #0065bd;
+    --brand-dim: #0065bd12;
     --green:     #259186;
     --green-dim: #25918610;
     --amber:     #9e7040;
@@ -34,6 +36,9 @@
     --font-mono: 'DM Mono', monospace;
     --font-num:  'Barlow', sans-serif;
     --font-sans: 'DM Sans', sans-serif;
+    --font-poster: 'Outfit', sans-serif;
+    --font-display: 'Syne', sans-serif;
+    --gap:       16px;
   }
 
 
@@ -80,8 +85,71 @@
   /* ── Layout ── */
   .app { display: flex; flex-direction: column; min-height: 100vh; }
 
+  .analytics-hybrid-stripe {
+    height: 2px;
+    flex-shrink: 0;
+    background: linear-gradient(90deg, transparent 0%, var(--brand) 50%, transparent 100%);
+    opacity: 0.85;
+  }
+
+  .hybrid-eyebrow {
+    font-family: var(--font-poster);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  .desk-nav-link {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: rgba(0, 101, 189, 0.12);
+    border: 1px solid rgba(0, 101, 189, 0.22);
+    color: var(--brand);
+    padding: 5px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+  .desk-nav-link:hover {
+    background: rgba(0, 101, 189, 0.22);
+    border-color: rgba(0, 101, 189, 0.35);
+  }
+
+  .analytics-desk-notice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 16px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: transparent;
+    margin-bottom: 4px;
+  }
+  .analytics-desk-notice p {
+    flex: 1;
+    min-width: 200px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin: 0;
+  }
+  .analytics-desk-notice a.inline-link {
+    color: var(--brand);
+    text-decoration: none;
+  }
+  .analytics-desk-notice a.inline-link:hover { text-decoration: underline; }
+
   .topbar {
-    background: rgba(21,24,30,0.92);
+    background: rgba(17, 18, 23, 0.94);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
@@ -108,12 +176,12 @@
     color: var(--text);
     text-transform: uppercase;
   }
-  .logo .wordmark span { color: var(--green); }
+  .logo .wordmark span { color: var(--brand); }
   .logo .sub {
-    font-family: var(--font-mono);
+    font-family: var(--font-poster);
     font-size: 9px;
-    font-weight: 400;
-    letter-spacing: 0.14em;
+    font-weight: 600;
+    letter-spacing: 0.16em;
     color: var(--muted);
     text-transform: uppercase;
   }
@@ -149,9 +217,9 @@
   }
 
   .readiness-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.05em;
+    font-family: var(--font-poster);
+    font-size: 9px;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--muted);
     margin-bottom: 3px;
@@ -237,9 +305,9 @@
   }
   .range-btn:hover { border-color: var(--border2); color: var(--text); }
   .range-btn.active {
-    border-color: var(--text);
-    color: var(--text);
-    background: var(--surface2);
+    border-color: rgba(0, 101, 189, 0.45);
+    color: #e8dcc8;
+    background: var(--brand-dim);
   }
 
   .date-input {
@@ -260,19 +328,19 @@
 
   /* ── Cards ── */
   .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.06);
     padding: 18px 22px;
-    border-radius: 6px;
+    border-radius: 8px;
   }
 
   .card-title {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.06em;
+    font-family: var(--font-poster);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: #7a8199;
+    color: var(--muted);
     margin-bottom: 18px;
     display: flex;
     align-items: center;
@@ -283,9 +351,9 @@
     display: inline-block;
     width: 3px;
     height: 14px;
-    background: var(--blue);
+    background: var(--brand);
     border-radius: 1px;
-    opacity: 0.8;
+    opacity: 0.85;
   }
 
   /* ── Journal & Lessons widgets ── */
@@ -755,12 +823,12 @@
     color: var(--text); padding: 8px 10px; border-radius: 4px;
     outline: none; transition: border-color 0.15s;
   }
-  .form-input:focus { border-color: var(--green); }
+  .form-input:focus { border-color: rgba(0, 101, 189, 0.45); }
   .form-actions { display: flex; gap: 8px; margin-top: 14px; }
   .btn-primary {
     font-family: var(--font-mono); font-size: 10px;
     letter-spacing: 0.06em; text-transform: uppercase;
-    background: var(--green); color: var(--bg);
+    background: var(--brand); color: #fff;
     border: none; padding: 8px 16px; border-radius: 4px;
     cursor: pointer; font-weight: 500; transition: opacity 0.15s;
   }
@@ -795,22 +863,23 @@
     border: 1px solid var(--border); color: var(--muted);
     cursor: pointer; transition: all 0.15s; white-space: nowrap;
   }
-  .account-chip.active { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+  .account-chip.active { border-color: rgba(0, 101, 189, 0.4); color: var(--brand); background: var(--brand-dim); }
   .upload-btn {
     font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em;
-    text-transform: uppercase; background: transparent;
-    border: 1px solid var(--green); color: var(--green);
+    text-transform: uppercase; background: rgba(0, 101, 189, 0.12);
+    border: 1px solid rgba(0, 101, 189, 0.22); color: var(--brand);
     padding: 5px 12px; border-radius: 4px; cursor: pointer;
     transition: all 0.15s;
   }
-  .upload-btn:hover { background: var(--green-dim); }
+  .upload-btn:hover { background: rgba(0, 101, 189, 0.22); }
 
   .settings-btn {
-    background: none; border: 1px solid var(--border);
+    background: none; border: 1px solid var(--border2);
     color: var(--muted); padding: 5px 9px; cursor: pointer;
     border-radius: 4px; font-size: 14px; transition: all 0.15s;
+    text-decoration: none; display: inline-flex; align-items: center;
   }
-  .settings-btn:hover { border-color: var(--text); color: var(--text); }
+  .settings-btn:hover { border-color: rgba(0, 101, 189, 0.35); color: var(--brand); }
 
 
   /* ── Whoop Heatmap ── */
@@ -1631,8 +1700,8 @@
 <!-- Auth overlay -->
 <div id="auth-overlay">
   <div id="auth-card">
-    <div style="font-family:var(--font-sans);font-size:22px;font-weight:600;color:var(--text);margin-bottom:8px">Libertrade</div>
-    <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:36px">Analytics</div>
+    <div style="font-family:var(--font-sans);font-size:22px;font-weight:600;color:#fff;margin-bottom:8px">Libertrade</div>
+    <div class="hybrid-eyebrow" style="margin-bottom:36px">Analytics</div>
     <button id="google-signin-btn" onclick="signInWithGoogle()">
       <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
       Sign in with Google
@@ -1641,6 +1710,7 @@
 </div>
 
 <div class="app">
+  <div class="analytics-hybrid-stripe" aria-hidden="true"></div>
 
   <!-- Top bar -->
   <div class="topbar">
@@ -1651,7 +1721,7 @@
         <button id="nav-reports" onclick="showPage('reports')" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:5px 14px;border-radius:3px;border:none;cursor:pointer;background:none;color:var(--muted);transition:all 0.15s">Reports</button>
       </div>
     </div>
-    <a id="back-to-desk" href="/" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);text-decoration:none;border:1px solid rgba(45,212,191,0.15);padding:5px 14px;border-radius:4px;background:rgba(45,212,191,0.04);transition:all 0.15s;opacity:0.6">← Trade Desk</a>
+    <a id="back-to-desk" href="/" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--brand);text-decoration:none;border:1px solid rgba(0,101,189,0.22);padding:5px 14px;border-radius:4px;background:rgba(0,101,189,0.08);transition:all 0.15s;opacity:0.85">← Trade Desk</a>
     <div class="topbar-right">
       <div class="accounts-filter" id="accounts-chips"></div>
       <select id="type-filter-select" class="date-input" onchange="setTypeFilter(this.value)" style="padding:4px 10px;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;">
@@ -1662,8 +1732,8 @@
       </select>
       <span id="last-sync" style="font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:0.08em;opacity:0;transition:opacity 0.5s"></span>
       <button class="sync-btn" id="sync-btn" onclick="syncData()">⟳ Sync</button>
-      <button class="upload-btn" onclick="document.getElementById('rtrader-file-input').click()" title="Upload rTrader CSV">↑ Import</button>
-      <input type="file" id="rtrader-file-input" accept=".csv" style="display:none" onchange="handleRTraderUpload(event)">
+      <button class="sync-btn" onclick="backfillCommissions()" id="backfill-btn" title="Recalculate commission &amp; net P&amp;L for all historical trades">⟳ Recalc</button>
+      <a class="desk-nav-link" href="/postmarket" onclick="return navigateToDesk('/postmarket')" title="Import rTrader CSV via Post-Market review">Import → Post-Market</a>
       <button id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle light/dark mode" style="background:none;border:1px solid var(--border2);border-radius:4px;padding:6px 8px;cursor:pointer;color:var(--muted);line-height:0;transition:all 0.15s;display:flex;align-items:center;justify-content:center">
         <!-- Moon (dark mode default) -->
         <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -1683,7 +1753,7 @@
         </svg>
       </button>
       <button id="signout-btn" onclick="signOut()" style="display:none">Sign Out</button>
-      <button class="settings-btn" onclick="openDrawer()" title="Manage Accounts">⚙</button>
+      <a class="settings-btn" href="/settings" onclick="return navigateToDesk('/settings')" title="Desk settings">⚙</a>
     </div>
   </div>
 
@@ -2091,6 +2161,21 @@
 </div>
 
 <script>
+// Notify parent shell when embedded (Trade Desk /analytics route)
+if (window.self !== window.top) {
+  window.parent.postMessage({ type: "analytics-embed-ready" }, window.location.origin);
+}
+
+// Navigate within Trade Desk shell (works from iframe or standalone)
+function navigateToDesk(path) {
+  if (window.self !== window.top) {
+    window.top.location.href = path;
+  } else {
+    window.location.href = path;
+  }
+  return false;
+}
+
 // Hide back link when embedded in app shell sidebar
 if (window.self !== window.top) {
   const backLink = document.getElementById('back-to-desk');
@@ -2243,29 +2328,87 @@ function renderPlaybookAdherence(trades) {
     '<div>' + rows + '</div>';
 }
 
-// ── Accounts State ────────────────────────────────────────────────────────────
-let accounts = [];          // [{id, name, starting_balance, active}]
-let activeAccountIds = [];  // IDs currently checked for stats
+// ── Accounts & trader settings (Supabase app_data) ───────────────────────────
+let accounts = [];
+let activeAccountIds = [];
 let editingAccountId = null;
+let traderDefaultRisk = 15;
 
-const ACCOUNTS_KEY = 'libertrade_accounts';
+const ACCOUNTS_KEY = 'libertrade_accounts'; // legacy migration only
+const TRADER_SETTINGS_KEY = 'trader-settings';
 
-function loadAccounts() {
+const DEFAULT_ACCOUNT_TEMPLATE = {
+  id: 'default',
+  name: 'Default Account',
+  starting_balance: 50000,
+  active: true,
+  forImport: true,
+  be_threshold: 30,
+  account_type: 'eval',
+  commissions: { MNQ:'0.50', NQ:'1.75', MES:'0.50', ES:'1.75', GC:'2.30', MGC:'0.80' }
+};
+
+async function fetchTraderSettingsDoc() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/app_data?key=eq.${TRADER_SETTINGS_KEY}&select=value`, { headers: HEADERS });
+  if (!res.ok) throw new Error(await res.text());
+  const rows = await res.json();
+  if (!rows.length) return null;
+  return JSON.parse(rows[0].value);
+}
+
+async function persistTraderSettings(data) {
+  const payload = {
+    key: TRADER_SETTINGS_KEY,
+    value: JSON.stringify({ ...data, updatedAt: new Date().toISOString() }),
+    updated_at: new Date().toISOString()
+  };
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/app_data?on_conflict=key`, {
+    method: 'POST',
+    headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error(await res.text());
+}
+
+function getImportAccount() {
+  return accounts.find(a => a.forImport) || accounts.find(a => a.active) || accounts[0] || null;
+}
+
+async function loadAccounts() {
   try {
-    const stored = localStorage.getItem(ACCOUNTS_KEY);
-    accounts = stored ? JSON.parse(stored) : [];
-    // Default: all active
-    if (!accounts.length) {
-      accounts = [{ id: 'default', name: 'Default Account', starting_balance: 50000, active: true, be_threshold: 30,
-      commissions: { MNQ:'0.50', NQ:'1.75', MES:'0.50', ES:'1.75', GC:'2.30', MGC:'0.80' } }];
+    let data = await fetchTraderSettingsDoc();
+    if (!data) {
+      const stored = localStorage.getItem(ACCOUNTS_KEY);
+      const legacyAccounts = stored ? JSON.parse(stored) : [];
+      const legacyRisk = parseFloat(localStorage.getItem('libertrade_default_risk') || '15') || 15;
+      data = {
+        defaultRisk: legacyRisk,
+        accounts: legacyAccounts.length
+          ? legacyAccounts.map((a, i) => Object.assign({}, a, { forImport: i === 0 || !!a.active }))
+          : [Object.assign({}, DEFAULT_ACCOUNT_TEMPLATE)]
+      };
+      await persistTraderSettings(data);
+      localStorage.removeItem(ACCOUNTS_KEY);
+      localStorage.removeItem('libertrade_default_risk');
     }
-    activeAccountIds = accounts.filter(a => a.active).map(a => a.id);
-  } catch(e) { accounts = []; activeAccountIds = []; }
+    traderDefaultRisk = data.defaultRisk || 15;
+    accounts = Array.isArray(data.accounts) && data.accounts.length
+      ? data.accounts
+      : [Object.assign({}, DEFAULT_ACCOUNT_TEMPLATE, { id: Date.now().toString() })];
+    if (!accounts.some(a => a.forImport)) {
+      accounts[0].forImport = true;
+    }
+    activeAccountIds = accounts.filter(a => a.active !== false).map(a => a.id);
+  } catch (e) {
+    console.error('loadAccounts:', e);
+    accounts = [Object.assign({}, DEFAULT_ACCOUNT_TEMPLATE, { id: Date.now().toString() })];
+    activeAccountIds = accounts.map(a => a.id);
+  }
 }
 
 function saveAccounts() {
-  localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-  activeAccountIds = accounts.filter(a => a.active).map(a => a.id);
+  activeAccountIds = accounts.filter(a => a.active !== false).map(a => a.id);
+  persistTraderSettings({ defaultRisk: traderDefaultRisk, accounts }).catch(e => console.error('saveAccounts:', e));
 }
 
 function openDrawer() {
@@ -2417,7 +2560,7 @@ function saveAccountForm() {
     if (a) { a.name = name; a.starting_balance = balance; a.be_threshold = be; a.commissions = comms; a.account_type = acctType; }
   } else {
     accounts.push({ id: Date.now().toString(), name, starting_balance: balance,
-      active: true, be_threshold: be, commissions: comms, account_type: acctType });
+      active: true, forImport: accounts.length === 0, be_threshold: be, commissions: comms, account_type: acctType });
   }
   saveAccounts();
   document.getElementById('account-form-wrap').innerHTML = '';
@@ -2646,7 +2789,7 @@ function calcStats(trades) {
   if (!trades.length) return null;
   const pnls = trades.map(t => t.net_pnl || 0);
   // Use the BE threshold from the first active account (or 30 default)
-  const activeAcct = accounts.find(a => a.active);
+  const activeAcct = getImportAccount();
   const beThreshold = activeAcct ? (activeAcct.be_threshold ?? 30) : 30;
   // BE = within threshold. Winners/losers exclude BEs entirely.
   const bes      = trades.filter(t => Math.abs(t.net_pnl) <= beThreshold);
@@ -2733,6 +2876,12 @@ function render() {
   const stats  = calcStats(trades);
 
   const html = [];
+
+  html.push(`<div class="analytics-desk-notice">
+    <span class="hybrid-eyebrow">Workflow</span>
+    <p>Import trades in <a class="inline-link" href="/postmarket" onclick="return navigateToDesk('/postmarket')">Post-Market review</a> — tag every setup there. Analytics reads your trade history; accounts &amp; commissions live in <a class="inline-link" href="/settings" onclick="return navigateToDesk('/settings')">Settings</a>.</p>
+    <a class="desk-nav-link" href="/postmarket" onclick="return navigateToDesk('/postmarket')">Go to Post-Market</a>
+  </div>`);
 
   // ── Section 1: Performance Overview
   html.push(`<div class="card">
@@ -3868,12 +4017,13 @@ _supaAuth.auth.onAuthStateChange((event, session) => {
     if (signoutBtn) signoutBtn.style.display = '';
     if (!_dashboardInitialised) {
       _dashboardInitialised = true;
-      loadAccounts();
-      renderAccountChips();
-      loadToday();
-      const btn10d = [...document.querySelectorAll('.range-btn')].find(b => b.textContent.trim() === '10D');
-      if (btn10d) btn10d.click();
-      else loadAndRender();
+      loadAccounts().then(function() {
+        renderAccountChips();
+        loadToday();
+        const btn10d = [...document.querySelectorAll('.range-btn')].find(b => b.textContent.trim() === '10D');
+        if (btn10d) btn10d.click();
+        else loadAndRender();
+      });
     }
   } else {
     HEADERS['Authorization'] = `Bearer ${SUPABASE_KEY}`;
@@ -4500,31 +4650,8 @@ function applyCommissions(trades, commissions) {
 let pendingTrades = [];
 
 function handleRTraderUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  event.target.value = ''; // reset so same file can be re-uploaded
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const orders = parseRTraderCSV(e.target.result);
-      let { trades, openPosition } = fifoReconstructTrades(orders);
-      trades = applyPointValues(trades);
-
-      // Get active account commissions
-      const activeAcct = accounts.find(a => a.active);
-      const comms = activeAcct?.commissions || {};
-      trades = applyCommissions(trades, comms);
-
-      // Check for missing commission symbols
-      const missingSymbols = [...new Set(trades.map(t => t.symbol).filter(s => !comms[s]))];
-
-      showImportPreview(trades, openPosition, missingSymbols, file.name);
-    } catch(err) {
-      alert('Error parsing CSV: ' + err.message);
-    }
-  };
-  reader.readAsText(file);
+  if (event && event.target) event.target.value = '';
+  navigateToDesk('/postmarket');
 }
 
 function showImportPreview(trades, openPosition, missingSymbols, filename) {
@@ -4534,7 +4661,7 @@ function showImportPreview(trades, openPosition, missingSymbols, filename) {
   const totalComm  = trades.reduce((s,t) => s + t.commission, 0);
   const totalNet   = trades.reduce((s,t) => s + t.net_pnl, 0);
   const winners    = trades.filter(t => t.net_pnl > 0).length;
-  const activeAcct = accounts.find(a => a.active);
+  const activeAcct = getImportAccount();
 
   // Summary strip
   document.getElementById('import-summary').innerHTML = `
@@ -4566,13 +4693,13 @@ function showImportPreview(trades, openPosition, missingSymbols, filename) {
     warnings += `<div class="commission-missing">⚠ Open position detected (${openPosition} contracts). This session may have unclosed trades.</div>`;
   }
   if (missingSymbols.length) {
-    warnings += `<div class="commission-missing">⚠ No commission rate set for: ${missingSymbols.join(', ')}. Commission calculated as $0 for these symbols. Update rates in ⚙ Settings.</div>`;
+    warnings += `<div class="commission-missing">⚠ No commission rate set for: ${missingSymbols.join(', ')}. Commission calculated as $0 for these symbols. Update rates in <a href="/settings" onclick="return navigateToDesk('/settings')" style="color:var(--brand)">Settings</a>.</div>`;
   }
   document.getElementById('import-warnings').innerHTML = warnings;
 
   // Trade table
   // Load saved default risk and init per-trade values
-  var savedRisk = parseFloat(localStorage.getItem('libertrade_default_risk') || '15') || 15;
+  var savedRisk = traderDefaultRisk || 15;
   var riskInput = document.getElementById('import-default-risk');
   if (riskInput) riskInput.value = savedRisk;
   pendingTrades.forEach(function(t) { if (t.stop_loss_points === undefined) t.stop_loss_points = savedRisk; });
@@ -4650,7 +4777,8 @@ function renderImportRows() {
 function applyDefaultRisk() {
   var val = parseFloat(document.getElementById('import-default-risk').value);
   if (isNaN(val) || val <= 0) return;
-  localStorage.setItem('libertrade_default_risk', val);
+  traderDefaultRisk = val;
+  persistTraderSettings({ defaultRisk: val, accounts }).catch(function(e) { console.error(e); });
   pendingTrades.forEach(function(t) { t.stop_loss_points = val; });
   renderImportRows();
 }
@@ -4675,7 +4803,7 @@ async function confirmImport() {
   const btn = document.getElementById('confirm-import-btn');
   btn.textContent = 'Importing...'; btn.disabled = true;
 
-  const activeAcct = accounts.find(a => a.active);
+  const activeAcct = getImportAccount();
   const accountName = activeAcct?.name || 'Default';
   const acctType = document.getElementById('import-acct-type')?.value || 'eval';
 
@@ -4736,7 +4864,7 @@ async function confirmImport() {
 // ── Backfill Commissions ───────────────────────────────────────────────────
 async function backfillCommissions() {
   const btn = document.getElementById('backfill-btn');
-  const activeAcct = accounts.find(a => a.active);
+  const activeAcct = getImportAccount();
   if (!activeAcct) { alert('No active account selected'); return; }
 
   const comms = activeAcct.commissions || {};
@@ -5579,7 +5707,12 @@ function showPage(page) {
 
   // Reset all nav buttons
   [navDash, navRep].forEach(b => {
-    if (b) { b.style.background = 'none'; b.style.color = 'var(--muted)'; b.style.boxShadow = 'none'; }
+    if (b) {
+      b.style.background = 'none';
+      b.style.color = 'var(--muted)';
+      b.style.boxShadow = 'none';
+      b.style.border = 'none';
+    }
   });
 
   // Hide all pages
@@ -5588,7 +5721,12 @@ function showPage(page) {
   if (rstrip) rstrip.style.display = 'none';
   if (fbar)   fbar.style.display   = 'none';
 
-  const activeStyle = { background: 'var(--surface)', color: 'var(--text)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' };
+  const activeStyle = {
+    background: 'var(--brand-dim)',
+    color: '#e8dcc8',
+    boxShadow: 'none',
+    border: '1px solid rgba(0,101,189,0.22)',
+  };
 
   if (page === 'dashboard') {
     dash.style.display = '';

@@ -1,6 +1,11 @@
 import { supabase } from "./supabase";
+import { loadTraderSettings, getImportAccount } from "./trader-settings";
 
-const ACCOUNTS_KEY = "libertrade_accounts";
+const DEFAULT_IMPORT_ACCOUNT = {
+  name: "Default Account",
+  account_type: "eval",
+  commissions: { MNQ: "0.50", NQ: "1.75", MES: "0.50", ES: "1.75", GC: "2.30", MGC: "0.80" },
+};
 
 function parseCSVLine(line) {
   const result = [];
@@ -162,30 +167,27 @@ export function getMissingCommissionSymbols(trades, commissions = {}) {
   return [...new Set(trades.map((t) => t.symbol).filter((s) => !commissions[s]))];
 }
 
-export function getActiveAccount() {
-  if (typeof window === "undefined") return null;
+export async function loadImportAccount() {
   try {
-    const accounts = JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || "[]");
-    if (!accounts.length) {
-      return {
-        name: "Default Account",
-        account_type: "eval",
-        commissions: { MNQ: "0.50", NQ: "1.75", MES: "0.50", ES: "1.75", GC: "2.30", MGC: "0.80" },
-      };
-    }
-    return accounts.find((a) => a.active) || accounts[0];
+    const settings = await loadTraderSettings();
+    return getImportAccount(settings) || DEFAULT_IMPORT_ACCOUNT;
   } catch {
-    return null;
+    return DEFAULT_IMPORT_ACCOUNT;
   }
 }
 
-export function processRTraderCSV(text) {
+/** @deprecated Use loadImportAccount — sync fallback for legacy callers */
+export function getActiveAccount() {
+  return DEFAULT_IMPORT_ACCOUNT;
+}
+
+export function processRTraderCSV(text, account = null) {
   const orders = parseRTraderCSV(text);
   let { trades, openPosition } = fifoReconstructTrades(orders);
   trades = applyPointValues(trades);
-  const account = getActiveAccount();
-  trades = applyCommissions(trades, account?.commissions || {});
-  return { trades, openPosition, account };
+  const acct = account || getActiveAccount();
+  trades = applyCommissions(trades, acct?.commissions || {});
+  return { trades, openPosition, account: acct };
 }
 
 function round2(n) {

@@ -11,6 +11,7 @@ import {
   fetchTradesForDate,
   importTradesToSupabase,
   getMissingCommissionSymbols,
+  loadImportAccount,
 } from "../lib/rtrader-import";
 import {
   summarizeSetupAdherence,
@@ -276,7 +277,8 @@ export default function PostMarketReview({ onBack }) {
     e.target.value = "";
     try {
       const text = await file.text();
-      const { trades, openPosition, account } = processRTraderCSV(text);
+      const account = await loadImportAccount();
+      const { trades, openPosition } = processRTraderCSV(text, account);
       const missingSymbols = getMissingCommissionSymbols(trades, account?.commissions || {});
       setImportPreview({ trades, openPosition, filename: file.name, account, missingSymbols });
       setImportMsg("");

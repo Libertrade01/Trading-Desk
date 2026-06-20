@@ -1,3 +1,5 @@
+import AnalyticsEmbed from "@/components/AnalyticsEmbed";
+
 export default function AnalyticsPage() {
-  return <iframe className="embed-frame" src="/analytics.html" title="Analytics" />;
+  return <AnalyticsEmbed />;
 }
