@@ -3,11 +3,12 @@
 import { playbookAdherenceLabel } from "../../lib/setup-adherence";
 import AnalyticsStat from "./AnalyticsStat";
 
-export default function PlaybookAdherencePanel({ summary }) {
+export default function PlaybookAdherencePanel({ summary, trackingStart }) {
   if (!summary?.total) {
     return (
       <div className="analytics-empty">
-        Import trades and tag every setup to track playbook adherence.
+        No trades in the selected range since playbook tracking began
+        {trackingStart ? ` (${trackingStart})` : ""}.
       </div>
     );
   }

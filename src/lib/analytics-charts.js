@@ -142,51 +142,6 @@ export function buildDayOfWeekConfig(trades) {
   };
 }
 
-export function buildSequenceConfig(trades) {
-  const byDay = {};
-  trades.forEach((t) => {
-    if (!byDay[t.date]) byDay[t.date] = [];
-    byDay[t.date].push(t);
-  });
-
-  const seqPnls = [];
-  Object.values(byDay).forEach((dayTrades) => {
-    const sorted = [...dayTrades].sort((a, b) => new Date(a.entry_time) - new Date(b.entry_time));
-    sorted.forEach((t, i) => seqPnls.push({ x: i + 1, y: t.net_pnl || 0 }));
-  });
-
-  const maxX = Math.min(20, Math.max(...seqPnls.map((p) => p.x), 1));
-
-  return {
-    type: "bar",
-    data: {
-      datasets: [
-        {
-          data: seqPnls.filter((p) => p.x <= maxX),
-          backgroundColor: seqPnls.map((p) => (p.y >= 0 ? "rgba(37,145,134,0.5)" : "rgba(138,53,53,0.5)")),
-          parsing: { xAxisKey: "x", yAxisKey: "y" },
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: {
-          type: "linear",
-          min: 0.5,
-          max: maxX + 0.5,
-          grid: { display: false },
-          ticks: { color: TICK_COLOR, font: CHART_FONT, stepSize: 1 },
-          border: { display: false },
-        },
-        y: { grid: { color: GRID_COLOR }, ticks: { color: TICK_COLOR, font: CHART_FONT, callback: (v) => `$${v}` }, border: { display: false } },
-      },
-    },
-  };
-}
-
 /** NY offset helper — rTrader EST + DST correction (mirrors analytics.html). */
 export function getNYOffsetHours(date) {
   try {
@@ -214,6 +169,5 @@ export function getChartConfigs(trades) {
     pnl: trades.length ? buildCumulativePnlConfig(trades) : null,
     baskets: trades.length ? buildBasketsConfig(trades, getNYOffsetHours) : null,
     dow: trades.length ? buildDayOfWeekConfig(trades) : null,
-    seq: trades.length ? buildSequenceConfig(trades) : null,
   };
 }

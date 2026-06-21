@@ -68,3 +68,22 @@ export const RANGE_PRESETS = [
 ];
 
 export { limaTodayParts };
+
+const PLAYBOOK_TRACKING_START_KEY = "analytics-playbook-tracking-start";
+
+/** First day of playbook adherence tracking — set once, excludes legacy untagged history. */
+export function getPlaybookTrackingStartDate() {
+  if (typeof window === "undefined") return limaTodayParts().today;
+  let stored = localStorage.getItem(PLAYBOOK_TRACKING_START_KEY);
+  if (!stored) {
+    stored = limaTodayParts().today;
+    localStorage.setItem(PLAYBOOK_TRACKING_START_KEY, stored);
+  }
+  return stored;
+}
+
+/** Trades within toolbar range, on or after playbook tracking start. */
+export function filterTradesForPlaybookAdherence(trades, trackingStart) {
+  if (!trackingStart) return [];
+  return (trades || []).filter((t) => t.date >= trackingStart);
+}

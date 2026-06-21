@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import { getChartConfigs } from "../../lib/analytics-charts";
 import AnalyticsCard from "./AnalyticsCard";
 import AnalyticsChart from "./AnalyticsChart";
-import RecoveryPanel from "./RecoveryPanel";
 
 export default function SessionAnalyticsGrid({ trades }) {
   const charts = useMemo(() => getChartConfigs(trades), [trades]);
@@ -23,14 +22,6 @@ export default function SessionAnalyticsGrid({ trades }) {
 
       <AnalyticsCard title="Performance by Day" className="an-session-card">
         {charts.dow ? <AnalyticsChart config={charts.dow} /> : <div className="analytics-empty">No data</div>}
-      </AnalyticsCard>
-
-      <AnalyticsCard title="P&L by Trade # in Session" className="an-session-card">
-        {charts.seq ? <AnalyticsChart config={charts.seq} /> : <div className="analytics-empty">No data</div>}
-      </AnalyticsCard>
-
-      <AnalyticsCard title="Post-Loss Recovery" className="an-session-card">
-        <RecoveryPanel trades={trades} />
       </AnalyticsCard>
     </div>
   );

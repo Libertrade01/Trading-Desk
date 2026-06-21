@@ -1,7 +1,7 @@
 "use client";
 
 import AnalyticsStat from "./AnalyticsStat";
-import { fmtR } from "../../lib/analytics-stats";
+import { fmtR, formatPnl } from "../../lib/analytics-stats";
 
 function toneFromSigned(n, threshold = 0) {
   if (n == null || Number.isNaN(n)) return "neutral";
@@ -26,9 +26,9 @@ export default function PerformanceOverview({ stats, trades, beThreshold = 30 })
   const pfVal = stats.profitFactor >= 999 ? "∞" : stats.profitFactor.toFixed(2);
 
   const hero = [
-    { label: "Net P&L", value: `$${stats.totalPnl.toFixed(2)}`, tone: toneFromSigned(stats.totalPnl) },
+    { label: "Net P&L", value: formatPnl(stats.totalPnl), tone: toneFromSigned(stats.totalPnl) },
     { label: "Win Rate", value: `${stats.winRate.toFixed(1)}%`, tone: stats.winRate >= 50 ? "positive" : "negative" },
-    { label: "Expectancy", value: `$${stats.expectancy.toFixed(2)}`, tone: toneFromSigned(stats.expectancy) },
+    { label: "Expectancy", value: formatPnl(stats.expectancy), tone: toneFromSigned(stats.expectancy) },
     {
       label: "Profit Factor",
       value: pfVal,
@@ -37,13 +37,13 @@ export default function PerformanceOverview({ stats, trades, beThreshold = 30 })
   ];
 
   const secondary = [
-    { label: "Avg P&L", value: `$${stats.avgPnl.toFixed(2)}`, tone: toneFromSigned(stats.avgPnl) },
+    { label: "Avg P&L", value: formatPnl(stats.avgPnl), tone: toneFromSigned(stats.avgPnl) },
     { label: "WR w/o BE", value: `${stats.winRateNoBE.toFixed(1)}%`, tone: stats.winRateNoBE >= 50 ? "positive" : "negative" },
-    { label: "Avg Win", value: `$${stats.avgWin.toFixed(2)}`, tone: "positive" },
-    { label: "Avg Loss", value: `$${stats.avgLoss.toFixed(2)}`, tone: "negative" },
-    { label: "Biggest Win", value: `$${stats.biggestWin.toFixed(2)}`, tone: "positive" },
-    { label: "Biggest Loss", value: `$${stats.biggestLoss.toFixed(2)}`, tone: "negative" },
-    { label: "Max Consec DD", value: `$${stats.maxDD.toFixed(2)}`, tone: "negative" },
+    { label: "Avg Win", value: formatPnl(stats.avgWin, { signed: false }), tone: "positive" },
+    { label: "Avg Loss", value: formatPnl(stats.avgLoss, { signed: false }), tone: "negative" },
+    { label: "Biggest Win", value: formatPnl(stats.biggestWin, { signed: false }), tone: "positive" },
+    { label: "Biggest Loss", value: formatPnl(stats.biggestLoss, { signed: false }), tone: "negative" },
+    { label: "Max Consec DD", value: formatPnl(stats.maxDD, { signed: false }), tone: "negative" },
     { label: "Avg Hold (min)", value: stats.avgHold.toFixed(1), tone: "neutral" },
     { label: "Total Trades", value: stats.total, tone: "neutral" },
     { label: "Trading Days", value: new Set(trades.map((t) => t.date)).size, tone: "neutral" },

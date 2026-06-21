@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { fetchAnalyticsTrades, filterTradesByAccounts } from "../../lib/analytics-data";
-import { resolveDateRangePreset } from "../../lib/analytics-date-range";
+import { resolveDateRangePreset, getPlaybookTrackingStartDate, filterTradesForPlaybookAdherence } from "../../lib/analytics-date-range";
 import { getChartConfigs } from "../../lib/analytics-charts";
 import { calcStats } from "../../lib/analytics-stats";
 import { summarizeSetupAdherence } from "../../lib/setup-adherence";
@@ -27,6 +27,7 @@ export default function AnalyticsDashboard() {
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
   const [accountType, setAccountType] = useState("all");
+  const [playbookTrackingStart, setPlaybookTrackingStart] = useState(null);
 
   const load = useCallback(async (from, to, type) => {
     setLoading(true);
@@ -43,6 +44,10 @@ export default function AnalyticsDashboard() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    setPlaybookTrackingStart(getPlaybookTrackingStartDate());
   }, []);
 
   useEffect(() => {
@@ -79,7 +84,11 @@ export default function AnalyticsDashboard() {
   const importAccount = getImportAccount(settings || {});
   const beThreshold = importAccount?.be_threshold ?? 30;
   const stats = useMemo(() => calcStats(trades, settings), [trades, settings]);
-  const playbook = useMemo(() => summarizeSetupAdherence(trades), [trades]);
+  const playbookTrades = useMemo(
+    () => filterTradesForPlaybookAdherence(trades, playbookTrackingStart),
+    [trades, playbookTrackingStart]
+  );
+  const playbook = useMemo(() => summarizeSetupAdherence(playbookTrades), [playbookTrades]);
   const charts = useMemo(() => getChartConfigs(trades), [trades]);
 
   if (loading && !trades.length) {
@@ -154,7 +163,7 @@ export default function AnalyticsDashboard() {
         </div>
 
         <AnalyticsCard title="Playbook Adherence">
-          <PlaybookAdherencePanel summary={playbook} />
+          <PlaybookAdherencePanel summary={playbook} trackingStart={playbookTrackingStart} />
         </AnalyticsCard>
 
         <SessionAnalyticsGrid trades={trades} />

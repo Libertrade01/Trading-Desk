@@ -97,43 +97,6 @@ export function calcStats(trades, settings) {
   };
 }
 
-export function calcRecoveryStats(trades) {
-  if (!trades || trades.length < 2) {
-    return { avgAfterLoss: null, avgAfterWin: null, afterLossCount: 0, afterWinCount: 0 };
-  }
-
-  const sorted = [...trades].sort(
-    (a, b) => new Date(a.entry_time) - new Date(b.entry_time)
-  );
-  const byDay = {};
-  sorted.forEach((t) => {
-    if (!byDay[t.date]) byDay[t.date] = [];
-    byDay[t.date].push(t);
-  });
-
-  const afterLoss = [];
-  const afterWin = [];
-  Object.values(byDay).forEach((dt) => {
-    for (let i = 0; i < dt.length - 1; i += 1) {
-      const curr = dt[i].net_pnl || 0;
-      const next = dt[i + 1].net_pnl || 0;
-      if (curr < 0) afterLoss.push(next);
-      else if (curr > 0) afterWin.push(next);
-    }
-  });
-
-  return {
-    avgAfterLoss: afterLoss.length
-      ? afterLoss.reduce((s, v) => s + v, 0) / afterLoss.length
-      : null,
-    avgAfterWin: afterWin.length
-      ? afterWin.reduce((s, v) => s + v, 0) / afterWin.length
-      : null,
-    afterLossCount: afterLoss.length,
-    afterWinCount: afterWin.length,
-  };
-}
-
 export function buildDailyPnlByDate(trades) {
   const byDate = {};
   trades.forEach((t) => {
