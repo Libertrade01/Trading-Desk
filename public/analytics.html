@@ -163,114 +163,7 @@
     z-index: 100;
   }
 
-  .logo {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-  }
-  .logo .wordmark {
-    font-family: 'Syne', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    color: var(--text);
-    text-transform: uppercase;
-  }
-  .logo .wordmark span { color: var(--brand); }
-  .logo .sub {
-    font-family: var(--font-poster);
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    color: var(--muted);
-    text-transform: uppercase;
-  }
-
   .topbar-right { display: flex; align-items: center; gap: 12px; }
-
-  .sync-btn {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    background: transparent;
-    border: 1px solid var(--border2);
-    color: var(--muted);
-    padding: 6px 14px;
-    cursor: pointer;
-    transition: all 0.15s;
-    border-radius: 4px;
-  }
-  .sync-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--text); }
-  .sync-btn.syncing { opacity: 0.6; cursor: not-allowed; }
-
-  /* ── Header strip ── */
-  .header-strip {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 12px 24px;
-    display: flex;
-    align-items: center;
-    gap: 32px;
-    flex-wrap: wrap;
-  }
-
-  .readiness-label {
-    font-family: var(--font-poster);
-    font-size: 9px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 3px;
-  }
-
-  .gate-badge {
-    display: flex; align-items: center; gap: 7px;
-  }
-  .gate-badge::before {
-    content: '';
-    display: inline-block;
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .gate-badge {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text);
-  }
-  .gate-GREEN::before { background: var(--green); }
-  .gate-AMBER::before { background: var(--amber); }
-  .gate-RED::before   { background: var(--red); }
-  .gate-none::before  { background: var(--muted); }
-  .gate-GREEN { color: var(--text); }
-  .gate-AMBER { color: var(--text); }
-  .gate-RED   { color: var(--text); }
-  .gate-none  { color: var(--muted); }
-
-  .stat-pill {
-    display: flex;
-    flex-direction: column;
-  }
-  .stat-pill .val {
-    font-family: var(--font-num);
-    font-size: 17px;
-    font-weight: 300;
-    color: var(--text);
-  }
-  .stat-pill .val.good { color: var(--green); }
-  .stat-pill .val.warn { color: var(--amber); }
-  .stat-pill .val.bad  { color: var(--red); }
-
-  .strip-divider {
-    width: 1px;
-    height: 32px;
-    background: var(--border);
-  }
 
   /* ── Date filter ── */
   .filter-bar {
@@ -712,7 +605,7 @@
     .basket-grid { grid-template-columns: repeat(3, 1fr); }
   }
 
-  /* ── Accounts Drawer ── */
+  /* ── Drawer overlay (shared by panels) ── */
   .drawer-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.5);
     z-index: 200; opacity: 0; pointer-events: none;
@@ -720,103 +613,6 @@
   }
   .drawer-overlay.open { opacity: 1; pointer-events: all; }
 
-  .drawer {
-    position: fixed; top: 0; right: 0; bottom: 0; width: 380px;
-    background: var(--surface);
-    border-left: 1px solid var(--border);
-    z-index: 201;
-    transform: translateX(100%);
-    transition: transform 0.25s ease;
-    display: flex; flex-direction: column;
-    overflow: hidden;
-  }
-  .drawer.open { transform: translateX(0); }
-
-  .drawer-header {
-    padding: 18px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    flex-shrink: 0;
-  }
-  .drawer-title {
-    font-family: var(--font-mono); font-size: 11px;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--text);
-  }
-  .drawer-close {
-    background: none; border: none; color: var(--muted);
-    font-size: 18px; cursor: pointer; padding: 0 4px;
-    transition: color 0.15s;
-  }
-  .drawer-close:hover { color: var(--text); }
-
-  .drawer-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
-
-  .account-card {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 14px 16px;
-    margin-bottom: 10px;
-    transition: border-color 0.15s;
-  }
-  .account-card.inactive { opacity: 0.45; }
-  .account-card-top {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
-  }
-  .account-checkbox {
-    width: 16px; height: 16px; cursor: pointer; accent-color: var(--green);
-    flex-shrink: 0;
-  }
-  .account-name-display {
-    font-family: var(--font-sans); font-size: 13px; font-weight: 500;
-    color: var(--text); flex: 1;
-  }
-  .account-edit-btn {
-    background: none; border: none; color: var(--muted);
-    font-size: 12px; cursor: pointer; padding: 2px 6px;
-    border-radius: 3px; transition: all 0.15s;
-    font-family: var(--font-mono);
-  }
-  .account-edit-btn:hover { background: var(--surface); color: var(--text); }
-  .account-delete-btn {
-    background: none; border: none; color: var(--muted);
-    font-size: 14px; cursor: pointer; padding: 2px 6px;
-    border-radius: 3px; transition: all 0.15s;
-  }
-  .account-delete-btn:hover { color: var(--red); }
-  .account-meta {
-    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
-  }
-  .account-meta-item .m-label {
-    font-family: var(--font-mono); font-size: 8px;
-    text-transform: uppercase; letter-spacing: 0.05em;
-    color: var(--muted); margin-bottom: 2px;
-  }
-  .account-meta-item .m-val {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 500;
-    color: var(--text);
-  }
-
-  /* Add / Edit form */
-  .account-form {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 16px;
-    margin-bottom: 10px;
-  }
-  .form-title {
-    font-family: var(--font-mono); font-size: 10px;
-    text-transform: uppercase; letter-spacing: 0.06em;
-    color: var(--muted); margin-bottom: 14px;
-  }
-  .form-row { margin-bottom: 10px; }
-  .form-label {
-    font-family: var(--font-mono); font-size: 9px;
-    text-transform: uppercase; letter-spacing: 0.06em;
-    color: var(--muted); margin-bottom: 5px; display: block;
-  }
   .form-input {
     width: 100%; font-family: var(--font-sans); font-size: 13px;
     background: var(--surface); border: 1px solid var(--border);
@@ -824,7 +620,6 @@
     outline: none; transition: border-color 0.15s;
   }
   .form-input:focus { border-color: rgba(0, 101, 189, 0.45); }
-  .form-actions { display: flex; gap: 8px; margin-top: 14px; }
   .btn-primary {
     font-family: var(--font-mono); font-size: 10px;
     letter-spacing: 0.06em; text-transform: uppercase;
@@ -841,16 +636,6 @@
     border-radius: 4px; cursor: pointer; transition: all 0.15s;
   }
   .btn-secondary:hover { border-color: var(--text); color: var(--text); }
-
-  .add-account-btn {
-    width: 100%; font-family: var(--font-mono); font-size: 10px;
-    letter-spacing: 0.06em; text-transform: uppercase;
-    background: transparent; color: var(--green);
-    border: 1px dashed var(--green); padding: 10px;
-    border-radius: 4px; cursor: pointer; transition: all 0.15s;
-    margin-top: 4px;
-  }
-  .add-account-btn:hover { background: var(--green-dim); }
 
   /* Active accounts filter in topbar */
   .accounts-filter {
@@ -1714,12 +1499,9 @@
 
   <!-- Top bar -->
   <div class="topbar">
-    <div style="display:flex;align-items:center;gap:20px">
-      <div class="logo"><span class="wordmark">Liber<span>trade</span></span><span class="sub">Analytics</span></div>
-      <div style="display:flex;align-items:center;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px">
-        <button id="nav-dashboard" onclick="showPage('dashboard')" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:5px 14px;border-radius:3px;border:none;cursor:pointer;background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:all 0.15s">Dashboard</button>
-        <button id="nav-reports" onclick="showPage('reports')" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:5px 14px;border-radius:3px;border:none;cursor:pointer;background:none;color:var(--muted);transition:all 0.15s">Reports</button>
-      </div>
+    <div style="display:flex;align-items:center;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px">
+      <button id="nav-dashboard" onclick="showPage('dashboard')" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:5px 14px;border-radius:3px;border:none;cursor:pointer;background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:all 0.15s">Dashboard</button>
+      <button id="nav-reports" onclick="showPage('reports')" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:5px 14px;border-radius:3px;border:none;cursor:pointer;background:none;color:var(--muted);transition:all 0.15s">Reports</button>
     </div>
     <a id="back-to-desk" href="/" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--brand);text-decoration:none;border:1px solid rgba(0,101,189,0.22);padding:5px 14px;border-radius:4px;background:rgba(0,101,189,0.08);transition:all 0.15s;opacity:0.85">← Trade Desk</a>
     <div class="topbar-right">
@@ -1730,9 +1512,6 @@
         <option value="funded">Funded</option>
         <option value="cash">Cash</option>
       </select>
-      <span id="last-sync" style="font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:0.08em;opacity:0;transition:opacity 0.5s"></span>
-      <button class="sync-btn" id="sync-btn" onclick="syncData()">⟳ Sync</button>
-      <button class="sync-btn" onclick="backfillCommissions()" id="backfill-btn" title="Recalculate commission &amp; net P&amp;L for all historical trades">⟳ Recalc</button>
       <a class="desk-nav-link" href="/postmarket" onclick="return navigateToDesk('/postmarket')" title="Import rTrader CSV via Post-Market review">Import → Post-Market</a>
       <button id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle light/dark mode" style="background:none;border:1px solid var(--border2);border-radius:4px;padding:6px 8px;cursor:pointer;color:var(--muted);line-height:0;transition:all 0.15s;display:flex;align-items:center;justify-content:center">
         <!-- Moon (dark mode default) -->
@@ -1755,31 +1534,6 @@
       <button id="signout-btn" onclick="signOut()" style="display:none">Sign Out</button>
       <a class="settings-btn" href="/settings" onclick="return navigateToDesk('/settings')" title="Desk settings">⚙</a>
     </div>
-  </div>
-
-  <!-- Today's readiness strip -->
-  <div class="header-strip" id="readiness-strip">
-    <div class="stat-pill">
-      <div class="readiness-label">Today's Gate</div>
-      <div id="today-gate" class="gate-badge gate-none">—</div>
-    </div>
-    <div class="strip-divider"></div>
-    <div class="stat-pill">
-      <div class="readiness-label">Whoop Sleep</div>
-      <div class="val" id="today-sleep">—</div>
-    </div>
-    <div class="stat-pill">
-      <div class="readiness-label">Recovery</div>
-      <div class="val" id="today-recovery">—</div>
-    </div>
-    <div class="strip-divider"></div>
-    <div class="stat-pill">
-      <div class="readiness-label">Today's P&L</div>
-      <div class="val" id="today-pnl">—</div>
-    </div>
-    <div style="flex:1"></div>
-    <div class="strip-divider"></div>
-    <div id="topbar-streaks" style="display:flex;align-items:center;gap:16px;padding:0 8px"></div>
   </div>
 
   <!-- Date filter bar -->
@@ -2136,28 +1890,6 @@
   </div>
 
 
-
-  <!-- Accounts Drawer Overlay -->
-  <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
-
-  <!-- Accounts Drawer -->
-  <div class="drawer" id="accounts-drawer">
-    <div class="drawer-header">
-      <span class="drawer-title">Accounts</span>
-      <button class="drawer-close" onclick="closeDrawer()">✕</button>
-    </div>
-    <div class="drawer-body">
-      <div id="accounts-list"></div>
-      <div id="account-form-wrap"></div>
-      <button class="add-account-btn" onclick="showAddForm()">+ Add Account</button>
-    <div style="padding:12px 0 4px">
-      <button onclick="backfillCommissions()" id="backfill-btn" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--font-mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;border-radius:3px" title="Recalculate commission &amp; net P&amp;L for all historical trades">
-        ⟳ Recalculate Historical Commissions
-      </button>
-    </div>
-    </div>
-  </div>
-
 </div>
 
 <script>
@@ -2331,7 +2063,6 @@ function renderPlaybookAdherence(trades) {
 // ── Accounts & trader settings (Supabase app_data) ───────────────────────────
 let accounts = [];
 let activeAccountIds = [];
-let editingAccountId = null;
 let traderDefaultRisk = 15;
 
 const ACCOUNTS_KEY = 'libertrade_accounts'; // legacy migration only
@@ -2411,63 +2142,6 @@ function saveAccounts() {
   persistTraderSettings({ defaultRisk: traderDefaultRisk, accounts }).catch(e => console.error('saveAccounts:', e));
 }
 
-function openDrawer() {
-  document.getElementById('accounts-drawer').classList.add('open');
-  document.getElementById('drawer-overlay').classList.add('open');
-  renderAccountsList();
-}
-
-function closeDrawer() {
-  document.getElementById('accounts-drawer').classList.remove('open');
-  document.getElementById('drawer-overlay').classList.remove('open');
-  document.getElementById('account-form-wrap').innerHTML = '';
-}
-
-function renderAccountsList() {
-  const list = document.getElementById('accounts-list');
-  if (!accounts.length) {
-    list.innerHTML = '<div class="no-data" style="padding:20px 0">No accounts yet</div>';
-    return;
-  }
-  list.innerHTML = accounts.map(a => {
-    // Calculate P&L for this account from allTrades
-    const acctTrades = allTrades; // for now show all (filter by account_name once tagging is live)
-    const pnl = acctTrades.reduce((s,t) => s+(t.net_pnl||0), 0);
-    const pnlColor = pnl >= 0 ? 'var(--green)' : 'var(--red)';
-    const bal = a.starting_balance || 0;
-    const roiPct = bal ? (pnl/bal*100).toFixed(2) : '—';
-
-    return `<div class="account-card ${a.active ? '' : 'inactive'}" id="acct-${a.id}">
-      <div class="account-card-top">
-        <input type="checkbox" class="account-checkbox"
-          ${a.active ? 'checked' : ''}
-          onchange="toggleAccount('${a.id}', this.checked)">
-        <span class="account-name-display">${a.name}</span>
-        <button class="account-edit-btn" onclick="showEditForm('${a.id}')">edit</button>
-        <button class="account-delete-btn" onclick="deleteAccount('${a.id}')" title="Delete">✕</button>
-      </div>
-      <div class="account-meta">
-        <div class="account-meta-item">
-          <div class="m-label">Starting Bal</div>
-          <div class="m-val">$${Number(bal).toLocaleString()}</div>
-        </div>
-        <div class="account-meta-item">
-          <div class="m-label">P&L</div>
-          <div class="m-val" style="color:${pnlColor}">${pnl>=0?'+':''}$${pnl.toFixed(0)}</div>
-        </div>
-        <div class="account-meta-item">
-          <div class="m-label">ROI</div>
-          <div class="m-val" style="color:${pnl>=0?'var(--green)':'var(--red)'}">${roiPct}%</div>
-        </div>
-        <div class="account-meta-item" style="grid-column:1/-1;margin-top:6px;padding-top:8px;border-top:1px solid var(--border)">
-          <div class="m-label">Breakeven Threshold</div>
-          <div class="m-val" style="color:var(--text-dim)">±$${a.be_threshold ?? 30}</div>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
 function renderAccountChips() {
   const el = document.getElementById('accounts-chips');
   if (!accounts.length || (accounts.length === 1 && accounts[0].id === 'default')) {
@@ -2485,87 +2159,8 @@ function renderAccountChips() {
 function toggleAccount(id, active) {
   const acct = accounts.find(a => a.id === id);
   if (acct) { acct.active = active; saveAccounts(); }
-  renderAccountsList();
   renderAccountChips();
   loadAndRender();
-}
-
-function deleteAccount(id) {
-  if (!confirm('Delete this account?')) return;
-  accounts = accounts.filter(a => a.id !== id);
-  saveAccounts();
-  renderAccountsList();
-  renderAccountChips();
-}
-
-function showAddForm() {
-  editingAccountId = null;
-  document.getElementById('account-form-wrap').innerHTML = accountFormHTML('Add Account', '', '', 30, 'eval');
-  openCommEditor(null);
-}
-
-function showEditForm(id) {
-  editingAccountId = id;
-  const a = accounts.find(x => x.id === id);
-  if (!a) return;
-  document.getElementById('account-form-wrap').innerHTML = accountFormHTML('Edit Account', a.name, a.starting_balance || '', a.be_threshold ?? 30, a.account_type || 'eval');
-  openCommEditor(id);
-}
-
-function accountFormHTML(title, name, balance, be=30, acctType='eval') {
-  return `<div class="account-form">
-    <div class="form-title">${title}</div>
-    <div class="form-row">
-      <label class="form-label">Account Name</label>
-      <input class="form-input" id="form-name" placeholder="e.g. 50K Eval" value="${name}">
-    </div>
-    <div class="form-row">
-      <label class="form-label">Starting Balance ($)</label>
-      <input class="form-input" id="form-balance" type="number" placeholder="50000" value="${balance}">
-    </div>
-    <div class="form-row">
-      <label class="form-label">Breakeven Threshold ($) <span style="color:var(--muted);font-size:9px">— trades within ±this amount are counted as BE</span></label>
-      <input class="form-input" id="form-be" type="number" placeholder="30" value="${be}">
-    </div>
-    <div class="form-row">
-      <label class="form-label">Account Type</label>
-      <select class="form-input" id="form-acct-type">
-        <option value="eval" ${acctType==='eval'?'selected':''}>Eval</option>
-        <option value="funded" ${acctType==='funded'?'selected':''}>Funded</option>
-        <option value="cash" ${acctType==='cash'?'selected':''}>Cash</option>
-      </select>
-    </div>
-    <div class="form-row" style="margin-top:16px">
-      <div class="form-label" style="margin-bottom:8px">Commission Rates ($ per contract per side)</div>
-      <div id="comm-table-wrap" style="margin-bottom:8px"></div>
-      <button type="button" onclick="addCommRow()" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.06em;text-transform:uppercase;background:transparent;color:var(--green);border:1px dashed var(--green);padding:5px 10px;border-radius:3px;cursor:pointer;width:100%">+ Add Symbol</button>
-    </div>
-    <div class="form-actions">
-      <button class="btn-primary" onclick="saveAccountForm()">Save</button>
-      <button class="btn-secondary" onclick="document.getElementById('account-form-wrap').innerHTML=''">Cancel</button>
-    </div>
-  </div>`;
-}
-
-function saveAccountForm() {
-  const name    = document.getElementById('form-name').value.trim();
-  const balance = parseFloat(document.getElementById('form-balance').value) || 0;
-  const be      = parseFloat(document.getElementById('form-be').value) ?? 30;
-  const comms    = readCommTable();
-  const acctType = document.getElementById('form-acct-type')?.value || 'eval';
-  if (!name) { alert('Please enter an account name'); return; }
-
-  if (editingAccountId) {
-    const a = accounts.find(x => x.id === editingAccountId);
-    if (a) { a.name = name; a.starting_balance = balance; a.be_threshold = be; a.commissions = comms; a.account_type = acctType; }
-  } else {
-    accounts.push({ id: Date.now().toString(), name, starting_balance: balance,
-      active: true, forImport: accounts.length === 0, be_threshold: be, commissions: comms, account_type: acctType });
-  }
-  saveAccounts();
-  document.getElementById('account-form-wrap').innerHTML = '';
-  renderAccountsList();
-  renderAccountChips();
 }
 
 
@@ -2747,41 +2342,6 @@ async function loadJournalData() {
   ]);
   allJournalEntries = journal || [];
   allLessonEntries  = (lessons || []).filter(e => (e.lesson_text || '').trim());
-}
-
-// ── Today's readiness ─────────────────────────────────────────────────────────
-async function loadToday() {
-  const today = new Date().toISOString().split('T')[0];
-  try {
-    const [days, trades] = await Promise.all([
-      query('trading_days', '*', [`date=eq.${today}`]),
-      query('trades',       '*', [`date=eq.${today}`]),
-    ]);
-
-    const day = days && days[0];
-    if (day) {
-      const gateEl = document.getElementById('today-gate');
-      gateEl.textContent = day.gate || '—';
-      gateEl.className = `gate-badge gate-${day.gate || 'none'}`;
-
-      const sleep = day.whoop_sleep;
-      const sleepEl = document.getElementById('today-sleep');
-      sleepEl.textContent = sleep != null ? sleep + '%' : '—';
-      sleepEl.className = `val ${sleep < 70 ? 'bad' : sleep < 80 ? 'warn' : 'good'}`;
-
-      const rec = day.whoop_recovery;
-      const recEl = document.getElementById('today-recovery');
-      recEl.textContent = rec != null ? rec + '%' : '—';
-      recEl.className = `val ${rec < 30 ? 'bad' : rec < 50 ? 'warn' : 'good'}`;
-    }
-
-    const todayPnl = trades ? trades.reduce((s, t) => s + (t.net_pnl || 0), 0) : 0;
-    const pnlEl = document.getElementById('today-pnl');
-    pnlEl.textContent = todayPnl !== 0 ? `$${todayPnl.toFixed(2)}` : '—';
-    pnlEl.className = `val ${todayPnl > 0 ? 'good' : todayPnl < 0 ? 'bad' : ''}`;
-  } catch(e) {
-    console.warn('Today data:', e);
-  }
 }
 
 // ── Calculations ──────────────────────────────────────────────────────────────
@@ -3002,7 +2562,6 @@ function render() {
     ['renderDiscipline',   () => renderDiscipline(days, trades)],
     ['renderJournal',      () => renderJournal()],
     ['renderLessons',      () => renderLessons()],
-    ['renderTopStreaks',    () => renderTopStreaks(days, trades)],
   ];
   for (const [name, fn] of _renders) {
     try { fn(); }
@@ -3349,7 +2908,6 @@ async function executeDeleteDay() {
     }
 
     await loadAndRender();
-    loadToday();
   } catch (e) {
     errEl.textContent = e.message || 'Delete failed. Check your connection or permissions.';
     errEl.style.display = 'block';
@@ -3628,356 +3186,6 @@ function renderRecovery(trades) {
 
 // ── Activation Hot Window ────────────────────────────────────────────────────
 
-// ── Sync ──────────────────────────────────────────────────────────────────────
-// Reads app_data (Trading Desk mobile app) and incrementally backfills
-// trading_days and activations tables with mental/prep/review data.
-// Only syncs dates that haven't been synced yet — always re-syncs today.
-
-async function syncData() {
-  const btn = document.getElementById('sync-btn');
-  btn.textContent = '⟳ Syncing...';
-  btn.classList.add('syncing');
-
-  try {
-    // ── Step 1: Fetch all app_data keys ──────────────────────────────────────
-    btn.textContent = '⟳ Reading data...';
-
-    // We need to list all keys — fetch up to 2000 rows, filter by prefix
-    const appDataRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/app_data?select=key,value&limit=2000`,
-      { headers: HEADERS }
-    );
-    if (!appDataRes.ok) throw new Error('Failed to fetch app_data: ' + await appDataRes.text());
-    const appDataRows = await appDataRes.json();
-
-    // Build lookup map: key → parsed value
-    const appData = {};
-    for (const row of appDataRows) {
-      try { appData[row.key] = JSON.parse(row.value); }
-      catch { appData[row.key] = row.value; }
-    }
-
-    // ── Step 2: Find all dates that have checkin data ─────────────────────────
-    const today = new Date().toISOString().split('T')[0];
-    const checkinDates = Object.keys(appData)
-      .filter(k => k.startsWith('checkin-'))
-      .map(k => k.replace('checkin-', ''))
-      .sort();
-
-    if (!checkinDates.length) {
-      showSyncResult({ skipped: 0, days: 0, message: 'No Trading Desk data found in app_data.' });
-      return;
-    }
-
-    // ── Step 3: Check which dates already have synced_at set in trading_days ──
-    btn.textContent = '⟳ Checking existing...';
-    const existingRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/trading_days?select=date,synced_at&limit=1000`,
-      { headers: HEADERS }
-    );
-    if (!existingRes.ok) throw new Error('Failed to fetch trading_days: ' + await existingRes.text());
-    const existingDays = await existingRes.json();
-
-    // Map of date → synced_at
-    const syncedMap = {};
-    for (const d of existingDays) {
-      if (d.synced_at) syncedMap[d.date] = d.synced_at;
-    }
-
-    // Dates to sync = not yet synced, or within last 7 days (to catch same-week edits)
-    const cutoffDate = new Date(); cutoffDate.setDate(cutoffDate.getDate() - 7);
-    const cutoffStr = cutoffDate.toISOString().split('T')[0];
-    const datesToSync = checkinDates.filter(d => !syncedMap[d] || d >= cutoffStr);
-    const skippedCount = checkinDates.length - datesToSync.length;
-
-    if (!datesToSync.length) {
-      showSyncResult({ skipped: skippedCount, days: 0, message: 'All dates already synced.' });
-      await loadAndRender();
-      return;
-    }
-
-    // ── Step 4: Build trading_days upsert rows ────────────────────────────────
-    btn.textContent = `⟳ Syncing ${datesToSync.length} days...`;
-
-    const tradingDayRows = [];
-    const descriptionRows = [];   // separate batch — only dates that have prep descriptions
-
-    for (const date of datesToSync) {
-      const checkin   = appData[`checkin-${date}`] || null;
-      // Find prep key — could be any instrument e.g. prep-2026-02-27-NQ
-      const prepKey = Object.keys(appData).find(k => k.startsWith(`prep-${date}-`));
-      const prep = prepKey ? appData[prepKey] : null;
-      const instrument = prep?.instrument || (prepKey ? prepKey.split('-').slice(3).join('-') : null);
-
-      // Find review key — could be any instrument e.g. review-2026-02-26-NQ
-      const reviewKey = Object.keys(appData).find(k => k.startsWith(`review-${date}-`));
-      const review = reviewKey ? appData[reviewKey] : null;
-
-      // ── Gate computation (mirrors mobile app logic exactly) ──────────────
-      // Whoop gate
-      const whoopGate = checkin?.whoopGate || computeWhoopGate(checkin?.whoopSleep, checkin?.whoopRecovery);
-
-      // Schema gate from schemaScores — but we agreed not to sync these,
-      // so if gate was saved in checkin we use it, otherwise null
-      // Mental gate from mentalScores
-      const mentalScores = checkin?.mentalScores || [];
-      const minMental = mentalScores[0] > 0 && mentalScores[1] > 0
-        ? Math.min(mentalScores[0], mentalScores[1]) : 0;
-      const mentalGate = minMental === 0 ? null
-        : minMental <= 1 ? 'RED' : minMental <= 3 ? 'AMBER' : 'GREEN';
-
-      // Final gate = worst of available gates
-      const gateOrder = { GREEN: 0, AMBER: 1, RED: 2 };
-      const availableGates = [whoopGate, mentalGate].filter(Boolean);
-      const finalGate = availableGates.length === 0 ? null
-        : availableGates.reduce((worst, g) =>
-            gateOrder[g] > gateOrder[worst] ? g : worst, 'GREEN');
-
-      // Gate driver — what's driving it
-      const drivers = [];
-      if (whoopGate && whoopGate !== 'GREEN') drivers.push('Whoop');
-      if (mentalGate && mentalGate !== 'GREEN') drivers.push('Mental');
-      const gateDriver = drivers.join(' + ') || null;
-
-      // ── Build row ────────────────────────────────────────────────────────
-      const row = {
-        date,
-        synced_at: new Date().toISOString(),
-      };
-
-      // Checkin fields
-      if (checkin) {
-        if (checkin.whoopSleep    != null) row.whoop_sleep       = parseInt(checkin.whoopSleep);
-        if (checkin.whoopRecovery != null) row.whoop_recovery    = parseInt(checkin.whoopRecovery);
-        if (whoopGate)                     row.whoop_gate        = whoopGate;
-        if (finalGate)                     row.gate              = finalGate;
-        if (gateDriver)                    row.gate_driver       = gateDriver;
-        if (mentalScores[0] > 0)           row.mental_awareness  = mentalScores[0];
-        if (mentalScores[1] > 0)           row.mental_connected  = mentalScores[1];
-      }
-
-      // Prep fields
-      if (prep) {
-        if (instrument)               row.instrument         = instrument;
-        if (prep.vix)                 row.vix                = parseFloat(prep.vix);
-        if (prep.rvol)                row.rvol               = parseFloat(prep.rvol);
-        if (prep.adr)                 row.adr                = parseFloat(prep.adr);
-        if (prep.auctionDirection)    row.auction_direction  = prep.auctionDirection;
-        if (prep.auctionConviction)   row.auction_conviction = prep.auctionConviction;
-        if (prep.openVsValue)         row.open_vs_value      = prep.openVsValue;
-        if (prep.priorDaily)          row.prior_daily        = prep.priorDaily;
-        if (prep.ema4h1h)             row.ema_4h1h           = prep.ema4h1h;
-        if (prep.rotationFactor)      row.rotation_factor    = prep.rotationFactor;
-        if (prep.weeklyCandle)        row.weekly_candle      = prep.weeklyCandle;
-        if (prep.emasW)               row.weekly_emas        = prep.emasW;
-        if (prep.emasD)               row.daily_emas         = prep.emasD;
-        if (prep.sessionFocus)        row.session_focus      = prep.sessionFocus;
-        if (prep.anomaly)             row.anomaly            = Array.isArray(prep.anomaly)
-                                                               ? prep.anomaly.join(', ')
-                                                               : prep.anomaly;
-        // Play descriptions — upserted in a separate batch so null-normalization
-        // of dates without prep never overwrites dates that do have descriptions.
-        descriptionRows.push({
-          date,
-          bull1_description:  prep.bull1        || null,
-          bull1_invalidation: prep.bull1Invalid || null,
-          bull2_description:  prep.bull2        || null,
-          bull2_invalidation: prep.bull2Invalid || null,
-          bear1_description:  prep.bear1        || null,
-          bear1_invalidation: prep.bear1Invalid || null,
-          bear2_description:  prep.bear2        || null,
-          bear2_invalidation: prep.bear2Invalid || null,
-        });
-        // Checklist
-        row.sim_deactivated   = !!prep.simDeactivated;
-        row.bracket_set       = !!prep.bracket;
-        row.accounts_unlocked = !!prep.accountsUnlocked;
-        row.lag_check         = !!prep.lagCheck;
-      }
-
-      // Review fields
-      if (review) {
-        if (review.focusRating    != null) row.focus_rating        = review.focusRating;
-        if (review.postEmotional  != null) row.post_emotional      = review.postEmotional;
-        if (review.postDecision   != null) row.post_decision       = review.postDecision;
-        if (review.postPhysical   != null) row.post_physical       = review.postPhysical;
-        if (review.rulesTrend)             row.rules_trend         = review.rulesTrend;
-        if (review.rulesMarketCond)        row.rules_market_cond   = review.rulesMarketCond;
-        if (review.rulesTopBottom)         row.rules_top_bottom    = review.rulesTopBottom;
-        if (review.rulesPlays)             row.rules_plays         = review.rulesPlays;
-        if (review.rulesExecution)         row.rules_execution     = review.rulesExecution;
-        if (review.rulesFocus)             row.rules_focus         = review.rulesFocus;
-        if (review.rulesConsol)            row.rules_consol        = review.rulesConsol;
-        if (review.rulesDLL)               row.rules_dll           = review.rulesDLL;
-        if (review.rulesCooloff)           row.rules_cooloff       = review.rulesCooloff;
-        // Rule notes are written to the rule_compliance table (see Step 6b below),
-        // not to trading_days (those columns don't exist in the schema).
-        if (review.bull1Result)            row.bull1_result        = review.bull1Result;
-        if (review.bull1Traded)            row.bull1_traded        = review.bull1Traded;
-        if (review.bull1WhyNot)            row.bull1_why_not       = review.bull1WhyNot;
-        if (review.bull2Result)            row.bull2_result        = review.bull2Result;
-        if (review.bull2Traded)            row.bull2_traded        = review.bull2Traded;
-        if (review.bull2WhyNot)            row.bull2_why_not       = review.bull2WhyNot;
-        if (review.bear1Result)            row.bear1_result        = review.bear1Result;
-        if (review.bear1Traded)            row.bear1_traded        = review.bear1Traded;
-        if (review.bear1WhyNot)            row.bear1_why_not       = review.bear1WhyNot;
-        if (review.bear2Result)            row.bear2_result        = review.bear2Result;
-        if (review.bear2Traded)            row.bear2_traded        = review.bear2Traded;
-        if (review.bear2WhyNot)            row.bear2_why_not       = review.bear2WhyNot;
-        if (review.tomorrowWill)           row.tomorrow_will       = review.tomorrowWill;
-        if (review.sessionCharacter)       row.session_character   = review.sessionCharacter;
-      }
-
-      tradingDayRows.push(row);
-
-    }
-
-    // ── Step 5: Upsert trading_days rows ──────────────────────────────────────
-    btn.textContent = `⟳ Writing ${tradingDayRows.length} days...`;
-
-    if (tradingDayRows.length) {
-      // PGRST102 fix: all rows must have identical keys.
-      // Collect the union of all keys across every row, then fill missing
-      // keys with null so every row has exactly the same shape.
-      const allKeys = Array.from(
-        new Set(tradingDayRows.flatMap(r => Object.keys(r)))
-      );
-      const normalisedRows = tradingDayRows.map(row => {
-        const out = {};
-        for (const k of allKeys) out[k] = row[k] !== undefined ? row[k] : null;
-        return out;
-      });
-
-      // on_conflict=date tells PostgREST to use date as the conflict column
-      // so rows that already exist get updated rather than causing a duplicate key error
-      const upsertRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/trading_days?on_conflict=date`,
-        {
-          method: 'POST',
-          headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-          body: JSON.stringify(normalisedRows),
-        }
-      );
-      if (!upsertRes.ok) {
-        const err = await upsertRes.text();
-        throw new Error('trading_days upsert failed: ' + err);
-      }
-    }
-
-    // ── Step 5b: Upsert play descriptions (separate batch, only prep dates) ────
-    if (descriptionRows.length) {
-      const descRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/trading_days?on_conflict=date`,
-        {
-          method: 'POST',
-          headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-          body: JSON.stringify(descriptionRows),
-        }
-      );
-      if (!descRes.ok) {
-        const err = await descRes.text();
-        throw new Error('descriptions upsert failed: ' + err);
-      }
-    }
-
-    // ── Step 6: Write rule notes to rule_compliance ──────────────────────────
-    // Fetch trading_day IDs for synced dates so we can relate rule_compliance rows
-    const tdIdRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/trading_days?select=id,date&date=in.(${datesToSync.join(',')})`,
-      { headers: HEADERS }
-    );
-    const dayIdMap = {};
-    if (tdIdRes.ok) {
-      for (const r of await tdIdRes.json()) dayIdMap[r.date] = r.id;
-    }
-
-    const ruleCompRows = [];
-    const rcKeyMap = [
-      ['rulesTrend',      'rulesTrendNote'],
-      ['rulesMarketCond', 'rulesMarketCondNote'],
-      ['rulesTopBottom',  'rulesTopBottomNote'],
-      ['rulesPlays',      'rulesPlaysNote'],
-      ['rulesExecution',  'rulesExecutionNote'],
-      ['rulesFocus',      'rulesFocusNote'],
-      ['rulesConsol',     'rulesConsolNote'],
-      ['rulesDLL',        'rulesDLLNote'],
-      ['rulesCooloff',    'rulesCooloffNote'],
-    ];
-
-    for (const date of datesToSync) {
-      const revKey = Object.keys(appData).find(k => k.startsWith(`review-${date}-`));
-      const rev    = revKey ? appData[revKey] : null;
-      if (!rev || !dayIdMap[date]) continue;
-
-      const rulesDict = rev.rules || rev.ruleCompliance || rev.ruleChecks || {};
-
-      for (const [camelKey, flatNoteKey] of rcKeyMap) {
-        const result = rev[camelKey] || rulesDict[camelKey]?.result || rulesDict[camelKey]?.status || null;
-        const notes  = rev[flatNoteKey] || rulesDict[camelKey]?.notes || null;
-        if (result || notes) {
-          ruleCompRows.push({ trading_day_id: dayIdMap[date], date, rule: camelKey, result, notes });
-        }
-      }
-    }
-
-    if (ruleCompRows.length) {
-      await Promise.all(datesToSync.map(date =>
-        fetch(`${SUPABASE_URL}/rest/v1/rule_compliance?date=eq.${date}`, { method: 'DELETE', headers: HEADERS })
-      ));
-      const rcRes = await fetch(`${SUPABASE_URL}/rest/v1/rule_compliance`, {
-        method: 'POST',
-        headers: { ...HEADERS, 'Prefer': 'return=minimal' },
-        body: JSON.stringify(ruleCompRows),
-      });
-      if (!rcRes.ok) console.warn('rule_compliance insert:', await rcRes.text());
-    }
-
-    // ── Step 7: Refresh dashboard + show result ───────────────────────────────
-    await loadToday();
-    await loadAndRender();
-
-    showSyncResult({
-      days:    tradingDayRows.length,
-      skipped: skippedCount,
-      message: null,
-    });
-
-  } catch (err) {
-    console.error('Sync error:', err);
-    alert('Sync failed: ' + err.message);
-  } finally {
-    btn.textContent = '⟳ Sync';
-    btn.classList.remove('syncing');
-  }
-}
-
-// ── Helper: compute whoop gate from raw scores (mirrors mobile app) ───────────
-function computeWhoopGate(sleep, recovery) {
-  const s = parseFloat(sleep), r = parseFloat(recovery);
-  if (isNaN(s) || isNaN(r)) return null;
-  if (s < 70 || r < 30) return 'RED';
-  if (s >= 80 && r >= 50) return 'GREEN';
-  return 'AMBER';
-}
-
-// ── Helper: show sync result summary in topbar ────────────────────────────────
-function showSyncResult({ days, activations, skipped, message }) {
-  const syncEl = document.getElementById('last-sync');
-  let text = '';
-  if (message) {
-    text = message;
-  } else {
-    const parts = [];
-    if (days > 0)        parts.push(`${days} day${days !== 1 ? 's' : ''} synced`);
-    if (activations > 0) parts.push(`${activations} activation${activations !== 1 ? 's' : ''}`);
-    if (skipped > 0)     parts.push(`${skipped} already up to date`);
-    text = parts.join(' · ') || 'Nothing to sync';
-  }
-  syncEl.textContent = text;
-  syncEl.style.opacity = '1';
-  setTimeout(() => { syncEl.style.opacity = '0'; }, 6000);
-}
-
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 // ── Type Filter ──────────────────────────────────────────────────────────────
@@ -4019,7 +3227,6 @@ _supaAuth.auth.onAuthStateChange((event, session) => {
       _dashboardInitialised = true;
       loadAccounts().then(function() {
         renderAccountChips();
-        loadToday();
         const btn10d = [...document.querySelectorAll('.range-btn')].find(b => b.textContent.trim() === '10D');
         if (btn10d) btn10d.click();
         else loadAndRender();
@@ -4377,266 +3584,6 @@ function renderDiscipline(days, trades) {
   });
 }
 
-// ── Commission table UI ───────────────────────────────────────────────────────
-// Working commissions object — edited in memory, saved on form submit
-let _workingComms = {};
-
-function getAccountComms(id) {
-  const a = id ? accounts.find(x => x.id === id) : accounts.find(x => x.active);
-  return a ? (a.commissions || {}) : {};
-}
-
-function openCommEditor(accountId) {
-  // Load existing comms into working object
-  _workingComms = Object.assign({}, accountId ? getAccountComms(accountId) :
-    { MNQ:'0.50', NQ:'1.75', MES:'0.50', ES:'1.75', GC:'2.30', MGC:'0.80' });
-  renderCommTable();
-}
-
-function renderCommTable() {
-  const wrap = document.getElementById('comm-table-wrap');
-  if (!wrap) return;
-  wrap.innerHTML = '';
-  const syms = Object.keys(_workingComms);
-  if (!syms.length) {
-    const msg = document.createElement('div');
-    msg.style.cssText = 'color:var(--muted);font-family:var(--font-mono);font-size:10px;padding:4px 0';
-    msg.textContent = 'No symbols added';
-    wrap.appendChild(msg);
-    return;
-  }
-  syms.forEach(function(sym) {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;gap:8px;margin-bottom:6px;align-items:center';
-
-    const symInput = document.createElement('input');
-    symInput.className = 'form-input comm-sym-input';
-    symInput.style.cssText = 'width:80px';
-    symInput.placeholder = 'Symbol';
-    symInput.value = sym;
-
-    const dollar = document.createElement('span');
-    dollar.style.cssText = 'color:var(--muted);font-family:var(--font-mono);font-size:10px';
-    dollar.textContent = '$';
-
-    const rateInput = document.createElement('input');
-    rateInput.className = 'form-input comm-rate-input';
-    rateInput.style.cssText = 'width:80px';
-    rateInput.type = 'number';
-    rateInput.step = '0.01';
-    rateInput.placeholder = '0.00';
-    rateInput.value = _workingComms[sym];
-
-    const perLabel = document.createElement('span');
-    perLabel.style.cssText = 'color:var(--muted);font-family:var(--font-mono);font-size:9px';
-    perLabel.textContent = '/contract/side';
-
-    const delBtn = document.createElement('button');
-    delBtn.type = 'button';
-    delBtn.textContent = '✕';
-    delBtn.style.cssText = 'background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 4px';
-    // Use closure-safe IIFE to capture sym
-    (function(s) {
-      delBtn.addEventListener('click', function() {
-        // Before deleting, sync current DOM values so other rows aren't lost
-        syncCommDOM();
-        delete _workingComms[s];
-        renderCommTable();
-      });
-    })(sym);
-
-    row.appendChild(symInput);
-    row.appendChild(dollar);
-    row.appendChild(rateInput);
-    row.appendChild(perLabel);
-    row.appendChild(delBtn);
-    wrap.appendChild(row);
-  });
-}
-
-// Sync DOM input values back to _workingComms without re-rendering
-function syncCommDOM() {
-  const wrap = document.getElementById('comm-table-wrap');
-  if (!wrap) return;
-  const symInputs  = wrap.querySelectorAll('.comm-sym-input');
-  const rateInputs = wrap.querySelectorAll('.comm-rate-input');
-  const newComms = {};
-  symInputs.forEach(function(el, i) {
-    const sym  = el.value.trim().toUpperCase();
-    const rate = rateInputs[i] ? rateInputs[i].value : '0';
-    if (sym) newComms[sym] = rate;
-  });
-  _workingComms = newComms;
-}
-
-
-function addCommRow() {
-  // Add a placeholder that user fills in
-  const sym = 'NEW';
-  let key = sym;
-  let i = 1;
-  while (_workingComms[key] !== undefined) key = sym + i++;
-  _workingComms[key] = '0.00';
-  renderCommTable();
-}
-
-function readCommTable() {
-  // Always read from DOM — source of truth at save time
-  syncCommDOM();
-  const result = {};
-  Object.keys(_workingComms).forEach(function(k) {
-    if (k) result[k] = String(_workingComms[k]);
-  });
-  return result;
-}
-
-
-
-// ── FIFO Algorithm ────────────────────────────────────────────────────────────
-function parseRTraderCSV(text) {
-  const lines = text.split('\n');
-  let completedStart = -1;
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].includes('Completed Orders')) { completedStart = i + 1; break; }
-  }
-  if (completedStart < 0) throw new Error('Could not find Completed Orders section');
-
-  // Parse CSV rows
-  function parseCSVLine(line) {
-    const result = []; let cur = ''; let inQ = false;
-    for (const ch of line) {
-      if (ch === '"') { inQ = !inQ; }
-      else if (ch === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
-      else cur += ch;
-    }
-    result.push(cur.trim());
-    return result;
-  }
-
-  const headerLine = lines[completedStart];
-  const headers = parseCSVLine(headerLine);
-  const idxStatus   = headers.indexOf('Status');
-  const idxSide     = headers.indexOf('Buy/Sell');
-  const idxQty      = headers.indexOf('Qty To Fill');
-  const idxSymbol   = headers.indexOf('Symbol');
-  const idxPrice    = headers.indexOf('Avg Fill Price');
-  const idxTime     = (() => {
-    for (const name of ['Update Time (SAPST)', 'Update Time (ESAST)', 'Create Time (SAPST)', 'Create Time (ESAST)']) {
-      const idx = headers.indexOf(name);
-      if (idx >= 0) return idx;
-    }
-    return headers.findIndex(h => /^Update Time/i.test(h) || /^Create Time/i.test(h));
-  })();
-  if (idxTime < 0) throw new Error('Could not find Update Time or Create Time column in Completed Orders');
-
-  const orders = [];
-  for (let i = completedStart + 1; i < lines.length; i++) {
-    if (!lines[i].trim()) continue;
-    const cols = parseCSVLine(lines[i]);
-    if (cols[idxStatus] !== 'Filled') continue;
-    const price = parseFloat(cols[idxPrice]);
-    if (!price) continue;
-    orders.push({
-      time:    cols[idxTime],
-      side:    cols[idxSide],
-      qty:     parseInt(cols[idxQty]),
-      price:   price,
-      symbol:  cols[idxSymbol].replace(/[A-Z]\d$/, '').trim(), // strip expiry e.g. MNQH6 → MNQ
-    });
-  }
-
-  orders.sort((a, b) => a.time.localeCompare(b.time));
-  return orders;
-}
-
-function fifoReconstructTrades(orders) {
-  const rawTrades = [];
-  let position = 0;
-  let entryQueue = []; // {qty, price, time, side, symbol}
-
-  for (const o of orders) {
-    const { side, qty, price, time, symbol } = o;
-
-    if (position === 0) {
-      position = side === 'B' ? qty : -qty;
-      entryQueue = [{ qty, price, time, side, symbol }];
-    } else if ((position > 0 && side === 'B') || (position < 0 && side === 'S')) {
-      // Adding to position
-      position += side === 'B' ? qty : -qty;
-      entryQueue.push({ qty, price, time, side, symbol });
-    } else {
-      // Closing/reducing — may be partial profit take
-      let remaining = qty;
-      while (remaining > 0 && entryQueue.length > 0) {
-        const entry = entryQueue[0];
-        const matched = Math.min(entry.qty, remaining);
-        const rawPnl = entry.side === 'B'
-          ? (price - entry.price) * matched * 2
-          : (entry.price - price) * matched * 2;
-
-        rawTrades.push({
-          entry_time:   entry.time,
-          exit_time:    time,
-          direction:    entry.side === 'B' ? 'LONG' : 'SHORT',
-          symbol:       entry.symbol,
-          qty:          matched,
-          entry_price:  entry.price,
-          exit_price:   price,
-          raw_pnl:      Math.round(rawPnl * 100) / 100,
-        });
-
-        entry.qty -= matched;
-        remaining -= matched;
-        if (entry.qty === 0) entryQueue.shift();
-      }
-      position += side === 'B' ? qty : -qty;
-    }
-  }
-
-  // ── Merge partial profit-takes into single trades ─────────────────────────
-  // Group by entry_time + symbol + direction — these are scale-outs of one trade
-  const groups = {};
-  const groupOrder = [];
-  for (const t of rawTrades) {
-    const key = `${t.entry_time}|${t.symbol}|${t.direction}`;
-    if (!groups[key]) {
-      groupOrder.push(key);
-      groups[key] = { ...t, _exits: [{ qty: t.qty, price: t.exit_price, time: t.exit_time, pnl: t.raw_pnl }] };
-    } else {
-      const g = groups[key];
-      g._exits.push({ qty: t.qty, price: t.exit_price, time: t.exit_time, pnl: t.raw_pnl });
-      g.qty      += t.qty;
-      g.raw_pnl   = Math.round((g.raw_pnl + t.raw_pnl) * 100) / 100;
-      g.exit_time = t.exit_time; // last exit time
-      // Weighted average exit price across all scale-outs
-      const totalQty = g._exits.reduce((s, e) => s + e.qty, 0);
-      g.exit_price = Math.round(g._exits.reduce((s, e) => s + e.price * e.qty, 0) / totalQty * 100) / 100;
-    }
-  }
-
-  const merged = groupOrder.map(key => {
-    const { _exits, ...trade } = groups[key];
-    return trade;
-  });
-
-  return { trades: merged, openPosition: position };
-}
-
-function getPointValue(symbol) {
-  // Per point per contract
-  const map = { NQ:20, MNQ:2, ES:50, MES:5, GC:100, MGC:10 };
-  return map[symbol] || 2; // default to micro
-}
-
-function applyPointValues(trades) {
-  // Raw PNL was calculated assuming $2/pt — correct for non-MNQ symbols
-  return trades.map(t => {
-    const pv = getPointValue(t.symbol);
-    const corrected = pv !== 2 ? (t.raw_pnl / 2) * pv : t.raw_pnl;
-    return { ...t, raw_pnl: Math.round(corrected * 100) / 100 };
-  });
-}
-
 function applyCommissions(trades, commissions) {
   return trades.map(t => {
     const rate = parseFloat(commissions[t.symbol]) || 0;
@@ -4850,107 +3797,12 @@ async function confirmImport() {
     }
 
     closeImportModal();
-    const syncEl = document.getElementById('last-sync');
-    syncEl.textContent = `Imported ${rows.length} trades`;
-    syncEl.style.opacity = '1';
-    setTimeout(() => { syncEl.style.opacity = '0'; }, 4000);
     loadAndRender();
   } catch(err) {
     alert('Import failed: ' + err.message);
     btn.textContent = 'Confirm & Import'; btn.disabled = false;
   }
 }
-
-// ── Backfill Commissions ───────────────────────────────────────────────────
-async function backfillCommissions() {
-  const btn = document.getElementById('backfill-btn');
-  const activeAcct = getImportAccount();
-  if (!activeAcct) { alert('No active account selected'); return; }
-
-  const comms = activeAcct.commissions || {};
-  if (!Object.keys(comms).length) {
-    alert('No commission rates set for this account. Edit the account and add rates first.');
-    return;
-  }
-
-  btn.textContent = 'Loading...';
-  btn.disabled = true;
-
-  try {
-    // Fetch ALL trades (paginate if needed — Supabase default limit is 1000)
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/trades?select=id,instrument,quantity,gross_pnl,commission,account_type&limit=5000`, {
-      headers: HEADERS
-    });
-    if (!res.ok) throw new Error(await res.text());
-    const trades = await res.json();
-
-    // Find trades that need commission recalculated
-    // We recalculate ALL (even if commission != 0, to ensure accuracy)
-    const updates = [];
-    const skipped = [];
-
-    trades.forEach(t => {
-      // Strip expiry suffix: MNQH6 → MNQ
-      const rawSym = (t.instrument || '').toUpperCase();
-      const sym = rawSym.replace(/[A-Z]\d+$/, ''); // strip e.g. H6, M6, Z5
-      const rate = parseFloat(comms[sym] || comms[rawSym] || 0);
-
-      if (!rate) {
-        skipped.push(rawSym);
-        return;
-      }
-
-      const qty = t.quantity || 0;
-      const commission = Math.round(qty * rate * 2 * 100) / 100;
-      const net_pnl = Math.round(((t.gross_pnl || 0) - commission) * 10000) / 10000;
-
-      // also tag account_type from active account if not already set
-      const row = { id: t.id, commission, net_pnl };
-      if (!t.account_type && activeAcct?.account_type) {
-        row.account_type = activeAcct.account_type;
-      }
-      updates.push(row);
-    });
-
-    if (!updates.length) {
-      btn.textContent = '⟳ Backfill Comms';
-      btn.disabled = false;
-      const skipMsg = skipped.length ? `\nSkipped ${[...new Set(skipped)].join(', ')} — no rate set` : '';
-      alert('No trades to update.' + skipMsg);
-      return;
-    }
-
-    btn.textContent = `Updating ${updates.length}...`;
-
-    // PATCH each trade individually (avoids not-null constraint on other columns)
-    let done = 0;
-    for (const u of updates) {
-      const patchRes = await fetch(`${SUPABASE_URL}/rest/v1/trades?id=eq.${u.id}`, {
-        method: 'PATCH',
-        headers: HEADERS,
-        body: JSON.stringify({ commission: u.commission, net_pnl: u.net_pnl })
-      });
-      if (!patchRes.ok) {
-        const err = await patchRes.text();
-        throw new Error(err);
-      }
-      done++;
-      if (done % 20 === 0) btn.textContent = `Updating ${done}/${updates.length}...`;
-    }
-
-    const skipMsg = skipped.length ? `\n${[...new Set(skipped)].join(', ')} skipped (no rate)` : '';
-    alert(`✓ Updated commission & net P&L for ${updates.length} trades.` + skipMsg);
-    loadAndRender();
-
-  } catch (e) {
-    alert('Backfill failed: ' + e.message);
-  } finally {
-    btn.textContent = '⟳ Backfill Comms';
-    btn.disabled = false;
-  }
-}
-
-
 
 // ── Trade Panel State ─────────────────────────────────────────────────────────
 let allPanelTrades   = [];
@@ -5699,7 +4551,6 @@ let reportWeekOffset = 0; // 0 = most recent Mon-Fri week
 function showPage(page) {
   currentPage = page;
   const dash    = document.getElementById('main-content');
-  const rstrip  = document.getElementById('readiness-strip');
   const fbar    = document.querySelector('.filter-bar');
   const rpage   = document.getElementById('reports-page');
   const navDash = document.getElementById('nav-dashboard');
@@ -5718,8 +4569,7 @@ function showPage(page) {
   // Hide all pages
   dash.style.display  = 'none';
   rpage.style.display = 'none';
-  if (rstrip) rstrip.style.display = 'none';
-  if (fbar)   fbar.style.display   = 'none';
+  if (fbar) fbar.style.display = 'none';
 
   const activeStyle = {
     background: 'var(--brand-dim)',
@@ -5730,8 +4580,7 @@ function showPage(page) {
 
   if (page === 'dashboard') {
     dash.style.display = '';
-    if (rstrip) rstrip.style.display = '';
-    if (fbar)   fbar.style.display   = '';
+    if (fbar) fbar.style.display = '';
     Object.assign(navDash.style, activeStyle);
   } else if (page === 'reports') {
     rpage.style.display = 'grid';
@@ -7629,46 +6478,6 @@ function renderLessons() {
       <div class="journal-entry-text">${_safe(e.preview)}</div>
     </div>`).join('');
 }
-
-function renderTopStreaks(days, trades) {
-  const el = document.getElementById('topbar-streaks');
-  if (!el) return;
-
-  const rk = ['rules_trend','rules_market_cond','rules_plays','rules_execution','rules_focus','rules_consol','rules_dll'];
-  const sorted = [...days].filter(d=>d.date).sort((a,b)=>a.date.localeCompare(b.date));
-  const dm = sorted.map(d => {
-    const dt = trades.filter(t=>t.date===d.date);
-    const net = dt.reduce((s,t)=>s+(t.net_pnl||0),0);
-    const cnt = dt.length;
-    const brk = rk.filter(r=>d[r]==='Broke'||d[r]==='broke').length;
-    const fol = rk.filter(r=>d[r]==='Followed'||d[r]==='followed').length;
-    return { disc100:brk===0&&fol>0, isSpiral:cnt>12&&brk>=1&&net<0&&(cnt?net/cnt:0)<-15, cnt };
-  }).filter(d=>d.cnt>0||d.disc100);
-
-  function cur(fn){let n=0;for(let i=dm.length-1;i>=0;i--){if(fn(dm[i]))n++;else break;}return n;}
-  function best(fn){let b=0,c=0;dm.forEach(d=>{c=fn(d)?c+1:0;b=Math.max(b,c);});return b;}
-
-  const dc = cur(d=>d.disc100),  db = best(d=>d.disc100);
-  const sc = cur(d=>!d.isSpiral&&d.cnt>0), sb = best(d=>!d.isSpiral&&d.cnt>0);
-
-  function pill(label, count, best, color) {
-    const isPB = count > 0 && count >= best;
-    return `
-      <div style="display:flex;flex-direction:column;align-items:center;gap:1px" title="${label}: ${count} session streak (best: ${best})">
-        <div style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap">${label}</div>
-        <div style="display:flex;align-items:baseline;gap:3px">
-          <span style="font-family:var(--font-num);font-size:18px;font-weight:300;line-height:1;color:${count>0?color:'rgba(180,185,200,0.2)'}">${count}</span>
-          ${isPB ? `<span style="font-size:8px;padding:0 3px;border-radius:3px;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);color:rgba(255,200,80,0.6);font-family:var(--font-mono)">PB</span>` : ''}
-        </div>
-      </div>`;
-  }
-
-  el.innerHTML =
-    pill('Discipline', dc, db, 'var(--green)') +
-    `<div style="width:1px;height:28px;background:var(--border);margin:0 2px"></div>` +
-    pill('No Spiral', sc, sb, 'var(--green)');
-}
-
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INTEL TAB
