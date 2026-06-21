@@ -7,10 +7,14 @@ import {
   readinessStatus,
   sliderValueColor,
   DEFAULT_PREMARKET_FORM,
+  isSleepDebtSevere,
+  parseSleepDebtMinutes,
+  requiresSleepDebtStandDown,
+  SLEEP_DEBT_SEVERE_CAUTION_MINS,
 } from "../lib/premarket-scoring";
 import MarketEventNudge from "./MarketEventNudge";
 import ReadinessScoreWidget from "./ReadinessScoreWidget";
-import { todayKey } from "../lib/today-key";
+import { todayKey, offsetDateKey } from "../lib/today-key";
 
 async function loadData(key, fallback) {
   try {
@@ -108,11 +112,19 @@ function ToggleField({ label, hint, value, onChange }) {
 
 export default function PreMarketCheckIn({ onBack }) {
   const [form, setForm] = useState(DEFAULT_PREMARKET_FORM);
+  const [yesterdaySleepDebtMinutes, setYesterdaySleepDebtMinutes] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
 
   const scores = useMemo(() => computeReadinessScore(form), [form]);
   const status = useMemo(() => readinessStatus(scores.composite), [scores.composite]);
+  const sleepDebtMinutes = parseSleepDebtMinutes(form.sleepDebtMinutes);
+  const sleepDebtSevere = isSleepDebtSevere(sleepDebtMinutes);
+  const sleepDebtStandDown = requiresSleepDebtStandDown(
+    sleepDebtMinutes,
+    yesterdaySleepDebtMinutes
+  );
+  const showStandDownCard = scores.composite < 50 || sleepDebtStandDown;
 
   const set = useCallback((key, value) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -121,8 +133,18 @@ export default function PreMarketCheckIn({ onBack }) {
 
   useEffect(() => {
     (async () => {
-      const data = await loadData(`premarket-checkin-${todayKey()}`, null);
+      const dateKey = todayKey();
+      const yesterdayKey = offsetDateKey(dateKey, -1);
+      const [data, yesterdayData] = await Promise.all([
+        loadData(`premarket-checkin-${dateKey}`, null),
+        loadData(`premarket-checkin-${yesterdayKey}`, null),
+      ]);
       if (data) setForm({ ...DEFAULT_PREMARKET_FORM, ...data });
+      if (yesterdayData?.sleepDebtMinutes != null && yesterdayData.sleepDebtMinutes !== "") {
+        setYesterdaySleepDebtMinutes(parseSleepDebtMinutes(yesterdayData.sleepDebtMinutes));
+      } else {
+        setYesterdaySleepDebtMinutes(null);
+      }
       setLoading(false);
     })();
   }, []);
@@ -143,8 +165,13 @@ export default function PreMarketCheckIn({ onBack }) {
     standDownAcknowledgedAt: formData.standDownAcknowledged
       ? (formData.standDownAcknowledgedAt || new Date().toISOString())
       : null,
+    sleepDebtSevere: isSleepDebtSevere(formData.sleepDebtMinutes),
+    sleepDebtStandDownRequired: requiresSleepDebtStandDown(
+      formData.sleepDebtMinutes,
+      yesterdaySleepDebtMinutes
+    ),
     savedAt: new Date().toISOString(),
-  }), []);
+  }), [yesterdaySleepDebtMinutes]);
 
   const persistCheckin = useCallback(async (formData, scoreData, statusData) => {
     const payload = buildSavePayload(formData, scoreData, statusData);
@@ -207,18 +234,45 @@ export default function PreMarketCheckIn({ onBack }) {
                 <p className="pm-section-desc">The body the brain rents.</p>
               </div>
             </div>
-            <div className="pm-field">
-              <div className="pm-field-label hybrid-label">Sleep (hours)</div>
-              <input
-                type="number"
-                min={0}
-                max={14}
-                step={0.5}
-                value={form.sleepHours}
-                onChange={(e) => set("sleepHours", e.target.value)}
-                className="pm-number-input"
-              />
+            <div className="pm-sleep-row">
+              <div className="pm-field">
+                <div className="pm-field-label hybrid-label">Sleep (hours)</div>
+                <input
+                  type="number"
+                  min={0}
+                  max={14}
+                  step={0.5}
+                  value={form.sleepHours}
+                  onChange={(e) => set("sleepHours", e.target.value)}
+                  className="pm-number-input"
+                />
+              </div>
+              <div className="pm-field">
+                <div className="pm-field-label hybrid-label">Sleep debt (mins)</div>
+                <input
+                  type="number"
+                  min={0}
+                  max={600}
+                  step={5}
+                  value={form.sleepDebtMinutes}
+                  onChange={(e) => set("sleepDebtMinutes", e.target.value)}
+                  className={`pm-number-input${sleepDebtSevere ? " pm-number-input--caution" : ""}`}
+                />
+              </div>
             </div>
+            {sleepDebtSevere && !sleepDebtStandDown && (
+              <div className="pm-sleep-debt-caution" role="status">
+                <strong>Severe caution</strong> — sleep debt is {sleepDebtMinutes} min (≥{" "}
+                {SLEEP_DEBT_SEVERE_CAUTION_MINS}). Another day at this level triggers a mandatory
+                stand-down.
+              </div>
+            )}
+            {sleepDebtStandDown && (
+              <div className="pm-sleep-debt-caution pm-sleep-debt-caution--standdown" role="alert">
+                <strong>Mandatory stand-down</strong> — sleep debt has been ≥{" "}
+                {SLEEP_DEBT_SEVERE_CAUTION_MINS} min for two consecutive days.
+              </div>
+            )}
             <SliderField
               label="Sleep quality"
               minLabel="Restless"
@@ -448,7 +502,7 @@ export default function PreMarketCheckIn({ onBack }) {
               </p>
             </div>
 
-            {scores.composite < 50 && (
+            {showStandDownCard && (
               <div className={`pm-standdown-card${form.standDownAcknowledged ? " pm-standdown-card--acknowledged" : ""}`}>
                 <div className="pm-standdown-header">
                   <div className="pm-standdown-icon">
@@ -463,11 +517,15 @@ export default function PreMarketCheckIn({ onBack }) {
                       </svg>
                     )}
                   </div>
-                  <h3 className="pm-standdown-title">Stand-down day?</h3>
+                  <h3 className="pm-standdown-title">
+                    {sleepDebtStandDown ? "Sleep debt stand-down" : "Stand-down day?"}
+                  </h3>
                 </div>
                 {!form.standDownAcknowledged && (
                   <p className="pm-standdown-text">
-                    Your score is signaling caution. If you trade today, trade small. If you don&apos;t trade, that&apos;s a win — and it gets recognized.
+                    {sleepDebtStandDown
+                      ? "Two days in a row with 60+ minutes of sleep debt. Stand down today — recovery comes before P&L."
+                      : "Your score is signaling caution. If you trade today, trade small. If you don't trade, that's a win — and it gets recognized."}
                   </p>
                 )}
                 <label className={`pm-standdown-check${form.standDownAcknowledged ? " pm-standdown-check--acknowledged" : ""}`}>
@@ -479,7 +537,9 @@ export default function PreMarketCheckIn({ onBack }) {
                   <span>
                     {form.standDownAcknowledged
                       ? "Stand-down acknowledged. Honor it."
-                      : "I acknowledge today is a stand-down day."}
+                      : sleepDebtStandDown
+                        ? "I acknowledge today is a sleep-debt stand-down day."
+                        : "I acknowledge today is a stand-down day."}
                   </span>
                 </label>
               </div>

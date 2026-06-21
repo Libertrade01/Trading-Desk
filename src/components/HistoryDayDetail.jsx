@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { getRaisedBehavioralFlags } from "../lib/postmarket-defaults";
+import { parseSleepDebtMinutes } from "../lib/premarket-scoring";
 import {
   loadSessionDay,
   deleteSessionDay,
@@ -154,6 +155,13 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                 title="Physical"
                 items={[
                   { label: "Sleep", value: pre.sleepHours != null ? `${pre.sleepHours}h` : null },
+                  {
+                    label: "Sleep debt",
+                    value:
+                      pre.sleepDebtMinutes != null && pre.sleepDebtMinutes !== ""
+                        ? `${parseSleepDebtMinutes(pre.sleepDebtMinutes)} min`
+                        : null,
+                  },
                   { label: "Sleep quality", value: pre.sleepQuality },
                   { label: "Energy", value: pre.energy },
                   { label: "HRV", value: pre.hrvScore != null && pre.hrvScore !== "" ? `${pre.hrvScore}%` : null },

@@ -49,6 +49,13 @@ export function todayKey() {
   return calendarDateParts().today;
 }
 
+/** Offset a YYYY-MM-DD key by calendar days in the trading-day timezone. */
+export function offsetDateKey(dateKey, dayOffset) {
+  const { cal } = calendarDateParts(new Date(`${dateKey}T12:00:00`));
+  cal.setDate(cal.getDate() + dayOffset);
+  return formatDateKey(cal);
+}
+
 /** @deprecated Use calendarDateParts — kept for existing imports. */
 export function limaDateParts(date = new Date()) {
   return calendarDateParts(date);

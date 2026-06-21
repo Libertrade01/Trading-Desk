@@ -11,7 +11,7 @@
  *   Mental 38% · Physical 22% · Preparation 25% · External 15%
  *
  * Mental sub-weights: Patience 28% · FOMO 18% · Revenge 14% · State 20% · Confidence 20%
- * Physical sub-weights: HRV 26% · Sleep quality 24% · Sleep hours 18% · Energy 16% · Movement 8% · Hydrated 8%
+ * Physical sub-weights: HRV 24% · Sleep quality 22% · Sleep hours 14% · Sleep debt 10% · Energy 14% · Movement 8% · Hydrated 8%
  * Preparation sub-weights: Plan written 28% · Key levels 24% · Routine 22% · News 14% · Meditation 12%
  * External sub-weights: Financial pressure 34% · Distractions 33% · Focus 33%
  */
@@ -32,13 +32,42 @@ export const EMOTIONAL_FIELD_WEIGHTS = {
 };
 
 export const PHYSICAL_FIELD_WEIGHTS = {
-  sleepHours: 0.18,
-  sleepQuality: 0.24,
-  energy: 0.16,
+  sleepHours: 0.14,
+  sleepQuality: 0.22,
+  sleepDebt: 0.10,
+  energy: 0.14,
   hydrated: 0.08,
-  hrvScore: 0.26,
+  hrvScore: 0.24,
   movement: 0.08,
 };
+
+export const SLEEP_DEBT_SEVERE_CAUTION_MINS = 60;
+
+export function parseSleepDebtMinutes(value) {
+  const n = Number(value);
+  if (Number.isNaN(n) || n < 0) return 0;
+  return Math.round(n);
+}
+
+export function isSleepDebtSevere(value) {
+  return parseSleepDebtMinutes(value) >= SLEEP_DEBT_SEVERE_CAUTION_MINS;
+}
+
+/** Sleep debt minutes → 0–100 (0 min = best) */
+export function sleepDebtToScore(minutes) {
+  const m = parseSleepDebtMinutes(minutes);
+  if (m === 0) return 100;
+  if (m < 30) return 85;
+  if (m < 45) return 70;
+  if (m < 60) return 55;
+  if (m < 90) return 35;
+  return 20;
+}
+
+/** Two consecutive trading days with sleep debt ≥ 60 min → mandatory stand-down. */
+export function requiresSleepDebtStandDown(todayMinutes, yesterdayMinutes) {
+  return isSleepDebtSevere(todayMinutes) && isSleepDebtSevere(yesterdayMinutes);
+}
 
 export const EXTERNAL_FIELD_WEIGHTS = {
   financialPressure: 0.34,
@@ -115,6 +144,7 @@ export function scorePhysical(fields) {
   const scores = {
     sleepHours: sleepHoursToScore(fields.sleepHours),
     sleepQuality: sliderToScore(fields.sleepQuality),
+    sleepDebt: sleepDebtToScore(fields.sleepDebtMinutes),
     energy: sliderToScore(fields.energy),
     hydrated: toggleToScore(fields.hydrated),
     hrvScore: hrvScoreToScore(fields.hrvScore),
@@ -197,6 +227,7 @@ export const DEFAULT_PREMARKET_FORM = {
   fomoRisk: 3,
   revengeRisk: 2,
   sleepHours: 7,
+  sleepDebtMinutes: 0,
   sleepQuality: 7,
   energy: 5,
   hrvScore: 70,
