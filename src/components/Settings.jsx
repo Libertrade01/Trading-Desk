@@ -13,6 +13,8 @@ import {
   validateTraderSettingsInput,
   createDefaultAccount,
   DEFAULT_TRADER_SETTINGS,
+  TRADING_DAY_TIMEZONE_OPTIONS,
+  DEFAULT_TRADING_DAY_TIMEZONE,
   COMMISSION_SYMBOLS,
 } from "../lib/trader-settings";
 import { formatRecoveryUsd } from "../lib/dll-recovery";
@@ -209,6 +211,7 @@ export default function Settings() {
     recoveryEnabled: DEFAULT_DLL_SETTINGS.recoveryEnabled,
   });
   const [defaultRisk, setDefaultRisk] = useState(String(DEFAULT_TRADER_SETTINGS.defaultRisk));
+  const [tradingDayTimezone, setTradingDayTimezone] = useState(DEFAULT_TRADING_DAY_TIMEZONE);
   const [accounts, setAccounts] = useState([]);
   const [expandedAccount, setExpandedAccount] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -230,6 +233,7 @@ export default function Settings() {
         recoveryEnabled: dll.recoveryEnabled,
       });
       setDefaultRisk(String(trader.defaultRisk));
+      setTradingDayTimezone(trader.tradingDayTimezone);
       setAccounts(trader.accounts);
       setExpandedAccount(trader.accounts[0]?.id ?? null);
       setLoading(false);
@@ -283,6 +287,7 @@ export default function Settings() {
 
     const traderCheck = validateTraderSettingsInput({
       defaultRisk,
+      tradingDayTimezone,
       accounts: accounts.map((a) => ({
         ...a,
         starting_balance: parseFloat(a.starting_balance) || 0,
@@ -305,6 +310,7 @@ export default function Settings() {
       recoveryEnabled: dllCheck.settings.recoveryEnabled,
     });
     setDefaultRisk(String(traderCheck.settings.defaultRisk));
+    setTradingDayTimezone(traderCheck.settings.tradingDayTimezone);
     setAccounts(traderCheck.settings.accounts);
     setSaved(true);
   };
@@ -374,10 +380,44 @@ export default function Settings() {
           </div>
         </section>
 
-        {/* 02 — per-trade import default */}
+        {/* 02 — trading day calendar */}
         <section className="pm-card">
           <div className="pm-section-head">
             <span className="pm-section-num">02</span>
+            <div>
+              <h2 className="pm-section-title hybrid-section-title">Trading day</h2>
+              <p className="pm-section-desc">
+                Which timezone defines &ldquo;today&rdquo; for pre-market, post-market, history, and analytics ranges.
+              </p>
+            </div>
+          </div>
+
+          <div className="pm-field">
+            <div className="pm-field-label hybrid-label">Calendar timezone</div>
+            <select
+              value={tradingDayTimezone}
+              onChange={(e) => {
+                setTradingDayTimezone(e.target.value);
+                markDirty();
+              }}
+              className="pm-text-input settings-timezone-select"
+            >
+              {TRADING_DAY_TIMEZONE_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <p className="pm-field-hint">
+              Trade dates in your import CSV are unchanged — this only affects desk workflows and date filters.
+            </p>
+          </div>
+        </section>
+
+        {/* 03 — per-trade import default */}
+        <section className="pm-card">
+          <div className="pm-section-head">
+            <span className="pm-section-num">03</span>
             <div>
               <h2 className="pm-section-title hybrid-section-title">Import defaults</h2>
               <p className="pm-section-desc">
@@ -404,10 +444,10 @@ export default function Settings() {
           </div>
         </section>
 
-        {/* 03 — accounts & commissions */}
+        {/* 04 — accounts & commissions */}
         <section className="pm-card">
           <div className="pm-section-head">
-            <span className="pm-section-num">03</span>
+            <span className="pm-section-num">04</span>
             <div>
               <h2 className="pm-section-title hybrid-section-title">Trading accounts</h2>
               <p className="pm-section-desc">

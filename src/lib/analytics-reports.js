@@ -19,10 +19,10 @@ export const REPORT_RULE_COLS = [
 ];
 
 export function getWeekRange(offsetFromNow = 0) {
-  const { lima } = limaTodayParts();
-  const mon = new Date(lima);
-  const dow = lima.getDay();
-  mon.setDate(lima.getDate() - (dow === 0 ? 6 : dow - 1));
+  const { cal } = limaTodayParts();
+  const mon = new Date(cal);
+  const dow = cal.getDay();
+  mon.setDate(cal.getDate() - (dow === 0 ? 6 : dow - 1));
   mon.setDate(mon.getDate() + offsetFromNow * 7);
   const fri = new Date(mon);
   fri.setDate(fri.getDate() + 4);

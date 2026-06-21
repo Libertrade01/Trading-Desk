@@ -1,4 +1,14 @@
 import { storage } from "./supabase";
+import {
+  DEFAULT_TRADING_DAY_TIMEZONE,
+  isValidTradingDayTimezone,
+  setTradingDayTimezone,
+} from "./today-key";
+
+export {
+  TRADING_DAY_TIMEZONE_OPTIONS,
+  DEFAULT_TRADING_DAY_TIMEZONE,
+} from "./today-key";
 
 export const TRADER_SETTINGS_KEY = "trader-settings";
 
@@ -18,6 +28,7 @@ export const COMMISSION_SYMBOLS = Object.keys(DEFAULT_COMMISSIONS);
 
 export const DEFAULT_TRADER_SETTINGS = {
   defaultRisk: 15,
+  tradingDayTimezone: DEFAULT_TRADING_DAY_TIMEZONE,
   accounts: [],
 };
 
@@ -122,13 +133,21 @@ export function normalizeTraderSettings(raw = {}) {
   }
 
   const defaultRisk = Number(raw.defaultRisk);
+  const tradingDayTimezone = isValidTradingDayTimezone(raw.tradingDayTimezone)
+    ? raw.tradingDayTimezone
+    : DEFAULT_TRADER_SETTINGS.tradingDayTimezone;
   return {
     defaultRisk:
       Number.isFinite(defaultRisk) && defaultRisk > 0
         ? Math.round(defaultRisk * 100) / 100
         : DEFAULT_TRADER_SETTINGS.defaultRisk,
+    tradingDayTimezone,
     accounts,
   };
+}
+
+export function applyTradingDayTimezoneFromSettings(settings) {
+  setTradingDayTimezone(settings?.tradingDayTimezone);
 }
 
 export function getImportAccount(settings) {
@@ -145,7 +164,9 @@ export async function loadTraderSettings() {
   try {
     const r = await storage.get(TRADER_SETTINGS_KEY);
     if (r?.value) {
-      return normalizeTraderSettings(JSON.parse(r.value));
+      const settings = normalizeTraderSettings(JSON.parse(r.value));
+      applyTradingDayTimezoneFromSettings(settings);
+      return settings;
     }
   } catch {
     /* fall through */
@@ -168,11 +189,13 @@ export async function loadTraderSettings() {
     });
     await saveTraderSettings(migrated);
     clearLegacyTraderStorage();
+    applyTradingDayTimezoneFromSettings(migrated);
     return migrated;
   }
 
   const defaults = normalizeTraderSettings(DEFAULT_TRADER_SETTINGS);
   await saveTraderSettings(defaults);
+  applyTradingDayTimezoneFromSettings(defaults);
   return defaults;
 }
 
@@ -182,6 +205,7 @@ export async function saveTraderSettings(settings) {
     TRADER_SETTINGS_KEY,
     JSON.stringify({ ...next, updatedAt: new Date().toISOString() })
   );
+  applyTradingDayTimezoneFromSettings(next);
   return next;
 }
 
@@ -190,6 +214,10 @@ export function validateTraderSettingsInput(form) {
   if (!Number.isFinite(defaultRisk) || defaultRisk <= 0) {
     return { ok: false, message: "Default risk must be a positive number (stop points)." };
   }
+
+  const tradingDayTimezone = isValidTradingDayTimezone(form.tradingDayTimezone)
+    ? form.tradingDayTimezone
+    : DEFAULT_TRADER_SETTINGS.tradingDayTimezone;
 
   const accounts = form.accounts.map((a, i) => normalizeAccount(a, i));
   if (!accounts.length) {
@@ -210,6 +238,7 @@ export function validateTraderSettingsInput(form) {
     ok: true,
     settings: normalizeTraderSettings({
       defaultRisk,
+      tradingDayTimezone,
       accounts,
     }),
   };

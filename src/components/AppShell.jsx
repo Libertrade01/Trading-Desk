@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { loadTraderSettings } from "../lib/trader-settings";
 
 const NAV_ITEMS = [
   { id: "home", href: "/", label: "Home", icon: (
@@ -80,6 +81,10 @@ function Sidebar({ pathname, open, onClose }) {
 export default function AppShell({ children }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    loadTraderSettings().catch(() => {});
+  }, []);
 
   return (
     <div className="app-layout">
