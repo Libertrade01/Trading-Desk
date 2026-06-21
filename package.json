@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test src/lib/market-events.test.js"
+    "test": "node --test src/lib/market-events.test.js src/lib/econ-calendar.test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

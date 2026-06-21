@@ -459,7 +459,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
             </section>
           )}
 
-          <HomeEventBanner />
+          <HomeEventBanner dateKey={effectiveDateKey} />
 
           {weekFocus.items.length > 0 && (
             <section className="home-week-focus" aria-label="This week's focus">

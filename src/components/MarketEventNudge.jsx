@@ -1,19 +1,42 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  getMarketEventsForDate,
+  loadMarketEventsForDate,
   formatEventTimeET,
 } from "../lib/market-events";
+import {
+  summarizeEconEvents,
+  isEconEvent,
+} from "../lib/econ-calendar";
+import { todayKey } from "../lib/today-key";
 
-export default function MarketEventNudge({ date = new Date() }) {
-  const events = useMemo(() => getMarketEventsForDate(date), [date]);
+export default function MarketEventNudge({ dateKey = todayKey() }) {
+  const [events, setEvents] = useState([]);
 
-  if (!events.length) return null;
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const rows = await loadMarketEventsForDate(dateKey);
+      if (!cancelled) setEvents(rows);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [dateKey]);
 
-  const isHighImpact = events.some((e) => e.severity === "high");
-  const headline = events.map((e) => e.label).join(" · ");
-  const schedule = events
+  const visible = useMemo(
+    () => events.filter((e) => e.severity === "high" || e.severity === "medium"),
+    [events],
+  );
+
+  const isHighImpact = visible.some((e) => e.severity === "high");
+  const econSummary = useMemo(() => summarizeEconEvents(visible.filter(isEconEvent)), [visible]);
+
+  if (!visible.length) return null;
+
+  const headline = visible.map((e) => e.label).join(" · ");
+  const schedule = visible
     .map((e) => {
       const time = formatEventTimeET(e.timeET);
       return time ? `${e.label} (${time})` : e.label;
@@ -27,7 +50,9 @@ export default function MarketEventNudge({ date = new Date() }) {
       </div>
       <p className="pm-market-event-nudge-title">{headline}</p>
       <p className="pm-market-event-nudge-sub">
-        Review catalysts before toggling prep complete. {schedule}
+        Review catalysts before toggling prep complete.
+        {econSummary.total > 0 && ` ${econSummary.high} high · ${econSummary.medium} medium US releases.`}{" "}
+        {schedule}
       </p>
     </div>
   );

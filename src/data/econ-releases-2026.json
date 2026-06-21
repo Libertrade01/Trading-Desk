@@ -1,0 +1,53 @@
+[
+  { "date": "2026-01-14", "kind": "ppi", "label": "PPI release", "timeET": "08:30", "severity": "medium", "reminder": "Watch 8:30 ET print — size down until volatility settles." },
+  { "date": "2026-01-16", "kind": "retail", "label": "Retail sales", "timeET": "08:30", "severity": "medium", "reminder": "Consumer demand read at 8:30 ET." },
+  { "date": "2026-01-29", "kind": "gdp", "label": "GDP advance estimate", "timeET": "08:30", "severity": "high", "reminder": "Quarterly GDP at 8:30 ET — elevated volatility." },
+  { "date": "2026-01-30", "kind": "pce", "label": "PCE inflation", "timeET": "08:30", "severity": "high", "reminder": "Fed's preferred gauge at 8:30 ET." },
+
+  { "date": "2026-02-13", "kind": "ppi", "label": "PPI release", "timeET": "08:30", "severity": "medium", "reminder": "Watch 8:30 ET print — size down until volatility settles." },
+  { "date": "2026-02-14", "kind": "retail", "label": "Retail sales", "timeET": "08:30", "severity": "medium", "reminder": "Consumer demand read at 8:30 ET." },
+  { "date": "2026-02-27", "kind": "pce", "label": "PCE inflation", "timeET": "08:30", "severity": "high", "reminder": "Fed's preferred gauge at 8:30 ET." },
+
+  { "date": "2026-03-13", "kind": "ppi", "label": "PPI release", "timeET": "08:30", "severity": "medium", "reminder": "Watch 8:30 ET print — size down until volatility settles." },
+  { "date": "2026-03-17", "kind": "retail", "label": "Retail sales", "timeET": "08:30", "severity": "medium", "reminder": "Consumer demand read at 8:30 ET." },
+  { "date": "2026-03-27", "kind": "pce", "label": "PCE inflation", "timeET": "08:30", "severity": "high", "reminder": "Fed's preferred gauge at 8:30 ET." },
+
+  { "date": "2026-04-14", "kind": "ppi", "label": "PPI release", "timeET": "08:30", "severity": "medium", "reminder": "Watch 8:30 ET print — size down until volatility settles." },
+  { "date": "2026-04-16", "kind": "retail", "label": "Retail sales", "timeET": "08:30", "severity": "medium", "reminder": "Consumer demand read at 8:30 ET." },
+  { "date": "2026-04-29", "kind": "gdp", "label": "GDP advance estimate", "timeET": "08:30", "severity": "high", "reminder": "Quarterly GDP at 8:30 ET — elevated volatility." },
+  { "date": "2026-04-30", "kind": "pce", "label": "PCE inflation", "timeET": "08:30", "severity": "high", "reminder": "Fed's preferred gauge at 8:30 ET." },
+
+  { "date": "2026-05-13", "kind": "ppi", "label": "PPI release", "timeET": "08:30", "severity": "medium", "reminder": "Watch 8:30 ET print — size down until volatility settles." },
+  { "date": "2026-05-15", "kind": "retail", "label": "Retail sales", "timeET": "08:30", "severity": "medium", "reminder": "Consumer demand read at 8:30 ET." },
+  { "date": "2026-05-29", "kind": "pce", "label": "PCE inflation", "timeET": "08:30", "severity": "high", "reminder": "Fed's preferred gauge at 8:30 ET." },
+
+  { "date": "2026-06-12", "kind": "ppi", "label": "PPI release", "timeET": "08:30", "severity": "medium", "reminder": "Watch 8:30 ET print — size down until volatility settles." },
+  { "date": "2026-06-16", "kind": "retail", "label": "Retail sales", "timeET": "08:30", "severity": "medium", "reminder": "Consumer demand read at 8:30 ET." },
+  { "date": "2026-06-26", "kind": "pce", "label": "PCE inflation", "timeET": "08:30", "severity": "high", "reminder": "Fed's preferred gauge at 8:30 ET." },
+
+  { "date": "2026-07-14", "kind": "ppi", "label": "PPI release", "timeET": "08:30", "severity": "medium", "reminder": "Watch 8:30 ET print — size down until volatility settles." },
+  { "date": "2026-07-16", "kind": "retail", "label": "Retail sales", "timeET": "08:30", "severity": "medium", "reminder": "Consumer demand read at 8:30 ET." },
+  { "date": "2026-07-29", "kind": "gdp", "label": "GDP advance estimate", "timeET": "08:30", "severity": "high", "reminder": "Quarterly GDP at 8:30 ET — elevated volatility." },
+  { "date": "2026-07-30", "kind": "pce", "label": "PCE inflation", "timeET": "08:30", "severity": "high", "reminder": "Fed's preferred gauge at 8:30 ET." },
+
+  { "date": "2026-08-13", "kind": "ppi", "label": "PPI release", "timeET": "08:30", "severity": "medium", "reminder": "Watch 8:30 ET print — size down until volatility settles." },
+  { "date": "2026-08-14", "kind": "retail", "label": "Retail sales", "timeET": "08:30", "severity": "medium", "reminder": "Consumer demand read at 8:30 ET." },
+  { "date": "2026-08-28", "kind": "pce", "label": "PCE inflation", "timeET": "08:30", "severity": "high", "reminder": "Fed's preferred gauge at 8:30 ET." },
+
+  { "date": "2026-09-11", "kind": "ppi", "label": "PPI release", "timeET": "08:30", "severity": "medium", "reminder": "Watch 8:30 ET print — size down until volatility settles." },
+  { "date": "2026-09-16", "kind": "retail", "label": "Retail sales", "timeET": "08:30", "severity": "medium", "reminder": "Consumer demand read at 8:30 ET." },
+  { "date": "2026-09-25", "kind": "pce", "label": "PCE inflation", "timeET": "08:30", "severity": "high", "reminder": "Fed's preferred gauge at 8:30 ET." },
+
+  { "date": "2026-10-14", "kind": "ppi", "label": "PPI release", "timeET": "08:30", "severity": "medium", "reminder": "Watch 8:30 ET print — size down until volatility settles." },
+  { "date": "2026-10-15", "kind": "retail", "label": "Retail sales", "timeET": "08:30", "severity": "medium", "reminder": "Consumer demand read at 8:30 ET." },
+  { "date": "2026-10-29", "kind": "gdp", "label": "GDP advance estimate", "timeET": "08:30", "severity": "high", "reminder": "Quarterly GDP at 8:30 ET — elevated volatility." },
+  { "date": "2026-10-30", "kind": "pce", "label": "PCE inflation", "timeET": "08:30", "severity": "high", "reminder": "Fed's preferred gauge at 8:30 ET." },
+
+  { "date": "2026-11-13", "kind": "ppi", "label": "PPI release", "timeET": "08:30", "severity": "medium", "reminder": "Watch 8:30 ET print — size down until volatility settles." },
+  { "date": "2026-11-17", "kind": "retail", "label": "Retail sales", "timeET": "08:30", "severity": "medium", "reminder": "Consumer demand read at 8:30 ET." },
+  { "date": "2026-11-25", "kind": "pce", "label": "PCE inflation", "timeET": "08:30", "severity": "high", "reminder": "Fed's preferred gauge at 8:30 ET." },
+
+  { "date": "2026-12-11", "kind": "ppi", "label": "PPI release", "timeET": "08:30", "severity": "medium", "reminder": "Watch 8:30 ET print — size down until volatility settles." },
+  { "date": "2026-12-16", "kind": "retail", "label": "Retail sales", "timeET": "08:30", "severity": "medium", "reminder": "Consumer demand read at 8:30 ET." },
+  { "date": "2026-12-23", "kind": "pce", "label": "PCE inflation", "timeET": "08:30", "severity": "high", "reminder": "Fed's preferred gauge at 8:30 ET." }
+]
