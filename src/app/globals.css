@@ -4478,24 +4478,10 @@ input.pm-slider::-moz-range-thumb {
   color: var(--muted);
 }
 
-.analytics-range-btn {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 5px 10px;
-  border-radius: 3px;
-  border: 1px solid transparent;
-  background: none;
-  color: var(--muted);
+.analytics-range-select {
+  min-width: 118px;
+  padding-right: 24px;
   cursor: pointer;
-}
-
-.analytics-range-btn.active,
-.analytics-range-btn:hover {
-  background: var(--surface2);
-  border-color: var(--border);
-  color: var(--text);
 }
 
 .analytics-date-input {

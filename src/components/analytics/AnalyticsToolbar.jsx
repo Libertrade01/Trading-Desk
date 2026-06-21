@@ -20,16 +20,21 @@ export default function AnalyticsToolbar({
     <div className="analytics-toolbar">
       <div className="analytics-toolbar__ranges">
         <span className="analytics-toolbar__label">Range</span>
-        {RANGE_PRESETS.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            className={`analytics-range-btn${activePreset === p.id ? " active" : ""}`}
-            onClick={() => onPresetChange(p.id)}
-          >
-            {p.label}
-          </button>
-        ))}
+        <select
+          className="analytics-date-input analytics-range-select"
+          value={activePreset || "custom"}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value !== "custom") onPresetChange(value);
+          }}
+        >
+          {RANGE_PRESETS.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.label}
+            </option>
+          ))}
+          <option value="custom">Custom</option>
+        </select>
         <span className="analytics-toolbar__sep">|</span>
         <input
           type="date"
@@ -72,7 +77,7 @@ export default function AnalyticsToolbar({
           <option value="cash">Cash</option>
         </select>
         <Link href="/postmarket" className="desk-nav-link">
-          Import → Post-Market
+          Import
         </Link>
         <Link href="/settings" className="analytics-settings-link" title="Settings">
           ⚙
