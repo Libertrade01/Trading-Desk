@@ -249,71 +249,6 @@
     opacity: 0.85;
   }
 
-  /* ── Journal & Lessons widgets ── */
-  .journal-entry {
-    padding: 11px 14px;
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    background: var(--surface2);
-    margin-bottom: 8px;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-  }
-  .journal-entry:last-child { margin-bottom: 0; }
-  .journal-entry:hover { border-color: var(--border2); background: var(--dim); }
-  .journal-entry-meta {
-    display: flex; align-items: center; gap: 8px;
-    margin-bottom: 6px; flex-wrap: wrap;
-  }
-  .journal-entry-time {
-    font-family: var(--font-mono); font-size: 9px;
-    letter-spacing: 0.06em; color: var(--muted);
-  }
-  .journal-entry-phase {
-    font-family: var(--font-mono); font-size: 8px;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--blue); opacity: 0.8;
-  }
-  .journal-entry-text {
-    font-family: var(--font-sans); font-size: 12px;
-    color: var(--text); line-height: 1.5;
-    display: -webkit-box; -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical; overflow: hidden;
-  }
-  .journal-emotion-chips {
-    display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px;
-  }
-  .emotion-chip {
-    font-family: var(--font-mono); font-size: 8px;
-    letter-spacing: 0.07em; text-transform: uppercase;
-    padding: 2px 7px; border-radius: 10px;
-    border: 1px solid; line-height: 1.6;
-  }
-  .emotion-chip.positive { color: var(--green); border-color: var(--green); background: var(--green-dim); }
-  .emotion-chip.neutral  { color: var(--blue);  border-color: var(--blue);  background: var(--blue-dim); }
-  .emotion-chip.negative { color: var(--red);   border-color: var(--red);   background: var(--red-dim); }
-  .emotion-chip.caution  { color: var(--amber); border-color: var(--amber); background: var(--amber-dim); }
-
-  /* Journal entry modal */
-  #journal-modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-    z-index: 400; display: flex; align-items: center; justify-content: center;
-    opacity: 0; pointer-events: none; transition: opacity 0.2s;
-  }
-  #journal-modal-overlay.open { opacity: 1; pointer-events: all; }
-  #journal-modal {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 6px; width: 620px; max-width: 92vw;
-    max-height: 80vh; display: flex; flex-direction: column;
-    transform: translateY(8px); transition: transform 0.2s;
-  }
-  #journal-modal-overlay.open #journal-modal { transform: translateY(0); }
-  #journal-modal-header {
-    padding: 14px 18px; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
-  }
-  #journal-modal-body { padding: 20px 18px; overflow-y: auto; flex: 1; }
-
   /* ── Stats row ── */
   .stats-grid {
     display: grid;
@@ -329,11 +264,8 @@
     transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
     cursor: default;
   }
-  .stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-    border-color: var(--border2);
-  }
+  .stat-card--clickable { cursor: pointer; transition: background 0.12s, border-color 0.12s; }
+  .stat-card--clickable:hover { background: var(--dim); border-color: var(--border2); }
 
   .stat-card .label {
     font-family: var(--font-mono);
@@ -361,6 +293,188 @@
     color: var(--muted);
     margin-top: 4px;
   }
+
+  /* ── Analytics stat system (Phase 1) ── */
+  .an-stat { display: flex; flex-direction: column; align-items: flex-start; }
+  .an-stat__label {
+    font-family: var(--font-poster);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .an-stat__value {
+    font-family: 'Syne', var(--font-display);
+    font-size: clamp(28px, 4vw, 36px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--text);
+  }
+  .an-stat__value--sm {
+    font-size: clamp(22px, 3vw, 28px);
+    font-weight: 700;
+  }
+  .an-stat__value.pos, .an-stat__value.positive { color: var(--green); }
+  .an-stat__value.neg, .an-stat__value.negative { color: var(--red); }
+  .an-stat__value.neu, .an-stat__value.neutral { color: var(--text); }
+  .an-stat__sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .an-stats-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 28px 36px;
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .an-wlbe { margin-bottom: 16px; }
+  .an-wlbe__bar {
+    display: flex;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    gap: 2px;
+    margin-bottom: 12px;
+  }
+  .an-wlbe__seg-win { background: var(--green); border-radius: 3px 0 0 3px; transition: width 0.6s; }
+  .an-wlbe__seg-be { background: var(--muted); }
+  .an-wlbe__seg-loss { background: var(--red); border-radius: 0 3px 3px 0; transition: width 0.6s; }
+  .an-wlbe__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+  }
+  .an-wlbe__item-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .an-wlbe__item-val {
+    font-family: var(--font-num);
+    font-size: 20px;
+    font-weight: 300;
+    line-height: 1;
+  }
+  .an-stats-more { margin-top: 4px; }
+  .an-stats-more__toggle {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    list-style: none;
+    padding: 8px 0;
+  }
+  .an-stats-more__toggle::-webkit-details-marker { display: none; }
+  .an-stats-more[open] .an-stats-more__toggle { color: var(--text); }
+  .an-stats-secondary {
+    margin-top: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+  .an-playbook-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+  .an-playbook-status {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.5;
+    text-align: right;
+    max-width: 280px;
+  }
+  .an-playbook-rows { margin-top: 8px; }
+  .an-playbook-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .an-playbook-row:last-child { border-bottom: none; }
+  .an-session-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 900px) {
+    .an-session-grid { grid-template-columns: 1fr; }
+  }
+  .an-session-card { padding: 16px 18px; }
+  .an-subsection-title { margin-bottom: 12px; }
+  .an-chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .an-chart-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--muted);
+  }
+  /* ── Analytics tables (Phase 2) ── */
+  .an-table { width: 100%; }
+  .an-table__head,
+  .an-table__row {
+    display: grid;
+    gap: 8px;
+    align-items: center;
+    padding: 7px 6px;
+  }
+  .an-table__head {
+    padding: 0 6px 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .an-table__row {
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .an-table__row--clickable { cursor: pointer; transition: background 0.12s; }
+  .an-table__row--clickable:hover { background: var(--surface2); }
+  .an-table__cell { min-width: 0; }
+  .an-table__cell--right { text-align: right; }
+  .an-table__cell--center { text-align: center; }
+  .an-table__th {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .analytics-desk-notice--compact { padding: 10px 14px; margin-bottom: 0; }
+  .analytics-desk-notice__dismiss {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 4px;
+  }
+  .analytics-desk-notice__dismiss:hover { color: var(--text); }
 
   /* ── Grid layouts ── */
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -762,8 +876,7 @@
   .modal-overlay.open .modal { transform: translateY(0); }
 
   /* Above side panels (drawer-overlay 449, .trade-panel 450) */
-  #delete-day-modal-overlay,
-  #journal-modal-overlay {
+  #delete-day-modal-overlay {
     z-index: 600;
   }
 
@@ -906,35 +1019,6 @@
     font-family: var(--font-mono); font-size: 10px; color: var(--muted);
   }
 
-  /* ── Journal Panel entries ── */
-  .jp-entry {
-    display: flex; align-items: flex-start; gap: 12px;
-    padding: 14px 20px; border-bottom: 1px solid var(--border);
-    transition: background 0.15s;
-  }
-  .jp-entry:hover { background: var(--surface2); }
-  .jp-entry-body { flex: 1; min-width: 0; cursor: pointer; }
-  .jp-entry-meta {
-    font-family: var(--font-mono); font-size: 9px;
-    color: var(--muted); margin-bottom: 5px;
-  }
-  .jp-entry-text {
-    font-family: var(--font-sans); font-size: 12px;
-    color: var(--text); line-height: 1.55;
-  }
-  .jp-edit-btn {
-    background: none; border: none; color: var(--muted);
-    font-size: 12px; cursor: pointer; padding: 2px 4px;
-    flex-shrink: 0; margin-top: 2px; opacity: 0.6; transition: color 0.15s, opacity 0.15s;
-  }
-  .jp-edit-btn:hover { color: var(--purple); opacity: 1; }
-  .jp-delete-btn {
-    background: none; border: none; color: var(--muted);
-    font-size: 13px; cursor: pointer; padding: 2px 4px;
-    flex-shrink: 0; transition: color 0.15s; line-height: 1;
-    margin-top: 2px;
-  }
-  .jp-delete-btn:hover { color: var(--red); }
   .day-delete-btn {
     background: none; border: none; color: var(--muted);
     font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.06em;
@@ -1274,170 +1358,6 @@
   .sidebar-week-item:hover { background:var(--surface2); }
   .sidebar-week-item.active { background:var(--surface2);border-left-color:var(--green); }
 
-  /* ── Streak Tracking ── */
-  .streak-strip {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-  }
-  .streak-card {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 16px 18px;
-    position: relative;
-    overflow: hidden;
-  }
-  .streak-card .s-bar {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-  }
-  .streak-card.s-green  .s-bar { background: var(--green);  opacity: 0.7; }
-  .streak-card.s-blue   .s-bar { background: var(--blue);   opacity: 0.6; }
-  .streak-card.s-purple .s-bar { background: var(--purple); opacity: 0.6; }
-  .streak-type {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    position: relative;
-  }
-  .streak-type .s-dot {
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .s-green  .s-dot { background: var(--green); }
-  .s-blue   .s-dot { background: var(--blue); }
-  .s-purple .s-dot { background: var(--purple); }
-  .streak-count {
-    font-family: var(--font-num);
-    font-size: 40px;
-    font-weight: 300;
-    line-height: 1;
-    margin-bottom: 3px;
-    letter-spacing: -0.02em;
-  }
-  .s-green  .streak-count { color: var(--green); }
-  .s-blue   .streak-count { color: var(--blue); }
-  .s-purple .streak-count { color: var(--purple); }
-  .streak-zero .streak-count { color: rgba(180,185,200,0.2); }
-  .streak-unit {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--muted);
-    margin-bottom: 14px;
-  }
-  .streak-meta { display: flex; flex-direction: column; gap: 5px; }
-  .streak-meta-row { display: flex; justify-content: space-between; align-items: center; }
-  .s-meta-label { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
-  .s-meta-val   { font-family: var(--font-mono); font-size: 10px; color: rgba(180,185,200,0.6); }
-  .s-pb { color: rgba(255,200,80,0.6) !important; }
-  .streak-spark {
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: flex-end;
-    gap: 3px;
-    height: 24px;
-  }
-  .spark-b {
-    flex: 1;
-    border-radius: 2px 2px 0 0;
-    min-height: 3px;
-  }
-  /* Spiral tooltip */
-  .spiral-q {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 13px; height: 13px;
-    border-radius: 50%;
-    border: 1px solid rgba(180,185,200,0.2);
-    font-size: 9px;
-    color: var(--muted);
-    cursor: help;
-    margin-left: 4px;
-    flex-shrink: 0;
-    transition: border-color 0.15s;
-  }
-  .spiral-q:hover { border-color: rgba(220,120,120,0.4); color: rgba(220,120,120,0.7); }
-  .spiral-tt {
-    display: none;
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    z-index: 200;
-    background: #1a1c24;
-    border: 1px solid rgba(138,53,53,0.3);
-    border-radius: 5px;
-    padding: 11px 13px;
-    width: 210px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: rgba(180,185,200,0.6);
-    line-height: 1.6;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-  }
-  .spiral-q:hover + .spiral-tt, .spiral-tt:hover { display: block; }
-  .spiral-tt-title { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(220,120,120,0.55); margin-bottom: 7px; }
-  .spiral-tt-foot  { margin-top: 7px; padding-top: 7px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 9px; color: rgba(220,120,120,0.4); }
-  /* Streak heatmap */
-  .streak-heatmap {
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px solid var(--border);
-  }
-  .streak-heatmap-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 10px;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .streak-heatmap-label::after { content:''; flex:1; height:1px; background:var(--border); }
-  .heatmap-grid { display: flex; gap: 3px; flex-wrap: wrap; }
-  .hm-day {
-    width: 18px; height: 18px;
-    border-radius: 2px;
-    cursor: default;
-    transition: transform 0.12s;
-    position: relative;
-  }
-  .hm-day:hover { transform: scale(1.25); z-index: 5; }
-  .hm-green  { background: rgba(37,145,134,0.5);  border: 1px solid rgba(37,145,134,0.15); }
-  .hm-amber  { background: rgba(158,112,64,0.4);   border: 1px solid rgba(158,112,64,0.15); }
-  .hm-red    { background: rgba(138,53,53,0.45);   border: 1px solid rgba(138,53,53,0.15); }
-  .hm-empty  { background: var(--surface2);         border: 1px solid var(--border); }
-  .hm-today  { outline: 1px solid rgba(180,185,200,0.25); outline-offset: 1px; }
-  .heatmap-legend { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
-  .hm-legend-item { display: flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
-  .hm-legend-dot  { width: 10px; height: 10px; border-radius: 2px; }
-  /* Streak insight */
-  .streak-insight-bar {
-    margin-top: 14px;
-    padding: 12px 16px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-left: 2px solid rgba(117,104,184,0.35);
-    border-radius: 4px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--muted);
-    line-height: 1.7;
-  }
-
-
-
   /* ── Auth overlay ── */
   #auth-overlay {
     position: fixed; inset: 0; z-index: 2000;
@@ -1593,34 +1513,6 @@
   </div>
 
   <!-- Import Preview Modal -->
-  <!-- Journal entry modal -->
-  <div id="journal-modal-overlay" onclick="if(event.target===this)closeJournalModal()">
-    <div id="journal-modal">
-      <div id="journal-modal-header">
-        <div>
-          <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text)" id="journal-modal-title"></div>
-          <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-top:4px" id="journal-modal-meta"></div>
-        </div>
-        <button style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;transition:color 0.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'" onclick="closeJournalModal()">✕</button>
-      </div>
-      <div id="journal-modal-body"></div>
-    </div>
-  </div>
-
-  <!-- Journal / Lessons panel -->
-  <div class="drawer-overlay" id="journal-panel-overlay" onclick="closeJournalPanel()" style="z-index:449"></div>
-  <div class="trade-panel" id="journal-panel" style="width:min(700px,92vw)">
-    <div class="panel-header">
-      <span class="panel-title" id="journal-panel-title">Journal</span>
-      <div style="display:flex;align-items:center;gap:10px">
-        <button class="panel-action-btn" id="jp-tab-journal" onclick="switchJournalTab('journal')">Journal</button>
-        <button class="panel-action-btn" id="jp-tab-lessons" onclick="switchJournalTab('lessons')">Lessons &amp; Reflections</button>
-        <button class="panel-close" onclick="closeJournalPanel()">✕</button>
-      </div>
-    </div>
-    <div class="panel-body" id="journal-panel-body"></div>
-  </div>
-
   <div class="modal-overlay" id="import-modal" onclick="if(event.target===this)closeImportModal()">
     <div class="modal">
       <div class="modal-header">
@@ -2030,13 +1922,13 @@ function renderPlaybookAdherence(trades) {
   if (!el) return;
   var s = summarizeSetupAdherence(trades);
   if (!s.total) {
-    el.innerHTML = '<div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);line-height:1.6">Import trades and tag every setup to track playbook adherence. Untagged trades cannot be imported.</div>';
+    el.innerHTML = '<div class="no-data" style="font-size:11px;line-height:1.6">Import trades and tag every setup to track playbook adherence.</div>';
     return;
   }
 
   var statusColor = !s.processPass ? 'var(--red)' : (s.purePlaybook ? 'var(--green)' : 'var(--amber)');
   var statusText = !s.processPass
-    ? (s.invalid + ' invalid trade' + (s.invalid === 1 ? '' : 's') + ' — process adherence failed')
+    ? (s.invalid + ' invalid — process failed')
     : (s.purePlaybook ? '100% playbook setups' : s.improvised + ' improvised · process pass');
 
   var rows = [
@@ -2045,19 +1937,15 @@ function renderPlaybookAdherence(trades) {
     ['Invalid', s.invalid, 'var(--red)'],
     ['Untagged', s.untagged, 'var(--muted)'],
   ].filter(function(r) { return r[1] > 0; }).map(function(r) {
-    return '<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">' +
-      '<span style="font-family:var(--font-mono);font-size:11px;color:var(--text)">' + r[0] + '</span>' +
-      '<span style="font-family:var(--font-num);font-size:16px;color:' + r[2] + '">' + r[1] + '</span>' +
-    '</div>';
+    return '<div class="an-playbook-row"><span style="font-family:var(--font-mono);font-size:11px;color:var(--text)">' + r[0] + '</span><span class="an-stat__value an-stat__value--sm" style="color:' + r[2] + '">' + r[1] + '</span></div>';
   }).join('');
 
   el.innerHTML =
-    '<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px">' +
-      '<div><div style="font-family:var(--font-num);font-size:36px;font-weight:300;color:' + statusColor + '">' + s.playbookRate + '%</div>' +
-      '<div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)">playbook rate</div></div>' +
-      '<div style="font-family:var(--font-mono);font-size:11px;color:' + statusColor + ';text-align:right;max-width:240px;line-height:1.5">' + statusText + '</div>' +
+    '<div class="an-playbook-hero">' +
+      '<div class="an-stat an-stat--hero"><div class="an-stat__value" style="color:' + statusColor + '">' + s.playbookRate + '%</div><div class="an-stat__label">Playbook</div></div>' +
+      '<div class="an-playbook-status" style="color:' + statusColor + '">' + statusText + '</div>' +
     '</div>' +
-    '<div>' + rows + '</div>';
+    (rows ? '<details class="an-stats-more"><summary class="an-stats-more__toggle">Breakdown</summary><div class="an-playbook-rows">' + rows + '</div></details>' : '');
 }
 
 // ── Accounts & trader settings (Supabase app_data) ───────────────────────────
@@ -2176,8 +2064,6 @@ let dateFrom = null;
 let dateTo   = null;
 let allTrades = [];
 let allDays   = [];
-let allJournalEntries = [];
-let allLessonEntries  = [];
 
 // ── NY Eastern Time offset (handles DST) ────────────────────────────────────
 // NY is EST (UTC-5) in winter, EDT (UTC-4) during DST (Mar-Nov)
@@ -2328,22 +2214,6 @@ async function loadData() {
   allDays   = days   || [];
 }
 
-// ── Journal & Lessons data (always last 5, ignores date filter) ───────────────
-async function loadJournalData() {
-  const dateFilters = [];
-  if (dateFrom) dateFilters.push(`trading_day=gte.${dateFrom}`);
-  if (dateTo)   dateFilters.push(`trading_day=lte.${dateTo}`);
-
-  const [journal, lessons] = await Promise.all([
-    query('intraday_journal', 'id,et_time,trading_day,session_phase,dictated_text,emotions',
-      ['dictated_text=not.is.null', ...dateFilters, 'order=et_time.desc', 'limit=5']),
-    query('intraday_journal', 'id,et_time,trading_day,session_phase,lesson_text',
-      ['lesson_text=not.is.null', ...dateFilters, 'order=et_time.desc', 'limit=5']),
-  ]);
-  allJournalEntries = journal || [];
-  allLessonEntries  = (lessons || []).filter(e => (e.lesson_text || '').trim());
-}
-
 // ── Calculations ──────────────────────────────────────────────────────────────
 function calcStats(trades) {
   if (!trades.length) return null;
@@ -2416,18 +2286,17 @@ function calcStats(trades) {
   };
 }
 
-function byGate(trades) {
-  const gates = { GREEN: [], AMBER: [], RED: [] };
-  trades.forEach(t => {
-    const g = t.gate_at_session_open;
-    if (gates[g]) gates[g].push(t);
-  });
-  return gates;
-}
 
 // ── Render ────────────────────────────────────────────────────────────────────
 function destroyChart(id) {
   if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+
+function dismissWorkflowNotice() {
+  localStorage.setItem('analytics-workflow-notice-dismissed', '1');
+  const el = document.getElementById('analytics-workflow-notice');
+  if (el) el.remove();
 }
 
 function render() {
@@ -2437,11 +2306,13 @@ function render() {
 
   const html = [];
 
-  html.push(`<div class="analytics-desk-notice">
-    <span class="hybrid-eyebrow">Workflow</span>
-    <p>Import trades in <a class="inline-link" href="/postmarket" onclick="return navigateToDesk('/postmarket')">Post-Market review</a> — tag every setup there. Analytics reads your trade history; accounts &amp; commissions live in <a class="inline-link" href="/settings" onclick="return navigateToDesk('/settings')">Settings</a>.</p>
-    <a class="desk-nav-link" href="/postmarket" onclick="return navigateToDesk('/postmarket')">Go to Post-Market</a>
-  </div>`);
+  if (!localStorage.getItem('analytics-workflow-notice-dismissed')) {
+    html.push(`<div class="analytics-desk-notice analytics-desk-notice--compact" id="analytics-workflow-notice">
+      <span class="hybrid-eyebrow">Workflow</span>
+      <p>Import in <a class="inline-link" href="/postmarket" onclick="return navigateToDesk('/postmarket')">Post-Market</a> · tag every setup · accounts in <a class="inline-link" href="/settings" onclick="return navigateToDesk('/settings')">Settings</a>.</p>
+      <button type="button" class="analytics-desk-notice__dismiss" onclick="dismissWorkflowNotice()" title="Dismiss">✕</button>
+    </div>`);
+  }
 
   // ── Section 1: Performance Overview
   html.push(`<div class="card">
@@ -2479,71 +2350,29 @@ function render() {
     <div id="playbook-adherence-section"></div>
   </div>`);
 
-  // ── Section 8: Process Discipline Score
-  html.push(`<div class="card">
-    <div class="card-title">Process Discipline Score</div>
-    <div id="discipline-section"></div>
-  </div>`);
-
-  // ── Section 9: Journal & Lessons
-  html.push(`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-        <div class="card-title" style="margin-bottom:0">Journal</div>
-        <button onclick="openJournalPanel('journal')" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--cyan);background:none;border:none;cursor:pointer;padding:0">View All →</button>
+  // ── Section: Session Analytics (2×2 cards)
+  html.push(`<div class="an-session-grid">
+    <div class="card an-session-card">
+      <div class="card-title an-subsection-title">Performance by Time · NY</div>
+      <div class="an-chart-legend">
+        <div class="an-chart-legend-item"><div style="width:10px;height:8px;border-radius:1px;background:rgba(37,145,134,0.35);border-top:1px solid rgba(37,145,134,0.7)"></div>P&L</div>
+        <div class="an-chart-legend-item"><svg width="18" height="10"><line x1="0" y1="5" x2="18" y2="5" stroke="rgba(180,185,200,0.25)" stroke-width="1" stroke-dasharray="3,4"/><circle cx="9" cy="5" r="3.5" fill="rgba(37,145,134,0.9)" stroke="#12131a" stroke-width="1.5"/></svg>WR</div>
       </div>
-      <div id="journal-entries-section"></div>
+      <div class="chart-wrap" style="height:160px"><canvas id="chart-baskets"></canvas></div>
     </div>
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-        <div class="card-title" style="margin-bottom:0">Lessons &amp; Reflections</div>
-        <button onclick="openJournalPanel('lessons')" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--cyan);background:none;border:none;cursor:pointer;padding:0">View All →</button>
-      </div>
-      <div id="lessons-entries-section"></div>
+    <div class="card an-session-card">
+      <div class="card-title an-subsection-title">Performance by Day</div>
+      <div class="chart-wrap" style="height:160px"><canvas id="chart-dow"></canvas></div>
     </div>
-  </div>`);
-
-  // ── Section 4+7: Session Analytics (merged)
-  html.push(`<div class="card">
-  <div class="card-title">Session Analytics</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
-    <div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)">Performance by Time · NY</div>
-        <div style="display:flex;align-items:center;gap:12px">
-          <div style="display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:9px;color:var(--muted)">
-            <div style="width:10px;height:8px;border-radius:1px;background:rgba(37,145,134,0.35);border-top:1px solid rgba(37,145,134,0.7)"></div>P&L
-          </div>
-          <div style="display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:9px;color:var(--muted)">
-            <svg width="18" height="10"><line x1="0" y1="5" x2="18" y2="5" stroke="rgba(180,185,200,0.25)" stroke-width="1" stroke-dasharray="3,4"/><circle cx="9" cy="5" r="3.5" fill="rgba(37,145,134,0.9)" stroke="#12131a" stroke-width="1.5"/></svg>WR
-          </div>
-        </div>
-      </div>
-      <div class="chart-wrap" style="height:160px">
-        <canvas id="chart-baskets"></canvas>
-      </div>
+    <div class="card an-session-card">
+      <div class="card-title an-subsection-title">P&L by Trade # in Session</div>
+      <div class="chart-wrap" style="height:160px"><canvas id="chart-seq"></canvas></div>
     </div>
-    <div>
-      <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Performance by Day</div>
-      <div class="chart-wrap" style="height:160px">
-        <canvas id="chart-dow"></canvas>
-      </div>
-    </div>
-  </div>
-  <div style="height:1px;background:var(--border);margin-bottom:20px"></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
-    <div>
-      <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">P&L by Trade # in Session</div>
-      <div class="chart-wrap" style="height:160px">
-        <canvas id="chart-seq"></canvas>
-      </div>
-    </div>
-    <div>
-      <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Post-Loss Recovery</div>
+    <div class="card an-session-card">
+      <div class="card-title an-subsection-title">Post-Loss Recovery</div>
       <div id="recovery-section"></div>
     </div>
-  </div>
-</div>`);
+  </div>`);
 
 
   document.getElementById('main-content').innerHTML = html.join('');
@@ -2552,16 +2381,13 @@ function render() {
   const _renders = [
     ['renderStats',        () => renderStats(stats, trades)],
     ['renderPnlChart',     () => renderPnlChart(trades)],
-    ['renderDailyCal',     () => renderDailyCal(trades, days)],
+    ['renderDailyCal',     () => renderDailyCal(trades)],
     ['renderBaskets',      () => renderBaskets(trades)],
     ['renderDayOfWeek',    () => renderDayOfWeek(trades)],
     ['renderSequence',     () => renderSequence(trades)],
     ['renderRecovery',     () => renderRecovery(trades)],
     ['renderRecentTrades', () => renderRecentTrades(trades)],
     ['renderPlaybookAdherence', () => renderPlaybookAdherence(trades)],
-    ['renderDiscipline',   () => renderDiscipline(days, trades)],
-    ['renderJournal',      () => renderJournal()],
-    ['renderLessons',      () => renderLessons()],
   ];
   for (const [name, fn] of _renders) {
     try { fn(); }
@@ -2570,104 +2396,66 @@ function render() {
 }
 
 function renderStats(s, trades) {
-  if (!s) { document.getElementById('stats-grid').innerHTML = '<div class="no-data">No trades in selected range</div>'; return; }
   const grid = document.getElementById('stats-grid');
-  const activeAcct2  = accounts.find(a => a.active);
-  const beThresh2    = activeAcct2 ? (activeAcct2.be_threshold ?? 30) : 30;
-  const winners = trades.filter(t => t.net_pnl > beThresh2).length;
-  const losers  = trades.filter(t => t.net_pnl < -beThresh2).length;
+  if (!s) { grid.innerHTML = '<div class="no-data">No trades in selected range</div>'; return; }
+
+  const activeAcct = accounts.find(a => a.active);
+  const beThresh = activeAcct ? (activeAcct.be_threshold ?? 30) : 30;
+  const winners = trades.filter(t => t.net_pnl > beThresh).length;
+  const losers  = trades.filter(t => t.net_pnl < -beThresh).length;
   const bes     = s.beCount;
   const total   = s.total;
-  const wPct    = total ? (winners/total*100).toFixed(0) : 0;
-  const lPct    = total ? (losers/total*100).toFixed(0) : 0;
-  const bePct   = total ? (bes/total*100).toFixed(0) : 0;
+  const wPct    = total ? (winners / total * 100).toFixed(0) : 0;
+  const lPct    = total ? (losers / total * 100).toFixed(0) : 0;
+  const bePct   = total ? (bes / total * 100).toFixed(0) : 0;
 
-  // Win/Loss/BE creative panel + other stats
+  const pfVal = s.profitFactor >= 999 ? '∞' : s.profitFactor.toFixed(2);
+  const pfCls = s.profitFactor >= 1.5 ? 'pos' : s.profitFactor >= 1 ? 'neu' : 'neg';
+
+  const hero = [
+    { label: 'Net P&L', val: `$${s.totalPnl.toFixed(2)}`, cls: s.totalPnl >= 0 ? 'pos' : 'neg' },
+    { label: 'Win Rate', val: `${s.winRate.toFixed(1)}%`, cls: s.winRate >= 50 ? 'pos' : 'neg' },
+    { label: 'Expectancy', val: `$${s.expectancy.toFixed(2)}`, cls: s.expectancy >= 0 ? 'pos' : 'neg' },
+    { label: 'Profit Factor', val: pfVal, cls: pfCls },
+  ].map(h => `<div class="an-stat an-stat--hero"><div class="an-stat__label">${h.label}</div><div class="an-stat__value ${h.cls}">${h.val}</div></div>`).join('');
+
+  const secondary = [
+    { label: 'Avg P&L', val: `$${s.avgPnl.toFixed(2)}`, cls: s.avgPnl >= 0 ? 'pos' : 'neg' },
+    { label: 'WR w/o BE', val: `${s.winRateNoBE.toFixed(1)}%`, cls: s.winRateNoBE >= 50 ? 'pos' : 'neg' },
+    { label: 'Avg Win', val: `$${s.avgWin.toFixed(2)}`, cls: 'pos' },
+    { label: 'Avg Loss', val: `$${s.avgLoss.toFixed(2)}`, cls: 'neg' },
+    { label: 'Biggest Win', val: `$${s.biggestWin.toFixed(2)}`, cls: 'pos' },
+    { label: 'Biggest Loss', val: `$${s.biggestLoss.toFixed(2)}`, cls: 'neg' },
+    { label: 'Max Consec DD', val: `$${s.maxDD.toFixed(2)}`, cls: 'neg' },
+    { label: 'Avg Hold (min)', val: s.avgHold.toFixed(1), cls: 'neu' },
+    { label: 'Total Trades', val: s.total, cls: 'neu' },
+    { label: 'Trading Days', val: new Set(trades.map(t => t.date)).size, cls: 'neu' },
+    ...(s.rCount > 0 ? [
+      { label: 'Avg R', val: fmtR(s.avgR), cls: s.avgR >= 0 ? 'pos' : 'neg' },
+      { label: 'Expectancy (R)', val: fmtR(s.expectancyR), cls: s.expectancyR >= 0 ? 'pos' : 'neg' },
+    ] : []),
+  ].map(c => `<div class="stat-card"><div class="label">${c.label}</div><div class="value ${c.cls}">${c.val}</div></div>`).join('');
+
   grid.innerHTML = `
-    <!-- Win/Loss/BE panel - spans full width -->
-    <div class="stat-card wlbe-card" style="grid-column:1/-1">
-      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
-        <!-- Segmented bar -->
-        <div style="flex:1;min-width:200px">
-          <div style="display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-bottom:10px">
-            <div style="width:${wPct}%;background:var(--green);border-radius:3px 0 0 3px;transition:width 0.6s"></div>
-            <div style="width:${bePct}%;background:var(--muted)"></div>
-            <div style="width:${lPct}%;background:var(--red);border-radius:0 3px 3px 0;transition:width 0.6s"></div>
-          </div>
-          <div style="display:flex;gap:20px">
-            <div>
-              <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:2px">Winners</div>
-              <div style="display:flex;align-items:baseline;gap:6px">
-                <span style="font-family:var(--font-num);font-size:24px;font-weight:300;color:var(--green)">${winners}</span>
-                <span style="font-family:var(--font-mono);font-size:11px;color:var(--green);opacity:0.7">${wPct}%</span>
-              </div>
-            </div>
-            <div>
-              <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:2px">Breakeven</div>
-              <div style="display:flex;align-items:baseline;gap:6px">
-                <span style="font-family:var(--font-num);font-size:24px;font-weight:300;color:var(--text-dim)">${bes}</span>
-                <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">${bePct}%</span>
-              </div>
-            </div>
-            <div>
-              <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:2px">Losers</div>
-              <div style="display:flex;align-items:baseline;gap:6px">
-                <span style="font-family:var(--font-num);font-size:24px;font-weight:300;color:var(--red)">${losers}</span>
-                <span style="font-family:var(--font-mono);font-size:11px;color:var(--red);opacity:0.7">${lPct}%</span>
-              </div>
-            </div>
-            <div style="border-left:1px solid var(--border);padding-left:20px">
-              <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:2px">WR w/o BE</div>
-              <div style="font-family:var(--font-num);font-size:24px;font-weight:300;color:${s.winRateNoBE>=50?'var(--green)':'var(--red)'}">${s.winRateNoBE.toFixed(1)}%</div>
-            </div>
-            <div style="border-left:1px solid var(--border);padding-left:20px">
-              <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:2px">Avg Win</div>
-              <div style="font-family:var(--font-num);font-size:24px;font-weight:300;color:var(--green)">$${s.avgWin.toFixed(2)}</div>
-            </div>
-            <div>
-              <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:2px">Avg Loss</div>
-              <div style="font-family:var(--font-num);font-size:24px;font-weight:300;color:var(--red)">$${s.avgLoss.toFixed(2)}</div>
-            </div>
-            <div>
-              <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:2px">Expectancy</div>
-              <div style="font-family:var(--font-num);font-size:24px;font-weight:300;color:${s.expectancy>=0?'var(--green)':'var(--red)'}">$${s.expectancy.toFixed(2)}</div>
-            </div>
-          </div>
+    <div style="grid-column:1/-1">
+      <div class="an-stats-hero">${hero}</div>
+      <div class="an-wlbe">
+        <div class="an-wlbe__bar">
+          <div class="an-wlbe__seg-win" style="width:${wPct}%"></div>
+          <div class="an-wlbe__seg-be" style="width:${bePct}%"></div>
+          <div class="an-wlbe__seg-loss" style="width:${lPct}%"></div>
         </div>
-        <!-- Divider -->
-        <div style="width:1px;height:50px;background:var(--border);flex-shrink:0"></div>
-        <!-- Win rate ring -->
-        <div style="text-align:center;flex-shrink:0">
-          <svg width="64" height="64" viewBox="0 0 64 64">
-            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--surface2)" stroke-width="6"/>
-            <circle cx="32" cy="32" r="26" fill="none" stroke="${s.winRate>=50?'var(--green)':'var(--red)'}" stroke-width="6"
-              stroke-dasharray="${(s.winRate/100*163.4).toFixed(1)} 163.4"
-              stroke-dashoffset="40.85" stroke-linecap="round" transform="rotate(-90 32 32)"/>
-            <text x="32" y="36" text-anchor="middle" fill="var(--text)" font-family="DM Mono" font-size="12" font-weight="500">${s.winRate.toFixed(0)}%</text>
-          </svg>
-          <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-top:4px">Win Rate</div>
+        <div class="an-wlbe__legend">
+          <div><div class="an-wlbe__item-label">Winners</div><div class="an-wlbe__item-val" style="color:var(--green)">${winners} <span style="font-size:11px;opacity:0.7">${wPct}%</span></div></div>
+          <div><div class="an-wlbe__item-label">Breakeven</div><div class="an-wlbe__item-val" style="color:var(--text-dim)">${bes} <span style="font-size:11px;color:var(--muted)">${bePct}%</span></div></div>
+          <div><div class="an-wlbe__item-label">Losers</div><div class="an-wlbe__item-val" style="color:var(--red)">${losers} <span style="font-size:11px;opacity:0.7">${lPct}%</span></div></div>
         </div>
       </div>
-    </div>
-    <!-- Other stat cards -->
-    ${[
-      { label: 'Net P&L',       val: `$${s.totalPnl.toFixed(2)}`,  cls: s.totalPnl >= 0 ? 'pos' : 'neg' },
-      { label: 'Avg P&L',       val: `$${s.avgPnl.toFixed(2)}`,    cls: s.avgPnl >= 0 ? 'pos' : 'neg' },
-      { label: 'Profit Factor', val: s.profitFactor >= 999 ? '∞' : s.profitFactor.toFixed(2), cls: s.profitFactor >= 1.5 ? 'pos' : s.profitFactor >= 1 ? 'neu' : 'neg' },
-      { label: 'Biggest Win',   val: `$${s.biggestWin.toFixed(2)}`, cls: 'pos' },
-      { label: 'Biggest Loss',  val: `$${s.biggestLoss.toFixed(2)}`,cls: 'neg' },
-      { label: 'Max Consec DD', val: `$${s.maxDD.toFixed(2)}`,      cls: 'neg' },
-      { label: 'Avg Hold (min)',val: s.avgHold.toFixed(1),          cls: 'neu' },
-      { label: 'Total Trades',  val: s.total,                       cls: 'neu' },
-      { label: 'Trading Days',  val: new Set(allTrades.map(t=>t.date)).size, cls: 'neu' },
-      ...(s.rCount > 0 ? [
-        { label: 'Avg R',          val: fmtR(s.avgR),        cls: s.avgR >= 0 ? 'pos' : 'neg' },
-        { label: 'Avg Win (R)',    val: fmtR(s.avgRWin),     cls: 'pos' },
-        { label: 'Avg Loss (R)',   val: fmtR(s.avgRLoss),    cls: 'neg' },
-        { label: 'Expectancy (R)', val: fmtR(s.expectancyR), cls: s.expectancyR >= 0 ? 'pos' : 'neg' },
-      ] : []),
-    ].map(c => `<div class="stat-card"><div class="label">${c.label}</div><div class="value ${c.cls}">${c.val}</div></div>`).join('')}
-  `;
+      <details class="an-stats-more">
+        <summary class="an-stats-more__toggle">More metrics</summary>
+        <div class="stats-grid an-stats-secondary">${secondary}</div>
+      </details>
+    </div>`;
 }
 
 function renderPnlChart(trades) {
@@ -2731,39 +2519,42 @@ function renderPnlChart(trades) {
 
 var _dailyPnlData = null;
 
-function buildDailyPnlRows(dates, byDate, cols, showDelete) {
+function buildDailyPnlRows(dates, byDate, template, showDelete) {
   return dates.map(d => {
-    const { pnl, count, gate, seqIds, soloCount } = byDate[d];
-    const seq     = (seqIds ? seqIds.size : 0) + (soloCount || 0);
-    const pnlCol  = pnl > 0 ? '#259186' : pnl < 0 ? '#c26060' : 'var(--muted)';
-    const pnlStr  = (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2);
-    const gateCol = gate === 'GREEN' ? 'var(--green)' : gate === 'AMBER' ? 'var(--amber)' : gate === 'RED' ? 'var(--red)' : 'var(--muted)';
+    const { pnl, count, seqIds, soloCount } = byDate[d];
+    const seq = (seqIds ? seqIds.size : 0) + (soloCount || 0);
+    const pnlCol = pnl > 0 ? 'var(--green)' : pnl < 0 ? 'var(--red)' : 'var(--muted)';
+    const pnlStr = (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2);
     const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
     const dateObj = new Date(d + 'T12:00:00');
     const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const dateLabel = dayNames[dateObj.getDay()] + ' ' + dateObj.getDate() + ' ' + monthNames[dateObj.getMonth()];
     const deleteBtn = showDelete
-      ? '<button class="day-delete-btn" onclick="event.stopPropagation();openDeleteDayModal(\'' + d + '\')" title="Delete all trades for ' + d + '">Delete</button>'
+      ? '<button class="day-delete-btn an-table__cell--right" onclick="event.stopPropagation();openDeleteDayModal(\'' + d + '\')" title="Delete all trades for ' + d + '">Delete</button>'
       : '';
-    return '<div style="display:grid;grid-template-columns:' + cols + ';gap:8px;padding:7px 0;border-bottom:1px solid var(--border);align-items:center">'
-      + '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-align:left">' + dateLabel + '</span>'
-      + '<span style="font-family:var(--font-mono);font-size:9px;color:' + gateCol + ';text-align:center">' + (gate || '—') + '</span>'
-      + '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-align:center">' + count + '</span>'
-      + '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-align:center">' + seq + '</span>'
-      + '<span style="font-family:var(--font-mono);font-size:11px;font-weight:500;color:' + pnlCol + ';text-align:right">' + pnlStr + '</span>'
-      + (showDelete ? deleteBtn : '')
-      + '</div>';
+    return '<div class="an-table__row" style="grid-template-columns:' + template + '">' +
+      '<span class="an-table__cell">' + dateLabel + '</span>' +
+      '<span class="an-table__cell an-table__cell--center">' + count + '</span>' +
+      '<span class="an-table__cell an-table__cell--center">' + seq + '</span>' +
+      '<span class="an-table__cell an-table__cell--right" style="font-size:11px;font-weight:500;color:' + pnlCol + '">' + pnlStr + '</span>' +
+      (showDelete ? deleteBtn : '') +
+    '</div>';
   }).join('');
 }
 
-function renderDailyCal(trades, days) {
-  // Gate from trading_days is more reliable — covers days where CSV was imported before gate was set
-  const gateByDate = {};
-  (days || []).forEach(d => { if (d.gate) gateByDate[d.date] = d.gate; });
+function anTableHead(template, headers, aligns) {
+  return '<div class="an-table__head" style="grid-template-columns:' + template + '">' +
+    headers.map(function(h, i) {
+      var align = aligns[i] === 'right' ? ' an-table__cell--right' : aligns[i] === 'center' ? ' an-table__cell--center' : '';
+      return '<span class="an-table__th' + align + '">' + h + '</span>';
+    }).join('') +
+  '</div>';
+}
 
+function renderDailyCal(trades) {
   const byDate = {};
   trades.forEach(t => {
-    if (!byDate[t.date]) byDate[t.date] = { pnl: 0, count: 0, gate: gateByDate[t.date] || t.gate_at_session_open, seqIds: new Set(), soloCount: 0 };
+    if (!byDate[t.date]) byDate[t.date] = { pnl: 0, count: 0, seqIds: new Set(), soloCount: 0 };
     byDate[t.date].pnl += t.net_pnl || 0;
     byDate[t.date].count++;
     if (t.sequence_id != null) byDate[t.date].seqIds.add(t.sequence_id);
@@ -2774,16 +2565,14 @@ function renderDailyCal(trades, days) {
   _dailyPnlData = { byDate, allSorted };
 
   const sorted = allSorted.slice(0, 8);
-  if (!sorted.length) { document.getElementById('daily-cal').innerHTML = '<div class="no-data">No data</div>'; return; }
+  const el = document.getElementById('daily-cal');
+  if (!sorted.length) { el.innerHTML = '<div class="no-data">No data</div>'; return; }
 
-  const cols = '110px 46px 32px 32px 72px';
-
-  const colAligns = ['left','center','center','center','right'];
-  const header = '<div style="display:grid;grid-template-columns:' + cols + ';gap:8px;padding:0 0 8px;border-bottom:1px solid var(--border);margin-bottom:2px">'
-    + ['Date','Gate','Trd','Seq','P&L'].map((h,i) => '<span style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-align:' + colAligns[i] + '">' + h + '</span>').join('')
-    + '</div>';
-
-  document.getElementById('daily-cal').innerHTML = header + buildDailyPnlRows(sorted, byDate, cols);
+  const template = '1fr 40px 40px 72px';
+  el.innerHTML = '<div class="an-table">' +
+    anTableHead(template, ['Date', 'Trd', 'Seq', 'P&L'], ['left', 'center', 'center', 'right']) +
+    buildDailyPnlRows(sorted, byDate, template, false) +
+  '</div>';
 }
 
 function openDailyPnlPanel() {
@@ -2796,12 +2585,11 @@ function openDailyPnlPanel() {
     return;
   }
   const { byDate, allSorted } = _dailyPnlData;
-  const cols = '130px 55px 40px 40px 85px 64px';
-  const colAligns = ['left','center','center','center','right','right'];
-  const header = '<div style="display:grid;grid-template-columns:' + cols + ';gap:8px;padding:0 0 10px;border-bottom:1px solid var(--border);margin-bottom:4px">'
-    + ['Date','Gate','Trd','Seq','P&L',''].map((h,i) => '<span style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-align:' + colAligns[i] + '">' + h + '</span>').join('')
-    + '</div>';
-  body.innerHTML = header + buildDailyPnlRows(allSorted, byDate, cols, true);
+  const template = '1fr 40px 40px 85px 64px';
+  body.innerHTML = '<div class="an-table">' +
+    anTableHead(template, ['Date', 'Trd', 'Seq', 'P&L', ''], ['left', 'center', 'center', 'right', 'right']) +
+    buildDailyPnlRows(allSorted, byDate, template, true) +
+  '</div>';
 }
 
 function closeDailyPnlPanel() {
@@ -3135,8 +2923,6 @@ function renderRecovery(trades) {
   if (trades.length < 2) { el.innerHTML = '<div class="no-data">Need more trades</div>'; return; }
 
   const sorted = [...trades].sort((a,b) => new Date(a.entry_time) - new Date(b.entry_time));
-
-  // Group by day for within-session recovery only
   const byDay = {};
   sorted.forEach(t => {
     if (!byDay[t.date]) byDay[t.date] = [];
@@ -3156,32 +2942,28 @@ function renderRecovery(trades) {
   const avgAfterLoss = afterLoss.length ? afterLoss.reduce((s,v)=>s+v,0)/afterLoss.length : null;
   const avgAfterWin  = afterWin.length  ? afterWin.reduce((s,v)=>s+v,0)/afterWin.length   : null;
 
-  const lossColor = avgAfterLoss != null ? (avgAfterLoss >= 0 ? 'var(--green)' : 'var(--red)') : 'var(--muted)';
-  const winColor  = avgAfterWin  != null ? (avgAfterWin  >= 0 ? 'var(--green)' : 'var(--red)') : 'var(--muted)';
+  function fmt(v) {
+    if (v == null) return '—';
+    return (v >= 0 ? '+' : '') + '$' + Math.abs(v).toFixed(0);
+  }
 
   el.innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:14px">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:3px">After Loss</div>
-          <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted)">${afterLoss.length} instances</div>
-        </div>
-        <div style="font-family:var(--font-num);font-size:22px;font-weight:300;color:${lossColor}">${avgAfterLoss!=null?(avgAfterLoss>=0?'+':'')+'$'+avgAfterLoss.toFixed(0):'—'}</div>
-      </div>
-      <div style="height:1px;background:var(--border)"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:3px">After Win</div>
-          <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted)">${afterWin.length} instances</div>
-        </div>
-        <div style="font-family:var(--font-num);font-size:22px;font-weight:300;color:${winColor}">${avgAfterWin!=null?(avgAfterWin>=0?'+':'')+'$'+avgAfterWin.toFixed(0):'—'}</div>
-      </div>
-      ${avgAfterLoss!=null&&avgAfterLoss<-20
-        ? `<div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);line-height:1.7;padding-top:2px">⚠ Revenge trading tendency detected.</div>`
-        : avgAfterLoss!=null&&avgAfterLoss>0
-        ? `<div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);line-height:1.7;padding-top:2px">✓ Positive recovery pattern.</div>`
-        : ''}
-    </div>`;
+    <div class="an-stat" style="margin-bottom:14px">
+      <div class="an-stat__label">After Loss</div>
+      <div class="an-stat__value an-stat__value--sm ${avgAfterLoss != null ? (avgAfterLoss >= 0 ? 'pos' : 'neg') : 'neutral'}">${fmt(avgAfterLoss)}</div>
+      <div class="an-stat__sub">${afterLoss.length} instances</div>
+    </div>
+    <div style="height:1px;background:var(--border);margin:14px 0"></div>
+    <div class="an-stat">
+      <div class="an-stat__label">After Win</div>
+      <div class="an-stat__value an-stat__value--sm ${avgAfterWin != null ? (avgAfterWin >= 0 ? 'pos' : 'neg') : 'neutral'}">${fmt(avgAfterWin)}</div>
+      <div class="an-stat__sub">${afterWin.length} instances</div>
+    </div>
+    ${avgAfterLoss != null && avgAfterLoss < -20
+      ? '<p class="an-stat__sub" style="margin-top:14px;line-height:1.6">Revenge trading tendency detected.</p>'
+      : avgAfterLoss != null && avgAfterLoss > 0
+      ? '<p class="an-stat__sub" style="margin-top:14px;line-height:1.6;color:var(--green)">Positive recovery pattern.</p>'
+      : ''}`;
 }
 
 // ── Activation Hot Window ────────────────────────────────────────────────────
@@ -3202,7 +2984,7 @@ async function loadAndRender() {
   document.getElementById('main-content').innerHTML = '<div class="loading"><div class="spinner"></div>Loading analytics...</div>';
   try {
     console.log('[1] loadAndRender started');
-    await Promise.all([loadData(), loadJournalData()]);
+    await loadData();
     console.log('[2] loadData done, trades:', allTrades.length, 'days:', allDays.length);
     render();
     console.log('[3] render done');
@@ -3254,335 +3036,10 @@ async function signOut() {
 
 window.addEventListener('DOMContentLoaded', () => {
   initSetupSelects();
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('view') === 'reports') showPage('reports');
 });
 
-function renderDiscipline(days, trades) {
-  const el = document.getElementById('discipline-section');
-  if (!el) return;
-
-  const RULES = [
-    { key: 'rules_trend',         label: 'Traded with Trend / Tape' },
-    { key: 'rules_market_cond',   label: 'Traded Inline with Market Condition' },
-    { key: 'rules_plays',         label: 'Traded Playbook Setups' },
-    { key: 'rules_execution',     label: 'Execution Model Followed' },
-    { key: 'rules_focus',         label: 'Stayed Focused / Avoided Distraction' },
-    { key: 'rules_consol',        label: 'Avoided Entering During Consolidation' },
-    { key: 'rules_dll',           label: 'Risk Manager Respected' },
-  ];
-
-
-  // ── Streak logic (inline) ─────────────────────────────────────────────
-  const ruleKeysStreak = ['rules_trend','rules_market_cond','rules_plays','rules_execution','rules_focus','rules_consol','rules_dll'];
-  const allSortedDays = [...days].filter(d=>d.date).sort((a,b)=>a.date.localeCompare(b.date));
-  const tradeableDays = allSortedDays.map(d => {
-    const dt = trades.filter(t=>t.date===d.date);
-    const net = dt.reduce((s,t)=>s+(t.net_pnl||0),0);
-    const cnt = dt.length;
-    const avg = cnt>0?net/cnt:0;
-    const brk = ruleKeysStreak.filter(r=>d[r]==='Broke'||d[r]==='broke').length;
-    const fol = ruleKeysStreak.filter(r=>d[r]==='Followed'||d[r]==='followed').length;
-    return { date:d.date, disc100:brk===0&&fol>0, isSpiral:cnt>12&&brk>=1&&net<0&&avg<-15, cnt };
-  }).filter(d=>d.cnt>0||d.disc100);
-
-  function _curStreak(arr,fn){let n=0;for(let i=arr.length-1;i>=0;i--){if(fn(arr[i]))n++;else break;}return n;}
-  function _bestStreak(arr,fn){let b=0,c=0;arr.forEach(d=>{c=fn(d)?c+1:0;b=Math.max(b,c);});return b;}
-
-  const discCur    = _curStreak(tradeableDays, d=>d.disc100);
-  const discBest   = _bestStreak(tradeableDays, d=>d.disc100);
-  const discBreaks = tradeableDays.filter(d=>!d.disc100&&d.cnt>0).length;
-  const spiralCur  = _curStreak(tradeableDays, d=>!d.isSpiral&&d.cnt>0);
-  const spiralBest = _bestStreak(tradeableDays, d=>!d.isSpiral&&d.cnt>0);
-  const spiralCount= tradeableDays.filter(d=>d.isSpiral).length;
-
-  function buildDiscSpark() {
-    const data = tradeableDays.slice(-14);
-    return data.map((d,i,a)=>{
-      const op=(0.25+(i/a.length)*0.75).toFixed(2);
-      return `<div style="flex:1;border-radius:2px 2px 0 0;min-height:2px;height:${d.disc100?'100%':'15%'};background:${d.disc100?'var(--green)':'rgba(138,53,53,0.35)'};opacity:${op}"></div>`;
-    }).join('');
-  }
-  function buildSpiralSpark() {
-    const data = tradeableDays.filter(d=>d.cnt>0).slice(-14);
-    return data.map((d,i,a)=>{
-      const op=(0.25+(i/a.length)*0.75).toFixed(2);
-      return `<div style="flex:1;border-radius:2px 2px 0 0;min-height:2px;height:${!d.isSpiral?'100%':'15%'};background:${!d.isSpiral?'var(--green)':'rgba(138,53,53,0.35)'};opacity:${op}"></div>`;
-    }).join('');
-  }
-
-
-  // Only days that have at least one rule filled in
-  const scoredDays = days.filter(d => RULES.some(r => d[r.key] != null));
-  if (!scoredDays.length) {
-    el.innerHTML = `
-      <div style="display:grid;grid-template-columns:180px 1fr;gap:16px;align-items:start">
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <div style="background:var(--surface2);border:1px solid var(--border);border-top:2px solid rgba(37,145,134,0.5);border-radius:4px;padding:10px 12px">
-            <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(37,145,134,0.55);margin-bottom:6px">Process Discipline</div>
-            <div style="display:flex;align-items:baseline;gap:6px">
-              <span style="font-family:var(--font-num);font-size:28px;font-weight:300;line-height:1;color:${discCur>0?'var(--green)':'rgba(180,185,200,0.2)'}">${discCur}</span>
-              <span style="font-family:var(--font-mono);font-size:9px;color:var(--muted)">session streak</span>
-            </div>
-            <div style="display:flex;align-items:flex-end;gap:2px;height:16px;margin-top:6px">${buildDiscSpark()}</div>
-            <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-top:5px">Best: ${discBest} · Breaks: ${discBreaks}</div>
-          </div>
-          <div style="background:var(--surface2);border:1px solid var(--border);border-top:2px solid rgba(37,145,134,0.5);border-radius:4px;padding:10px 12px">
-            <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(37,145,134,0.55);margin-bottom:6px">No Spiral</div>
-            <div style="display:flex;align-items:baseline;gap:6px">
-              <span style="font-family:var(--font-num);font-size:28px;font-weight:300;line-height:1;color:${spiralCur>0?'var(--green)':'rgba(180,185,200,0.2)'}">${spiralCur}</span>
-              <span style="font-family:var(--font-mono);font-size:9px;color:var(--muted)">session streak</span>
-            </div>
-            <div style="display:flex;align-items:flex-end;gap:2px;height:16px;margin-top:6px">${buildSpiralSpark()}</div>
-            <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-top:5px">Best: ${spiralBest} · Spirals: ${spiralCount}</div>
-          </div>
-        </div>
-        <div class="no-data" style="display:flex;align-items:center">No rule compliance data in range — run Sync to import from Trading Desk</div>
-      </div>`;
-    return;
-  }
-
-  // Score each day: followed / (followed + broke), ignoring null/N/A
-  function dayScore(d) {
-    let followed = 0, broke = 0;
-    RULES.forEach(r => {
-      const v = d[r.key];
-      const vl = (v === true ? 'followed' : v === false ? 'broke' : (v||'').toLowerCase());
-      if (vl === 'followed') followed++;
-      else if (vl === 'broke') broke++;
-      // 'na', 'n/a', null → skip
-    });
-    return (followed + broke) ? Math.round(followed / (followed + broke) * 100) : null;
-  }
-
-  // Map day P&L
-  const dayPnl = {};
-  trades.forEach(t => {
-    if (!dayPnl[t.date]) dayPnl[t.date] = 0;
-    dayPnl[t.date] += t.net_pnl || 0;
-  });
-
-  const scored = scoredDays
-    .map(d => ({ ...d, score: dayScore(d), pnl: dayPnl[d.date] ?? null }))
-    .filter(d => d.score !== null)
-    .sort((a,b) => a.date.localeCompare(b.date));
-
-  const avgScore = Math.round(scored.reduce((s,d) => s + d.score, 0) / scored.length);
-
-  // Trend: last 4 vs prior 4
-  const half = Math.floor(scored.length / 2);
-  const recent = scored.slice(-4);
-  const prior  = scored.slice(-8, -4);
-  const recentAvg = recent.length ? Math.round(recent.reduce((s,d) => s+d.score,0)/recent.length) : null;
-  const priorAvg  = prior.length  ? Math.round(prior.reduce((s,d)  => s+d.score,0)/prior.length)  : null;
-  const trendDelta = (recentAvg != null && priorAvg != null) ? recentAvg - priorAvg : null;
-
-  const bestDay  = scored.length ? scored.reduce((a,b) => b.score > a.score ? b : a) : null;
-  const worstDay = scored.length ? scored.reduce((a,b) => b.score < a.score ? b : a) : null;
-
-  // Score color
-  function scoreColor(v) {
-    return v >= 80 ? 'var(--green)' : v >= 60 ? 'var(--amber)' : 'var(--red)';
-  }
-  function barColor(v) {
-    return v >= 80 ? 'rgba(37,145,134,0.5)' : v >= 60 ? 'rgba(158,112,64,0.5)' : 'rgba(138,53,53,0.5)';
-  }
-
-  // Rule follow rates
-  const ruleStats = RULES.map(r => {
-    let followed = 0, broke = 0;
-    scoredDays.forEach(d => {
-      const v = d[r.key];
-      const vl = (v === true ? 'followed' : v === false ? 'broke' : (v||'').toLowerCase());
-      if (vl === 'followed') followed++;
-      else if (vl === 'broke') broke++;
-      // 'na', 'n/a', null → skip
-    });
-    const rate = (followed + broke) ? Math.round(followed / (followed + broke) * 100) : null;
-    return { ...r, followed, broke, rate };
-  });
-
-  // Score vs P&L insight
-  const highScoreDays = scored.filter(d => d.score >= 80 && d.pnl != null);
-  const lowScoreDays  = scored.filter(d => d.score < 80  && d.pnl != null);
-  const highAvgPnl = highScoreDays.length ? highScoreDays.reduce((s,d)=>s+d.pnl,0)/highScoreDays.length : null;
-  const lowAvgPnl  = lowScoreDays.length  ? lowScoreDays.reduce((s,d)=>s+d.pnl,0)/lowScoreDays.length   : null;
-
-  function fmtPnl(v) { return v == null ? '—' : (v>=0?'+':'')+'$'+Math.abs(v).toFixed(0); }
-  function fmtDate(d) {
-    if (!d) return '—';
-    const parts = d.split('-');
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return months[parseInt(parts[1])-1] + ' ' + parseInt(parts[2]);
-  }
-
-  function divider(label) {
-    return `<div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple);font-weight:500;margin:22px 0 16px;display:flex;align-items:center;gap:10px">${label}<span style="flex:1;height:1px;background:var(--border);display:block"></span></div>`;
-  }
-
-  // Chart data
-  const chartLabels = scored.map(d => fmtDate(d.date));
-  const chartScores = scored.map(d => d.score);
-  const chartColors = chartScores.map(s => scoreColor(s).replace('var(--green)','rgba(37,145,134,0.8)').replace('var(--amber)','rgba(158,112,64,0.8)').replace('var(--red)','rgba(138,53,53,0.8)'));
-
-  // Scatter data
-  const scatterPoints = scored.filter(d => d.pnl != null).map(d => ({ x: d.score, y: +d.pnl.toFixed(0) }));
-
-    el.innerHTML = `
-    <!-- Discipline module: 4-col equal-height layout -->
-    <div style="display:grid;grid-template-columns:160px repeat(3,minmax(0,1fr));gap:14px;align-items:stretch">
-
-      <!-- COL 1: Streaks + avg score — flex column fills full height -->
-      <div style="display:flex;flex-direction:column;gap:8px">
-
-        <div style="background:var(--surface2);border:1px solid var(--border);border-top:2px solid rgba(37,145,134,0.5);border-radius:4px;padding:10px 12px;flex:1">
-          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(37,145,134,0.55);margin-bottom:6px">Process Discipline</div>
-          <div style="display:flex;align-items:baseline;gap:6px">
-            <span style="font-family:var(--font-num);font-size:28px;font-weight:300;line-height:1;color:${discCur>0?'var(--green)':'rgba(180,185,200,0.2)'}" id="disc-streak-num">${discCur}</span>
-            <span style="font-family:var(--font-mono);font-size:9px;color:var(--muted)">session streak</span>
-          </div>
-          <div style="display:flex;align-items:flex-end;gap:2px;height:16px;margin-top:6px">${buildDiscSpark()}</div>
-          <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-top:5px">Best: ${discBest} · Breaks: ${discBreaks}</div>
-        </div>
-
-        <div style="background:var(--surface2);border:1px solid var(--border);border-top:2px solid rgba(37,145,134,0.5);border-radius:4px;padding:10px 12px;flex:1">
-          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(37,145,134,0.55);margin-bottom:6px;display:flex;align-items:center;gap:5px">
-            No Spiral
-            <span class="spiral-q" style="position:relative">?<span class="spiral-tt"><div class="spiral-tt-title">Spiral Definition</div><div>· Trades &gt; 12</div><div>· Rule breaks ≥ 1</div><div>· Net P&amp;L &lt; 0</div><div>· Avg P&amp;L/trade &lt; −$15</div><div class="spiral-tt-foot">All four must be met</div></span></span>
-          </div>
-          <div style="display:flex;align-items:baseline;gap:6px">
-            <span style="font-family:var(--font-num);font-size:28px;font-weight:300;line-height:1;color:${spiralCur>0?'var(--green)':'rgba(180,185,200,0.2)'}">${spiralCur}</span>
-            <span style="font-family:var(--font-mono);font-size:9px;color:var(--muted)">session streak</span>
-          </div>
-          <div style="display:flex;align-items:flex-end;gap:2px;height:16px;margin-top:6px">${buildSpiralSpark()}</div>
-          <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-top:5px">Best: ${spiralBest} · Spirals: ${spiralCount}</div>
-        </div>
-
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;position:relative;overflow:hidden;flex:1">
-          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${scoreColor(avgScore)};opacity:0.45"></div>
-          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Avg Score</div>
-          <div style="display:flex;align-items:baseline;gap:4px">
-            <span style="font-family:var(--font-num);font-size:28px;font-weight:300;line-height:1;color:${scoreColor(avgScore)}">${avgScore}</span>
-            <span style="font-family:var(--font-mono);font-size:9px;color:var(--muted)">%</span>
-          </div>
-          <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-top:3px">${scored.length} sessions${trendDelta != null ? ` · <span style="color:${trendDelta>=0?'var(--green)':'var(--red)'}">${trendDelta>=0?'↑ +':'↓ '}${Math.abs(trendDelta)}%</span>` : ''}</div>
-        </div>
-
-      </div>
-
-      <!-- COL 2: Rule breakdown — stretches to full row height -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:14px 16px;min-width:0;overflow:hidden;display:flex;flex-direction:column">
-        <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:10px">Rule Breakdown<span style="flex:1;height:1px;background:var(--border);display:block"></span></div>
-        <div style="display:flex;flex-direction:column;justify-content:space-between;flex:1">
-          ${ruleStats.map(r => {
-            if (r.rate == null) return '';
-            return `<div style="display:flex;align-items:center;gap:8px">
-              <div style="font-family:var(--font-mono);font-size:10px;color:rgba(180,185,200,0.55);width:120px;flex-shrink:0;line-height:1.3">${r.label}</div>
-              <div style="flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden">
-                <div style="height:100%;width:${r.rate}%;background:${barColor(r.rate)};border-radius:2px"></div>
-              </div>
-              <div style="font-family:var(--font-num);font-size:12px;color:${scoreColor(r.rate)};width:34px;text-align:right;flex-shrink:0">${r.rate}%</div>
-              <div style="font-family:var(--font-mono);font-size:9px;color:rgba(37,145,134,0.5);width:22px;flex-shrink:0">✓${r.followed}</div>
-              <div style="font-family:var(--font-mono);font-size:9px;color:rgba(138,53,53,0.5);width:22px;flex-shrink:0">✕${r.broke}</div>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>
-
-      <!-- COL 3: Daily Score — full height, chart fills remaining space -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:12px 14px;min-width:0;overflow:hidden;display:flex;flex-direction:column">
-        <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;flex-shrink:0">Daily Score</div>
-        <div style="position:relative;flex:1;min-height:120px;width:100%"><canvas id="chart-discipline" style="position:absolute;inset:0"></canvas></div>
-      </div>
-
-      <!-- COL 4: Score vs P&L — full height -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:12px 14px;min-width:0;overflow:hidden;display:flex;flex-direction:column">
-        <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;flex-shrink:0">Score vs P&L</div>
-        ${scatterPoints.length >= 2 ? `
-        <div style="position:relative;flex:1;min-height:120px;width:100%"><canvas id="chart-disc-corr" style="position:absolute;inset:0"></canvas></div>
-        ${(highAvgPnl != null && lowAvgPnl != null) ? `
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:8px;padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-left:2px solid rgba(37,145,134,0.3);border-radius:3px;line-height:1.8;flex-shrink:0">
-          ≥80% → <span style="color:${highAvgPnl>=0?'var(--green)':'var(--red)'};opacity:0.85">${fmtPnl(highAvgPnl)}</span> &nbsp;
-          &lt;80% → <span style="color:${lowAvgPnl>=0?'var(--green)':'var(--red)'};opacity:0.85">${fmtPnl(lowAvgPnl)}</span>
-        </div>` : ''}` : '<div class="no-data" style="flex:1;display:flex;align-items:center;justify-content:center">Not enough data</div>'}
-      </div>
-
-    </div>
-  `;
-
-  // Render trend chart
-  requestAnimationFrame(() => {
-    const ctx1 = document.getElementById('chart-discipline');
-    if (ctx1) {
-      destroyChart('discipline');
-      charts['discipline'] = new Chart(ctx1.getContext('2d'), {
-        type: 'line',
-        data: {
-          labels: chartLabels,
-          datasets: [{
-            data: chartScores,
-            borderColor: 'rgba(37,145,134,0.7)',
-            backgroundColor: 'rgba(37,145,134,0.06)',
-            borderWidth: 1.5,
-            pointBackgroundColor: chartColors,
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            fill: true,
-            tension: 0.3,
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          layout: { padding: { top: 8, right: 4, bottom: 2, left: 2 } },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: '#16171e', borderColor: '#22242e', borderWidth: 1,
-              titleFont: { family: 'DM Mono', size: 10 }, bodyFont: { family: 'DM Mono', size: 11 },
-              titleColor: '#4a4f5e', bodyColor: '#b8bcc8',
-              callbacks: { label: ctx => `Score: ${ctx.raw}%` }
-            }
-          },
-          scales: {
-            x: { grid: { display: false }, ticks: { color: '#4a4f5e', font: { family: 'DM Mono', size: 9 } }, border: { display: false } },
-            y: { min: 0, max: 105, grid: { color: '#22242e', lineWidth: 0.5 }, ticks: { color: '#4a4f5e', font: { family: 'DM Mono', size: 9 }, stepSize: 25, callback: v => v <= 100 ? v + '%' : '' }, border: { display: false } }
-          }
-        }
-      });
-    }
-
-    // Render scatter
-    const ctx2 = document.getElementById('chart-disc-corr');
-    if (ctx2 && scatterPoints.length >= 2) {
-      destroyChart('disc-corr');
-      charts['disc-corr'] = new Chart(ctx2.getContext('2d'), {
-        type: 'scatter',
-        data: {
-          datasets: [{
-            data: scatterPoints,
-            backgroundColor: scatterPoints.map(p => p.y >= 0 ? 'rgba(37,145,134,0.6)' : 'rgba(138,53,53,0.6)'),
-            pointRadius: 5, pointHoverRadius: 7,
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          layout: { padding: { top: 6, right: 8, bottom: 2, left: 2 } },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: '#16171e', borderColor: '#22242e', borderWidth: 1,
-              titleFont: { family: 'DM Mono', size: 10 }, bodyFont: { family: 'DM Mono', size: 11 },
-              titleColor: '#4a4f5e', bodyColor: '#b8bcc8',
-              callbacks: { label: ctx => `Score: ${ctx.raw.x}% | P&L: $${ctx.raw.y}` }
-            }
-          },
-          scales: {
-            x: { min: 0, max: 105, grid: { color: '#22242e', lineWidth: 0.5 }, ticks: { color: '#4a4f5e', font: { family: 'DM Mono', size: 9 }, callback: v => v <= 100 ? v+'%' : '' }, border: { display: false } },
-            y: { grid: { color: '#22242e', lineWidth: 0.5 }, ticks: { color: '#4a4f5e', font: { family: 'DM Mono', size: 9 }, callback: v => '$'+v }, border: { display: false } }
-          }
-        }
-      });
-    }
-  });
-}
 
 function applyCommissions(trades, commissions) {
   return trades.map(t => {
@@ -3978,36 +3435,31 @@ function goPage(p) { panelPage = p; renderPanelTrades(); document.getElementById
 function renderRecentTrades(trades) {
   var el = document.getElementById('recent-trades-list');
   if (!el) return;
-  var recent = trades.slice().sort(function(a,b){ return (b.entry_time||'').localeCompare(a.entry_time||''); }).slice(0,8);
-  if (!recent.length) { el.innerHTML = '<div style="color:var(--muted);font-size:11px;font-family:var(--font-mono)">No trades yet</div>'; return; }
+  var recent = trades.slice().sort(function(a,b){ return (b.entry_time||'').localeCompare(a.entry_time||''); }).slice(0, 8);
+  if (!recent.length) { el.innerHTML = '<div class="no-data">No trades yet</div>'; return; }
 
-  var rtAligns = ['left','left','center','center','right'];
-  var html = '<div style="display:grid;grid-template-columns:90px 1fr 60px 40px 80px;gap:8px;padding:0 6px 8px;border-bottom:1px solid var(--border);margin-bottom:4px">';
-  ['Time','Symbol','Dir','Qty','Net P&L'].forEach(function(h, i) {
-    html += '<span style="font-family:var(--font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-align:' + rtAligns[i] + '">' + h + '</span>';
-  });
-  html += '</div>';
+  var template = '90px 1fr 60px 40px 80px';
+  var html = '<div class="an-table">' +
+    anTableHead(template, ['Time', 'Symbol', 'Dir', 'Qty', 'Net P&L'], ['left', 'left', 'center', 'center', 'right']);
 
   recent.forEach(function(t) {
-    var pnl    = t.net_pnl || 0;
-    var pnlCol = pnl > 0 ? '#259186' : pnl < 0 ? '#c26060' : 'var(--muted)';
+    var pnl = t.net_pnl || 0;
+    var pnlCol = pnl > 0 ? 'var(--green)' : pnl < 0 ? 'var(--red)' : 'var(--muted)';
     var pnlStr = (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2);
     var dirCol = t.direction === 'long' ? 'var(--teal)' : '#c26060';
     var dateStr = toNYTimeStr(t.entry_time).substring(5);
-    html += '<div class="recent-trade-row" data-id="' + t.id + '" style="display:grid;grid-template-columns:90px 1fr 60px 40px 80px;gap:8px;padding:7px 6px;border-bottom:1px solid var(--border);cursor:pointer">';
-    html += '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">' + dateStr + '</span>';
-    html += '<span style="font-family:var(--font-mono);font-size:11px;color:#6a7080">' + (t.instrument||'--') + '</span>';
-    html += '<span style="font-family:var(--font-mono);font-size:10px;color:' + dirCol + ';text-align:center">' + (t.direction||'').toUpperCase() + '</span>';
-    html += '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-align:center">' + (t.quantity||'') + '</span>';
-    html += '<span style="font-family:var(--font-mono);font-size:11px;font-weight:500;color:' + pnlCol + ';text-align:right">' + pnlStr + '</span>';
+    html += '<div class="an-table__row an-table__row--clickable recent-trade-row" data-id="' + t.id + '" style="grid-template-columns:' + template + '">';
+    html += '<span class="an-table__cell">' + dateStr + '</span>';
+    html += '<span class="an-table__cell" style="color:#6a7080">' + (t.instrument||'--') + '</span>';
+    html += '<span class="an-table__cell an-table__cell--center" style="color:' + dirCol + '">' + (t.direction||'').toUpperCase() + '</span>';
+    html += '<span class="an-table__cell an-table__cell--center">' + (t.quantity||'') + '</span>';
+    html += '<span class="an-table__cell an-table__cell--right" style="font-weight:500;color:' + pnlCol + '">' + pnlStr + '</span>';
     html += '</div>';
   });
-
+  html += '</div>';
   el.innerHTML = html;
 
   el.querySelectorAll('.recent-trade-row').forEach(function(row) {
-    row.addEventListener('mouseover', function(){ this.style.background = 'var(--surface2)'; });
-    row.addEventListener('mouseout',  function(){ this.style.background = ''; });
     row.addEventListener('click', function(){ openTradePanelToTrade(this.dataset.id); });
   });
 }
@@ -6177,307 +5629,6 @@ Write in plain prose with the section headings listed above. No bullet points wi
 
 
 
-// ── Top bar streak pills ──────────────────────────────────────────────────────
-// ── Emotion chip helper ────────────────────────────────────────────────────────
-const EMOTION_CLASS = {
-  focused: 'positive', confident: 'positive', calm: 'positive',
-  neutral: 'neutral',
-  overconfident: 'caution', hesitant: 'caution', impatient: 'caution', anxious: 'caution',
-  frustrated: 'negative', fomo: 'negative', revenge: 'negative',
-};
-function emotionChipsHtml(emotions) {
-  if (!emotions || !emotions.length) return '';
-  const chips = emotions.map(e => {
-    const key = (e || '').toLowerCase();
-    const cls = EMOTION_CLASS[key] || 'neutral';
-    const label = key.charAt(0).toUpperCase() + key.slice(1);
-    return `<span class="emotion-chip ${cls}">${label}</span>`;
-  }).join('');
-  return `<div class="journal-emotion-chips">${chips}</div>`;
-}
-
-// ── Format ET timestamp ────────────────────────────────────────────────────────
-// et_time is stored as "HH:MM:SS ET" (time only); trading_day is "YYYY-MM-DD"
-function fmtJournalTime(entry) {
-  const day  = (entry.trading_day || '').trim();
-  const time = (entry.et_time     || '').trim();
-  if (!day && !time) return '';
-  if (day) {
-    const d = new Date(day + 'T12:00:00'); // noon to avoid timezone date shift
-    const dayStr = isNaN(d) ? day : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    return time ? `${dayStr} · ${time}` : dayStr;
-  }
-  return time;
-}
-
-// ── Safe HTML escape ───────────────────────────────────────────────────────────
-const _safe = s => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-// ── Entry stores (indexed to avoid onclick escaping issues) ───────────────────
-let _journalStore = [];
-let _lessonStore  = [];
-
-function openJournalEntry(store, idx) {
-  const entry = store[idx];
-  if (!entry) return;
-  document.getElementById('journal-modal-title').textContent = entry._modalTitle;
-  document.getElementById('journal-modal-meta').textContent  = entry._timeStr;
-  document.getElementById('journal-modal-body').innerHTML    = entry._bodyHtml;
-  document.getElementById('journal-modal-overlay').classList.add('open');
-}
-function closeJournalModal() {
-  document.getElementById('journal-modal-overlay').classList.remove('open');
-}
-
-// ── Journal panel (View All + delete) ─────────────────────────────────────────
-let _jpCurrentTab = 'journal';
-
-async function openJournalPanel(tab = 'journal') {
-  _jpCurrentTab = tab;
-  document.getElementById('journal-panel-overlay').classList.add('open');
-  document.getElementById('journal-panel').classList.add('open');
-  await loadJournalPanelPage();
-}
-function closeJournalPanel() {
-  document.getElementById('journal-panel-overlay').classList.remove('open');
-  document.getElementById('journal-panel').classList.remove('open');
-}
-function switchJournalTab(tab) {
-  _jpCurrentTab = tab;
-  loadJournalPanelPage();
-}
-
-async function loadJournalPanelPage() {
-  const body = document.getElementById('journal-panel-body');
-  const titleEl = document.getElementById('journal-panel-title');
-  body.innerHTML = '<div style="padding:20px;font-family:var(--font-mono);font-size:11px;color:var(--muted)">Loading…</div>';
-
-  // Highlight active tab
-  document.getElementById('jp-tab-journal').style.color  = _jpCurrentTab === 'journal'  ? 'var(--text)' : '';
-  document.getElementById('jp-tab-lessons').style.color  = _jpCurrentTab === 'lessons'  ? 'var(--text)' : '';
-
-  const dateFilters = [];
-  if (dateFrom) dateFilters.push(`trading_day=gte.${dateFrom}`);
-  if (dateTo)   dateFilters.push(`trading_day=lte.${dateTo}`);
-
-  try {
-    let entries;
-    if (_jpCurrentTab === 'journal') {
-      titleEl.textContent = 'Journal';
-      entries = await query('intraday_journal',
-        'id,et_time,trading_day,session_phase,dictated_text,emotions',
-        ['dictated_text=not.is.null', ...dateFilters, 'order=et_time.desc', 'limit=200']);
-    } else {
-      titleEl.textContent = 'Lessons & Reflections';
-      entries = await query('intraday_journal',
-        'id,et_time,trading_day,session_phase,lesson_text',
-        ['lesson_text=not.is.null', ...dateFilters, 'order=et_time.desc', 'limit=200']);
-      entries = (entries || []).filter(e => (e.lesson_text || '').trim());
-    }
-    renderJournalPanel(entries || []);
-  } catch(e) {
-    body.innerHTML = `<div style="padding:20px;font-family:var(--font-mono);font-size:11px;color:var(--red)">Error: ${e.message}</div>`;
-  }
-}
-
-function renderJournalPanel(entries) {
-  const body = document.getElementById('journal-panel-body');
-  if (!entries.length) {
-    body.innerHTML = '<div style="padding:20px;font-family:var(--font-mono);font-size:11px;color:var(--muted)">No entries found.</div>';
-    return;
-  }
-  body.innerHTML = entries.map((entry, i) => {
-    const isLesson = _jpCurrentTab === 'lessons';
-    const text    = isLesson ? (entry.lesson_text || '') : (entry.dictated_text || '');
-    const timeStr = fmtJournalTime(entry);
-    const phase   = entry.session_phase || '';
-    const chips   = !isLesson ? emotionChipsHtml(entry.emotions) : '';
-    // store for modal click
-    window._jpStore = window._jpStore || [];
-    window._jpStore[i] = {
-      _modalTitle: isLesson ? 'Lesson & Reflection' : 'Journal Entry',
-      _timeStr: timeStr,
-      _bodyHtml: `<p style="font-family:var(--font-sans);font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${_safe(text)}</p>${chips}`,
-      id: entry.id,
-      field: isLesson ? 'lesson_text' : 'dictated_text',
-      text,
-      chips,
-      phase,
-    };
-    return `
-    <div class="jp-entry" id="jp-entry-${i}">
-      <div class="jp-entry-body" onclick="openJournalEntryFromPanel(${i})">
-        <div class="jp-entry-meta">${timeStr}${phase ? ' · ' + phase : ''}</div>
-        <div class="jp-entry-text">${_safe(text)}</div>
-        ${chips}
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
-        <button class="jp-edit-btn" onclick="openJournalEdit(${i})" title="Edit">✎</button>
-        <button class="jp-delete-btn" onclick="deleteJournalEntry('${entry.id}', this)" title="Delete">🗑</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function openJournalEntryFromPanel(i) {
-  const e = (window._jpStore || [])[i];
-  if (!e) return;
-  document.getElementById('journal-modal-title').textContent = e._modalTitle;
-  document.getElementById('journal-modal-meta').textContent  = e._timeStr;
-  document.getElementById('journal-modal-body').innerHTML    = e._bodyHtml;
-  document.getElementById('journal-modal-overlay').classList.add('open');
-}
-
-async function deleteJournalEntry(id, btn) {
-  if (!confirm('Delete this entry? This cannot be undone.')) return;
-  btn.disabled = true;
-  btn.textContent = '…';
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/intraday_journal?id=eq.${id}`, {
-      method: 'DELETE',
-      headers: HEADERS,
-    });
-    if (!res.ok) throw new Error(res.status);
-    // Remove row from panel
-    btn.closest('.jp-entry').remove();
-    // Refresh the widget cards
-    await loadJournalData();
-    renderJournal();
-    renderLessons();
-  } catch(e) {
-    btn.disabled = false;
-    btn.textContent = '🗑';
-    alert('Delete failed: ' + e.message);
-  }
-}
-
-function openJournalEdit(i) {
-  const store = window._jpStore || [];
-  const e = store[i];
-  if (!e) return;
-  const entryEl = document.getElementById('jp-entry-' + i);
-  if (!entryEl) return;
-  const bodyEl = entryEl.querySelector('.jp-entry-body');
-  bodyEl.innerHTML = `
-    <textarea id="jp-edit-ta-${i}" style="width:100%;min-height:120px;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--font-sans);font-size:12px;line-height:1.55;padding:10px;box-sizing:border-box;resize:vertical;outline:none">${e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <button onclick="saveJournalEdit(${i})" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:5px 12px;border-radius:3px;background:var(--purple);color:#fff;border:none;cursor:pointer">Save</button>
-      <button onclick="cancelJournalEdit(${i})" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:5px 12px;border-radius:3px;background:var(--surface2);color:var(--muted);border:1px solid var(--border2);cursor:pointer">Cancel</button>
-    </div>`;
-  // Focus textarea
-  const ta = document.getElementById('jp-edit-ta-' + i);
-  if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
-}
-
-async function saveJournalEdit(i) {
-  const store = window._jpStore || [];
-  const e = store[i];
-  if (!e) return;
-  const ta = document.getElementById('jp-edit-ta-' + i);
-  if (!ta) return;
-  const newText = ta.value.trim();
-  if (!newText) return;
-  const saveBtn = ta.nextElementSibling.querySelector('button');
-  saveBtn.textContent = '...'; saveBtn.disabled = true;
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/intraday_journal?id=eq.${e.id}`, {
-      method: 'PATCH',
-      headers: { ...HEADERS, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ [e.field]: newText }),
-    });
-    if (!res.ok) throw new Error(res.status);
-    // Update store
-    store[i].text = newText;
-    store[i]._bodyHtml = `<p style="font-family:var(--font-sans);font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${_safe(newText)}</p>${e.chips || ''}`;
-    // Restore normal view with chips preserved
-    const entryEl = document.getElementById('jp-entry-' + i);
-    const bodyEl = entryEl.querySelector('.jp-entry-body');
-    bodyEl.innerHTML = `
-      <div class="jp-entry-meta">${e._timeStr}${e.phase ? ' · ' + e.phase : ''}</div>
-      <div class="jp-entry-text">${_safe(newText)}</div>
-      ${e.chips || ''}`;
-    bodyEl.onclick = () => openJournalEntryFromPanel(i);
-    // Patch in-memory arrays so dashboard updates regardless of date filter
-    const memArr = e.field === 'lesson_text' ? allLessonEntries : allJournalEntries;
-    const memEntry = memArr.find(x => x.id === e.id);
-    if (memEntry) memEntry[e.field] = newText;
-    renderJournal();
-    renderLessons();
-  } catch(err) {
-    saveBtn.textContent = 'Save'; saveBtn.disabled = false;
-    alert('Save failed: ' + err.message);
-  }
-}
-
-function cancelJournalEdit(i) {
-  const store = window._jpStore || [];
-  const e = store[i];
-  if (!e) return;
-  const entryEl = document.getElementById('jp-entry-' + i);
-  const bodyEl = entryEl.querySelector('.jp-entry-body');
-  bodyEl.innerHTML = `
-    <div class="jp-entry-meta">${e._timeStr}${e.phase ? ' · ' + e.phase : ''}</div>
-    <div class="jp-entry-text">${_safe(e.text)}</div>
-    ${e.chips || ''}`;
-  bodyEl.onclick = () => openJournalEntryFromPanel(i);
-}
-
-// ── renderJournal ──────────────────────────────────────────────────────────────
-function renderJournal() {
-  const el = document.getElementById('journal-entries-section');
-  if (!el) return;
-  if (!allJournalEntries.length) {
-    el.innerHTML = '<div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);padding:8px 0">No journal entries yet</div>';
-    return;
-  }
-  _journalStore = allJournalEntries.map(entry => {
-    const preview = (entry.dictated_text || '').trim();
-    const timeStr = fmtJournalTime(entry);
-    const chips   = emotionChipsHtml(entry.emotions);
-    return {
-      _modalTitle: 'Journal Entry',
-      _timeStr:    timeStr,
-      _bodyHtml:   `<p style="font-family:var(--font-sans);font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${_safe(preview)}</p>${chips}`,
-      preview, timeStr, phase: entry.session_phase || '', chips,
-    };
-  });
-  el.innerHTML = _journalStore.map((e, i) => `
-    <div class="journal-entry" onclick="openJournalEntry(_journalStore,${i})">
-      <div class="journal-entry-meta">
-        <span class="journal-entry-time">${e.timeStr}</span>
-        ${e.phase ? `<span class="journal-entry-phase">${e.phase.charAt(0).toUpperCase()+e.phase.slice(1)}</span>` : ''}
-      </div>
-      <div class="journal-entry-text">${_safe(e.preview)}</div>
-      ${e.chips}
-    </div>`).join('');
-}
-
-// ── renderLessons ──────────────────────────────────────────────────────────────
-function renderLessons() {
-  const el = document.getElementById('lessons-entries-section');
-  if (!el) return;
-  if (!allLessonEntries.length) {
-    el.innerHTML = '<div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);padding:8px 0">No lessons captured yet</div>';
-    return;
-  }
-  _lessonStore = allLessonEntries.map(entry => {
-    const preview = (entry.lesson_text || '').trim();
-    const timeStr = fmtJournalTime(entry);
-    return {
-      _modalTitle: 'Lesson & Reflection',
-      _timeStr:    timeStr,
-      _bodyHtml:   `<p style="font-family:var(--font-sans);font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${_safe(preview)}</p>`,
-      preview, timeStr,
-    };
-  });
-  el.innerHTML = _lessonStore.map((e, i) => `
-    <div class="journal-entry" onclick="openJournalEntry(_lessonStore,${i})">
-      <div class="journal-entry-meta">
-        <span class="journal-entry-time">${e.timeStr}</span>
-      </div>
-      <div class="journal-entry-text">${_safe(e.preview)}</div>
-    </div>`).join('');
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INTEL TAB

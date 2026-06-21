@@ -1,5 +1,5 @@
-import AnalyticsEmbed from "@/components/AnalyticsEmbed";
+import AnalyticsShell from "@/components/AnalyticsShell";
 
 export default function AnalyticsPage() {
-  return <AnalyticsEmbed />;
+  return <AnalyticsShell />;
 }
