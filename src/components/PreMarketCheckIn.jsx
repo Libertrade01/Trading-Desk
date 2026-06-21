@@ -15,6 +15,7 @@ import {
 import MarketEventNudge from "./MarketEventNudge";
 import ReadinessScoreWidget from "./ReadinessScoreWidget";
 import { todayKey, offsetDateKey } from "../lib/today-key";
+import { loadHomeFocusItems } from "../lib/weekly-process-review";
 
 async function loadData(key, fallback) {
   try {
@@ -115,6 +116,7 @@ export default function PreMarketCheckIn({ onBack }) {
   const [yesterdaySleepDebtMinutes, setYesterdaySleepDebtMinutes] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
+  const [weekFocus, setWeekFocus] = useState([]);
 
   const scores = useMemo(() => computeReadinessScore(form), [form]);
   const status = useMemo(() => readinessStatus(scores.composite), [scores.composite]);
@@ -135,11 +137,13 @@ export default function PreMarketCheckIn({ onBack }) {
     (async () => {
       const dateKey = todayKey();
       const yesterdayKey = offsetDateKey(dateKey, -1);
-      const [data, yesterdayData] = await Promise.all([
+      const [data, yesterdayData, focus] = await Promise.all([
         loadData(`premarket-checkin-${dateKey}`, null),
         loadData(`premarket-checkin-${yesterdayKey}`, null),
+        loadHomeFocusItems(dateKey),
       ]);
       if (data) setForm({ ...DEFAULT_PREMARKET_FORM, ...data });
+      setWeekFocus(focus.items || []);
       if (yesterdayData?.sleepDebtMinutes != null && yesterdayData.sleepDebtMinutes !== "") {
         setYesterdaySleepDebtMinutes(parseSleepDebtMinutes(yesterdayData.sleepDebtMinutes));
       } else {
@@ -223,6 +227,17 @@ export default function PreMarketCheckIn({ onBack }) {
             Be honest before the open. Your score updates as you go.
           </p>
         </div>
+
+        {weekFocus.length > 0 && (
+          <div className="pm-week-focus-reminder" role="note">
+            <div className="pm-week-focus-reminder-label hybrid-eyebrow">This week&apos;s focus</div>
+            <ul className="pm-week-focus-reminder-list">
+              {weekFocus.map((item, i) => (
+                <li key={i}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="premarket-form">
           {/* 01 Physical */}

@@ -23,6 +23,9 @@ const NAV_ITEMS = [
   { id: "history", href: "/history", label: "History", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5v4l2.5 1.5" strokeLinecap="round"/></svg>
   )},
+  { id: "weeklyreview", href: "/weekly-review", label: "Weekly Review", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3" strokeLinecap="round"/></svg>
+  )},
   { id: "propeconomics", href: "/prop-economics", label: "Prop Economics", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 12V6l6-3 6 3v6l-6 3-6-3z"/><path d="M8 3v10M2 6l6 3 6-3" strokeLinecap="round" strokeLinejoin="round"/></svg>
   )},
@@ -43,6 +46,7 @@ const NAV_ITEMS = [
 function isNavActive(pathname, item) {
   if (item.id === "home") return pathname === "/";
   if (item.id === "history") return pathname === "/history" || pathname.startsWith("/history/");
+  if (item.id === "weeklyreview") return pathname === "/weekly-review" || pathname.startsWith("/weekly-review/");
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 

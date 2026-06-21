@@ -17,6 +17,7 @@ export default function HomePage() {
     <HomeDashboard
       onNavigate={(id) => router.push(SECTION_ROUTES[id] || "/")}
       onOpenHistoryDay={(date) => router.push(`/history/${date}`)}
+      onOpenWeeklyReview={() => router.push("/weekly-review")}
     />
   );
 }

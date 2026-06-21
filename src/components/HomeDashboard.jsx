@@ -25,6 +25,11 @@ import {
   seedRecoveryDemo,
 } from "../lib/dll-recovery";
 import { loadDllSettings } from "../lib/dll-recovery-settings";
+import {
+  loadHomeFocusItems,
+  shouldPromptWeeklyReview,
+  hasTradingDaysThisWeek,
+} from "../lib/weekly-process-review";
 
 /** Set localStorage to "750" to demo recovery UI; remove key to disable. */
 const DEMO_RECOVERY_KEY = "libertrade_demo_recovery";
@@ -203,7 +208,7 @@ function heroCopy(allComplete, completedCount, weekend, timeEyebrow) {
   };
 }
 
-export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
+export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeeklyReview }) {
   const effectiveDateKey = todayKey();
   const effectiveDate = useMemo(
     () => dateFromKey(effectiveDateKey),
@@ -214,6 +219,8 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [recoveryStatus, setRecoveryStatus] = useState(null);
+  const [weekFocus, setWeekFocus] = useState({ items: [], complete: false });
+  const [showReviewPrompt, setShowReviewPrompt] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -235,13 +242,19 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
         recoveryState = await loadRecoveryState();
       }
 
-      const [todaySession, all] = await Promise.all([
+      const [todaySession, all, focus, hasWeekDays] = await Promise.all([
         loadSessionDay(effectiveDateKey),
         loadAllSessions(),
+        loadHomeFocusItems(effectiveDateKey),
+        hasTradingDaysThisWeek(effectiveDateKey),
       ]);
       if (cancelled) return;
       setToday(todaySession);
       setSessions(all);
+      setWeekFocus(focus);
+      setShowReviewPrompt(
+        shouldPromptWeeklyReview(effectiveDateKey) && hasWeekDays
+      );
       setRecoveryStatus(getRecoveryStatus(recoveryState, dllSettings));
       setLoading(false);
     })();
@@ -450,6 +463,28 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay }) {
           )}
 
           <HomeEventBanner />
+
+          {weekFocus.items.length > 0 && (
+            <section className="home-week-focus" aria-label="This week's focus">
+              <div className="home-week-focus-eyebrow hybrid-eyebrow">This week&apos;s focus</div>
+              <ul className="home-week-focus-list">
+                {weekFocus.items.map((item, i) => (
+                  <li key={i} className="home-week-focus-item">{item}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {showReviewPrompt && onOpenWeeklyReview && (
+            <button
+              type="button"
+              className="home-review-prompt"
+              onClick={onOpenWeeklyReview}
+            >
+              <span className="home-review-prompt-label">Weekly process review</span>
+              <span className="home-review-prompt-action">Review this week →</span>
+            </button>
+          )}
 
           {recoveryStatus?.active && (
             <div className="dll-recovery-banner" role="status" aria-label="DLL recovery mode">

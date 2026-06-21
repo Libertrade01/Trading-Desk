@@ -13,34 +13,7 @@ import {
   getRiskPlanFollowed,
 } from "../lib/history-data";
 import { playbookAdherenceLabel } from "../lib/setup-adherence";
-import { readinessScoreColor } from "../lib/premarket-scoring";
-
-function ScoreRing({ score, size = 100 }) {
-  const r = 38;
-  const c = 2 * Math.PI * r;
-  const offset = c - (score / 100) * c;
-  const tone = readinessScoreColor(score);
-
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100" className="history-score-ring">
-      <circle cx="50" cy="50" r={r} fill="none" stroke="var(--border)" strokeWidth="5" />
-      <circle
-        cx="50"
-        cy="50"
-        r={r}
-        fill="none"
-        stroke={tone}
-        strokeWidth="5"
-        strokeLinecap="round"
-        strokeDasharray={c}
-        strokeDashoffset={offset}
-        transform="rotate(-90 50 50)"
-      />
-      <text x="50" y="48" textAnchor="middle" className="history-score-num" style={{ fill: tone }}>{score}</text>
-      <text x="50" y="62" textAnchor="middle" className="history-score-denom">/ 100</text>
-    </svg>
-  );
-}
+import HistoryDaySummary from "./history/HistoryDaySummary";
 
 function StatGrid({ title, items }) {
   return (
@@ -58,11 +31,12 @@ function StatGrid({ title, items }) {
   );
 }
 
-function SectionCard({ title, subtitle, children, action }) {
+function SectionCard({ num, title, subtitle, children, action }) {
   return (
     <section className="history-section-card">
       <div className="history-section-head">
-        <div>
+        {num ? <span className="history-section-num">{num}</span> : null}
+        <div className="history-section-head__text">
           <h2 className="history-section-title hybrid-section-title">{title}</h2>
           {subtitle && <p className="history-section-sub">{subtitle}</p>}
         </div>
@@ -122,35 +96,16 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
     <div className="history-detail-page hybrid-page">
       <div className="history-detail-top">
         <button type="button" className="pm-back" onClick={onBack}>← Back to history</button>
-        <div className="history-detail-header">
-          <div>
-            <h1 className="history-detail-title hybrid-title">{formatDetailTitle(date)}</h1>
-            <div className="history-detail-meta">
-              {session.readinessScore != null && (
-                <span>Score <strong>{session.readinessScore}</strong></span>
-              )}
-              <span className={pnlTone}>
-                {session.netPnl != null ? `${formatUsd(session.netPnl, { signed: true })} net` : "No P&L recorded"}
-              </span>
-            </div>
-          </div>
-        </div>
+        <h1 className="history-detail-title hybrid-title">{formatDetailTitle(date)}</h1>
+        <HistoryDaySummary session={session} />
       </div>
 
       <div className="history-detail-grid">
-        <SectionCard title="Pre-Market" subtitle="The state you arrived in.">
+        <SectionCard num="01" title="Pre-Market" subtitle="The state you arrived in.">
           {!pre ? (
             <p className="history-missing">No pre-market check-in saved for this day.</p>
           ) : (
-            <>
-              {session.readinessScore != null && (
-                <div className="history-pre-score">
-                  <ScoreRing score={session.readinessScore} />
-                  <div className={`history-pre-status history-pre-status--${session.readinessTone || "good"}`}>
-                    {session.readinessLabel}
-                  </div>
-                </div>
-              )}
+            <div className="history-stat-groups">
               <StatGrid
                 title="Physical"
                 items={[
@@ -213,11 +168,11 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                   </ul>
                 </div>
               )}
-            </>
+            </div>
           )}
         </SectionCard>
 
-        <SectionCard title="Daily Plan" subtitle="What you said you'd do.">
+        <SectionCard num="02" title="Daily Plan" subtitle="What you said you'd do.">
           {!plan ? (
             <p className="history-missing">No daily plan saved for this day.</p>
           ) : (
@@ -345,7 +300,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
         </SectionCard>
       </div>
 
-      <SectionCard title="Post-Market" subtitle="How it actually went.">
+      <SectionCard num="03" title="Post-Market" subtitle="How it actually went.">
         {!post ? (
           <p className="history-missing">No post-market review saved for this day.</p>
         ) : (
@@ -410,7 +365,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
               </div>
             </div>
 
-            <div className="history-flags-block">
+            <div className={`history-flags-block${raisedFlags.length ? "" : " history-flags-block--clean"}`}>
               <div className="history-flags-title hybrid-label-sm">
                 {raisedFlags.length
                   ? `${raisedFlags.length} behavioral flag${raisedFlags.length === 1 ? "" : "s"} raised`
