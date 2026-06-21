@@ -45,6 +45,115 @@ export function getRecentProcessWeeks(count = 8) {
   return weeks;
 }
 
+/** Current Mon–Fri process week. */
+export function getCurrentProcessWeek() {
+  return getProcessWeekRange(0);
+}
+
+/** Mon–Fri range from the Friday end date (YYYY-MM-DD). */
+export function weekRangeFromEnd(weekEnd) {
+  return { start: offsetDateKey(weekEnd, -4), end: weekEnd };
+}
+
+export function formatPriorWeekDelta(current, prior, { suffix = "" } = {}) {
+  if (current == null || prior == null) return null;
+  const delta = current - prior;
+  if (delta === 0) return "Same as prior week";
+  const sign = delta > 0 ? "+" : "";
+  return `${sign}${delta}${suffix} vs prior week`;
+}
+
+/** Rows for the week-over-week comparison table. */
+export function buildWeekComparison(summary, priorSummary) {
+  if (!priorSummary) return [];
+
+  const fmtPct = (v) => (v != null ? `${v}%` : "—");
+  const fmtNum = (v) => (v != null ? String(v) : "—");
+  const fmtRisk = (s) =>
+    s.riskPlanAnswered > 0 ? `${s.riskPlanFollowed}/${s.riskPlanAnswered}` : "—";
+
+  const rows = [
+    {
+      label: "Avg readiness",
+      current: fmtNum(summary.avgReadiness),
+      prior: fmtNum(priorSummary.avgReadiness),
+      delta: formatPriorWeekDelta(summary.avgReadiness, priorSummary.avgReadiness),
+      invertGood: false,
+    },
+    {
+      label: "Playbook",
+      current: fmtPct(summary.avgPlaybookPct),
+      prior: fmtPct(priorSummary.avgPlaybookPct),
+      delta: formatPriorWeekDelta(summary.avgPlaybookPct, priorSummary.avgPlaybookPct, { suffix: " pts" }),
+      invertGood: false,
+    },
+    {
+      label: "Risk plan",
+      current: fmtRisk(summary),
+      prior: fmtRisk(priorSummary),
+      delta: formatPriorWeekDelta(summary.riskPlanFollowed, priorSummary.riskPlanFollowed, { suffix: " days" }),
+      invertGood: false,
+    },
+    {
+      label: "Behavioral flags",
+      current: fmtNum(summary.behavioralFlagCount),
+      prior: fmtNum(priorSummary.behavioralFlagCount),
+      delta: formatPriorWeekDelta(summary.behavioralFlagCount, priorSummary.behavioralFlagCount),
+      invertGood: true,
+    },
+  ];
+
+  return rows.filter((r) => r.current !== "—" || r.prior !== "—");
+}
+
+/** Current week plus completed past reviews (newest first). */
+export async function listBrowsableProcessWeeks() {
+  const current = getCurrentProcessWeek();
+  const { keys } = await storage.list(REVIEW_KEY_PREFIX);
+  const completedPast = [];
+
+  await Promise.all(
+    (keys || []).map(async (key) => {
+      const weekEnd = key.slice(REVIEW_KEY_PREFIX.length);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(weekEnd) || weekEnd === current.end) return;
+      const review = await loadSavedReview(weekEnd);
+      if (isReviewComplete(review)) completedPast.push(weekEnd);
+    })
+  );
+
+  completedPast.sort((a, b) => b.localeCompare(a));
+
+  const weeks = [{ ...current, isCurrent: true }];
+  for (const end of completedPast) {
+    weeks.push({ ...weekRangeFromEnd(end), isCurrent: false });
+  }
+  return weeks;
+}
+
+/** Remove saved reviews for weeks before weekStart (YYYY-MM-DD). */
+export async function pruneProcessReviewsBefore(weekStart) {
+  const { keys } = await storage.list(REVIEW_KEY_PREFIX);
+  await Promise.all(
+    (keys || [])
+      .filter((key) => {
+        const weekEnd = key.slice(REVIEW_KEY_PREFIX.length);
+        return weekEnd < weekStart;
+      })
+      .map((key) => storage.delete(key))
+  );
+}
+
+const PROCESS_REVIEW_RESET_KEY = "weekly-process-review-reset";
+
+/** One-time cleanup: drop pre-current-week reviews when starting fresh. */
+export async function runInitialProcessReviewReset() {
+  if (typeof window === "undefined") return;
+  if (localStorage.getItem(PROCESS_REVIEW_RESET_KEY)) return;
+  const { start } = getCurrentProcessWeek();
+  await pruneProcessReviewsBefore(start);
+  localStorage.setItem(PROCESS_REVIEW_RESET_KEY, "1");
+}
+
 export function getWeekDayKeys(weekStart) {
   return [0, 1, 2, 3, 4].map((i) => offsetDateKey(weekStart, i));
 }
@@ -162,7 +271,6 @@ export function aggregateWeekSessions(allSessions, weekStart, weekEnd) {
 
 export function buildWeeklyProcessSummary(sessions) {
   const tradingDays = sessions.filter(isTradingDay);
-  const fullLoop = tradingDays.filter((s) => s.hasPre && s.hasPlan && s.hasPost).length;
   const readinessScores = sessions.map((s) => s.readinessScore).filter((n) => n != null);
   const avgReadiness = avg(readinessScores);
   const lowReadinessDays = sessions.filter((s) => s.readinessScore != null && s.readinessScore < 50).length;
@@ -233,14 +341,9 @@ export function buildWeeklyProcessSummary(sessions) {
     }
   }
 
-  const workflowPct =
-    tradingDays.length > 0 ? Math.round((fullLoop / tradingDays.length) * 100) : null;
-
   return {
     sessionDays: sessions.filter((s) => s.hasPre || s.hasPlan || s.hasPost || isTradingDay(s)).length,
     tradingDays: tradingDays.length,
-    fullLoopDays: fullLoop,
-    workflowPct,
     avgReadiness: avgReadiness != null ? Math.round(avgReadiness) : null,
     lowReadinessDays,
     avgPlaybookPct:
@@ -304,18 +407,6 @@ export function detectProcessFindings(summary, sessions, priorSummary = null) {
         detail: `${formatDayShort(s.date)} — mandatory sleep-debt stand-down but trades were taken.`,
       });
     }
-    if (traded && (!s.hasPre || !s.hasPlan || !s.hasPost)) {
-      const missing = [
-        !s.hasPre && "pre-market",
-        !s.hasPlan && "plan",
-        !s.hasPost && "post-market",
-      ].filter(Boolean);
-      findings.push({
-        severity: "amber",
-        title: "Incomplete workflow",
-        detail: `${formatDayShort(s.date)} — traded without ${missing.join(", ")}.`,
-      });
-    }
   });
 
   if (summary.consecutiveSevereSleep) {
@@ -375,16 +466,8 @@ export function detectProcessFindings(summary, sessions, priorSummary = null) {
 
   if (
     summary.tradingDays > 0 &&
-    summary.fullLoopDays === summary.tradingDays
+    summary.behavioralFlagCount === 0
   ) {
-    findings.push({
-      severity: "green",
-      title: "Full workflow",
-      detail: "Pre-market, plan, and post-market completed every trading day.",
-    });
-  }
-
-  if (summary.tradingDays > 0 && summary.behavioralFlagCount === 0) {
     findings.push({
       severity: "green",
       title: "No behavioral flags",
@@ -487,13 +570,19 @@ export function getFocusDisplayWeek() {
 }
 
 export async function loadHomeFocusItems(dateKey = todayKey()) {
-  for (const week of getRecentProcessWeeks(8)) {
-    const review = await loadSavedReview(week.end);
+  const { keys } = await storage.list(REVIEW_KEY_PREFIX);
+  const weekEnds = (keys || [])
+    .map((key) => key.slice(REVIEW_KEY_PREFIX.length))
+    .filter((weekEnd) => /^\d{4}-\d{2}-\d{2}$/.test(weekEnd))
+    .sort((a, b) => b.localeCompare(a));
+
+  for (const weekEnd of weekEnds) {
+    const review = await loadSavedReview(weekEnd);
     if (!isReviewComplete(review)) continue;
     const items = review.focusItems.filter((f) => f.trim());
     if (!items.length) continue;
-    if (focusAppliesForDate(week.end, dateKey)) {
-      return { items, weekEnd: week.end, complete: true };
+    if (focusAppliesForDate(weekEnd, dateKey)) {
+      return { items, weekEnd, complete: true };
     }
   }
   return { items: [], weekEnd: null, complete: false };
