@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchAnalyticsTrades, filterTradesByAccounts } from "../../lib/analytics-data";
+import { aggregateProcessMetrics, loadPostReviewsInRange } from "../../lib/analytics-process";
+import { countPlaybookStreak, countProcessStreak, loadAllSessions } from "../../lib/history-data";
 import { resolveDateRangePreset, getPlaybookTrackingStartDate, filterTradesForPlaybookAdherence, resetPlaybookTrackingStartDate } from "../../lib/analytics-date-range";
 import { getChartConfigs } from "../../lib/analytics-charts";
 import { calcStats } from "../../lib/analytics-stats";
@@ -18,6 +20,8 @@ import AnalyticsWorkflowNotice from "./AnalyticsWorkflowNotice";
 import DailyPnlTable from "./DailyPnlTable";
 import PerformanceOverview from "./PerformanceOverview";
 import PlaybookAdherencePanel from "./PlaybookAdherencePanel";
+import ProcessOverviewPanel from "./ProcessOverviewPanel";
+import ProcessStreaksPanel from "./ProcessStreaksPanel";
 import RecentTradesTable from "./RecentTradesTable";
 import SessionAnalyticsGrid from "./SessionAnalyticsGrid";
 import TradeDetailPanel from "./TradeDetailPanel";
@@ -35,6 +39,8 @@ export default function AnalyticsDashboard() {
   const [playbookTrackingStart, setPlaybookTrackingStart] = useState(null);
   const [listPanel, setListPanel] = useState(null);
   const [selectedTradeId, setSelectedTradeId] = useState(null);
+  const [sessions, setSessions] = useState([]);
+  const [processMetrics, setProcessMetrics] = useState(null);
 
   const load = useCallback(async (from, to, type) => {
     setLoading(true);
@@ -56,6 +62,28 @@ export default function AnalyticsDashboard() {
   useEffect(() => {
     setPlaybookTrackingStart(getPlaybookTrackingStartDate());
   }, []);
+
+  useEffect(() => {
+    loadAllSessions().then(setSessions).catch(() => setSessions([]));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const reviews = await loadPostReviewsInRange(dateFrom, dateTo);
+        if (cancelled) return;
+        setProcessMetrics(aggregateProcessMetrics(reviews));
+      } catch {
+        if (!cancelled) {
+          setProcessMetrics(null);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [dateFrom, dateTo]);
 
   useEffect(() => {
     const { dateFrom: from, dateTo: to } = resolveDateRangePreset("10d");
@@ -110,6 +138,8 @@ export default function AnalyticsDashboard() {
   const playbook = useMemo(() => summarizeSetupAdherence(playbookTrades), [playbookTrades]);
   const setupBreakdown = useMemo(() => summarizeSetupByTag(playbookTrades), [playbookTrades]);
   const untaggedCount = useMemo(() => countUntaggedTrades(playbookTrades), [playbookTrades]);
+  const riskStreak = useMemo(() => countProcessStreak(sessions), [sessions]);
+  const playbookStreak = useMemo(() => countPlaybookStreak(sessions), [sessions]);
   const charts = useMemo(() => getChartConfigs(trades), [trades]);
   const selectedTrade = useMemo(
     () => trades.find((t) => t.id === selectedTradeId) || null,
@@ -118,6 +148,11 @@ export default function AnalyticsDashboard() {
 
   const handleTradeUpdated = useCallback((updated) => {
     setTrades((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+  }, []);
+
+  const handleTradeDeleted = useCallback((tradeId) => {
+    setTrades((prev) => prev.filter((t) => t.id !== tradeId));
+    setSelectedTradeId(null);
   }, []);
 
   const openUntaggedTrade = useCallback(() => {
@@ -201,13 +236,23 @@ export default function AnalyticsDashboard() {
           </AnalyticsCard>
         </div>
 
-        <AnalyticsCard title="Playbook Adherence">
-          <PlaybookAdherencePanel
-            summary={playbook}
-            trackingStart={playbookTrackingStart}
-            setupBreakdown={setupBreakdown}
-            onTrackingReset={handleTrackingReset}
-          />
+        <div className="analytics-dual-grid">
+          <AnalyticsCard title="Process Streaks">
+            <ProcessStreaksPanel riskStreak={riskStreak} playbookStreak={playbookStreak} />
+          </AnalyticsCard>
+
+          <AnalyticsCard title="Playbook Adherence">
+            <PlaybookAdherencePanel
+              summary={playbook}
+              trackingStart={playbookTrackingStart}
+              setupBreakdown={setupBreakdown}
+              onTrackingReset={handleTrackingReset}
+            />
+          </AnalyticsCard>
+        </div>
+
+        <AnalyticsCard title="Process Overview">
+          <ProcessOverviewPanel metrics={processMetrics} />
         </AnalyticsCard>
 
         <SessionAnalyticsGrid trades={trades} />
@@ -262,6 +307,7 @@ export default function AnalyticsDashboard() {
         trade={selectedTrade}
         onClose={() => setSelectedTradeId(null)}
         onUpdated={handleTradeUpdated}
+        onDeleted={handleTradeDeleted}
       />
     </div>
   );

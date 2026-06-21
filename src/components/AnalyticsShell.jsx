@@ -1,10 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import AnalyticsDashboard from "./analytics/AnalyticsDashboard";
+import AnalyticsReports from "./analytics/AnalyticsReports";
 
 export default function AnalyticsShell() {
+  const searchParams = useSearchParams();
   const [view, setView] = useState("dashboard");
+
+  useEffect(() => {
+    if (searchParams.get("view") === "reports") {
+      setView("reports");
+    }
+  }, [searchParams]);
 
   return (
     <div className="analytics-shell">
@@ -28,11 +37,7 @@ export default function AnalyticsShell() {
       {view === "dashboard" ? (
         <AnalyticsDashboard />
       ) : (
-        <iframe
-          className="embed-frame analytics-reports-frame"
-          src="/analytics.html?embed=1&view=reports"
-          title="Analytics Reports"
-        />
+        <AnalyticsReports />
       )}
     </div>
   );

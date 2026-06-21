@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { storage } from "../lib/supabase";
-import { BEHAVIORAL_FLAGS, DEFAULT_POSTMARKET } from "../lib/postmarket-defaults";
+import { BEHAVIORAL_FLAG_CATEGORIES, countBehavioralFlags, DEFAULT_POSTMARKET, normalizePostmarketFlags } from "../lib/postmarket-defaults";
 import {
   processRTraderCSV,
   tradesForDate,
@@ -28,6 +28,7 @@ import {
   formatRecoveryUsd,
 } from "../lib/dll-recovery";
 import { loadDllSettings } from "../lib/dll-recovery-settings";
+import { todayKey } from "../lib/today-key";
 
 async function loadData(key, fallback) {
   try {
@@ -44,10 +45,6 @@ async function saveData(key, value) {
   } catch (e) {
     console.error("Save:", e);
   }
-}
-
-function todayKey() {
-  return new Date().toISOString().split("T")[0];
 }
 
 function headerDate() {
@@ -88,7 +85,7 @@ function SliderField({ label, hint, minLabel, maxLabel, value, onChange }) {
 }
 
 function SessionSummary({ form, netPnl, winRate, setupAdherence, adherenceLabel }) {
-  const flagsRaised = BEHAVIORAL_FLAGS.filter((f) => form[f.key]).length;
+  const flagsRaised = countBehavioralFlags(form);
   const pnlTone = netPnl > 0 ? "var(--green)" : netPnl < 0 ? "var(--red)" : "var(--text)";
   const adherenceTone =
     adherenceLabel?.tone === "green"
@@ -211,7 +208,7 @@ export default function PostMarketReview({ onBack }) {
 
       setDayTrades(dbTrades);
 
-      let next = { ...DEFAULT_POSTMARKET, ...(savedReview || {}) };
+      let next = { ...DEFAULT_POSTMARKET, ...normalizePostmarketFlags(savedReview || {}) };
       if (next.riskPlanFollowed == null && next.planProcessFollowed != null) {
         next.riskPlanFollowed = next.planProcessFollowed;
       }
@@ -243,7 +240,7 @@ export default function PostMarketReview({ onBack }) {
       ...formData,
       netPnl: computedNet,
       winRate,
-      behavioralFlagsRaised: BEHAVIORAL_FLAGS.filter((f) => formData[f.key]).length,
+      behavioralFlagsRaised: countBehavioralFlags(formData),
       playbookAdherence: adherence,
       playbookProcessPass: adherence.total > 0 ? adherence.processPass : null,
       savedAt: new Date().toISOString(),
@@ -434,10 +431,17 @@ export default function PostMarketReview({ onBack }) {
                 <p className="pm-section-desc">Honest answers help. Pattern recognition over time only works if you&apos;re truthful.</p>
               </div>
             </div>
-            <div className="pm-flags-grid">
-              {BEHAVIORAL_FLAGS.map((flag) => (
-                <div key={flag.key} className="pm-flag-item">
-                  <ToggleField label={flag.label} hint={flag.hint} value={form[flag.key]} onChange={(v) => set(flag.key, v)} />
+            <div className="pm-flags-categories">
+              {BEHAVIORAL_FLAG_CATEGORIES.map((category) => (
+                <div key={category.id} className="pm-flags-category">
+                  <div className="pm-flags-category-title">{category.label}</div>
+                  <div className="pm-flags-grid">
+                    {category.flags.map((flag) => (
+                      <div key={flag.key} className="pm-flag-item">
+                        <ToggleField label={flag.label} hint={flag.hint} value={form[flag.key]} onChange={(v) => set(flag.key, v)} />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>

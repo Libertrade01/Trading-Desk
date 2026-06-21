@@ -1,12 +1,10 @@
 /** Date range presets aligned with analytics.html filter bar. */
 
+import { limaDateParts } from "./today-key";
+
 function limaTodayParts() {
-  const now = new Date();
-  const lima = new Date(now.toLocaleString("en-US", { timeZone: "America/Lima" }));
-  const y = lima.getFullYear();
-  const m = String(lima.getMonth() + 1).padStart(2, "0");
-  const d = String(lima.getDate()).padStart(2, "0");
-  return { today: `${y}-${m}-${d}`, lima, now };
+  const { today, lima } = limaDateParts();
+  return { today, lima, now: new Date() };
 }
 
 function limaStr(date) {

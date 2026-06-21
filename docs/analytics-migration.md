@@ -2,7 +2,7 @@
 
 Track progress retiring `public/analytics.html` in favour of the React `/analytics` shell.
 
-**Last updated:** 2026-06-18 (overnight session)
+**Last updated:** 2026-06-20 (Phase 6a + 5f session)
 
 ---
 
@@ -11,9 +11,9 @@ Track progress retiring `public/analytics.html` in favour of the React `/analyti
 | Layer | Target |
 |-------|--------|
 | `/analytics` Dashboard tab | React only |
-| `/analytics` Reports tab | React (currently legacy iframe) |
+| `/analytics` Reports tab | React weekly reports (agent analysis **deferred** — out of scope for now) |
 | Trade editing / full log | React slide panels → full Trade Log |
-| Standalone `/analytics.html` | Redirect to `/analytics` when parity reached |
+| Standalone `/analytics.html` | ✅ Redirects to `/analytics` (legacy file removed) |
 
 ---
 
@@ -39,26 +39,27 @@ Track progress retiring `public/analytics.html` in favour of the React `/analyti
 | 4e | Playbook tracking start UI + reset | ✅ | Footer on Playbook panel |
 | 4f | Daily P&L row → History day | ✅ | `/history/{date}` |
 
-### Phase 5 — Process metrics ⏳ PARTIAL
+### Phase 5 — Process metrics ✅ DONE (uncommitted)
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| 5a | Process overview card (Post-Market sliders) | ⬜ | Needs `fetchTradingDays` / review loader |
-| 5b | Playbook + risk streak widget | ⬜ | Reuse `history-data.js` streak fns |
+| 5a | Process overview card (Post-Market sliders) | ✅ | `ProcessOverviewPanel` + `analytics-process.js` |
+| 5b | Playbook + risk streak widget | ✅ | `ProcessStreaksPanel` |
 | 5c | Per-setup breakdown (PAF, BAR, …) | ✅ | `summarizeSetupByTag` |
-| 5d | Management quality summary | ⬜ | Aggregate `management` field |
+| 5d | Management quality summary | ✅ | `aggregateManagementQuality` |
 | 5e | History day playbook adherence | ✅ | `HistoryDayDetail` post section |
-| 5f | Timezone alignment (Lima vs UTC today) | ⬜ | App-wide `todayKey` |
+| 5f | Timezone alignment (Lima vs UTC today) | ✅ | `src/lib/today-key.js` — Lima calendar; wired into history-data, analytics-date-range, desk flows |
 
-### Phase 6 — Retire legacy dashboard ⬜ NOT STARTED
+### Phase 6 — Retire legacy dashboard ⏳ PARTIAL
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| 6a | React Trade Log (search, filters, pagination) | 🔄 | Search + setup filter + panel in toolbar; pagination TBD |
-| 6b | React Reports MVP | ⬜ | Weekly + `trading_days` rules |
+| 6a | React Trade Log (search, filters, pagination) | ✅ | Delete + notes in `TradeDetailPanel`; direction/result/setup/mgmt filters |
+| 6b | React Reports MVP | ✅ | `AnalyticsReports` + `WeeklyReportView` — weekly + trading_days |
+| 6b+ | Agent analysis (AI weekly reports) | ⏸️ | **Deferred** — not pursuing for now; remains in legacy only |
 | 6c | Process charts (optional) | ⬜ | Post-loss recovery, trade # in session |
-| 6d | Tag Manager decision | ⬜ | Deprecate or port custom tags |
-| 6e | Redirect `/analytics.html` → `/analytics` | ⬜ | After 6a + 6b |
+| 6d | Tag Manager decision | ⏸️ | **Deprecated** — custom tags not needed; tables remain in DB unused |
+| 6e | Redirect `/analytics.html` → `/analytics` | ✅ | `next.config.js` redirects; `public/analytics.html` removed |
 
 ### Phase 7 — Plan ↔ execution loop ⬜ NOT STARTED
 
@@ -68,19 +69,19 @@ Track progress retiring `public/analytics.html` in favour of the React `/analyti
 
 ---
 
-## Legacy-only features (still in `analytics.html`)
+## Legacy-only features (retired)
 
-| Feature | Migration target |
-|---------|------------------|
-| Full trade panel + pagination | 6a |
-| Trade detail (notes, tags, delete) | 6a (+ extend `TradeDetailPanel`) |
-| Tag Manager | 6d |
-| Daily P&L panel + delete day | 6a or History |
-| Reports (weekly/monthly/AI) | 6b |
-| P&L by trade # in session | 6c optional |
-| Post-loss recovery | 6c optional |
-| Google standalone auth | Remove with redirect |
-| Theme toggle in legacy | N/A (app shell handles) |
+| Feature | Status |
+|---------|--------|
+| Full trade panel + pagination | ✅ React trade log |
+| Trade detail (notes, delete, setup/mgmt) | ✅ `TradeDetailPanel` |
+| Tag Manager + custom trade tags | ⏸️ Deprecated |
+| Daily P&L panel | ✅ Dashboard + History |
+| Reports (weekly) | ✅ React Reports tab |
+| Agent analysis (weekly AI) | ⏸️ Deferred |
+| P&L by trade # in session | ⬜ 6c optional |
+| Post-loss recovery | ⬜ 6c optional |
+| Google standalone auth | Removed with `analytics.html` |
 
 ---
 
@@ -99,29 +100,34 @@ src/components/analytics/
   DailyPnlTable.jsx
   RecentTradesTable.jsx
   SessionAnalyticsGrid.jsx
-  … (Card, Chart, Stat, Table, WorkflowNotice)
+  ProcessOverviewPanel.jsx     — Phase 5a
+  ProcessStreaksPanel.jsx      — Phase 5b
+  AnalyticsReports.jsx         — Phase 6b shell
+  WeeklyReportView.jsx         — Phase 6b week report
 src/lib/
   analytics-stats.js
   analytics-data.js
   analytics-charts.js
   analytics-date-range.js
-  analytics-trades.js         — Supabase trade PATCH
+  analytics-process.js        — Phase 5 process metrics
+  analytics-trades.js        — trade update/delete/notes
+  analytics-reports.js        — Phase 6b week helpers
+  today-key.js                  — Lima todayKey (Phase 5f)
 ```
 
 ---
 
-## Tomorrow — suggested next steps
+## Next steps
 
-1. **Push** uncommitted Phase 4 work if not already on GitHub
-2. **6a** — React Trade Log panel (search + setup filter + open `TradeDetailPanel`)
-3. **5a** — Process overview card from post-market / trading_days
-4. **5b** — Streak widget on dashboard
-5. **6b** — Start Reports tab in React (weekly shell first)
+1. **Commit** Phase 5 + 6 work locally
+2. **6c** — Optional process charts (post-loss recovery, trade # in session)
+3. **5f tail** — Lima `todayKey` in `legacy/TradeDeskApp.jsx` + `market-events.js` (optional)
 
 ---
 
 ## Git / deploy notes
 
 - Playbook tracking start stored in `localStorage` key `analytics-playbook-tracking-start`
-- Reports tab still iframes `analytics.html?embed=1&view=reports`
-- `AnalyticsEmbed.jsx` unused by route; safe to remove after redirect
+- `/analytics.html` → `/analytics` permanent redirect in `next.config.js` (`?view=reports` preserved)
+- `public/analytics.html` removed (recoverable from git history)
+- Tag Manager deprecated — no React port; Supabase `trade_tags` / `trade_tag_links` tables untouched

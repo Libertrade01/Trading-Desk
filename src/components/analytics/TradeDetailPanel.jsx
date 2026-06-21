@@ -1,7 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { updateTrade } from "../../lib/analytics-trades";
+import { useEffect, useState } from "react";
+import {
+  deleteTrade,
+  fetchTradeNotes,
+  saveTradeNotes,
+  updateTrade,
+} from "../../lib/analytics-trades";
 import { calcR, formatPnl } from "../../lib/analytics-stats";
 import { MGMT_OPTIONS } from "../../lib/trade-import-options";
 import { VALID_SETUPS, SETUP_IMPROVISED, SETUP_INVALID } from "../../lib/setup-options";
@@ -17,9 +22,40 @@ function Field({ label, children }) {
   );
 }
 
-export default function TradeDetailPanel({ trade, onClose, onUpdated }) {
+export default function TradeDetailPanel({ trade, onClose, onUpdated, onDeleted }) {
   const [saving, setSaving] = useState(null);
   const [error, setError] = useState(null);
+  const [notes, setNotes] = useState("");
+  const [notesLoaded, setNotesLoaded] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!trade?.id) {
+      setNotes("");
+      setNotesLoaded(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setNotesLoaded(false);
+    fetchTradeNotes(trade.id)
+      .then((text) => {
+        if (!cancelled) {
+          setNotes(text);
+          setNotesLoaded(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setNotes("");
+          setNotesLoaded(true);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [trade?.id]);
 
   if (!trade) return null;
 
@@ -44,6 +80,32 @@ export default function TradeDetailPanel({ trade, onClose, onUpdated }) {
       setError(e.message || "Save failed");
     } finally {
       setSaving(null);
+    }
+  };
+
+  const saveNotesField = async () => {
+    setSaving("notes");
+    setError(null);
+    try {
+      await saveTradeNotes(trade.id, notes);
+    } catch (e) {
+      setError(e.message || "Save failed");
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm("Delete this trade? This cannot be undone.")) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      await deleteTrade(trade.id);
+      onDeleted?.(trade.id);
+      onClose?.();
+    } catch (e) {
+      setError(e.message || "Delete failed");
+      setDeleting(false);
     }
   };
 
@@ -106,9 +168,33 @@ export default function TradeDetailPanel({ trade, onClose, onUpdated }) {
             </option>
           ))}
         </select>
+
+        <label className="analytics-trade-edit__label">
+          Notes
+          {saving === "notes" ? <span className="analytics-trade-edit__saving">Saving…</span> : null}
+        </label>
+        <textarea
+          className="analytics-trade-notes"
+          placeholder="Add trade notes…"
+          value={notes}
+          disabled={!notesLoaded || deleting}
+          onChange={(e) => setNotes(e.target.value)}
+          onBlur={saveNotesField}
+        />
       </div>
 
       {error ? <p className="analytics-trade-edit__error">{error}</p> : null}
+
+      <div className="analytics-trade-actions">
+        <button
+          type="button"
+          className="analytics-trade-delete-btn"
+          disabled={deleting}
+          onClick={handleDelete}
+        >
+          {deleting ? "Deleting…" : "Delete trade"}
+        </button>
+      </div>
     </AnalyticsSlidePanel>
   );
 }

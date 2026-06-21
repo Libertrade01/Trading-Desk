@@ -19,6 +19,7 @@ import {
   validatePlanMaxDailyLoss,
 } from "../lib/dll-recovery";
 import { loadDllSettings, DEFAULT_DLL_SETTINGS } from "../lib/dll-recovery-settings";
+import { todayKey } from "../lib/today-key";
 
 async function loadData(key, fallback) {
   try {
@@ -35,10 +36,6 @@ async function saveData(key, value) {
   } catch (e) {
     console.error("Save:", e);
   }
-}
-
-function todayKey() {
-  return new Date().toISOString().split("T")[0];
 }
 
 function headerDate() {

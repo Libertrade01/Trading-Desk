@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { BEHAVIORAL_FLAGS } from "../lib/postmarket-defaults";
+import { getRaisedBehavioralFlags } from "../lib/postmarket-defaults";
 import {
   loadSessionDay,
   deleteSessionDay,
@@ -93,7 +93,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
 
   const raisedFlags = useMemo(() => {
     if (!session?.post) return [];
-    return BEHAVIORAL_FLAGS.filter((f) => session.post[f.key]);
+    return getRaisedBehavioralFlags(session.post);
   }, [session]);
 
   const handleDelete = async () => {

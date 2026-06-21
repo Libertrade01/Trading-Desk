@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { playbookAdherenceLabel } from "../../lib/setup-adherence";
-import AnalyticsStat from "./AnalyticsStat";
+import { useEffect, useMemo, useState } from "react";
 import AnalyticsTable from "./AnalyticsTable";
 import { formatPnl } from "../../lib/analytics-stats";
+import { MGMT_OPTIONS } from "../../lib/trade-import-options";
 import { formatLimaTime } from "../../lib/trade-time";
+
+const PAGE_SIZE = 40;
 
 const SETUP_FILTER_OPTIONS = [
   { value: "", label: "All setups" },
@@ -18,9 +19,35 @@ const SETUP_FILTER_OPTIONS = [
   { value: "Invalid / Not a Setup", label: "Invalid" },
 ];
 
+const DIRECTION_FILTER_OPTIONS = [
+  { value: "", label: "All dirs" },
+  { value: "long", label: "Long" },
+  { value: "short", label: "Short" },
+];
+
+const RESULT_FILTER_OPTIONS = [
+  { value: "", label: "All results" },
+  { value: "win", label: "Winners" },
+  { value: "loss", label: "Losers" },
+  { value: "be", label: "Breakeven" },
+];
+
+const MGMT_FILTER_OPTIONS = [
+  { value: "", label: "All mgmt" },
+  ...MGMT_OPTIONS.filter((o) => o.value).map((o) => ({ value: o.value, label: o.label })),
+];
+
 export default function AnalyticsTradeLogPanel({ trades, onTradeSelect }) {
   const [query, setQuery] = useState("");
   const [setupFilter, setSetupFilter] = useState("");
+  const [directionFilter, setDirectionFilter] = useState("");
+  const [resultFilter, setResultFilter] = useState("");
+  const [mgmtFilter, setMgmtFilter] = useState("");
+  const [page, setPage] = useState(0);
+
+  useEffect(() => {
+    setPage(0);
+  }, [query, setupFilter, directionFilter, resultFilter, mgmtFilter]);
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -32,15 +59,16 @@ export default function AnalyticsTradeLogPanel({ trades, onTradeSelect }) {
         } else if (setupFilter && (t.setup || "") !== setupFilter) {
           return false;
         }
+        if (directionFilter && (t.direction || "").toLowerCase() !== directionFilter) {
+          return false;
+        }
+        const pnl = t.net_pnl || 0;
+        if (resultFilter === "win" && pnl <= 0) return false;
+        if (resultFilter === "loss" && pnl >= 0) return false;
+        if (resultFilter === "be" && pnl !== 0) return false;
+        if (mgmtFilter && (t.management || "") !== mgmtFilter) return false;
         if (!q) return true;
-        const hay = [
-          t.instrument,
-          t.direction,
-          t.setup,
-          t.management,
-          t.date,
-          t.account_name,
-        ]
+        const hay = [t.instrument, t.direction, t.setup, t.management, t.date, t.account_name]
           .filter(Boolean)
           .join(" ")
           .toLowerCase();
@@ -66,7 +94,11 @@ export default function AnalyticsTradeLogPanel({ trades, onTradeSelect }) {
           },
         };
       });
-  }, [trades, query, setupFilter]);
+  }, [trades, query, setupFilter, directionFilter, resultFilter, mgmtFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages - 1);
+  const pageRows = rows.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
 
   return (
     <div className="analytics-trade-log">
@@ -79,7 +111,29 @@ export default function AnalyticsTradeLogPanel({ trades, onTradeSelect }) {
           onChange={(e) => setQuery(e.target.value)}
         />
         <select
-          className="analytics-date-input analytics-trade-log__setup"
+          className="analytics-date-input analytics-trade-log__filter"
+          value={directionFilter}
+          onChange={(e) => setDirectionFilter(e.target.value)}
+        >
+          {DIRECTION_FILTER_OPTIONS.map((o) => (
+            <option key={o.value || "all-dir"} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <select
+          className="analytics-date-input analytics-trade-log__filter"
+          value={resultFilter}
+          onChange={(e) => setResultFilter(e.target.value)}
+        >
+          {RESULT_FILTER_OPTIONS.map((o) => (
+            <option key={o.value || "all-result"} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <select
+          className="analytics-date-input analytics-trade-log__filter"
           value={setupFilter}
           onChange={(e) => setSetupFilter(e.target.value)}
         >
@@ -89,8 +143,25 @@ export default function AnalyticsTradeLogPanel({ trades, onTradeSelect }) {
             </option>
           ))}
         </select>
+        <select
+          className="analytics-date-input analytics-trade-log__filter"
+          value={mgmtFilter}
+          onChange={(e) => setMgmtFilter(e.target.value)}
+        >
+          {MGMT_FILTER_OPTIONS.map((o) => (
+            <option key={o.value || "all-mgmt"} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
       </div>
-      {rows.length ? (
+
+      <div className="analytics-trade-log__meta">
+        {rows.length} trade{rows.length === 1 ? "" : "s"}
+        {rows.length > PAGE_SIZE ? ` · page ${safePage + 1} of ${totalPages}` : ""}
+      </div>
+
+      {pageRows.length ? (
         <AnalyticsTable
           columns={[
             { key: "date", label: "Date", width: "88px" },
@@ -99,12 +170,33 @@ export default function AnalyticsTradeLogPanel({ trades, onTradeSelect }) {
             { key: "setup", label: "Setup", width: "100px" },
             { key: "pnl", label: "P&L", width: "80px", align: "right" },
           ]}
-          rows={rows}
+          rows={pageRows}
           onRowClick={onTradeSelect ? (row) => onTradeSelect(row.trade) : undefined}
         />
       ) : (
         <div className="analytics-empty">No trades match filters</div>
       )}
+
+      {rows.length > PAGE_SIZE ? (
+        <div className="analytics-trade-log__pager">
+          <button
+            type="button"
+            className="analytics-link-btn"
+            disabled={safePage <= 0}
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+          >
+            ← Prev
+          </button>
+          <button
+            type="button"
+            className="analytics-link-btn"
+            disabled={safePage >= totalPages - 1}
+            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+          >
+            Next →
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

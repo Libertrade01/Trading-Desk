@@ -105,9 +105,9 @@ export async function deleteSessionDay(dateKey) {
   await supabase.from("trades").delete().eq("date", dateKey);
 }
 
-export function todayKey() {
-  return new Date().toISOString().split("T")[0];
-}
+import { todayKey } from "./today-key";
+
+export { todayKey };
 
 export function isStepComplete(data) {
   return !!(data?.savedAt);

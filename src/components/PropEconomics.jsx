@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { storage } from "../lib/supabase";
 import { formatUsd } from "../lib/history-data";
+import { todayKey } from "../lib/today-key";
 
 const STORAGE_KEY = "prop-ledger";
 const DEFAULT_FIRMS = ["Lucid", "Tradeify"];
@@ -31,10 +32,6 @@ async function saveLedger(data) {
   } catch (e) {
     console.error("Prop ledger save:", e);
   }
-}
-
-function todayKey() {
-  return new Date().toISOString().split("T")[0];
 }
 
 function headerDate() {
