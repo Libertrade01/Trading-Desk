@@ -1,24 +1,29 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { fetchAnalyticsTrades, filterTradesByAccounts } from "../../lib/analytics-data";
-import { resolveDateRangePreset, getPlaybookTrackingStartDate, filterTradesForPlaybookAdherence } from "../../lib/analytics-date-range";
+import { resolveDateRangePreset, getPlaybookTrackingStartDate, filterTradesForPlaybookAdherence, resetPlaybookTrackingStartDate } from "../../lib/analytics-date-range";
 import { getChartConfigs } from "../../lib/analytics-charts";
 import { calcStats } from "../../lib/analytics-stats";
-import { summarizeSetupAdherence } from "../../lib/setup-adherence";
+import { summarizeSetupAdherence, summarizeSetupByTag, countUntaggedTrades } from "../../lib/setup-adherence";
 import { getImportAccount, loadTraderSettings, saveTraderSettings } from "../../lib/trader-settings";
 import AnalyticsCard from "./AnalyticsCard";
 import AnalyticsChart from "./AnalyticsChart";
+import AnalyticsSlidePanel from "./AnalyticsSlidePanel";
 import AnalyticsToolbar from "./AnalyticsToolbar";
+import AnalyticsTradeLogPanel from "./AnalyticsTradeLogPanel";
+import AnalyticsUntaggedBanner from "./AnalyticsUntaggedBanner";
 import AnalyticsWorkflowNotice from "./AnalyticsWorkflowNotice";
 import DailyPnlTable from "./DailyPnlTable";
 import PerformanceOverview from "./PerformanceOverview";
 import PlaybookAdherencePanel from "./PlaybookAdherencePanel";
 import RecentTradesTable from "./RecentTradesTable";
 import SessionAnalyticsGrid from "./SessionAnalyticsGrid";
+import TradeDetailPanel from "./TradeDetailPanel";
 
 export default function AnalyticsDashboard() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [trades, setTrades] = useState([]);
@@ -28,6 +33,8 @@ export default function AnalyticsDashboard() {
   const [dateTo, setDateTo] = useState(null);
   const [accountType, setAccountType] = useState("all");
   const [playbookTrackingStart, setPlaybookTrackingStart] = useState(null);
+  const [listPanel, setListPanel] = useState(null);
+  const [selectedTradeId, setSelectedTradeId] = useState(null);
 
   const load = useCallback(async (from, to, type) => {
     setLoading(true);
@@ -78,7 +85,19 @@ export default function AnalyticsDashboard() {
       a.id === id ? { ...a, active: a.active === false } : a
     );
     await saveTraderSettings({ ...settings, accounts });
+    setSettings({ ...settings, accounts });
     load(dateFrom, dateTo, accountType);
+  };
+
+  const handleTrackingReset = () => {
+    if (
+      !window.confirm(
+        "Reset playbook tracking to today? Trades before the new date will be excluded from playbook adherence."
+      )
+    ) {
+      return;
+    }
+    setPlaybookTrackingStart(resetPlaybookTrackingStartDate());
   };
 
   const importAccount = getImportAccount(settings || {});
@@ -89,7 +108,22 @@ export default function AnalyticsDashboard() {
     [trades, playbookTrackingStart]
   );
   const playbook = useMemo(() => summarizeSetupAdherence(playbookTrades), [playbookTrades]);
+  const setupBreakdown = useMemo(() => summarizeSetupByTag(playbookTrades), [playbookTrades]);
+  const untaggedCount = useMemo(() => countUntaggedTrades(playbookTrades), [playbookTrades]);
   const charts = useMemo(() => getChartConfigs(trades), [trades]);
+  const selectedTrade = useMemo(
+    () => trades.find((t) => t.id === selectedTradeId) || null,
+    [trades, selectedTradeId]
+  );
+
+  const handleTradeUpdated = useCallback((updated) => {
+    setTrades((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+  }, []);
+
+  const openUntaggedTrade = useCallback(() => {
+    const untagged = playbookTrades.find((t) => !t.setup || !String(t.setup).trim());
+    if (untagged) setSelectedTradeId(untagged.id);
+  }, [playbookTrades]);
 
   if (loading && !trades.length) {
     return <div className="analytics-loading">Loading analytics…</div>;
@@ -121,10 +155,12 @@ export default function AnalyticsDashboard() {
           load(dateFrom, dateTo, type);
         }}
         onToggleAccount={toggleAccount}
+        onOpenTradeLog={() => setListPanel("trade-log")}
       />
 
       <div className="analytics-dashboard__body">
         <AnalyticsWorkflowNotice />
+        <AnalyticsUntaggedBanner untaggedCount={untaggedCount} onTagTrade={openUntaggedTrade} />
 
         <AnalyticsCard title="Performance Overview">
           <PerformanceOverview stats={stats} trades={trades} beThreshold={beThreshold} />
@@ -142,32 +178,91 @@ export default function AnalyticsDashboard() {
           <AnalyticsCard
             title="Daily P&L"
             action={
-              <Link href="/analytics.html?embed=1" className="analytics-link-btn">
+              <button type="button" className="analytics-link-btn" onClick={() => setListPanel("daily-pnl")}>
                 View All →
-              </Link>
+              </button>
             }
           >
-            <DailyPnlTable trades={trades} />
+            <DailyPnlTable
+              trades={trades}
+              onRowClick={(date) => router.push(`/history/${date}`)}
+            />
           </AnalyticsCard>
 
           <AnalyticsCard
             title="Recent Trades"
             action={
-              <Link href="/analytics.html?embed=1" className="analytics-link-btn">
+              <button type="button" className="analytics-link-btn" onClick={() => setListPanel("recent-trades")}>
                 View All →
-              </Link>
+              </button>
             }
           >
-            <RecentTradesTable trades={trades} />
+            <RecentTradesTable trades={trades} onTradeSelect={(t) => setSelectedTradeId(t.id)} />
           </AnalyticsCard>
         </div>
 
         <AnalyticsCard title="Playbook Adherence">
-          <PlaybookAdherencePanel summary={playbook} trackingStart={playbookTrackingStart} />
+          <PlaybookAdherencePanel
+            summary={playbook}
+            trackingStart={playbookTrackingStart}
+            setupBreakdown={setupBreakdown}
+            onTrackingReset={handleTrackingReset}
+          />
         </AnalyticsCard>
 
         <SessionAnalyticsGrid trades={trades} />
       </div>
+
+      <AnalyticsSlidePanel
+        open={listPanel === "daily-pnl"}
+        title="Daily P&L"
+        onClose={() => setListPanel(null)}
+      >
+        <DailyPnlTable
+          trades={trades}
+          limit={null}
+          onRowClick={(date) => {
+            setListPanel(null);
+            router.push(`/history/${date}`);
+          }}
+        />
+      </AnalyticsSlidePanel>
+
+      <AnalyticsSlidePanel
+        open={listPanel === "recent-trades"}
+        title="Recent Trades"
+        onClose={() => setListPanel(null)}
+      >
+        <RecentTradesTable
+          trades={trades}
+          limit={null}
+          onTradeSelect={(t) => {
+            setListPanel(null);
+            setSelectedTradeId(t.id);
+          }}
+        />
+      </AnalyticsSlidePanel>
+
+      <AnalyticsSlidePanel
+        open={listPanel === "trade-log"}
+        title="Trade Log"
+        onClose={() => setListPanel(null)}
+        width="min(720px, 94vw)"
+      >
+        <AnalyticsTradeLogPanel
+          trades={trades}
+          onTradeSelect={(t) => {
+            setListPanel(null);
+            setSelectedTradeId(t.id);
+          }}
+        />
+      </AnalyticsSlidePanel>
+
+      <TradeDetailPanel
+        trade={selectedTrade}
+        onClose={() => setSelectedTradeId(null)}
+        onUpdated={handleTradeUpdated}
+      />
     </div>
   );
 }

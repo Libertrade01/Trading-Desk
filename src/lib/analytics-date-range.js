@@ -87,3 +87,11 @@ export function filterTradesForPlaybookAdherence(trades, trackingStart) {
   if (!trackingStart) return [];
   return (trades || []).filter((t) => t.date >= trackingStart);
 }
+
+/** Reset playbook tracking anchor to today (excludes prior history again). */
+export function resetPlaybookTrackingStartDate() {
+  if (typeof window === "undefined") return limaTodayParts().today;
+  const today = limaTodayParts().today;
+  localStorage.setItem(PLAYBOOK_TRACKING_START_KEY, today);
+  return today;
+}

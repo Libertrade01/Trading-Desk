@@ -13,6 +13,7 @@ export default function AnalyticsToolbar({
   onCustomRangeChange,
   onAccountTypeChange,
   onToggleAccount,
+  onOpenTradeLog,
 }) {
   const showChips = accounts.length > 1 || (accounts.length === 1 && accounts[0].id !== "default");
 
@@ -76,6 +77,19 @@ export default function AnalyticsToolbar({
           <option value="funded">Funded</option>
           <option value="cash">Cash</option>
         </select>
+        <nav className="analytics-toolbar__nav" aria-label="Workflow">
+          <Link href="/" className="analytics-nav-link">
+            Home
+          </Link>
+          <Link href="/history" className="analytics-nav-link">
+            History
+          </Link>
+        </nav>
+        {onOpenTradeLog ? (
+          <button type="button" className="analytics-link-btn" onClick={onOpenTradeLog}>
+            Trade log
+          </button>
+        ) : null}
         <Link href="/postmarket" className="desk-nav-link">
           Import
         </Link>

@@ -11,6 +11,7 @@ import {
   volTag,
   getRiskPlanFollowed,
 } from "../lib/history-data";
+import { playbookAdherenceLabel } from "../lib/setup-adherence";
 import { readinessScoreColor } from "../lib/premarket-scoring";
 
 function ScoreRing({ score, size = 100 }) {
@@ -112,6 +113,9 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
   const { pre, plan, post } = session;
   const pnlTone = session.netPnl > 0 ? "pos" : session.netPnl < 0 ? "neg" : "dim";
   const riskPlanFollowed = getRiskPlanFollowed(post);
+  const playbookLabel = session.playbookAdherence
+    ? playbookAdherenceLabel(session.playbookAdherence)
+    : null;
 
   return (
     <div className="history-detail-page hybrid-page">
@@ -356,6 +360,27 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                 <strong className="neg">{post.losses || "0"}</strong>
               </div>
             </div>
+
+            {session.playbookAdherence?.total > 0 && playbookLabel && (
+              <div className="history-process-row">
+                <div className="history-process-title hybrid-label-sm">Playbook adherence</div>
+                <div className="history-playbook-adherence">
+                  <strong
+                    style={{
+                      color:
+                        playbookLabel.tone === "green"
+                          ? "var(--green)"
+                          : playbookLabel.tone === "red"
+                            ? "var(--red)"
+                            : "var(--amber)",
+                    }}
+                  >
+                    {session.playbookAdherence.playbookRate}%
+                  </strong>
+                  <span>{playbookLabel.text}</span>
+                </div>
+              </div>
+            )}
 
             <div className="history-process-row">
               <div className="history-process-title hybrid-label-sm">Process adherence (1–10)</div>

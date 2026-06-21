@@ -5,12 +5,11 @@ import { formatPnl } from "../../lib/analytics-stats";
 import { formatLimaTime } from "../../lib/trade-time";
 import AnalyticsTable from "./AnalyticsTable";
 
-export default function RecentTradesTable({ trades, limit = 8 }) {
+export default function RecentTradesTable({ trades, limit = 8, onTradeSelect }) {
   const rows = useMemo(() => {
-    return [...trades]
-      .sort((a, b) => (b.entry_time || "").localeCompare(a.entry_time || ""))
-      .slice(0, limit)
-      .map((t) => {
+    const sorted = [...trades].sort((a, b) => (b.entry_time || "").localeCompare(a.entry_time || ""));
+    const slice = limit != null ? sorted.slice(0, limit) : sorted;
+    return slice.map((t) => {
         const pnl = t.net_pnl || 0;
         const pnlColor = pnl > 0 ? "var(--green)" : pnl < 0 ? "var(--red)" : "var(--muted)";
         const dirColor = t.direction === "long" ? "var(--green)" : "var(--red)";
@@ -48,9 +47,7 @@ export default function RecentTradesTable({ trades, limit = 8 }) {
         { key: "pnl", label: "Net P&L", width: "80px", align: "right" },
       ]}
       rows={rows}
-      onRowClick={(row) => {
-        window.open(`/analytics.html?embed=1&trade=${row.trade.id}`, "_blank");
-      }}
+      onRowClick={onTradeSelect ? (row) => onTradeSelect(row.trade) : undefined}
     />
   );
 }

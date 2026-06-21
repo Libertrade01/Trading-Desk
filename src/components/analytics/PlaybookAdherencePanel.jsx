@@ -3,12 +3,32 @@
 import { playbookAdherenceLabel } from "../../lib/setup-adherence";
 import AnalyticsStat from "./AnalyticsStat";
 
-export default function PlaybookAdherencePanel({ summary, trackingStart }) {
+export default function PlaybookAdherencePanel({
+  summary,
+  trackingStart,
+  setupBreakdown = [],
+  onTrackingReset,
+}) {
   if (!summary?.total) {
     return (
-      <div className="analytics-empty">
-        No trades in the selected range since playbook tracking began
-        {trackingStart ? ` (${trackingStart})` : ""}.
+      <div>
+        <div className="analytics-empty">
+          No trades in the selected range since playbook tracking began
+          {trackingStart ? ` (${trackingStart})` : ""}.
+        </div>
+        {trackingStart ? (
+          <p className="an-playbook-tracking-note">
+            Tracking since {trackingStart}
+            {onTrackingReset ? (
+              <>
+                {" · "}
+                <button type="button" className="analytics-link-btn" onClick={onTrackingReset}>
+                  Reset anchor
+                </button>
+              </>
+            ) : null}
+          </p>
+        ) : null}
       </div>
     );
   }
@@ -17,13 +37,6 @@ export default function PlaybookAdherencePanel({ summary, trackingStart }) {
   const tone = label?.tone === "green" ? "positive" : label?.tone === "red" ? "negative" : "neutral";
   const statusColor =
     label?.tone === "green" ? "var(--green)" : label?.tone === "red" ? "var(--red)" : "var(--amber)";
-
-  const rows = [
-    ["Playbook", summary.playbook, "var(--green)"],
-    ["Improvised", summary.improvised, "var(--amber)"],
-    ["Invalid", summary.invalid, "var(--red)"],
-    ["Untagged", summary.untagged, "var(--muted)"],
-  ].filter((r) => r[1] > 0);
 
   return (
     <div>
@@ -38,21 +51,34 @@ export default function PlaybookAdherencePanel({ summary, trackingStart }) {
           {label?.text}
         </div>
       </div>
-      {rows.length > 0 && (
-        <details className="an-stats-more">
-          <summary className="an-stats-more__toggle">Breakdown</summary>
+      {setupBreakdown.length > 0 && (
+        <details className="an-stats-more" open>
+          <summary className="an-stats-more__toggle">By setup</summary>
           <div className="an-playbook-rows">
-            {rows.map(([name, count, color]) => (
-              <div key={name} className="an-playbook-row">
-                <span>{name}</span>
-                <span className="an-stat__value an-stat__value--sm" style={{ color }}>
-                  {count}
+            {setupBreakdown.map((row) => (
+              <div key={row.name} className="an-playbook-row">
+                <span>{row.label}</span>
+                <span className="an-stat__value an-stat__value--sm" style={{ color: row.color }}>
+                  {row.count}
                 </span>
               </div>
             ))}
           </div>
         </details>
       )}
+      {trackingStart ? (
+        <p className="an-playbook-tracking-note">
+          Tracking since {trackingStart}
+          {onTrackingReset ? (
+            <>
+              {" · "}
+              <button type="button" className="analytics-link-btn" onClick={onTrackingReset}>
+                Reset anchor
+              </button>
+            </>
+          ) : null}
+        </p>
+      ) : null}
     </div>
   );
 }

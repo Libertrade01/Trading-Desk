@@ -254,7 +254,7 @@ export default function PostMarketReview({ onBack }) {
   const handleSave = async () => {
     if (!form.noTradeToday && setupAdherence.untagged > 0) {
       window.alert(
-        `${setupAdherence.untagged} trade${setupAdherence.untagged === 1 ? "" : "s"} still need a setup tag. Import again with every trade tagged, or update tags in Analytics.`
+        `${setupAdherence.untagged} trade${setupAdherence.untagged === 1 ? "" : "s"} still need a setup tag. Import again with every trade tagged, or tag trades in Analytics (Trade log).`
       );
       return false;
     }
