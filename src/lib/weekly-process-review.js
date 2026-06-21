@@ -468,26 +468,54 @@ export async function loadWeeklyProcessReview(weekStart, weekEnd) {
   };
 }
 
-/** Prior week's review holds "focus next week" for the current Mon–Fri. */
+/** Saturday after reviewed week through Friday of the focus week. */
+export function focusPeriodForReview(weekEnd) {
+  const focusStart = offsetDateKey(weekEnd, 0);
+  const focusWeekMon = offsetDateKey(weekEnd, 3);
+  const focusEnd = offsetDateKey(focusWeekMon, 4);
+  return { focusStart, focusEnd };
+}
+
+export function focusAppliesForDate(weekEnd, dateKey) {
+  const { focusStart, focusEnd } = focusPeriodForReview(weekEnd);
+  return dateKey >= focusStart && dateKey <= focusEnd;
+}
+
+/** @deprecated Use focusPeriodForReview — kept for callers that need a week range. */
 export function getFocusDisplayWeek() {
   return getProcessWeekRange(-1);
 }
 
 export async function loadHomeFocusItems(dateKey = todayKey()) {
-  const { end } = getFocusDisplayWeek();
-  const review = await loadSavedReview(end);
-  if (!isReviewComplete(review)) return { items: [], weekEnd: end, complete: false };
-  return {
-    items: review.focusItems.filter((f) => f.trim()),
-    weekEnd: end,
-    complete: true,
-  };
+  for (const week of getRecentProcessWeeks(8)) {
+    const review = await loadSavedReview(week.end);
+    if (!isReviewComplete(review)) continue;
+    const items = review.focusItems.filter((f) => f.trim());
+    if (!items.length) continue;
+    if (focusAppliesForDate(week.end, dateKey)) {
+      return { items, weekEnd: week.end, complete: true };
+    }
+  }
+  return { items: [], weekEnd: null, complete: false };
 }
 
 export function shouldPromptWeeklyReview(dateKey = todayKey()) {
   const cal = new Date(`${dateKey}T12:00:00`);
   const dow = cal.getDay();
   if (dow !== 5 && dow !== 0) return false;
+  return true;
+}
+
+export async function isCurrentWeekReviewComplete(dateKey = todayKey()) {
+  const { end } = getProcessWeekRange(0);
+  const review = await loadSavedReview(end);
+  return isReviewComplete(review);
+}
+
+export async function shouldShowWeeklyReviewPrompt(dateKey = todayKey()) {
+  if (!shouldPromptWeeklyReview(dateKey)) return false;
+  if (!(await hasTradingDaysThisWeek(dateKey))) return false;
+  if (await isCurrentWeekReviewComplete(dateKey)) return false;
   return true;
 }
 

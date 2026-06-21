@@ -27,8 +27,7 @@ import {
 import { loadDllSettings } from "../lib/dll-recovery-settings";
 import {
   loadHomeFocusItems,
-  shouldPromptWeeklyReview,
-  hasTradingDaysThisWeek,
+  shouldShowWeeklyReviewPrompt,
 } from "../lib/weekly-process-review";
 
 /** Set localStorage to "750" to demo recovery UI; remove key to disable. */
@@ -242,19 +241,17 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
         recoveryState = await loadRecoveryState();
       }
 
-      const [todaySession, all, focus, hasWeekDays] = await Promise.all([
+      const [todaySession, all, focus, showPrompt] = await Promise.all([
         loadSessionDay(effectiveDateKey),
         loadAllSessions(),
         loadHomeFocusItems(effectiveDateKey),
-        hasTradingDaysThisWeek(effectiveDateKey),
+        shouldShowWeeklyReviewPrompt(effectiveDateKey),
       ]);
       if (cancelled) return;
       setToday(todaySession);
       setSessions(all);
       setWeekFocus(focus);
-      setShowReviewPrompt(
-        shouldPromptWeeklyReview(effectiveDateKey) && hasWeekDays
-      );
+      setShowReviewPrompt(showPrompt);
       setRecoveryStatus(getRecoveryStatus(recoveryState, dllSettings));
       setLoading(false);
     })();
