@@ -915,6 +915,106 @@ textarea:focus, input:focus, select:focus {
   color: var(--amber);
 }
 
+.home-econ-cal-badge--conflict {
+  border-color: rgba(180, 120, 255, 0.35);
+  color: #c9a0ff;
+}
+
+.home-ribbon--conflict {
+  border-color: rgba(180, 120, 255, 0.35);
+  background: rgba(180, 120, 255, 0.06);
+}
+
+.home-ribbon--conflict .home-ribbon-tag {
+  color: #c9a0ff;
+}
+
+.home-ribbon--conflict .home-ribbon-hint {
+  color: #c9a0ff;
+  opacity: 0.9;
+}
+
+.home-econ-cal-empty {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.home-econ-cal-empty--inline {
+  margin-bottom: 8px;
+}
+
+.home-econ-cal-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.home-econ-cal-expand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  border: none;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.home-econ-cal-expand:hover {
+  color: var(--text);
+}
+
+.home-econ-cal-expand-icon {
+  font-size: 11px;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.home-econ-cal-week {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.home-econ-cal-day {
+  margin-bottom: 14px;
+}
+
+.home-econ-cal-day:last-child {
+  margin-bottom: 4px;
+}
+
+.home-econ-cal-day--today .home-econ-cal-day-label {
+  color: var(--text);
+}
+
+.home-econ-cal-day-label {
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.home-econ-cal-day-empty {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  opacity: 0.65;
+}
+
+.home-econ-cal-day .home-ribbons {
+  margin-bottom: 0;
+}
+
 .home-ribbon--high .home-ribbon-tag {
   color: #ff8a8a;
 }

@@ -37,6 +37,32 @@ export function getProcessWeekRange(offsetFromNow = 0) {
   return { start: dateKeyStr(mon), end: dateKeyStr(fri) };
 }
 
+/**
+ * Mon–Fri week for market calendar UI.
+ * Mon–Fri → current trading week; Sat/Sun → upcoming week (matches Sunday cron refresh).
+ */
+export function getDisplayTradingWeekRange() {
+  const { cal } = calendarDateParts();
+  const dow = cal.getDay();
+  const mon = new Date(cal);
+
+  if (dow === 0) {
+    mon.setDate(cal.getDate() + 1);
+  } else if (dow === 6) {
+    mon.setDate(cal.getDate() + 2);
+  } else {
+    mon.setDate(cal.getDate() - (dow - 1));
+  }
+
+  const fri = new Date(mon);
+  fri.setDate(fri.getDate() + 4);
+  return {
+    start: dateKeyStr(mon),
+    end: dateKeyStr(fri),
+    isUpcoming: dow === 0 || dow === 6,
+  };
+}
+
 export function getRecentProcessWeeks(count = 8) {
   const weeks = [];
   for (let i = 0; i >= -(count - 1); i -= 1) {

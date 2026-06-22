@@ -1,7 +1,5 @@
 import staticEvents2026 from "../data/market-events-2026.json";
 import marketHolidays2026 from "../data/market-holidays-2026.json";
-import { getEconEventsForDate, mergeEconEvents } from "./econ-calendar";
-import { getCachedEconEventsForDate } from "./econ-calendar-cache";
 
 const SEVERITY_ORDER = { high: 0, medium: 1, low: 2 };
 
@@ -194,7 +192,6 @@ export function getMarketEventsForDate(date = new Date()) {
     ...staticEventsForDate(dateKey),
     ...computedEventsForDate(dateKey),
     ...holidayEventsForDate(dateKey),
-    ...getEconEventsForDate(dateKey),
   ];
 
   merged.sort((a, b) => {
@@ -209,17 +206,9 @@ export function getMarketEventsForDate(date = new Date()) {
   return merged;
 }
 
-/** Curated + computed + optional API cache (client/server). */
-export async function loadMarketEventsForDate(date = new Date()) {
-  const dateKey = typeof date === "string" ? date : toDateKey(date);
-  const base = getMarketEventsForDate(dateKey);
-  try {
-    const cached = await getCachedEconEventsForDate(dateKey);
-    if (!cached.length) return base;
-    return mergeEconEvents(base, cached);
-  } catch {
-    return base;
-  }
+/** Sync market events for a date (holidays, FOMC, roll week, OPEX, etc.). */
+export function loadMarketEventsForDate(date = new Date()) {
+  return Promise.resolve(getMarketEventsForDate(date));
 }
 
 export function hasMarketEventsToday(date = new Date()) {

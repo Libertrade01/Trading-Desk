@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { fetchEconomicCalendar } from "@/lib/econ-calendar-api";
+import {
+  crossCheckEconWithApi,
+  getCuratedEconEventsForRange,
+} from "@/lib/econ-calendar";
 import { cacheDateRange, ECON_CACHE_KEY } from "@/lib/econ-calendar-cache";
 
 function getSupabaseAdmin() {
@@ -20,21 +24,38 @@ export async function GET(request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const apiKey = process.env.FMP_API_KEY;
+  const apiKey = process.env.SIFTING_API_KEY;
   const { from, to } = cacheDateRange(14);
 
   try {
-    let events = [];
+    let apiEvents = [];
+    let apiError = null;
     if (apiKey) {
-      events = await fetchEconomicCalendar(from, to, apiKey);
+      try {
+        apiEvents = await fetchEconomicCalendar(from, to, apiKey);
+      } catch (err) {
+        apiError = err.message || "API fetch failed";
+      }
     }
+
+    const curatedEvents = getCuratedEconEventsForRange(from, to);
+    const crossCheck = crossCheckEconWithApi(curatedEvents, apiEvents);
 
     const payload = {
       syncedAt: new Date().toISOString(),
       from,
       to,
-      count: events.length,
-      events,
+      count: apiEvents.length,
+      events: apiEvents,
+      crossCheck: {
+        curated: crossCheck.curatedCount,
+        api: crossCheck.apiCount,
+        matched: crossCheck.matched,
+        curatedOnly: crossCheck.curatedOnly,
+        apiOnly: crossCheck.apiOnly,
+        conflictCount: crossCheck.conflictCount,
+        conflicts: crossCheck.conflicts,
+      },
     };
 
     const supabase = getSupabaseAdmin();
@@ -54,8 +75,13 @@ export async function GET(request) {
       syncedAt: payload.syncedAt,
       from,
       to,
-      count: events.length,
+      count: apiEvents.length,
+      mergedCount: crossCheck.merged.length,
+      conflictCount: crossCheck.conflictCount,
       apiEnabled: !!apiKey,
+      provider: apiKey ? "sifting" : null,
+      crossCheck: payload.crossCheck,
+      ...(apiError ? { apiError } : {}),
     });
   } catch (err) {
     return NextResponse.json(

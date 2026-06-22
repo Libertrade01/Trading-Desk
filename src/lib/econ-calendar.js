@@ -134,7 +134,7 @@ export function normalizeEconEvent(raw) {
   const timeET = raw.timeET || null;
   if (timeET && !isWithinUSEconHours(timeET)) return null;
 
-  return {
+  const event = {
     date: raw.date,
     kind: raw.kind || "econ",
     label: raw.label,
@@ -143,6 +143,8 @@ export function normalizeEconEvent(raw) {
     reminder: raw.reminder || null,
     source: raw.source || "econ-api",
   };
+  if (raw.conflict) event.conflict = raw.conflict;
+  return event;
 }
 
 export function getEconEventsForDate(dateKey) {
@@ -163,32 +165,235 @@ export function getEconEventsForDate(dateKey) {
   return merged;
 }
 
-function eventDedupeKey(event) {
-  return `${event.date}|${event.kind}|${event.label.toLowerCase()}`;
+const ECON_MATCH_KINDS = new Set([
+  "nfp",
+  "claims",
+  "ppi",
+  "pce",
+  "gdp",
+  "retail",
+  "ism",
+  "cpi",
+  "fomc",
+  "pmi",
+]);
+
+/** Kinds that can appear more than once on the same day (e.g. Final GDP + GDP price index). */
+const MULTI_RELEASE_KINDS = new Set(["gdp", "pce", "ism", "pmi", "econ"]);
+
+/** Stable key for matching curated vs API releases. */
+export function econMatchKey(event) {
+  const kind = event?.kind || "econ";
+  if (MULTI_RELEASE_KINDS.has(kind)) {
+    return `${event.date}|${kind}|${(event.label || "").toLowerCase()}`;
+  }
+  if (ECON_MATCH_KINDS.has(kind)) {
+    return `${event.date}|${kind}`;
+  }
+  return `${event.date}|${kind}|${(event.label || "").toLowerCase()}`;
 }
 
-/** Merge API/cache events without duplicating curated entries. */
-export function mergeEconEvents(baseEvents, extraEvents) {
-  const seen = new Set(baseEvents.map(eventDedupeKey));
-  const merged = [...baseEvents];
+function addDaysToDateKey(dateKey, days) {
+  const d = parseDateKey(dateKey);
+  d.setDate(d.getDate() + days);
+  return toDateKey(d);
+}
 
-  for (const raw of extraEvents || []) {
-    const event = normalizeEconEvent(raw);
-    if (!event) continue;
-    const key = eventDedupeKey(event);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    merged.push(event);
+/** All pre-programmed econ events between two YYYY-MM-DD keys (inclusive). */
+export function getCuratedEconEventsForRange(fromKey, toKey) {
+  const events = [];
+  let current = fromKey;
+  while (current <= toKey) {
+    events.push(...getEconEventsForDate(current));
+    current = addDaysToDateKey(current, 1);
   }
+  return events;
+}
 
-  merged.sort((a, b) => {
+function sortEconEvents(events) {
+  return [...events].sort((a, b) => {
     const sev = (SEVERITY_ORDER[a.severity] ?? 9) - (SEVERITY_ORDER[b.severity] ?? 9);
     if (sev !== 0) return sev;
     if (a.timeET && b.timeET) return a.timeET.localeCompare(b.timeET);
     return a.label.localeCompare(b.label);
   });
+}
 
-  return merged;
+function conflictSnapshot(event) {
+  return {
+    date: event.date,
+    label: event.label,
+    timeET: event.timeET ?? null,
+    severity: event.severity,
+  };
+}
+
+export function hasScheduleConflict(curated, api) {
+  return (
+    curated.date !== api.date ||
+    (curated.timeET || null) !== (api.timeET || null) ||
+    curated.severity !== api.severity
+  );
+}
+
+function buildConflictEvent(displayEvent, curated, api) {
+  const base = normalizeEconEvent(displayEvent);
+  if (!base) return null;
+  return {
+    ...base,
+    source: "econ-conflict",
+    conflict: {
+      curated: conflictSnapshot(curated),
+      api: conflictSnapshot(api),
+    },
+  };
+}
+
+/**
+ * Merge curated + API econ events for one day.
+ * When schedules disagree, flag a conflict — never auto-pick a winner.
+ */
+export function mergeEconEvents(
+  curatedEvents,
+  apiEventsForDay,
+  { allApiEvents = null, curatedRangeEvents = null } = {},
+) {
+  const curated = (curatedEvents || []).map(normalizeEconEvent).filter(Boolean);
+  const apiToday = (apiEventsForDay || []).map((e) => normalizeEconEvent(e)).filter(Boolean);
+  const apiPool = (allApiEvents || apiToday).map((e) => normalizeEconEvent(e)).filter(Boolean);
+  const curatedPool = (curatedRangeEvents || curated).map(normalizeEconEvent).filter(Boolean);
+
+  if (!apiToday.length && !apiPool.some((e) => curated.some((c) => c.kind === e.kind))) {
+    return sortEconEvents(curated);
+  }
+
+  const apiTodayByKey = new Map(apiToday.map((event) => [econMatchKey(event), event]));
+  const usedApiKeys = new Set();
+  const merged = [];
+
+  for (const event of curated) {
+    if (!isEconEvent(event)) {
+      merged.push(event);
+      continue;
+    }
+
+    const key = econMatchKey(event);
+    const apiSameDay = apiTodayByKey.get(key);
+    const apiSameKindOtherDay =
+      ECON_MATCH_KINDS.has(event.kind) &&
+      !MULTI_RELEASE_KINDS.has(event.kind) &&
+      apiPool.find((apiEvent) => apiEvent.kind === event.kind && apiEvent.date !== event.date);
+
+    if (apiSameDay && hasScheduleConflict(event, apiSameDay)) {
+      const flagged = buildConflictEvent(event, event, apiSameDay);
+      if (flagged) merged.push(flagged);
+      usedApiKeys.add(key);
+    } else if (apiSameDay) {
+      merged.push(event);
+      usedApiKeys.add(key);
+    } else if (apiSameKindOtherDay) {
+      const flagged = buildConflictEvent(event, event, apiSameKindOtherDay);
+      if (flagged) merged.push(flagged);
+    } else {
+      merged.push(event);
+    }
+  }
+
+  for (const apiEvent of apiToday) {
+    const key = econMatchKey(apiEvent);
+    if (usedApiKeys.has(key)) continue;
+
+    const curatedSameDay = curated.find((event) => econMatchKey(event) === key);
+    const curatedSameKind = ECON_MATCH_KINDS.has(apiEvent.kind) && !MULTI_RELEASE_KINDS.has(apiEvent.kind)
+      ? curatedPool.find((event) => event.kind === apiEvent.kind)
+      : curatedSameDay;
+
+    if (curatedSameKind && hasScheduleConflict(curatedSameKind, apiEvent)) {
+      const flagged = buildConflictEvent(apiEvent, curatedSameKind, apiEvent);
+      if (flagged) merged.push(flagged);
+    } else if (!curatedSameDay) {
+      merged.push(apiEvent);
+    }
+  }
+
+  return sortEconEvents(merged);
+}
+
+/** Collect conflict records from merged events. */
+export function collectEconConflicts(events) {
+  return (events || [])
+    .filter((event) => event?.conflict)
+    .map((event) => ({
+      date: event.date,
+      kind: event.kind,
+      curated: event.conflict.curated,
+      api: event.conflict.api,
+    }));
+}
+
+/**
+ * Cross-check API events against curated rules/static data.
+ * Conflicts are flagged for manual review, not auto-resolved.
+ */
+export function crossCheckEconWithApi(curatedEvents, apiEvents) {
+  const curated = (curatedEvents || []).map(normalizeEconEvent).filter(Boolean);
+  const api = (apiEvents || []).map((e) => normalizeEconEvent(e)).filter(Boolean);
+
+  const dateKeys = new Set([
+    ...curated.map((event) => event.date),
+    ...api.map((event) => event.date),
+  ]);
+
+  const merged = [];
+  for (const dateKey of dateKeys) {
+    merged.push(
+      ...mergeEconEvents(
+        curated.filter((event) => event.date === dateKey),
+        api.filter((event) => event.date === dateKey),
+        { allApiEvents: api, curatedRangeEvents: curated },
+      ),
+    );
+  }
+
+  const conflicts = collectEconConflicts(merged);
+  const matchedKeys = new Set(
+    api
+      .filter((apiEvent) =>
+        curated.some(
+          (curatedEvent) =>
+            econMatchKey(curatedEvent) === econMatchKey(apiEvent) &&
+            !hasScheduleConflict(curatedEvent, apiEvent),
+        ),
+      )
+      .map(econMatchKey),
+  );
+
+  const apiExtraEvents = api.filter((apiEvent) => {
+    const hasCuratedKind = ECON_MATCH_KINDS.has(apiEvent.kind)
+      ? curated.some((curatedEvent) => curatedEvent.kind === apiEvent.kind)
+      : curated.some((curatedEvent) => econMatchKey(curatedEvent) === econMatchKey(apiEvent));
+    return !hasCuratedKind;
+  });
+
+  const curatedOnlyEvents = curated.filter((event) => {
+    const hasApiKind = ECON_MATCH_KINDS.has(event.kind)
+      ? api.some((apiEvent) => apiEvent.kind === event.kind)
+      : api.some((apiEvent) => econMatchKey(apiEvent) === econMatchKey(event));
+    return !hasApiKind;
+  });
+
+  return {
+    curatedCount: curated.length,
+    apiCount: api.length,
+    matched: matchedKeys.size,
+    curatedOnly: curatedOnlyEvents.length,
+    apiOnly: apiExtraEvents.length,
+    conflictCount: conflicts.length,
+    conflicts,
+    curatedOnlyEvents,
+    apiExtraEvents,
+    merged: sortEconEvents(merged),
+  };
 }
 
 export function summarizeEconEvents(events) {
@@ -217,6 +422,6 @@ export function getMorningHighImpactEvents(events) {
 export function isEconEvent(event) {
   return (
     event?.source?.startsWith("econ-") ||
-    ["nfp", "claims", "ppi", "pce", "gdp", "retail", "ism", "cpi", "fomc"].includes(event?.kind)
+    ["nfp", "claims", "ppi", "pce", "gdp", "retail", "ism", "cpi", "fomc", "pmi"].includes(event?.kind)
   );
 }

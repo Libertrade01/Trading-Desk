@@ -42,6 +42,18 @@ export async function getCachedEconEventsForDate(dateKey) {
     .filter(Boolean);
 }
 
+/** Full API cache payload for cross-day conflict checks. */
+export async function loadCachedApiEvents() {
+  const cache = await loadEconCache();
+  const events = (cache.events || []).map(normalizeEconEvent).filter(Boolean);
+  return {
+    syncedAt: cache.syncedAt || null,
+    from: cache.from || null,
+    to: cache.to || null,
+    events,
+  };
+}
+
 export function cacheDateRange(daysAhead = 14) {
   const from = toDateKey();
   const to = addDays(from, daysAhead);
