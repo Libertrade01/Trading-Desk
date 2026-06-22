@@ -438,15 +438,15 @@ export function detectProcessFindings(summary, sessions, priorSummary = null) {
     if (s.pre?.standDownAcknowledged && traded) {
       findings.push({
         severity: "red",
-        title: "Traded on stand-down day",
-        detail: `${formatDayShort(s.date)} — stand-down acknowledged but trades were taken.`,
+        title: "Traded on protective day",
+        detail: `${formatDayShort(s.date)} — protective day acknowledged but trades were taken.`,
       });
     }
     if (s.pre?.sleepDebtStandDownRequired && traded) {
       findings.push({
         severity: "red",
-        title: "Traded on sleep-debt stand-down",
-        detail: `${formatDayShort(s.date)} — mandatory sleep-debt stand-down but trades were taken.`,
+        title: "Traded on recovery day",
+        detail: `${formatDayShort(s.date)} — mandatory recovery day but trades were taken.`,
       });
     }
   });

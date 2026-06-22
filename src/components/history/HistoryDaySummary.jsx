@@ -72,11 +72,11 @@ export default function HistoryDaySummary({ session }) {
       {(pre?.standDownAcknowledged || pre?.sleepDebtStandDownRequired) && (
         <div className="history-day-summary__alerts">
           {pre.standDownAcknowledged && (
-            <span className="history-day-summary__alert">Stand-down acknowledged</span>
+            <span className="history-day-summary__alert">Protective day acknowledged</span>
           )}
           {pre.sleepDebtStandDownRequired && (
             <span className="history-day-summary__alert history-day-summary__alert--severe">
-              Sleep debt stand-down
+              Recovery day
             </span>
           )}
         </div>

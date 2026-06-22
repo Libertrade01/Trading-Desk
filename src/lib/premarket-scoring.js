@@ -201,10 +201,54 @@ export function computeReadinessScore(form) {
   };
 }
 
+/** Shown on a fresh check-in before the trader adjusts any fields. */
+export const NEUTRAL_CHECKIN_SCORE = 50;
+
+export const PROTECTIVE_DAY_THRESHOLD = 50;
+
 export function readinessStatus(score) {
   if (score >= 70) return { label: "Ready to trade", tone: "good" };
-  if (score >= 50) return { label: "Scale back", tone: "amber" };
-  return { label: "Stand down", tone: "red" };
+  if (score >= PROTECTIVE_DAY_THRESHOLD) return { label: "Trade light", tone: "amber" };
+  return { label: "Sit out or size down", tone: "red" };
+}
+
+/** User-facing copy for low-readiness / protective days (not "stand down"). */
+export const PROTECTIVE_DAY_COPY = {
+  scoreTitle: "Protective day",
+  scoreBody:
+    "Your readiness is below 50. Sitting out counts as a win. If you trade, keep size minimal and rules tight.",
+  scoreAckLabel: "I'll sit out or trade minimal size today.",
+  scoreAckDone: "Protective day noted — honor your limit.",
+  recoveryTitle: "Recovery day",
+  recoveryBody:
+    "Sleep debt has been severe two days running. Recovery before P&L — no full-size session today.",
+  recoveryAckLabel: "I acknowledge today is a recovery day.",
+  sleepDebtCaution:
+    "Another day at this level triggers a mandatory recovery day.",
+  sleepDebtMandatory: "Mandatory recovery day",
+};
+
+export function getDisplayReadiness(scores, { engaged }) {
+  if (!engaged) {
+    return {
+      composite: NEUTRAL_CHECKIN_SCORE,
+      emotional: null,
+      physical: null,
+      external: null,
+      preparation: null,
+      status: { label: "Check in", tone: "neutral" },
+      live: false,
+    };
+  }
+  return {
+    composite: scores.composite,
+    emotional: scores.emotional,
+    physical: scores.physical,
+    external: scores.external,
+    preparation: scores.preparation,
+    status: readinessStatus(scores.composite),
+    live: true,
+  };
 }
 
 export function readinessScoreColor(score) {

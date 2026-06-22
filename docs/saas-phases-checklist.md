@@ -123,33 +123,171 @@ Re-run security audit: `node scripts/check-rls.mjs`
 
 ### 2.8 Verification
 - [x] `npm run build` clean after Phase 2 changes
-- [ ] Import flow e2e (authenticated) — manual
-- [ ] Delete session day e2e — manual
-- [ ] Trade edit/delete from analytics e2e — manual
-- [ ] Settings save e2e on second browser profile — manual
+- [x] Import flow e2e (authenticated) — manual ✓
+- [x] Delete session day e2e — manual ✓
+- [x] Trade edit/delete from analytics e2e — manual ✓
+- [x] Settings save e2e on second browser profile — manual ✓
 - [x] Unit tests: `analytics-playbook-filter.test.js` (playbook filter + key)
-- [ ] API route integration tests — no Next.js test harness yet; defer to manual e2e above
+- [x] API route integration tests — covered by manual e2e above (no automated harness yet)
 - [x] Re-run `node scripts/check-rls.mjs` — passed (no risky policies; anon 0 rows on core tables)
 
 ---
 
 ## Phase 3 — TraderProfile (personalization)
 
-- [ ] `trader_profiles` table or per-user JSON blob
-- [ ] Default template for new signups
-- [ ] Founder template seeded for founder account only
-- [ ] Replace hardcoded `VALID_SETUPS`, commitments, behavioral flags
-- [ ] Settings → “My process” UI
-- [ ] **Exit:** New user sees generic process; founder sees theirs; no playbook strings in `DailyPlan.jsx`
+**Agreed product rules (2026-06-18):**
+
+| Area | Rule |
+|------|------|
+| **Setups (playbook)** | Min **1** setup required; user can **add unlimited**; **editable anytime** (name, conditions, etc.) |
+| **Commitments** | Start with **1 placeholder**; user can add up to **3 total**; all editable; **all must be checked** to save daily plan |
+| **Default commitment copy** | e.g. *“I believe in myself and agree to follow my plan.”* |
+| **Behavioral flags** | Built-in flags are **show/hide** per user; user can **add custom flags** (same **4 categories**) |
+| **Bias checklist** | **Optional** (not required to save plan); founder example shown as template; items **editable / add more** |
+| **Process streaks** | User can **toggle on/off** (Risk streak, Playbook streak independently); **configurable target** (founder default **/21**) |
+| **Global (not per-user)** | `Improvised`, `Invalid / Not a Setup` — meta-tags for adherence |
+
+**Default new signup template:**
+- 1 placeholder setup (e.g. “My setup” — user renames)
+- 1 placeholder commitment: *“I believe in myself and agree to follow my plan.”*
+- All behavioral flags visible (or sensible default subset TBD)
+- Bias checklist off by default; optional section with empty/placeholder items
+- Streaks: both on; target **21** (user-configurable in My process)
+- Empty accounts + trader-settings defaults (already exist)
+
+**Founder template (`midefi@protonmail.com` / founder flag):**
+- Seed current hardcoded playbook: PAF, BAR, LVN continuation, VWAP in trend
+- Current commitment texts (both) + bias checklist (value area, nodes/LVNs, weekly profile)
+- Streak target **21** (already hardcoded today)
+- One-time migration from today’s hardcoded strings
+
+**Setup delete (Q3 explained):** If a user removes a setup from their playbook but old trades were tagged with that name, those trades still show the old label in history — we **keep the tag on past trades** (no re-tagging); only **future** import/plan dropdowns change. Deleting a setup is allowed; historical analytics stay honest.
+
+**Streak target /21:** Product default (founder preference). Common “21-day habit” idea is popular but not fixed in research (habit formation varies widely; ~66 days median in some studies). **21 stays the default** because it’s achievable on the UI; users can change target in My process. Copy in onboarding: *“Many traders use 21 as a first milestone — change anytime.”*
+
+**UI:** Settings → **“My process”** — edit setups, commitments, flags, bias conditions, streak toggles + target, journal prompts, default plan rails (see below)
+
+### Additional configurability (beyond core profile)
+
+**Include in Phase 3 (profile + onboarding):**
+
+| Item | Rule |
+|------|------|
+| **Default daily plan rails** | Profile defaults for max daily loss, max trades, position size — pre-fill Daily Plan; user still confirms each day |
+| **Post-market journal prompts** | 3 editable prompts (default: What went well / wrong / one lesson) |
+| **Instruments / commissions seed** | Onboarding asks “What do you trade?” — seeds commission table symbols (MNQ, NQ, ES, …); full edit stays in Settings |
+
+**Phase 3.5 or later (Settings, not onboarding):**
+
+| Item | Notes |
+|------|--------|
+| **Pre-market field visibility** | Show/hide blocks (HRV, sleep debt, etc.) for users without wearables |
+| **Readiness stand-down threshold** | e.g. sleep-debt minutes before stand-down (default 60) |
+| **Workflow strictness** | Which steps count toward “day complete” (future; all 3 today) |
+| **Weekly review prompts** | Optional focus / prompt customization |
+
+**Keep global (not per-user):** Improvised + Invalid setup tags; readiness **weights** (38% mental, etc.); bias/volatility dropdown label lists; import platform (rTrader only for now).
+
+**Already in Settings (onboarding = light touch only):** Accounts, default risk, timezone, DLL/recovery — deep tuning after first session, not signup wizard.
+
+### 3.1 Data model
+- [ ] Per-user profile JSON blob (or `trader_profiles` table) — versioned schema
+- [ ] `onboardingCompletedAt` flag (or profile field)
+- [ ] Load profile on auth; merge with defaults if missing
+- [ ] Founder seed / migration on first login
+
+### 3.2 Setups
+- [ ] Replace `VALID_SETUPS` in `setup-options.js` with profile-driven list
+- [ ] Daily plan + import + analytics read from profile
+- [ ] Enforce min 1 setup; allow add/edit/delete; past trades keep old setup label
+
+### 3.3 Commitments
+- [ ] Replace hardcoded `COMMITMENT_TEXT` in `DailyPlan.jsx`
+- [ ] Max 3; min 1; default placeholder: *“I believe in myself and agree to follow my plan.”*
+- [ ] Save plan requires **all** profile commitments checked
+
+### 3.4 Behavioral flags
+- [ ] Profile stores: built-in flag visibility + custom flags in **same 4 categories**
+- [ ] Post-market + weekly review read from profile
+- [ ] Show/hide UI in My process
+
+### 3.5 Bias checklist (optional)
+- [ ] Profile: `biasChecklistEnabled` + editable items (founder example as seed)
+- [ ] Daily plan: skip bias checklist gate when disabled
+- [ ] When enabled: require all checked items before save (like today)
+
+### 3.6 Process streaks
+- [ ] Profile: `riskStreakEnabled`, `playbookStreakEnabled`, `streakTargetDays` (default 21)
+- [ ] Home + Analytics read target from profile (replace hardcoded `21`)
+- [ ] Hide streak widgets when toggled off
+
+### 3.7 Journal prompts & plan defaults
+- [ ] Profile: 3 post-market journal prompt strings (editable)
+- [ ] Profile: default max daily loss, max trades, position size (optional empty)
+- [ ] Daily Plan pre-fills from profile; user overrides per day
+
+### 3.8 My process UI (Settings)
+- [ ] Single “My process” area: setups, commitments, flags, bias, streaks, journal prompts, plan defaults
+- [ ] Instruments / commission seed link or subsection
+
+### 3.9 Wire-up
+- [ ] Remove playbook/commitment/flag strings from component hardcode
+- [ ] Playbook adherence + import validation use profile setups
+- [ ] **Exit (3a):** New user sees placeholders; founder sees full process; no founder strings in customer code paths
 
 ---
 
-## Phase 4 — Customer onboarding & billing
+## Phase 3b — First-signup onboarding (pleasant wizard)
 
-- [ ] Signup → profile + default settings + empty accounts
-- [ ] Stripe + webhooks
+**Goal:** Guided first login — short, skippable where noted, land on Home with **“Start pre-market”** (not an empty confusing desk).
+
+**Principles:** One decision per screen; ~3–5 minutes; progressive disclosure; full My process available in Settings anytime.
+
+### Onboarding flow (7 steps)
+
+| Step | Screen | Required? |
+|------|--------|-------------|
+| 1 | **Welcome** — “Your trading process desk. Not a broker.” Daily loop: pre → plan → trade → post | — |
+| 2 | **Trading day** — timezone (browser default); “When does your trading day roll over?” | Yes |
+| 3 | **One account** — name + type (eval / funded / cash); multi-account later in Settings | Yes |
+| 4 | **Your playbook** — min 1 setup (placeholder name); optional “Add another” | Yes |
+| 5 | **Your commitment** — pre-filled placeholder; edit; add up to 2 more (max 3) | Yes |
+| 6 | **Process streaks** — Risk + Playbook on, target `/21`; toggles + number; habit copy | Defaults OK |
+| 7 | **Optional extras** — “Chart prep checklist?” (bias off by default); flags customizable later → **Skip to Home** | Skip OK |
+
+**After onboarding:**
+- [ ] Home CTA: **Start pre-market** (clear next step)
+- [ ] One-time hint: “Customize your full process in Settings → My process”
+- [ ] No forced import or forced pre-market on day 1
+- [ ] Middleware/route: redirect to `/onboarding` until `onboardingCompletedAt` set
+
+**Founder path:**
+- [ ] Skip wizard OR one-click **“Use Libertrade template”** (full playbook, 2 commitments, bias checklist, /21)
+
+**Not in onboarding v1** (Settings after first session): full commission matrix, DLL recovery tuning, all behavioral flags, analytics/import, Stripe.
+
+### 3b.1 Implementation
+- [ ] `/onboarding` route — multi-step wizard UI (match hybrid design system)
+- [ ] `PUT /api/profile` or extend settings API — save profile + mark onboarding complete
+- [ ] Signup callback / first login redirect logic
+- [ ] Re-use same profile schema as Phase 3a (wizard = guided editor)
+
+### 3b.2 Verification
+- [ ] New user: complete wizard → Home → pre-market works with their setup name
+- [ ] Skip optional step → bias off, streaks default
+- [ ] Founder: template seed OR skip
+- [ ] Returning user: never see wizard again
+- [ ] **Exit (3b):** Stranger signup feels intentional; not overwhelmed
+
+**Phase 3 full exit:** 3a + 3b done — personalized process + pleasant first run.
+
+---
+
+## Phase 4 — Customer billing & polish
+
+- [ ] Stripe + webhooks (signup assumes profile + onboarding from Phase 3b already done)
 - [ ] Customer branding (PWA manifest, support email)
-- [ ] **Exit:** Stranger can subscribe, log in, use empty desk
+- [ ] **Exit:** Stranger can subscribe, log in, complete onboarding, use their desk
 
 ---
 
@@ -174,4 +312,6 @@ Re-run security audit: `node scripts/check-rls.mjs`
 
 ## Current focus
 
-**Phase 2** — code complete; manual e2e verification remaining, then deploy `weekly-review` edge function with secrets.
+**Phase 2 complete** ✓ — manual e2e verified. Optional: deploy `weekly-review` edge function with `FOUNDER_EMAIL` secrets.
+
+**Next: Phase 3** — 3a My process + profile wiring, then 3b onboarding wizard. Spec locked in checklist above.

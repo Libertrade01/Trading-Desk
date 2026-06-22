@@ -11,9 +11,12 @@ import {
   parseSleepDebtMinutes,
   requiresSleepDebtStandDown,
   SLEEP_DEBT_SEVERE_CAUTION_MINS,
+  getDisplayReadiness,
+  PROTECTIVE_DAY_COPY,
+  PROTECTIVE_DAY_THRESHOLD,
 } from "../lib/premarket-scoring";
 import MarketEventNudge from "./MarketEventNudge";
-import ReadinessScoreWidget from "./ReadinessScoreWidget";
+import CheckInRail, { CHECKIN_RAIL_SECTIONS } from "./CheckInRail";
 import { todayKey, offsetDateKey } from "../lib/today-key";
 import { loadHomeFocusItems } from "../lib/weekly-process-review";
 import { notifySessionSaved } from "../lib/session-events";
@@ -49,22 +52,7 @@ function sectionDate() {
     weekday: "long",
     month: "long",
     day: "numeric",
-  }).toUpperCase();
-}
-
-function DimBar({ label, value }) {
-  const tone = value >= 70 ? "var(--green)" : value >= 50 ? "var(--amber)" : "var(--red)";
-  return (
-    <div className="pm-dim-bar">
-      <div className="pm-dim-bar-header">
-        <span>{label}</span>
-        <span style={{ color: tone }}>{value}</span>
-      </div>
-      <div className="pm-dim-bar-track">
-        <div className="pm-dim-bar-fill" style={{ width: `${value}%`, background: tone }} />
-      </div>
-    </div>
-  );
+  });
 }
 
 function SliderField({ label, hint, minLabel, maxLabel, value, onChange, inverted }) {
@@ -112,24 +100,66 @@ function ToggleField({ label, hint, value, onChange }) {
   );
 }
 
+function ProtectiveDayBanner({ recoveryDay, acknowledged, onAcknowledge }) {
+  const title = recoveryDay ? PROTECTIVE_DAY_COPY.recoveryTitle : PROTECTIVE_DAY_COPY.scoreTitle;
+  const body = recoveryDay ? PROTECTIVE_DAY_COPY.recoveryBody : PROTECTIVE_DAY_COPY.scoreBody;
+  const ackLabel = recoveryDay ? PROTECTIVE_DAY_COPY.recoveryAckLabel : PROTECTIVE_DAY_COPY.scoreAckLabel;
+
+  return (
+    <div
+      className={`pm-protective-banner${acknowledged ? " pm-protective-banner--acknowledged" : ""}`}
+      role={recoveryDay ? "alert" : "status"}
+    >
+      <div className="pm-protective-banner-head">
+        <span className="pm-protective-banner-eyebrow hybrid-eyebrow">{title}</span>
+        {!acknowledged && <p className="pm-protective-banner-text">{body}</p>}
+      </div>
+      <label className={`pm-protective-check${acknowledged ? " pm-protective-check--done" : ""}`}>
+        <input
+          type="checkbox"
+          checked={acknowledged}
+          onChange={(e) => onAcknowledge(e.target.checked)}
+        />
+        <span>{acknowledged ? PROTECTIVE_DAY_COPY.scoreAckDone : ackLabel}</span>
+      </label>
+    </div>
+  );
+}
+
 export default function PreMarketCheckIn({ onBack }) {
   const [form, setForm] = useState(DEFAULT_PREMARKET_FORM);
   const [yesterdaySleepDebtMinutes, setYesterdaySleepDebtMinutes] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [weekFocus, setWeekFocus] = useState([]);
+  const [activeSection, setActiveSection] = useState(0);
+  const [checkInEngaged, setCheckInEngaged] = useState(false);
 
   const scores = useMemo(() => computeReadinessScore(form), [form]);
-  const status = useMemo(() => readinessStatus(scores.composite), [scores.composite]);
+  const display = useMemo(
+    () => getDisplayReadiness(scores, { engaged: checkInEngaged }),
+    [scores, checkInEngaged],
+  );
+
   const sleepDebtMinutes = parseSleepDebtMinutes(form.sleepDebtMinutes);
   const sleepDebtSevere = isSleepDebtSevere(sleepDebtMinutes);
-  const sleepDebtStandDown = requiresSleepDebtStandDown(
-    sleepDebtMinutes,
-    yesterdaySleepDebtMinutes
+  const recoveryDay = requiresSleepDebtStandDown(sleepDebtMinutes, yesterdaySleepDebtMinutes);
+  const showProtectiveBanner =
+    checkInEngaged &&
+    (recoveryDay || scores.composite < PROTECTIVE_DAY_THRESHOLD);
+
+  const railDimensions = useMemo(
+    () => ({
+      physical: display.physical,
+      mental: display.emotional,
+      external: display.external,
+      preparation: display.preparation,
+    }),
+    [display],
   );
-  const showStandDownCard = scores.composite < 50 || sleepDebtStandDown;
 
   const set = useCallback((key, value) => {
+    setCheckInEngaged(true);
     setForm((f) => ({ ...f, [key]: value }));
     setSaved(false);
   }, []);
@@ -143,7 +173,12 @@ export default function PreMarketCheckIn({ onBack }) {
         loadData(`premarket-checkin-${yesterdayKey}`, null),
         loadHomeFocusItems(dateKey),
       ]);
-      if (data) setForm({ ...DEFAULT_PREMARKET_FORM, ...data });
+      if (data) {
+        setForm({ ...DEFAULT_PREMARKET_FORM, ...data });
+        if (data.savedAt || data.readinessScore != null) {
+          setCheckInEngaged(true);
+        }
+      }
       setWeekFocus(focus.items || []);
       if (yesterdayData?.sleepDebtMinutes != null && yesterdayData.sleepDebtMinutes !== "") {
         setYesterdaySleepDebtMinutes(parseSleepDebtMinutes(yesterdayData.sleepDebtMinutes));
@@ -173,7 +208,7 @@ export default function PreMarketCheckIn({ onBack }) {
     sleepDebtSevere: isSleepDebtSevere(formData.sleepDebtMinutes),
     sleepDebtStandDownRequired: requiresSleepDebtStandDown(
       formData.sleepDebtMinutes,
-      yesterdaySleepDebtMinutes
+      yesterdaySleepDebtMinutes,
     ),
     savedAt: new Date().toISOString(),
   }), [yesterdaySleepDebtMinutes]);
@@ -189,11 +224,14 @@ export default function PreMarketCheckIn({ onBack }) {
   }, [buildSavePayload]);
 
   const handleSave = async () => {
+    setCheckInEngaged(true);
+    const status = readinessStatus(scores.composite);
     await persistCheckin(form, scores, status);
     setSaved(true);
   };
 
-  const handleStandDownAcknowledge = async (checked) => {
+  const handleProtectiveAcknowledge = async (checked) => {
+    setCheckInEngaged(true);
     const acknowledgedAt = checked ? new Date().toISOString() : null;
     const nextForm = {
       ...form,
@@ -202,14 +240,22 @@ export default function PreMarketCheckIn({ onBack }) {
     };
     setForm(nextForm);
     setSaved(false);
+    const status = readinessStatus(scores.composite);
     await persistCheckin(nextForm, scores, status);
     if (checked) setSaved(true);
   };
 
   const handleReset = () => {
     setForm(DEFAULT_PREMARKET_FORM);
+    setCheckInEngaged(false);
+    setActiveSection(0);
     setSaved(false);
   };
+
+  const goPrev = () => setActiveSection((i) => Math.max(0, i - 1));
+  const goNext = () => setActiveSection((i) => Math.min(CHECKIN_RAIL_SECTIONS.length - 1, i + 1));
+
+  const section = CHECKIN_RAIL_SECTIONS[activeSection];
 
   if (loading) {
     return <div className="pm-loading">Loading...</div>;
@@ -221,242 +267,274 @@ export default function PreMarketCheckIn({ onBack }) {
         <span>{headerDate()}</span>
       </div>
 
-      <div className="premarket-grid">
-        <div className="pm-header">
-          <div className="pm-eyebrow hybrid-eyebrow">Pre-market · {sectionDate()}</div>
-          <h1 className="hybrid-page-title">CHECK IN.</h1>
-          <p className="pm-subtitle">
-            Be honest before the open. Your score updates as you go.
-          </p>
-        </div>
+      <div className="pm-checkin-layout">
+        <CheckInRail
+          activeIndex={activeSection}
+          onSelect={setActiveSection}
+          composite={display.composite}
+          dimensions={railDimensions}
+          scoreLive={display.live}
+          cautionActive={showProtectiveBanner && !form.standDownAcknowledged}
+        />
 
-        {weekFocus.length > 0 && (
-          <div className="pm-week-focus-reminder" role="note">
-            <div className="pm-week-focus-reminder-label hybrid-eyebrow">This week&apos;s focus</div>
-            <ul className="pm-week-focus-reminder-list">
-              {weekFocus.map((item, i) => (
-                <li key={i}>{item}</li>
-              ))}
-            </ul>
+        <div className="pm-checkin-main">
+          <div className="pm-header">
+            <div className="pm-eyebrow hybrid-eyebrow">Pre-market · {sectionDate()}</div>
+            <h1 className="hybrid-page-title">CHECK IN.</h1>
+            <p className="pm-subtitle">
+              Be honest before the open. Your score updates as you go.
+            </p>
           </div>
-        )}
 
-        <div className="premarket-form">
-          {/* 01 Physical */}
-          <section className="pm-card">
-            <div className="pm-section-head">
-              <span className="pm-section-num">01</span>
-              <div>
-                <h2 className="pm-section-title hybrid-section-title">Physical state</h2>
-                <p className="pm-section-desc">The body the brain rents.</p>
-              </div>
+          {weekFocus.length > 0 && (
+            <div className="pm-week-focus-reminder" role="note">
+              <div className="pm-week-focus-reminder-label hybrid-eyebrow">This week&apos;s focus</div>
+              <ul className="pm-week-focus-reminder-list">
+                {weekFocus.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
             </div>
-            <div className="pm-sleep-row">
-              <div className="pm-field">
-                <div className="pm-field-label hybrid-label">Sleep (hours)</div>
-                <input
-                  type="number"
-                  min={0}
-                  max={14}
-                  step={0.5}
-                  value={form.sleepHours}
-                  onChange={(e) => set("sleepHours", e.target.value)}
-                  className="pm-number-input"
-                />
-              </div>
-              <div className="pm-field">
-                <div className="pm-field-label hybrid-label">Sleep debt (mins)</div>
-                <input
-                  type="number"
-                  min={0}
-                  max={600}
-                  step={5}
-                  value={form.sleepDebtMinutes}
-                  onChange={(e) => set("sleepDebtMinutes", e.target.value)}
-                  className={`pm-number-input${sleepDebtSevere ? " pm-number-input--caution" : ""}`}
-                />
-              </div>
-            </div>
-            {sleepDebtSevere && !sleepDebtStandDown && (
-              <div className="pm-sleep-debt-caution" role="status">
-                <strong>Severe caution</strong> — sleep debt is {sleepDebtMinutes} min (≥{" "}
-                {SLEEP_DEBT_SEVERE_CAUTION_MINS}). Another day at this level triggers a mandatory
-                stand-down.
-              </div>
-            )}
-            {sleepDebtStandDown && (
-              <div className="pm-sleep-debt-caution pm-sleep-debt-caution--standdown" role="alert">
-                <strong>Mandatory stand-down</strong> — sleep debt has been ≥{" "}
-                {SLEEP_DEBT_SEVERE_CAUTION_MINS} min for two consecutive days.
-              </div>
-            )}
-            <SliderField
-              label="Sleep quality"
-              minLabel="Restless"
-              maxLabel="Restored"
-              value={form.sleepQuality}
-              onChange={(v) => set("sleepQuality", v)}
-            />
-            <SliderField
-              label="Energy"
-              hint="Right now"
-              minLabel="Drained"
-              maxLabel="Sharp"
-              value={form.energy}
-              onChange={(v) => set("energy", v)}
-            />
-            <div className="pm-field">
-              <div className="pm-field-label hybrid-label">HRV</div>
-              <div className="pm-field-hint">Recovery score from your wearable (0–100%)</div>
-              <div className="pm-hrv-input-row">
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={form.hrvScore}
-                  onChange={(e) => set("hrvScore", e.target.value)}
-                  className="pm-number-input pm-hrv-input"
-                />
-                <span className="pm-hrv-suffix">%</span>
-              </div>
-            </div>
-            <div className="pm-toggle-row">
-              <ToggleField label="Hydrated" hint="Water in" value={form.hydrated} onChange={(v) => set("hydrated", v)} />
-              <ToggleField label="Movement" hint="Walk, stretch, or workout" value={form.movement} onChange={(v) => set("movement", v)} />
-            </div>
-          </section>
+          )}
 
-          {/* 02 Mental */}
-          <section className="pm-card">
-            <div className="pm-section-head">
-              <span className="pm-section-num">02</span>
+          <div className="pm-section-panel">
+            <div className="pm-section-panel-head">
               <div>
-                <h2 className="pm-section-title hybrid-section-title">Mental state</h2>
-                <p className="pm-section-desc">How you arrive on the desk today.</p>
+                <h2 className="pm-section-title hybrid-section-title">{sectionTitle(section.id)}</h2>
+                <p className="pm-section-desc">{sectionDesc(section.id)}</p>
               </div>
+              <span className="pm-section-step hybrid-label-sm">
+                {activeSection + 1} of {CHECKIN_RAIL_SECTIONS.length}
+              </span>
             </div>
-            <SliderField
-              label="Mental state"
-              hint="Calm, centered, prepared (10) → reactive, off-balance (1)"
-              minLabel="Off"
-              maxLabel="Centered"
-              value={form.emotionalState}
-              onChange={(v) => set("emotionalState", v)}
-            />
-            <SliderField
-              label="Confidence"
-              hint="In your read of conditions today"
-              minLabel="Shaky"
-              maxLabel="Confident"
-              value={form.confidence}
-              onChange={(v) => set("confidence", v)}
-            />
-            <SliderField
-              label="Patience"
-              hint="Willingness to wait for A+ setups"
-              minLabel="Itchy"
-              maxLabel="Patient"
-              value={form.patience}
-              onChange={(v) => set("patience", v)}
-            />
-            <SliderField
-              label="FOMO risk"
-              hint="How likely to chase moves"
-              minLabel="None"
-              maxLabel="High"
-              value={form.fomoRisk}
-              onChange={(v) => set("fomoRisk", v)}
-              inverted
-            />
-            <SliderField
-              label="Revenge risk"
-              hint="Pressure from a recent loss"
-              minLabel="None"
-              maxLabel="High"
-              value={form.revengeRisk}
-              onChange={(v) => set("revengeRisk", v)}
-              inverted
-            />
-          </section>
 
-          {/* 03 External */}
-          <section className="pm-card">
-            <div className="pm-section-head">
-              <span className="pm-section-num">03</span>
-              <div>
-                <h2 className="pm-section-title hybrid-section-title">External</h2>
-                <p className="pm-section-desc">What the world is throwing at you.</p>
-              </div>
-            </div>
-            <SliderField
-              label="External distractions"
-              hint="Calls, family, errands, life noise"
-              minLabel="None"
-              maxLabel="Heavy"
-              value={form.externalDistractions}
-              onChange={(v) => set("externalDistractions", v)}
-              inverted
-            />
-            <SliderField
-              label="Financial pressure"
-              hint="How much does today need to work"
-              minLabel="None"
-              maxLabel="Severe"
-              value={form.financialPressure}
-              onChange={(v) => set("financialPressure", v)}
-              inverted
-            />
-            <SliderField
-              label="General focus level"
-              hint="How sharp and present you feel right now"
-              minLabel="Scattered"
-              maxLabel="Locked in"
-              value={form.generalFocusLevel}
-              onChange={(v) => set("generalFocusLevel", v)}
-            />
-          </section>
+            <div className="pm-section-panel-body">
+              {section.id === "physical" && (
+                <>
+                  <div className="pm-sleep-row">
+                    <div className="pm-field">
+                      <div className="pm-field-label hybrid-label">Sleep (hours)</div>
+                      <input
+                        type="number"
+                        min={0}
+                        max={14}
+                        step={0.5}
+                        value={form.sleepHours}
+                        onChange={(e) => set("sleepHours", e.target.value)}
+                        className="pm-number-input"
+                      />
+                    </div>
+                    <div className="pm-field">
+                      <div className="pm-field-label hybrid-label">Sleep debt (mins)</div>
+                      <input
+                        type="number"
+                        min={0}
+                        max={600}
+                        step={5}
+                        value={form.sleepDebtMinutes}
+                        onChange={(e) => set("sleepDebtMinutes", e.target.value)}
+                        className={`pm-number-input${sleepDebtSevere ? " pm-number-input--caution" : ""}`}
+                      />
+                    </div>
+                  </div>
+                  {sleepDebtSevere && !recoveryDay && (
+                    <div className="pm-sleep-debt-caution" role="status">
+                      <strong>Severe caution</strong> — sleep debt is {sleepDebtMinutes} min (≥{" "}
+                      {SLEEP_DEBT_SEVERE_CAUTION_MINS}). {PROTECTIVE_DAY_COPY.sleepDebtCaution}
+                    </div>
+                  )}
+                  {recoveryDay && (
+                    <div className="pm-sleep-debt-caution pm-sleep-debt-caution--recovery" role="alert">
+                      <strong>{PROTECTIVE_DAY_COPY.sleepDebtMandatory}</strong> — sleep debt has been ≥{" "}
+                      {SLEEP_DEBT_SEVERE_CAUTION_MINS} min for two consecutive days.
+                    </div>
+                  )}
+                  <SliderField
+                    label="Sleep quality"
+                    minLabel="Restless"
+                    maxLabel="Restored"
+                    value={form.sleepQuality}
+                    onChange={(v) => set("sleepQuality", v)}
+                  />
+                  <SliderField
+                    label="Energy"
+                    hint="Right now"
+                    minLabel="Drained"
+                    maxLabel="Sharp"
+                    value={form.energy}
+                    onChange={(v) => set("energy", v)}
+                  />
+                  <div className="pm-field">
+                    <div className="pm-field-label hybrid-label">HRV</div>
+                    <div className="pm-field-hint">Recovery score from your wearable (0–100%)</div>
+                    <div className="pm-hrv-input-row">
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={form.hrvScore}
+                        onChange={(e) => set("hrvScore", e.target.value)}
+                        className="pm-number-input pm-hrv-input"
+                      />
+                      <span className="pm-hrv-suffix">%</span>
+                    </div>
+                  </div>
+                  <div className="pm-toggle-row">
+                    <ToggleField label="Hydrated" hint="Water in" value={form.hydrated} onChange={(v) => set("hydrated", v)} />
+                    <ToggleField label="Movement" hint="Walk, stretch, or workout" value={form.movement} onChange={(v) => set("movement", v)} />
+                  </div>
+                </>
+              )}
 
-          {/* 04 Preparation */}
-          <section className="pm-card">
-            <div className="pm-section-head">
-              <span className="pm-section-num">04</span>
-              <div>
-                <h2 className="pm-section-title hybrid-section-title">Preparation</h2>
-                <p className="pm-section-desc">The work you did before market open.</p>
-              </div>
-            </div>
-            <MarketEventNudge />
-            <div className="pm-prep-grid">
-              <ToggleField label="Reviewed key levels" value={form.reviewedKeyLevels} onChange={(v) => set("reviewedKeyLevels", v)} />
-              <ToggleField label="Reviewed news / catalysts" value={form.reviewedNews} onChange={(v) => set("reviewedNews", v)} />
-              <ToggleField label="Daily plan written" value={form.dailyPlanWritten} onChange={(v) => set("dailyPlanWritten", v)} />
-              <ToggleField label="Followed routine" value={form.followedRoutine} onChange={(v) => set("followedRoutine", v)} />
-              <ToggleField label="Meditation / breathwork" value={form.meditation} onChange={(v) => set("meditation", v)} />
-            </div>
-            <div className="pm-custom-prep">
-              <label className="pm-custom-check">
-                <input
-                  type="checkbox"
-                  checked={form.customPrepChecked}
-                  onChange={(e) => set("customPrepChecked", e.target.checked)}
-                />
-                <span>Your own prep item (optional)</span>
-              </label>
-              {form.customPrepChecked && (
-                <input
-                  type="text"
-                  value={form.customPrepItem}
-                  onChange={(e) => set("customPrepItem", e.target.value)}
-                  className="pm-text-input"
-                  placeholder="Add your own prep item..."
-                />
+              {section.id === "mental" && (
+                <>
+                  <SliderField
+                    label="Mental state"
+                    hint="Calm, centered, prepared (10) → reactive, off-balance (1)"
+                    minLabel="Off"
+                    maxLabel="Centered"
+                    value={form.emotionalState}
+                    onChange={(v) => set("emotionalState", v)}
+                  />
+                  <SliderField
+                    label="Confidence"
+                    hint="In your read of conditions today"
+                    minLabel="Shaky"
+                    maxLabel="Confident"
+                    value={form.confidence}
+                    onChange={(v) => set("confidence", v)}
+                  />
+                  <SliderField
+                    label="Patience"
+                    hint="Willingness to wait for A+ setups"
+                    minLabel="Itchy"
+                    maxLabel="Patient"
+                    value={form.patience}
+                    onChange={(v) => set("patience", v)}
+                  />
+                  <SliderField
+                    label="FOMO risk"
+                    hint="How likely to chase moves"
+                    minLabel="None"
+                    maxLabel="High"
+                    value={form.fomoRisk}
+                    onChange={(v) => set("fomoRisk", v)}
+                    inverted
+                  />
+                  <SliderField
+                    label="Revenge risk"
+                    hint="Pressure from a recent loss"
+                    minLabel="None"
+                    maxLabel="High"
+                    value={form.revengeRisk}
+                    onChange={(v) => set("revengeRisk", v)}
+                    inverted
+                  />
+                </>
+              )}
+
+              {section.id === "external" && (
+                <>
+                  <SliderField
+                    label="External distractions"
+                    hint="Calls, family, errands, life noise"
+                    minLabel="None"
+                    maxLabel="Heavy"
+                    value={form.externalDistractions}
+                    onChange={(v) => set("externalDistractions", v)}
+                    inverted
+                  />
+                  <SliderField
+                    label="Financial pressure"
+                    hint="How much does today need to work"
+                    minLabel="None"
+                    maxLabel="Severe"
+                    value={form.financialPressure}
+                    onChange={(v) => set("financialPressure", v)}
+                    inverted
+                  />
+                  <SliderField
+                    label="General focus level"
+                    hint="How sharp and present you feel right now"
+                    minLabel="Scattered"
+                    maxLabel="Locked in"
+                    value={form.generalFocusLevel}
+                    onChange={(v) => set("generalFocusLevel", v)}
+                  />
+                </>
+              )}
+
+              {section.id === "preparation" && (
+                <>
+                  <MarketEventNudge />
+                  <div className="pm-prep-grid">
+                    <ToggleField label="Reviewed key levels" value={form.reviewedKeyLevels} onChange={(v) => set("reviewedKeyLevels", v)} />
+                    <ToggleField label="Reviewed news / catalysts" value={form.reviewedNews} onChange={(v) => set("reviewedNews", v)} />
+                    <ToggleField label="Daily plan written" value={form.dailyPlanWritten} onChange={(v) => set("dailyPlanWritten", v)} />
+                    <ToggleField label="Followed routine" value={form.followedRoutine} onChange={(v) => set("followedRoutine", v)} />
+                    <ToggleField label="Meditation / breathwork" value={form.meditation} onChange={(v) => set("meditation", v)} />
+                  </div>
+                  <div className="pm-custom-prep">
+                    <label className="pm-custom-check">
+                      <input
+                        type="checkbox"
+                        checked={form.customPrepChecked}
+                        onChange={(e) => set("customPrepChecked", e.target.checked)}
+                      />
+                      <span>Your own prep item (optional)</span>
+                    </label>
+                    {form.customPrepChecked && (
+                      <input
+                        type="text"
+                        value={form.customPrepItem}
+                        onChange={(e) => set("customPrepItem", e.target.value)}
+                        className="pm-text-input"
+                        placeholder="Add your own prep item..."
+                      />
+                    )}
+                  </div>
+                </>
               )}
             </div>
-          </section>
+          </div>
 
-          {/* Mantra */}
-          <section className="pm-card pm-mantra-card">
+          {showProtectiveBanner && (
+            <ProtectiveDayBanner
+              recoveryDay={recoveryDay}
+              acknowledged={form.standDownAcknowledged}
+              onAcknowledge={handleProtectiveAcknowledge}
+            />
+          )}
+
+          {!checkInEngaged && (
+            <p className="pm-score-pending-hint">
+              Score starts at 50 until you adjust your check-in — then it reflects your real readiness.
+            </p>
+          )}
+
+          {display.live && (
+            <p className="pm-score-weight-hint">
+              Weighted: physical 22% · mental 38% · prep 25% · external 15%. Status: {display.status.label}.
+            </p>
+          )}
+
+          <div className="pm-section-nav">
+            <button type="button" className="pm-btn-link" onClick={goPrev} disabled={activeSection === 0}>
+              Previous
+            </button>
+            {activeSection < CHECKIN_RAIL_SECTIONS.length - 1 ? (
+              <button type="button" className="pm-btn-primary-sm" onClick={goNext}>
+                Next — {CHECKIN_RAIL_SECTIONS[activeSection + 1].label}
+              </button>
+            ) : (
+              <button type="button" className="pm-btn-link" onClick={() => setActiveSection(0)}>
+                Back to Physical
+              </button>
+            )}
+          </div>
+
+          <section className="pm-mantra-inline">
             <h2 className="pm-mantra-title hybrid-section-title">My mantra for today</h2>
             <p className="pm-section-desc">One line to anchor your session. It rides on your scorecard.</p>
             <input
@@ -468,7 +546,6 @@ export default function PreMarketCheckIn({ onBack }) {
             />
           </section>
 
-          {/* Reminders — separate block, not scored */}
           <section className="pm-reminders-panel" aria-label="Pre-market reminders">
             <div className="pm-reminders-head">
               <div className="pm-reminders-eyebrow hybrid-eyebrow">Reminders</div>
@@ -498,72 +575,37 @@ export default function PreMarketCheckIn({ onBack }) {
             </button>
           </div>
         </div>
-
-        <aside className="premarket-score-panel">
-          <div className="pm-score-stack">
-            <div className="pm-score-card">
-              <ReadinessScoreWidget
-                score={scores.composite}
-                statusLabel={status.label}
-                statusTone={status.tone}
-                variant="full"
-              />
-              <div className="pm-dim-bars">
-                <DimBar label="Physical" value={scores.physical} />
-                <DimBar label="Mental" value={scores.emotional} />
-                <DimBar label="External" value={scores.external} />
-                <DimBar label="Preparation" value={scores.preparation} />
-              </div>
-              <p className="pm-score-footnote">
-                Your score updates as you fill in the form. Weighted: physical 22% · mental 38% · prep 25% · external 15%.
-              </p>
-            </div>
-
-            {showStandDownCard && (
-              <div className={`pm-standdown-card${form.standDownAcknowledged ? " pm-standdown-card--acknowledged" : ""}`}>
-                <div className="pm-standdown-header">
-                  <div className="pm-standdown-icon">
-                    {form.standDownAcknowledged ? (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                        <path d="M12 2l7 4v6c0 5-3 9-7 10C8 21 5 17 5 12V6l7-4z" />
-                        <path d="M9 12l2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    ) : (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                        <path d="M12 2l7 4v6c0 5-3 9-7 10C8 21 5 17 5 12V6l7-4z" />
-                      </svg>
-                    )}
-                  </div>
-                  <h3 className="pm-standdown-title">
-                    {sleepDebtStandDown ? "Sleep debt stand-down" : "Stand-down day?"}
-                  </h3>
-                </div>
-                {!form.standDownAcknowledged && (
-                  <p className="pm-standdown-text">
-                    {sleepDebtStandDown
-                      ? "Two days in a row with 60+ minutes of sleep debt. Stand down today — recovery comes before P&L."
-                      : "Your score is signaling caution. If you trade today, trade small. If you don't trade, that's a win — and it gets recognized."}
-                  </p>
-                )}
-                <label className={`pm-standdown-check${form.standDownAcknowledged ? " pm-standdown-check--acknowledged" : ""}`}>
-                  <input
-                    type="checkbox"
-                    checked={form.standDownAcknowledged}
-                    onChange={(e) => handleStandDownAcknowledge(e.target.checked)}
-                  />
-                  <span>
-                    {form.standDownAcknowledged
-                      ? "Stand-down acknowledged. Honor it."
-                      : sleepDebtStandDown
-                        ? "I acknowledge today is a sleep-debt stand-down day."
-                        : "I acknowledge today is a stand-down day."}
-                  </span>
-                </label>
-              </div>
-            )}
-          </div>
-        </aside>
       </div>
     </div>
   );
+}
+
+function sectionTitle(id) {
+  switch (id) {
+    case "physical":
+      return "Physical state";
+    case "mental":
+      return "Mental state";
+    case "external":
+      return "External";
+    case "preparation":
+      return "Preparation";
+    default:
+      return "";
+  }
+}
+
+function sectionDesc(id) {
+  switch (id) {
+    case "physical":
+      return "The body the brain rents.";
+    case "mental":
+      return "How you arrive on the desk today.";
+    case "external":
+      return "What the world is throwing at you.";
+    case "preparation":
+      return "The work you did before market open.";
+    default:
+      return "";
+  }
 }

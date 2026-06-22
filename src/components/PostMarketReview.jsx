@@ -414,7 +414,7 @@ export default function PostMarketReview({ onBack }) {
               <input type="checkbox" checked={form.noTradeToday} onChange={(e) => set("noTradeToday", e.target.checked)} />
               <div>
                 <div className="pm-field-label hybrid-label">I didn&apos;t trade today</div>
-                <div className="pm-field-hint">Honoring a low-readiness day or sitting out by choice. Counts as a stand-down when paired with low/mid morning readiness.</div>
+                <div className="pm-field-hint">Honoring a low-readiness day or sitting out by choice. Counts as a protective day when paired with low/mid morning readiness.</div>
               </div>
             </label>
           </section>
