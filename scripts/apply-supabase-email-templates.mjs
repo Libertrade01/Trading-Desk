@@ -25,12 +25,18 @@ function readTemplate(name) {
   return fs.readFileSync(path.join(root, "supabase", "templates", name), "utf8");
 }
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://libertrade-desk.vercel.app";
-const callbackUrl = `${appUrl}/auth/callback`;
+const founderUrl = "https://libertrade-desk.vercel.app";
+const customerUrl = "https://libertrade-app.vercel.app";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || founderUrl;
+const redirectUrls = [
+  `${founderUrl}/auth/callback`,
+  `${customerUrl}/auth/callback`,
+  "http://localhost:3000/auth/callback",
+];
 
 const payload = {
   site_url: appUrl,
-  uri_allow_list: [callbackUrl, "http://localhost:3000/auth/callback"].join(","),
+  uri_allow_list: [...new Set(redirectUrls)].join(","),
   mailer_subjects_confirmation: "Confirm your Libertrade account",
   mailer_templates_confirmation_content: readTemplate("confirm-signup.html"),
   mailer_subjects_recovery: "Reset your Libertrade password",
