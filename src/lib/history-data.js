@@ -1,7 +1,10 @@
 import { storage } from "./supabase";
 import { computeReadinessScore, readinessStatus } from "./premarket-scoring";
-import { computePerformanceFromDbTrades, fetchTradesForDate } from "./rtrader-import";
+import { computePerformanceFromDbTrades, fetchTradesForDate, fetchTradesGroupedByDate } from "./rtrader-import";
 import { summarizeSetupAdherence } from "./setup-adherence";
+import { todayKey, offsetDateKey } from "./today-key";
+
+export { todayKey };
 
 const KEYS = {
   pre: "premarket-checkin-",
@@ -65,27 +68,22 @@ function resolveNetPnl(post, trades) {
   return null;
 }
 
-async function loadPostReview(dateKey) {
-  try {
-    const res = await fetch(`/api/sessions/${dateKey}/post`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data?.review) return data.review;
+async function loadPostReview(dateKey, { preferApi = false } = {}) {
+  if (preferApi) {
+    try {
+      const res = await fetch(`/api/sessions/${dateKey}/post`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.review) return data.review;
+      }
+    } catch {
+      /* fall through to storage */
     }
-  } catch {
-    /* fall through to storage */
   }
   return loadJson(`${KEYS.post}${dateKey}`);
 }
 
-export async function loadSessionDay(dateKey) {
-  const [pre, plan, post, trades] = await Promise.all([
-    loadJson(`${KEYS.pre}${dateKey}`),
-    loadJson(`${KEYS.plan}${dateKey}`),
-    loadPostReview(dateKey),
-    fetchTradesForDate(dateKey),
-  ]);
-
+function buildSessionRecord(dateKey, pre, plan, post, trades) {
   const readinessScore = pre?.readinessScore ?? (pre ? computeReadinessScore(pre).composite : null);
   const readiness = readinessScore != null ? readinessStatus(readinessScore) : null;
 
@@ -106,9 +104,61 @@ export async function loadSessionDay(dateKey) {
   };
 }
 
+export async function loadSessionDay(dateKey, { postFromApi = false } = {}) {
+  const [pre, plan, post, trades] = await Promise.all([
+    loadJson(`${KEYS.pre}${dateKey}`),
+    loadJson(`${KEYS.plan}${dateKey}`),
+    loadPostReview(dateKey, { preferApi: postFromApi }),
+    fetchTradesForDate(dateKey),
+  ]);
+
+  return buildSessionRecord(dateKey, pre, plan, post, trades);
+}
+
+/** Lightweight list load: one trades query, storage reads only (no per-day API). */
+export async function loadRecentSessions({
+  asOfDateKey,
+  limit = 12,
+  lookbackDays = 45,
+} = {}) {
+  const anchor = asOfDateKey || todayKey();
+  const minDate = offsetDateKey(anchor, -lookbackDays);
+  const dates = (await fetchSessionDates())
+    .filter((d) => d >= minDate && d <= anchor)
+    .slice(0, limit);
+
+  if (!dates.length) return [];
+
+  const tradesByDate = await fetchTradesGroupedByDate(dates);
+
+  return Promise.all(
+    dates.map(async (dateKey) => {
+      const [pre, plan, post] = await Promise.all([
+        loadJson(`${KEYS.pre}${dateKey}`),
+        loadJson(`${KEYS.plan}${dateKey}`),
+        loadJson(`${KEYS.post}${dateKey}`),
+      ]);
+      const trades = tradesByDate.get(dateKey) || [];
+      return buildSessionRecord(dateKey, pre, plan, post, trades);
+    })
+  );
+}
+
 export async function loadAllSessions({ maxDays = 90 } = {}) {
   const dates = (await fetchSessionDates()).slice(0, maxDays);
-  return Promise.all(dates.map((dateKey) => loadSessionDay(dateKey)));
+  if (!dates.length) return [];
+  const tradesByDate = await fetchTradesGroupedByDate(dates);
+  return Promise.all(
+    dates.map(async (dateKey) => {
+      const [pre, plan, post] = await Promise.all([
+        loadJson(`${KEYS.pre}${dateKey}`),
+        loadJson(`${KEYS.plan}${dateKey}`),
+        loadJson(`${KEYS.post}${dateKey}`),
+      ]);
+      const trades = tradesByDate.get(dateKey) || [];
+      return buildSessionRecord(dateKey, pre, plan, post, trades);
+    })
+  );
 }
 
 export async function deleteSessionDay(dateKey) {
@@ -118,10 +168,6 @@ export async function deleteSessionDay(dateKey) {
     throw new Error(data.error || "Failed to delete session");
   }
 }
-
-import { todayKey, offsetDateKey } from "./today-key";
-
-export { todayKey };
 
 export function isStepComplete(data) {
   return !!(data?.savedAt);

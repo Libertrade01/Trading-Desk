@@ -160,43 +160,63 @@ export function getImportAccount(settings) {
   );
 }
 
-export async function loadTraderSettings() {
-  try {
-    const r = await storage.get(TRADER_SETTINGS_KEY);
-    if (r?.value) {
-      const settings = normalizeTraderSettings(JSON.parse(r.value));
-      applyTradingDayTimezoneFromSettings(settings);
-      return settings;
+let settingsCache = null;
+let settingsLoadPromise = null;
+
+export async function loadTraderSettings({ force = false } = {}) {
+  if (!force && settingsCache) {
+    applyTradingDayTimezoneFromSettings(settingsCache);
+    return settingsCache;
+  }
+  if (!force && settingsLoadPromise) {
+    return settingsLoadPromise;
+  }
+
+  settingsLoadPromise = (async () => {
+    try {
+      const r = await storage.get(TRADER_SETTINGS_KEY);
+      if (r?.value) {
+        const settings = normalizeTraderSettings(JSON.parse(r.value));
+        applyTradingDayTimezoneFromSettings(settings);
+        settingsCache = settings;
+        return settings;
+      }
+    } catch {
+      /* fall through */
     }
-  } catch {
-    /* fall through */
-  }
 
-  const legacyAccounts = readLegacyAccounts();
-  const legacyRisk = readLegacyDefaultRisk();
-  if (legacyAccounts || legacyRisk != null) {
-    const migrated = normalizeTraderSettings({
-      defaultRisk: legacyRisk ?? DEFAULT_TRADER_SETTINGS.defaultRisk,
-      accounts: legacyAccounts?.map((a, i) =>
-        normalizeAccount(
-          {
-            ...a,
-            forImport: i === 0 || !!a.active,
-          },
-          i
-        )
-      ),
-    });
-    await saveTraderSettings(migrated);
-    clearLegacyTraderStorage();
-    applyTradingDayTimezoneFromSettings(migrated);
-    return migrated;
-  }
+    const legacyAccounts = readLegacyAccounts();
+    const legacyRisk = readLegacyDefaultRisk();
+    if (legacyAccounts || legacyRisk != null) {
+      const migrated = normalizeTraderSettings({
+        defaultRisk: legacyRisk ?? DEFAULT_TRADER_SETTINGS.defaultRisk,
+        accounts: legacyAccounts?.map((a, i) =>
+          normalizeAccount(
+            {
+              ...a,
+              forImport: i === 0 || !!a.active,
+            },
+            i
+          )
+        ),
+      });
+      await saveTraderSettings(migrated);
+      clearLegacyTraderStorage();
+      settingsCache = migrated;
+      return migrated;
+    }
 
-  const defaults = normalizeTraderSettings(DEFAULT_TRADER_SETTINGS);
-  await saveTraderSettings(defaults);
-  applyTradingDayTimezoneFromSettings(defaults);
-  return defaults;
+    const defaults = normalizeTraderSettings(DEFAULT_TRADER_SETTINGS);
+    await saveTraderSettings(defaults);
+    settingsCache = defaults;
+    return defaults;
+  })();
+
+  try {
+    return await settingsLoadPromise;
+  } finally {
+    settingsLoadPromise = null;
+  }
 }
 
 export async function saveTraderSettings(settings) {
@@ -210,6 +230,7 @@ export async function saveTraderSettings(settings) {
     const data = await res.json().catch(() => ({}));
     throw new Error(data.error || "Failed to save trader settings");
   }
+  settingsCache = next;
   applyTradingDayTimezoneFromSettings(next);
   return next;
 }

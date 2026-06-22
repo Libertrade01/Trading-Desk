@@ -258,6 +258,37 @@ export async function fetchTradesForDate(dateKey) {
   return data || [];
 }
 
+/** One query for many session days — used by home/history list loads. */
+export async function fetchTradesGroupedByDate(dateKeys) {
+  if (!dateKeys?.length) return new Map();
+  const userId = await getCurrentUserId();
+  const min = dateKeys.reduce((a, b) => (a < b ? a : b));
+  const max = dateKeys.reduce((a, b) => (a > b ? a : b));
+  const allowed = new Set(dateKeys);
+
+  const { data, error } = await withUserTradesQuery(
+    supabase
+      .from("trades")
+      .select("gross_pnl, net_pnl, commission, date, setup")
+      .gte("date", min)
+      .lte("date", max),
+    userId
+  );
+  if (error) {
+    console.error("fetchTradesGroupedByDate:", error);
+    return new Map();
+  }
+
+  const byDate = new Map();
+  for (const row of data || []) {
+    const day = String(row.date).slice(0, 10);
+    if (!allowed.has(day)) continue;
+    if (!byDate.has(day)) byDate.set(day, []);
+    byDate.get(day).push(row);
+  }
+  return byDate;
+}
+
 /** Server-side import: delete-then-insert for rTrader rows scoped to user. */
 export async function executeTradesImport(
   supabaseClient,

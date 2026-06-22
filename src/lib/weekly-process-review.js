@@ -11,7 +11,7 @@ import {
 } from "./premarket-scoring";
 import { summarizeSetupAdherence } from "./setup-adherence";
 import { calendarDateParts, offsetDateKey, todayKey } from "./today-key";
-import { loadAllSessions, getRiskPlanFollowed } from "./history-data";
+import { loadAllSessions, fetchSessionDates, getRiskPlanFollowed } from "./history-data";
 import { storage } from "./supabase";
 
 const REVIEW_KEY_PREFIX = "weekly-process-review-";
@@ -652,7 +652,6 @@ export async function shouldShowWeeklyReviewPrompt(dateKey = todayKey()) {
 
 export async function hasTradingDaysThisWeek(dateKey = todayKey()) {
   const { start, end } = getProcessWeekRange(0);
-  const all = await loadAllSessions();
-  const sessions = aggregateWeekSessions(all, start, end);
-  return sessions.some(isTradingDay);
+  const dates = await fetchSessionDates();
+  return dates.some((d) => d >= start && d <= end);
 }

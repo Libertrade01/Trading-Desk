@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   loadSessionDay,
-  loadAllSessions,
+  loadRecentSessions,
   todayKey,
   isStepComplete,
   countProcessStreakAsOf,
@@ -228,22 +228,22 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
     const key = todayKey();
     setDateKey(key);
 
-    const todaySession = await loadSessionDay(key);
+    const todaySession = await loadSessionDay(key, { postFromApi: true });
     setToday(todaySession);
     setSessions((prev) => mergeTodaySession(refreshTodayOnly ? prev : [], todaySession));
     setLoading(false);
 
     if (refreshTodayOnly) return;
 
-    const [all, focus, showPrompt, recoveryState, dllSettings] = await Promise.all([
-      loadAllSessions({ maxDays: 60 }),
+    const [recent, focus, showPrompt, recoveryState, dllSettings] = await Promise.all([
+      loadRecentSessions({ asOfDateKey: key, limit: 12 }),
       loadHomeFocusItems(key),
       shouldShowWeeklyReviewPrompt(key),
       loadRecoveryState(),
       loadDllSettings(),
     ]);
 
-    setSessions(mergeTodaySession(all, todaySession));
+    setSessions(mergeTodaySession(recent, todaySession));
     setWeekFocus(focus);
     setShowReviewPrompt(showPrompt);
     setRecoveryStatus(getRecoveryStatus(recoveryState, dllSettings));
