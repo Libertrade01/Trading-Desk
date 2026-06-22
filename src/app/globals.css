@@ -2211,6 +2211,9 @@ textarea:focus, input:focus, select:focus {
 
 .pm-checkin-main {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
 }
 
 .pm-checkin-workspace {
@@ -2562,11 +2565,24 @@ textarea:focus, input:focus, select:focus {
 }
 
 .pm-checkin-main .pm-header {
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .pm-checkin-main .pm-subtitle {
-  margin-bottom: 20px;
+  margin-bottom: 0;
+}
+
+.pm-checkin-main .pm-week-focus-reminder {
+  margin: 0;
+  padding: 16px 20px;
+}
+
+.pm-checkin-main .pm-week-focus-reminder-label {
+  margin-bottom: 10px;
+}
+
+.pm-checkin-main .pm-week-focus-reminder-list {
+  gap: 8px;
 }
 
 
@@ -7299,9 +7315,7 @@ input.pm-slider::-moz-range-thumb {
 
 /* Pre-market focus reminder */
 .pm-week-focus-reminder {
-  grid-column: 1 / -1;
   padding: 14px 18px;
-  margin-bottom: 8px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
