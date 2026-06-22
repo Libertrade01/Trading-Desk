@@ -1,6 +1,6 @@
 import { storage } from "./supabase";
 import { computeReadinessScore, readinessStatus } from "./premarket-scoring";
-import { computePerformanceFromDbTrades, fetchTradesForDate, fetchTradesGroupedByDate } from "./rtrader-import";
+import { computePerformanceFromDbTrades, fetchTradesForDate, fetchTradesGroupedByDate, performanceFromDbOrImport } from "./rtrader-import";
 import { summarizeSetupAdherence } from "./setup-adherence";
 import { todayKey, offsetDateKey } from "./today-key";
 
@@ -54,6 +54,8 @@ export async function fetchSessionDates() {
 }
 
 function resolveNetPnl(post, trades) {
+  const synced = performanceFromDbOrImport(post, trades);
+  if (synced) return synced.netPnl;
   if (post?.netPnl != null && post.netPnl !== "") return Number(post.netPnl);
   if (post) {
     const gross = parseFloat(post.grossPnl);
@@ -61,9 +63,6 @@ function resolveNetPnl(post, trades) {
     if (!Number.isNaN(gross)) {
       return Math.round((gross - (Number.isNaN(comm) ? 0 : comm)) * 100) / 100;
     }
-  }
-  if (trades?.length) {
-    return computePerformanceFromDbTrades(trades).netPnl;
   }
   return null;
 }

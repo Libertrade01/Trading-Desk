@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 import { getCurrentUserId } from "./user-storage";
 import { withUserTradesQuery } from "./trades-query";
+import { notifyTradesChanged } from "./session-events";
 
 async function assertTradeOwned(tradeId, userId) {
   const { data, error } = await withUserTradesQuery(
@@ -54,4 +55,5 @@ export async function deleteTrade(tradeId) {
     const data = await res.json().catch(() => ({}));
     throw new Error(data.error || "Failed to delete trade");
   }
+  notifyTradesChanged();
 }

@@ -29,7 +29,7 @@ import {
   shouldShowWeeklyReviewPrompt,
 } from "../lib/weekly-process-review";
 import { loadTraderSettings } from "../lib/trader-settings";
-import { SESSION_SAVED_EVENT } from "../lib/session-events";
+import { SESSION_SAVED_EVENT, TRADES_CHANGED_EVENT } from "../lib/session-events";
 
 const WORKFLOW_STEPS = [
   { id: "premarket", label: "Pre-Market" },
@@ -269,9 +269,11 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
       }, 200);
     };
     window.addEventListener(SESSION_SAVED_EVENT, refresh);
+    window.addEventListener(TRADES_CHANGED_EVENT, refresh);
     return () => {
       clearTimeout(timer);
       window.removeEventListener(SESSION_SAVED_EVENT, refresh);
+      window.removeEventListener(TRADES_CHANGED_EVENT, refresh);
     };
   }, [loadDashboard]);
 

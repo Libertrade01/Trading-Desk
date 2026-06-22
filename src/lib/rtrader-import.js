@@ -242,6 +242,18 @@ export function computePerformanceFromDbTrades(rows) {
   return computePerformanceFromTrades(trades);
 }
 
+/** DB trades override saved CSV/manual performance when the day was imported. */
+export function performanceFromDbOrImport(savedReview, dbTrades) {
+  const hadImport = !!(savedReview?.lastImportAt || savedReview?.lastImportFile);
+  if (dbTrades?.length) {
+    return computePerformanceFromDbTrades(dbTrades);
+  }
+  if (hadImport) {
+    return computePerformanceFromDbTrades([]);
+  }
+  return null;
+}
+
 export async function fetchTradesForDate(dateKey) {
   const userId = await getCurrentUserId();
   const { data, error } = await withUserTradesQuery(

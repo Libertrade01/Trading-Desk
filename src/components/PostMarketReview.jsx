@@ -8,7 +8,7 @@ import {
   DEFAULT_POSTMARKET,
   normalizePostmarketFlags,
 } from "../lib/postmarket-defaults";
-import { notifySessionSaved } from "../lib/session-events";
+import { notifySessionSaved, TRADES_CHANGED_EVENT } from "../lib/session-events";
 import {
   processRTraderCSV,
   tradesForDate,
@@ -18,6 +18,7 @@ import {
   importTradesToSupabase,
   getMissingCommissionSymbols,
   loadImportAccount,
+  performanceFromDbOrImport,
 } from "../lib/rtrader-import";
 import {
   summarizeSetupAdherence,
@@ -168,7 +169,44 @@ export default function PostMarketReview({ onBack }) {
   const reloadDayTrades = useCallback(async (dateKey = todayKey()) => {
     const trades = await fetchTradesForDate(dateKey);
     setDayTrades(trades);
+    setForm((f) => {
+      const perf = performanceFromDbOrImport(f, trades);
+      return perf ? { ...f, ...perf } : f;
+    });
     return trades;
+  }, []);
+
+  const hydrateDay = useCallback(async () => {
+    await loadTraderSettings();
+    const dateKey = todayKey();
+    const [reviewRes, dbTrades] = await Promise.all([
+      fetch(`/api/sessions/${dateKey}/post`).then((r) =>
+        r.ok ? r.json() : { review: null }
+      ),
+      fetchTradesForDate(dateKey),
+    ]);
+    const savedReview = reviewRes?.review ?? null;
+
+    setDayTrades(dbTrades);
+
+    let next = { ...DEFAULT_POSTMARKET, ...normalizePostmarketFlags(savedReview || {}) };
+    if (next.riskPlanFollowed == null && next.planProcessFollowed != null) {
+      next.riskPlanFollowed = next.planProcessFollowed;
+    }
+
+    const perf = performanceFromDbOrImport(savedReview ?? next, dbTrades);
+    if (perf) {
+      next = { ...next, ...perf };
+    }
+
+    setForm(next);
+
+    const [recoveryState, settings] = await Promise.all([
+      loadRecoveryState(),
+      loadDllSettings(),
+    ]);
+    setRecoveryStatus(getRecoveryStatus(recoveryState, settings));
+    setLoading(false);
   }, []);
 
   const refreshRecoveryStatus = useCallback(async () => {
@@ -189,37 +227,27 @@ export default function PostMarketReview({ onBack }) {
   }, [refreshRecoveryStatus]);
 
   useEffect(() => {
-    (async () => {
-      await loadTraderSettings();
-      const dateKey = todayKey();
-      const [reviewRes, dbTrades] = await Promise.all([
-        fetch(`/api/sessions/${dateKey}/post`).then((r) =>
-          r.ok ? r.json() : { review: null }
-        ),
-        fetchTradesForDate(dateKey),
-      ]);
-      const savedReview = reviewRes?.review ?? null;
+    setLoading(true);
+    hydrateDay().catch(() => setLoading(false));
+  }, [hydrateDay]);
 
-      setDayTrades(dbTrades);
-
-      let next = { ...DEFAULT_POSTMARKET, ...normalizePostmarketFlags(savedReview || {}) };
-      if (next.riskPlanFollowed == null && next.planProcessFollowed != null) {
-        next.riskPlanFollowed = next.planProcessFollowed;
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        hydrateDay().catch(() => {});
       }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [hydrateDay]);
 
-      if (dbTrades.length && !next.trades) {
-        next = { ...next, ...computePerformanceFromDbTrades(dbTrades) };
-      }
-
-      setForm(next);
-      const [recoveryState, settings] = await Promise.all([
-        loadRecoveryState(),
-        loadDllSettings(),
-      ]);
-      setRecoveryStatus(getRecoveryStatus(recoveryState, settings));
-      setLoading(false);
-    })();
-  }, []);
+  useEffect(() => {
+    const onTradesChanged = () => {
+      hydrateDay().catch(() => {});
+    };
+    window.addEventListener(TRADES_CHANGED_EVENT, onTradesChanged);
+    return () => window.removeEventListener(TRADES_CHANGED_EVENT, onTradesChanged);
+  }, [hydrateDay]);
 
   const persistReview = useCallback(async (formData) => {
     await loadTraderSettings();
