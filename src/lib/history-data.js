@@ -1,4 +1,4 @@
-import { storage, supabase } from "./supabase";
+import { storage } from "./supabase";
 import { computeReadinessScore, readinessStatus } from "./premarket-scoring";
 import { computePerformanceFromDbTrades, fetchTradesForDate } from "./rtrader-import";
 import { summarizeSetupAdherence } from "./setup-adherence";
@@ -97,12 +97,11 @@ export async function loadAllSessions() {
 }
 
 export async function deleteSessionDay(dateKey) {
-  await Promise.all([
-    storage.delete(`${KEYS.pre}${dateKey}`),
-    storage.delete(`${KEYS.plan}${dateKey}`),
-    storage.delete(`${KEYS.post}${dateKey}`),
-  ]);
-  await supabase.from("trades").delete().eq("date", dateKey);
+  const res = await fetch(`/api/sessions/${dateKey}`, { method: "DELETE" });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to delete session");
+  }
 }
 
 import { todayKey } from "./today-key";

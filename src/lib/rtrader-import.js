@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { getCurrentUserId } from "./user-storage";
+import { withUserTradesQuery } from "./trades-query";
 import { loadTraderSettings, getImportAccount } from "./trader-settings";
 
 const DEFAULT_IMPORT_ACCOUNT = {
@@ -242,10 +243,14 @@ export function computePerformanceFromDbTrades(rows) {
 }
 
 export async function fetchTradesForDate(dateKey) {
-  const { data, error } = await supabase
-    .from("trades")
-    .select("gross_pnl, net_pnl, commission, date, setup")
-    .eq("date", dateKey);
+  const userId = await getCurrentUserId();
+  const { data, error } = await withUserTradesQuery(
+    supabase
+      .from("trades")
+      .select("gross_pnl, net_pnl, commission, date, setup")
+      .eq("date", dateKey),
+    userId
+  );
   if (error) {
     console.error("fetchTradesForDate:", error);
     return [];
@@ -253,8 +258,14 @@ export async function fetchTradesForDate(dateKey) {
   return data || [];
 }
 
-export async function importTradesToSupabase(trades, account, accountTypeOverride) {
-  const userId = await getCurrentUserId();
+/** Server-side import: delete-then-insert for rTrader rows scoped to user. */
+export async function executeTradesImport(
+  supabaseClient,
+  userId,
+  trades,
+  account,
+  accountTypeOverride
+) {
   const accountName = account?.name || "Default";
   const acctType = accountTypeOverride || account?.account_type || "eval";
 
@@ -289,16 +300,33 @@ export async function importTradesToSupabase(trades, account, accountTypeOverrid
   const dates = [...new Set(rows.map((r) => r.date))];
 
   for (const date of dates) {
-    const { error: delError } = await supabase
-      .from("trades")
-      .delete()
-      .eq("date", date)
-      .eq("platform", "rTrader")
-      .eq("account_name", accountName);
+    const { error: delError } = await withUserTradesQuery(
+      supabaseClient
+        .from("trades")
+        .delete()
+        .eq("date", date)
+        .eq("platform", "rTrader")
+        .eq("account_name", accountName),
+      userId
+    );
     if (delError) throw new Error(delError.message);
   }
 
-  const { error } = await supabase.from("trades").insert(rows);
+  const { error } = await supabaseClient.from("trades").insert(rows);
   if (error) throw new Error(error.message);
   return rows.length;
+}
+
+export async function importTradesToSupabase(trades, account, accountTypeOverride) {
+  const res = await fetch("/api/trades/import", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ trades, account, accountTypeOverride }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Import failed");
+  }
+  const data = await res.json();
+  return data.count;
 }

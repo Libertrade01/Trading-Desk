@@ -1,7 +1,10 @@
 import { supabase } from "./supabase";
+import { getCurrentUserId } from "./user-storage";
+import { withUserTradesQuery } from "./trades-query";
 
 export async function fetchAnalyticsTrades({ dateFrom, dateTo, accountType } = {}) {
-  let query = supabase.from("trades").select("*");
+  const userId = await getCurrentUserId();
+  let query = withUserTradesQuery(supabase.from("trades").select("*"), userId);
   if (dateFrom) query = query.gte("date", dateFrom);
   if (dateTo) query = query.lte("date", dateTo);
   if (accountType && accountType !== "all") {
@@ -13,7 +16,8 @@ export async function fetchAnalyticsTrades({ dateFrom, dateTo, accountType } = {
 }
 
 export async function fetchTradingDays({ dateFrom, dateTo } = {}) {
-  let query = supabase.from("trading_days").select("*");
+  const userId = await getCurrentUserId();
+  let query = supabase.from("trading_days").select("*").eq("user_id", userId);
   if (dateFrom) query = query.gte("date", dateFrom);
   if (dateTo) query = query.lte("date", dateTo);
   const { data, error } = await query;
