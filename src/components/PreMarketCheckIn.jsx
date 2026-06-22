@@ -11,7 +11,6 @@ import {
   parseSleepDebtMinutes,
   requiresSleepDebtStandDown,
   SLEEP_DEBT_SEVERE_CAUTION_MINS,
-  getDisplayReadiness,
   PROTECTIVE_DAY_COPY,
   PROTECTIVE_DAY_THRESHOLD,
 } from "../lib/premarket-scoring";
@@ -133,33 +132,27 @@ export default function PreMarketCheckIn({ onBack }) {
   const [saved, setSaved] = useState(false);
   const [weekFocus, setWeekFocus] = useState([]);
   const [activeSection, setActiveSection] = useState(0);
-  const [checkInEngaged, setCheckInEngaged] = useState(false);
 
   const scores = useMemo(() => computeReadinessScore(form), [form]);
-  const display = useMemo(
-    () => getDisplayReadiness(scores, { engaged: checkInEngaged }),
-    [scores, checkInEngaged],
-  );
+  const status = useMemo(() => readinessStatus(scores.composite), [scores.composite]);
 
   const sleepDebtMinutes = parseSleepDebtMinutes(form.sleepDebtMinutes);
   const sleepDebtSevere = isSleepDebtSevere(sleepDebtMinutes);
   const recoveryDay = requiresSleepDebtStandDown(sleepDebtMinutes, yesterdaySleepDebtMinutes);
   const showProtectiveBanner =
-    checkInEngaged &&
-    (recoveryDay || scores.composite < PROTECTIVE_DAY_THRESHOLD);
+    recoveryDay || scores.composite < PROTECTIVE_DAY_THRESHOLD;
 
   const railDimensions = useMemo(
     () => ({
-      physical: display.physical,
-      mental: display.emotional,
-      external: display.external,
-      preparation: display.preparation,
+      physical: scores.physical,
+      mental: scores.emotional,
+      external: scores.external,
+      preparation: scores.preparation,
     }),
-    [display],
+    [scores],
   );
 
   const set = useCallback((key, value) => {
-    setCheckInEngaged(true);
     setForm((f) => ({ ...f, [key]: value }));
     setSaved(false);
   }, []);
@@ -175,9 +168,6 @@ export default function PreMarketCheckIn({ onBack }) {
       ]);
       if (data) {
         setForm({ ...DEFAULT_PREMARKET_FORM, ...data });
-        if (data.savedAt || data.readinessScore != null) {
-          setCheckInEngaged(true);
-        }
       }
       setWeekFocus(focus.items || []);
       if (yesterdayData?.sleepDebtMinutes != null && yesterdayData.sleepDebtMinutes !== "") {
@@ -224,14 +214,11 @@ export default function PreMarketCheckIn({ onBack }) {
   }, [buildSavePayload]);
 
   const handleSave = async () => {
-    setCheckInEngaged(true);
-    const status = readinessStatus(scores.composite);
     await persistCheckin(form, scores, status);
     setSaved(true);
   };
 
   const handleProtectiveAcknowledge = async (checked) => {
-    setCheckInEngaged(true);
     const acknowledgedAt = checked ? new Date().toISOString() : null;
     const nextForm = {
       ...form,
@@ -240,14 +227,12 @@ export default function PreMarketCheckIn({ onBack }) {
     };
     setForm(nextForm);
     setSaved(false);
-    const status = readinessStatus(scores.composite);
     await persistCheckin(nextForm, scores, status);
     if (checked) setSaved(true);
   };
 
   const handleReset = () => {
     setForm(DEFAULT_PREMARKET_FORM);
-    setCheckInEngaged(false);
     setActiveSection(0);
     setSaved(false);
   };
@@ -268,15 +253,6 @@ export default function PreMarketCheckIn({ onBack }) {
       </div>
 
       <div className="pm-checkin-layout">
-        <CheckInRail
-          activeIndex={activeSection}
-          onSelect={setActiveSection}
-          composite={display.composite}
-          dimensions={railDimensions}
-          scoreLive={display.live}
-          cautionActive={showProtectiveBanner && !form.standDownAcknowledged}
-        />
-
         <div className="pm-checkin-main">
           <div className="pm-header">
             <div className="pm-eyebrow hybrid-eyebrow">Pre-market · {sectionDate()}</div>
@@ -297,7 +273,17 @@ export default function PreMarketCheckIn({ onBack }) {
             </div>
           )}
 
-          <div className="pm-section-panel">
+          <div className="pm-checkin-workspace">
+            <CheckInRail
+              activeIndex={activeSection}
+              onSelect={setActiveSection}
+              composite={scores.composite}
+              dimensions={railDimensions}
+              cautionActive={showProtectiveBanner && !form.standDownAcknowledged}
+            />
+
+            <div className="pm-checkin-stage">
+              <div className="pm-section-panel">
             <div className="pm-section-panel-head">
               <div>
                 <h2 className="pm-section-title hybrid-section-title">{sectionTitle(section.id)}</h2>
@@ -507,17 +493,9 @@ export default function PreMarketCheckIn({ onBack }) {
             />
           )}
 
-          {!checkInEngaged && (
-            <p className="pm-score-pending-hint">
-              Score starts at 50 until you adjust your check-in — then it reflects your real readiness.
-            </p>
-          )}
-
-          {display.live && (
-            <p className="pm-score-weight-hint">
-              Weighted: physical 22% · mental 38% · prep 25% · external 15%. Status: {display.status.label}.
-            </p>
-          )}
+          <p className="pm-score-weight-hint">
+            Weighted: physical 22% · mental 38% · prep 25% · external 15%. Status: {status.label}.
+          </p>
 
           <div className="pm-section-nav">
             <button type="button" className="pm-btn-link" onClick={goPrev} disabled={activeSection === 0}>
@@ -532,6 +510,8 @@ export default function PreMarketCheckIn({ onBack }) {
                 Back to Physical
               </button>
             )}
+          </div>
+            </div>
           </div>
 
           <section className="pm-mantra-inline">

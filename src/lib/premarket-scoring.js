@@ -123,6 +123,11 @@ export function toggleToScore(on) {
   return on ? 100 : 0;
 }
 
+/** Prep toggles off = neutral baseline (not done yet). On = complete. */
+export function prepToggleToScore(on) {
+  return on ? 100 : 50;
+}
+
 function weightedSum(scores, weights) {
   return Math.round(
     Object.entries(weights).reduce((sum, [key, w]) => sum + (scores[key] ?? 50) * w, 0)
@@ -164,11 +169,11 @@ export function scoreExternal(fields) {
 
 export function scorePreparation(fields) {
   const scores = {
-    reviewedKeyLevels: toggleToScore(fields.reviewedKeyLevels),
-    reviewedNews: toggleToScore(fields.reviewedNews),
-    dailyPlanWritten: toggleToScore(fields.dailyPlanWritten),
-    followedRoutine: toggleToScore(fields.followedRoutine),
-    meditation: toggleToScore(fields.meditation),
+    reviewedKeyLevels: prepToggleToScore(fields.reviewedKeyLevels),
+    reviewedNews: prepToggleToScore(fields.reviewedNews),
+    dailyPlanWritten: prepToggleToScore(fields.dailyPlanWritten),
+    followedRoutine: prepToggleToScore(fields.followedRoutine),
+    meditation: prepToggleToScore(fields.meditation),
   };
   return { score: weightedSum(scores, PREPARATION_FIELD_WEIGHTS), fields: scores };
 }
@@ -201,9 +206,6 @@ export function computeReadinessScore(form) {
   };
 }
 
-/** Shown on a fresh check-in before the trader adjusts any fields. */
-export const NEUTRAL_CHECKIN_SCORE = 50;
-
 export const PROTECTIVE_DAY_THRESHOLD = 50;
 
 export function readinessStatus(score) {
@@ -228,29 +230,6 @@ export const PROTECTIVE_DAY_COPY = {
   sleepDebtMandatory: "Mandatory recovery day",
 };
 
-export function getDisplayReadiness(scores, { engaged }) {
-  if (!engaged) {
-    return {
-      composite: NEUTRAL_CHECKIN_SCORE,
-      emotional: null,
-      physical: null,
-      external: null,
-      preparation: null,
-      status: { label: "Check in", tone: "neutral" },
-      live: false,
-    };
-  }
-  return {
-    composite: scores.composite,
-    emotional: scores.emotional,
-    physical: scores.physical,
-    external: scores.external,
-    preparation: scores.preparation,
-    status: readinessStatus(scores.composite),
-    live: true,
-  };
-}
-
 export function readinessScoreColor(score) {
   if (score >= 70) return "var(--green)";
   if (score >= 50) return "var(--amber)";
@@ -264,21 +243,22 @@ export function sliderValueColor(value, inverted = false) {
   return "var(--red)";
 }
 
+/** Baseline defaults — composite 50 with all prep toggles off (neutral prep scoring). */
 export const DEFAULT_PREMARKET_FORM = {
   emotionalState: 5,
   confidence: 5,
-  patience: 7,
-  fomoRisk: 3,
-  revengeRisk: 2,
-  sleepHours: 7,
+  patience: 5,
+  fomoRisk: 5,
+  revengeRisk: 5,
+  sleepHours: 6,
   sleepDebtMinutes: 0,
-  sleepQuality: 7,
+  sleepQuality: 5,
   energy: 5,
-  hrvScore: 70,
-  hydrated: true,
+  hrvScore: 50,
+  hydrated: false,
   movement: false,
-  externalDistractions: 3,
-  financialPressure: 3,
+  externalDistractions: 5,
+  financialPressure: 5,
   generalFocusLevel: 5,
   reviewedKeyLevels: false,
   reviewedNews: false,
