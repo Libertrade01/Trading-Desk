@@ -2,17 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
 import { getAuthCallbackUrl } from "../../lib/app-url";
 
-export default function SignupPage() {
-  const router = useRouter();
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [pendingConfirmation, setPendingConfirmation] = useState(false);
+  const [sent, setSent] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -20,31 +17,23 @@ export default function SignupPage() {
     setLoading(true);
     try {
       const supabase = createClient();
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          emailRedirectTo: getAuthCallbackUrl(),
-        },
-      });
-      if (signUpError) {
-        setError(signUpError.message);
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email.trim(),
+        { redirectTo: `${getAuthCallbackUrl()}?type=recovery` }
+      );
+      if (resetError) {
+        setError(resetError.message);
         return;
       }
-      if (data.session) {
-        router.replace("/");
-        router.refresh();
-        return;
-      }
-      setPendingConfirmation(true);
+      setSent(true);
     } catch {
-      setError("Sign up failed. Please try again.");
+      setError("Could not send reset email. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
-  if (pendingConfirmation) {
+  if (sent) {
     return (
       <div className="auth-page">
         <div className="auth-card">
@@ -53,8 +42,8 @@ export default function SignupPage() {
           </div>
           <p className="auth-sub">Check your email</p>
           <p className="auth-success">
-            We sent a confirmation link to <strong>{email}</strong>. Open it to
-            activate your account, then sign in.
+            If an account exists for <strong>{email}</strong>, we sent a password
+            reset link.
           </p>
           <p className="auth-footer">
             <Link href="/login">Back to sign in</Link>
@@ -70,7 +59,7 @@ export default function SignupPage() {
         <div className="auth-brand">
           Liber<span>trade</span>
         </div>
-        <p className="auth-sub">Create your trading desk account</p>
+        <p className="auth-sub">Reset your password</p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-label">
@@ -84,26 +73,14 @@ export default function SignupPage() {
               onChange={(e) => setEmail(e.target.value)}
             />
           </label>
-          <label className="auth-label">
-            Password
-            <input
-              className="pm-text-input auth-input"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </label>
           {error && <p className="auth-error">{error}</p>}
           <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? "Creating account…" : "Create account"}
+            {loading ? "Sending…" : "Send reset link"}
           </button>
         </form>
 
         <p className="auth-footer">
-          Already have an account? <Link href="/login">Sign in</Link>
+          <Link href="/login">Back to sign in</Link>
         </p>
       </div>
     </div>

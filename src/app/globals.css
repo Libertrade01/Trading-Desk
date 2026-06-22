@@ -330,6 +330,18 @@ textarea:focus, input:focus, select:focus {
   margin: 0;
 }
 
+.auth-success {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  margin: 0;
+}
+
+.auth-success strong {
+  color: #fff;
+}
+
 .auth-submit {
   margin-top: 4px;
   padding: 12px 16px;

@@ -4,7 +4,13 @@ import { isRouteEnabled } from "./lib/features";
 
 const AUTH_DISABLED = process.env.AUTH_DISABLED === "true";
 
-const PUBLIC_PATHS = ["/login", "/signup", "/auth/callback"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/auth/callback",
+];
 
 function isPublicPath(pathname) {
   return PUBLIC_PATHS.some(

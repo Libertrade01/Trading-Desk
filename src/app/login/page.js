@@ -76,6 +76,9 @@ function LoginForm() {
         </form>
 
         <p className="auth-footer">
+          <Link href="/forgot-password">Forgot password?</Link>
+        </p>
+        <p className="auth-footer">
           No account? <Link href="/signup">Create one</Link>
         </p>
       </div>

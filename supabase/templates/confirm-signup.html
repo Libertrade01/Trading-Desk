@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Confirm your Libertrade account</title>
+</head>
+<body style="margin:0;padding:0;background-color:#111217;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#111217;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:480px;background-color:#16171e;border:1px solid #22242e;border-radius:8px;">
+          <tr>
+            <td style="padding:32px 28px 8px;">
+              <p style="margin:0;font-size:24px;font-weight:700;color:#ffffff;letter-spacing:-0.03em;">
+                Liber<span style="color:#0065bd;">trade</span>
+              </p>
+              <p style="margin:12px 0 0;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#4a4f5e;">
+                Confirm your account
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 28px 24px;">
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#b8bcc8;">
+                Thanks for signing up. Confirm your email to access your trading desk — daily plan, reviews, and analytics.
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="border-radius:4px;background-color:#0065bd;">
+                    <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:12px 20px;font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
+                      Confirm email
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:20px 0 0;font-size:12px;line-height:1.6;color:#4a4f5e;">
+                Or enter this code: <strong style="color:#b8bcc8;">{{ .Token }}</strong>
+              </p>
+              <p style="margin:16px 0 0;font-size:11px;line-height:1.5;color:#4a4f5e;">
+                If you didn&apos;t create a Libertrade account, you can ignore this email.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 28px 28px;border-top:1px solid #22242e;">
+              <p style="margin:16px 0 0;font-size:11px;line-height:1.5;color:#4a4f5e;">
+                Libertrade · Process-first trading desk
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
