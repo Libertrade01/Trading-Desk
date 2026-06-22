@@ -1,8 +1,15 @@
 import { redirect } from "next/navigation";
-import { FEATURE_WIKI } from "@/lib/features";
+import { canAccessWiki } from "@/lib/features";
+import { createClient } from "@/lib/supabase/server";
+import { isFounderUser } from "@/lib/founder-migration";
 
-export default function WikiPage() {
-  if (!FEATURE_WIKI) {
+export default async function WikiPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!canAccessWiki({ isFounder: isFounderUser(user) })) {
     redirect("/");
   }
 

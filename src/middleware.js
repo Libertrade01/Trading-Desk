@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { updateSession } from "./lib/supabase/middleware";
 import { isRouteEnabled } from "./lib/features";
+import { isFounderUser } from "./lib/founder-migration";
 
 const AUTH_DISABLED = process.env.AUTH_DISABLED === "true";
 
@@ -33,11 +34,12 @@ export async function middleware(request) {
     return NextResponse.next();
   }
 
-  if (!isRouteEnabled(pathname)) {
+  const { supabaseResponse, user } = await updateSession(request);
+  const isFounder = isFounderUser(user);
+
+  if (!isRouteEnabled(pathname, { isFounder })) {
     return NextResponse.redirect(new URL("/", request.url));
   }
-
-  const { supabaseResponse, user } = await updateSession(request);
 
   if (pathname === "/auth/logout") {
     return supabaseResponse;

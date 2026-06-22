@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { loadTraderSettings } from "../lib/trader-settings";
@@ -45,8 +45,6 @@ const NAV_ITEMS = [
   )},
 ];
 
-const VISIBLE_NAV_ITEMS = filterNavItems(NAV_ITEMS);
-
 function isNavActive(pathname, item) {
   if (item.id === "home") return pathname === "/";
   if (item.id === "history") return pathname === "/history" || pathname.startsWith("/history/");
@@ -54,7 +52,7 @@ function isNavActive(pathname, item) {
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
-function Sidebar({ pathname, open, onClose, userEmail }) {
+function Sidebar({ pathname, open, onClose, userEmail, navItems }) {
   return (
     <>
       <div className={`sidebar-overlay${open ? " visible" : ""}`} onClick={onClose} />
@@ -64,7 +62,7 @@ function Sidebar({ pathname, open, onClose, userEmail }) {
           <div className="sidebar-brand-sub">Trading Desk</div>
         </div>
         <nav className="sidebar-nav">
-          {VISIBLE_NAV_ITEMS.map((item, i) => item.type === "label" ? (
+          {navItems.map((item, i) => item.type === "label" ? (
             <div key={`label-${i}`} className="sidebar-nav-label">{item.text}</div>
           ) : (
             <Link
@@ -99,6 +97,12 @@ export default function AppShell({ children }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userEmail, setUserEmail] = useState(null);
+  const [isFounder, setIsFounder] = useState(false);
+
+  const navItems = useMemo(
+    () => filterNavItems(NAV_ITEMS, { isFounder }),
+    [isFounder]
+  );
 
   useEffect(() => {
     loadTraderSettings().catch(() => {});
@@ -114,7 +118,11 @@ export default function AppShell({ children }) {
 
       if (user) {
         try {
-          await fetch("/api/auth/founder-migrate", { method: "POST" });
+          const res = await fetch("/api/auth/founder-migrate", { method: "POST" });
+          if (res.ok) {
+            const data = await res.json();
+            if (!cancelled) setIsFounder(!!data.isFounder);
+          }
         } catch {
           /* only founder with service role migrates orphan rows */
         }
@@ -147,6 +155,7 @@ export default function AppShell({ children }) {
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         userEmail={userEmail}
+        navItems={navItems}
       />
 
       <main className="main-content">{children}</main>

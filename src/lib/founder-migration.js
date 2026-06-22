@@ -28,6 +28,16 @@ async function anyUserScopedData(admin) {
 }
 
 /**
+ * Determine if this user is the configured founder (email match only).
+ */
+export function isFounderUser(user) {
+  if (!user?.email) return false;
+  const founderEmail = process.env.FOUNDER_EMAIL?.trim().toLowerCase();
+  if (!founderEmail) return false;
+  return user.email.trim().toLowerCase() === founderEmail;
+}
+
+/**
  * Determine if this user may claim orphan (user_id null) rows.
  * - FOUNDER_EMAIL set → only that email
  * - FOUNDER_EMAIL unset → first eligible login when no user-scoped data exists
