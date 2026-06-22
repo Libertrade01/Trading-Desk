@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { getCurrentUserId } from "./user-storage";
 import { loadTraderSettings, getImportAccount } from "./trader-settings";
 
 const DEFAULT_IMPORT_ACCOUNT = {
@@ -253,6 +254,7 @@ export async function fetchTradesForDate(dateKey) {
 }
 
 export async function importTradesToSupabase(trades, account, accountTypeOverride) {
+  const userId = await getCurrentUserId();
   const accountName = account?.name || "Default";
   const acctType = accountTypeOverride || account?.account_type || "eval";
 
@@ -260,6 +262,7 @@ export async function importTradesToSupabase(trades, account, accountTypeOverrid
     const entryUTC = t.entry_time.replace(" ", "T") + "+00:00";
     const exitUTC = t.exit_time.replace(" ", "T") + "+00:00";
     return {
+      user_id: userId,
       broker_trade_id: `${entryUTC}_${t.symbol}_${t.direction}_${t.qty}`,
       entry_time: entryUTC,
       exit_time: exitUTC,

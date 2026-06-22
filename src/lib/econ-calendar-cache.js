@@ -1,4 +1,4 @@
-import { storage } from "./supabase";
+import { getSystemAppData } from "./supabase";
 import {
   mergeEconEvents,
   getEconEventsForDate,
@@ -22,7 +22,7 @@ function addDays(dateKey, days) {
 
 export async function loadEconCache() {
   try {
-    const row = await storage.get(ECON_CACHE_KEY);
+    const row = await getSystemAppData(ECON_CACHE_KEY);
     if (!row?.value) return { syncedAt: null, events: [] };
     return JSON.parse(row.value);
   } catch {
@@ -31,7 +31,8 @@ export async function loadEconCache() {
 }
 
 export async function saveEconCache(payload) {
-  await storage.set(ECON_CACHE_KEY, JSON.stringify(payload));
+  // System cache is written by cron (service role); client save is a no-op fallback.
+  console.warn("saveEconCache: system cache is managed by cron job");
 }
 
 export async function getCachedEconEventsForDate(dateKey) {

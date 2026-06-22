@@ -59,12 +59,26 @@ export async function GET(request) {
     };
 
     const supabase = getSupabaseAdmin();
-    const { error } = await supabase
+    const row = {
+      user_id: null,
+      key: ECON_CACHE_KEY,
+      value: JSON.stringify(payload),
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data: existing } = await supabase
       .from("app_data")
-      .upsert(
-        { key: ECON_CACHE_KEY, value: JSON.stringify(payload), updated_at: new Date().toISOString() },
-        { onConflict: "key" },
-      );
+      .select("id")
+      .eq("key", ECON_CACHE_KEY)
+      .is("user_id", null)
+      .maybeSingle();
+
+    const { error } = existing
+      ? await supabase
+          .from("app_data")
+          .update({ value: row.value, updated_at: row.updated_at })
+          .eq("id", existing.id)
+      : await supabase.from("app_data").insert(row);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

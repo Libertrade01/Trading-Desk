@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { loadTraderSettings } from "../lib/trader-settings";
+import { filterNavItems } from "../lib/features";
+import { getCurrentUser } from "../lib/user-storage";
 
 const NAV_ITEMS = [
   { id: "home", href: "/", label: "Home", icon: (
@@ -43,6 +45,8 @@ const NAV_ITEMS = [
   )},
 ];
 
+const VISIBLE_NAV_ITEMS = filterNavItems(NAV_ITEMS);
+
 function isNavActive(pathname, item) {
   if (item.id === "home") return pathname === "/";
   if (item.id === "history") return pathname === "/history" || pathname.startsWith("/history/");
@@ -50,7 +54,7 @@ function isNavActive(pathname, item) {
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
-function Sidebar({ pathname, open, onClose }) {
+function Sidebar({ pathname, open, onClose, userEmail }) {
   return (
     <>
       <div className={`sidebar-overlay${open ? " visible" : ""}`} onClick={onClose} />
@@ -60,7 +64,7 @@ function Sidebar({ pathname, open, onClose }) {
           <div className="sidebar-brand-sub">Trading Desk</div>
         </div>
         <nav className="sidebar-nav">
-          {NAV_ITEMS.map((item, i) => item.type === "label" ? (
+          {VISIBLE_NAV_ITEMS.map((item, i) => item.type === "label" ? (
             <div key={`label-${i}`} className="sidebar-nav-label">{item.text}</div>
           ) : (
             <Link
@@ -75,7 +79,16 @@ function Sidebar({ pathname, open, onClose }) {
           ))}
         </nav>
         <div className="sidebar-footer">
-          <div className="sidebar-footer-label">Libertrade</div>
+          {userEmail && (
+            <div className="sidebar-footer-email" title={userEmail}>
+              {userEmail}
+            </div>
+          )}
+          <form action="/auth/logout" method="post">
+            <button type="submit" className="sidebar-logout-btn">
+              Sign out
+            </button>
+          </form>
         </div>
       </aside>
     </>
@@ -85,9 +98,33 @@ function Sidebar({ pathname, open, onClose }) {
 export default function AppShell({ children }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState(null);
 
   useEffect(() => {
     loadTraderSettings().catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function initAuth() {
+      const user = await getCurrentUser();
+      if (cancelled) return;
+      setUserEmail(user?.email ?? null);
+
+      if (user) {
+        try {
+          await fetch("/api/auth/founder-migrate", { method: "POST" });
+        } catch {
+          /* only founder with service role migrates orphan rows */
+        }
+      }
+    }
+
+    initAuth();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -105,7 +142,12 @@ export default function AppShell({ children }) {
         <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 5h12M3 9h12M3 13h12"/></svg>
       </button>
 
-      <Sidebar pathname={pathname} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        pathname={pathname}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        userEmail={userEmail}
+      />
 
       <main className="main-content">{children}</main>
     </div>
