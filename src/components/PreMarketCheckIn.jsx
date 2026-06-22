@@ -16,6 +16,7 @@ import MarketEventNudge from "./MarketEventNudge";
 import ReadinessScoreWidget from "./ReadinessScoreWidget";
 import { todayKey, offsetDateKey } from "../lib/today-key";
 import { loadHomeFocusItems } from "../lib/weekly-process-review";
+import { notifySessionSaved } from "../lib/session-events";
 
 async function loadData(key, fallback) {
   try {
@@ -183,6 +184,7 @@ export default function PreMarketCheckIn({ onBack }) {
       payload.standDownAcknowledgedAt = new Date().toISOString();
     }
     await saveData(`premarket-checkin-${todayKey()}`, payload);
+    notifySessionSaved();
     return payload;
   }, [buildSavePayload]);
 

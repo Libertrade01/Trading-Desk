@@ -1,8 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { storage } from "../lib/supabase";
-import { BEHAVIORAL_FLAG_CATEGORIES, countBehavioralFlags, DEFAULT_POSTMARKET, normalizePostmarketFlags } from "../lib/postmarket-defaults";
+import {
+  BEHAVIORAL_FLAG_CATEGORIES,
+  BEHAVIORAL_FLAGS,
+  countBehavioralFlags,
+  DEFAULT_POSTMARKET,
+  normalizePostmarketFlags,
+} from "../lib/postmarket-defaults";
+import { notifySessionSaved } from "../lib/session-events";
 import {
   processRTraderCSV,
   tradesForDate,
@@ -28,24 +34,8 @@ import {
   formatRecoveryUsd,
 } from "../lib/dll-recovery";
 import { loadDllSettings } from "../lib/dll-recovery-settings";
+import { loadTraderSettings } from "../lib/trader-settings";
 import { todayKey } from "../lib/today-key";
-
-async function loadData(key, fallback) {
-  try {
-    const r = await storage.get(key);
-    return r ? JSON.parse(r.value) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-async function saveData(key, value) {
-  try {
-    await storage.set(key, JSON.stringify(value));
-  } catch (e) {
-    console.error("Save:", e);
-  }
-}
 
 function headerDate() {
   return new Date().toLocaleDateString("en-US", {
@@ -133,7 +123,7 @@ function SessionSummary({ form, netPnl, winRate, setupAdherence, adherenceLabel 
         <div className="pm-summary-flags-label">Behavioral flags</div>
         <div className="pm-summary-flags-count">
           <span style={{ color: flagsRaised ? "var(--amber)" : "var(--green)" }}>{flagsRaised}</span>
-          <span className="pm-summary-flags-of"> of 6 raised</span>
+          <span className="pm-summary-flags-of"> of {BEHAVIORAL_FLAGS.length} raised</span>
         </div>
       </div>
     </div>
@@ -200,11 +190,15 @@ export default function PostMarketReview({ onBack }) {
 
   useEffect(() => {
     (async () => {
+      await loadTraderSettings();
       const dateKey = todayKey();
-      const [savedReview, dbTrades] = await Promise.all([
-        loadData(`postmarket-review-${dateKey}`, null),
+      const [reviewRes, dbTrades] = await Promise.all([
+        fetch(`/api/sessions/${dateKey}/post`).then((r) =>
+          r.ok ? r.json() : { review: null }
+        ),
         fetchTradesForDate(dateKey),
       ]);
+      const savedReview = reviewRes?.review ?? null;
 
       setDayTrades(dbTrades);
 
@@ -228,6 +222,8 @@ export default function PostMarketReview({ onBack }) {
   }, []);
 
   const persistReview = useCallback(async (formData) => {
+    await loadTraderSettings();
+    const dateKey = todayKey();
     const gross = parseFloat(formData.grossPnl);
     const comm = parseFloat(formData.commissionsFees);
     const computedNet = !Number.isNaN(gross)
@@ -235,8 +231,8 @@ export default function PostMarketReview({ onBack }) {
       : null;
     const adherence = summarizeSetupAdherence(dayTrades);
 
-    await saveData(`postmarket-review-${todayKey()}`, {
-      date: todayKey(),
+    const payload = {
+      date: dateKey,
       ...formData,
       netPnl: computedNet,
       winRate,
@@ -244,7 +240,19 @@ export default function PostMarketReview({ onBack }) {
       playbookAdherence: adherence,
       playbookProcessPass: adherence.total > 0 ? adherence.processPass : null,
       savedAt: new Date().toISOString(),
+    };
+
+    const res = await fetch(`/api/sessions/${dateKey}/post`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || "Failed to save post-market review");
+    }
+
+    notifySessionSaved();
     await maybeEvaluateRecovery(computedNet, formData.noTradeToday);
   }, [winRate, dayTrades, maybeEvaluateRecovery]);
 
@@ -255,9 +263,14 @@ export default function PostMarketReview({ onBack }) {
       );
       return false;
     }
-    await persistReview(form);
-    setSaved(true);
-    return true;
+    try {
+      await persistReview(form);
+      setSaved(true);
+      return true;
+    } catch (err) {
+      window.alert(err.message || "Save failed. Check you are signed in and try again.");
+      return false;
+    }
   };
 
   const handleReset = () => {

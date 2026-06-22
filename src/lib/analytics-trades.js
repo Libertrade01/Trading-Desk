@@ -12,15 +12,16 @@ async function assertTradeOwned(tradeId, userId) {
 }
 
 export async function updateTrade(tradeId, updates) {
-  const userId = await getCurrentUserId();
-  const { data, error } = await withUserTradesQuery(
-    supabase.from("trades").update(updates).eq("id", tradeId),
-    userId
-  )
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
+  const res = await fetch(`/api/trades/${tradeId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to update trade");
+  }
+  return res.json();
 }
 
 export async function fetchTradeNotes(tradeId) {
@@ -36,23 +37,21 @@ export async function fetchTradeNotes(tradeId) {
 }
 
 export async function saveTradeNotes(tradeId, notes) {
-  const userId = await getCurrentUserId();
-  await assertTradeOwned(tradeId, userId);
-  const { error } = await supabase.from("trade_notes").upsert(
-    { trade_id: tradeId, notes, updated_at: new Date().toISOString() },
-    { onConflict: "trade_id" }
-  );
-  if (error) throw error;
+  const res = await fetch(`/api/trades/${tradeId}/notes`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ notes }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to save trade notes");
+  }
 }
 
 export async function deleteTrade(tradeId) {
-  const userId = await getCurrentUserId();
-  await assertTradeOwned(tradeId, userId);
-  await supabase.from("trade_tag_links").delete().eq("trade_id", tradeId);
-  await supabase.from("trade_notes").delete().eq("trade_id", tradeId);
-  const { error } = await withUserTradesQuery(
-    supabase.from("trades").delete().eq("id", tradeId),
-    userId
-  );
-  if (error) throw error;
+  const res = await fetch(`/api/trades/${tradeId}`, { method: "DELETE" });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to delete trade");
+  }
 }

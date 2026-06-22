@@ -96,6 +96,7 @@ serve(async (req) => {
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
   if (!apiKey) {
     return new Response(JSON.stringify({ error: 'ANTHROPIC_API_KEY not configured' }), {
@@ -103,6 +104,31 @@ serve(async (req) => {
     });
   }
 
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401, headers: { ...CORS, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const userClient = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const { data: { user }, error: authError } = await userClient.auth.getUser();
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401, headers: { ...CORS, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const founderEmail = Deno.env.get('FOUNDER_EMAIL')?.trim().toLowerCase();
+  if (founderEmail && user.email?.toLowerCase() !== founderEmail) {
+    return new Response(JSON.stringify({ error: 'Forbidden — founder-only legacy review' }), {
+      status: 403, headers: { ...CORS, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const userId = user.id;
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   // Determine week_ending
@@ -125,8 +151,8 @@ serve(async (req) => {
     { data: agent2Mem },
     { data: managerMem },
   ] = await Promise.all([
-    supabase.from('trades').select('*').gte('date', start).lte('date', weekEnding).order('entry_time'),
-    supabase.from('trading_days').select('*').gte('date', start).lte('date', weekEnding).order('date'),
+    supabase.from('trades').select('*').eq('user_id', userId).gte('date', start).lte('date', weekEnding).order('entry_time'),
+    supabase.from('trading_days').select('*').eq('user_id', userId).gte('date', start).lte('date', weekEnding).order('date'),
     supabase.from('intraday_journal').select('*').gte('trading_day', start).lte('trading_day', weekEnding).order('et_time'),
     supabase.from('rule_compliance').select('date, rule, result, notes').gte('date', start).lte('date', weekEnding).not('notes', 'is', null),
     supabase.from('agent_memory').select('week_ending, summary').eq('agent_name', 'agent1').order('week_ending', { ascending: false }).limit(8),

@@ -1,6 +1,13 @@
 /** Date range presets aligned with analytics.html filter bar. */
 
+import { storage } from "./supabase";
 import { calendarDateParts } from "./today-key";
+import {
+  PLAYBOOK_TRACKING_START_KEY,
+  filterTradesForPlaybookAdherence,
+} from "./analytics-playbook-filter";
+
+export { PLAYBOOK_TRACKING_START_KEY, filterTradesForPlaybookAdherence };
 
 function calendarTodayParts() {
   const { today, cal } = calendarDateParts();
@@ -67,29 +74,43 @@ export const RANGE_PRESETS = [
 
 export { calendarTodayParts as limaTodayParts };
 
-const PLAYBOOK_TRACKING_START_KEY = "analytics-playbook-tracking-start";
+const LEGACY_PLAYBOOK_KEY = "analytics-playbook-tracking-start";
 
-/** First day of playbook adherence tracking — set once, excludes legacy untagged history. */
-export function getPlaybookTrackingStartDate() {
-  if (typeof window === "undefined") return calendarTodayParts().today;
-  let stored = localStorage.getItem(PLAYBOOK_TRACKING_START_KEY);
-  if (!stored) {
-    stored = calendarTodayParts().today;
-    localStorage.setItem(PLAYBOOK_TRACKING_START_KEY, stored);
-  }
+function readLegacyPlaybookStart() {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem(LEGACY_PLAYBOOK_KEY);
+  if (!stored) return null;
+  localStorage.removeItem(LEGACY_PLAYBOOK_KEY);
   return stored;
 }
 
-/** Trades within toolbar range, on or after playbook tracking start. */
-export function filterTradesForPlaybookAdherence(trades, trackingStart) {
-  if (!trackingStart) return [];
-  return (trades || []).filter((t) => t.date >= trackingStart);
+async function savePlaybookTrackingStartDate(date) {
+  await storage.set(PLAYBOOK_TRACKING_START_KEY, date);
+  return date;
+}
+
+/** First day of playbook adherence tracking — set once, excludes legacy untagged history. */
+export async function loadPlaybookTrackingStartDate() {
+  try {
+    const r = await storage.get(PLAYBOOK_TRACKING_START_KEY);
+    if (r?.value) return r.value;
+  } catch {
+    /* fall through */
+  }
+
+  const legacy = readLegacyPlaybookStart();
+  if (legacy) {
+    await savePlaybookTrackingStartDate(legacy);
+    return legacy;
+  }
+
+  const today = calendarTodayParts().today;
+  await savePlaybookTrackingStartDate(today);
+  return today;
 }
 
 /** Reset playbook tracking anchor to today (excludes prior history again). */
-export function resetPlaybookTrackingStartDate() {
-  if (typeof window === "undefined") return calendarTodayParts().today;
+export async function resetPlaybookTrackingStartDate() {
   const today = calendarTodayParts().today;
-  localStorage.setItem(PLAYBOOK_TRACKING_START_KEY, today);
-  return today;
+  return savePlaybookTrackingStartDate(today);
 }

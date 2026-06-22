@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { fetchAnalyticsTrades, filterTradesByAccounts } from "../../lib/analytics-data";
 import { aggregateProcessMetrics, loadPostReviewsInRange } from "../../lib/analytics-process";
 import { countPlaybookStreak, countProcessStreak, loadAllSessions } from "../../lib/history-data";
-import { resolveDateRangePreset, getPlaybookTrackingStartDate, filterTradesForPlaybookAdherence, resetPlaybookTrackingStartDate } from "../../lib/analytics-date-range";
+import { resolveDateRangePreset, loadPlaybookTrackingStartDate, filterTradesForPlaybookAdherence, resetPlaybookTrackingStartDate } from "../../lib/analytics-date-range";
 import { getChartConfigs } from "../../lib/analytics-charts";
 import { calcStats } from "../../lib/analytics-stats";
 import { summarizeSetupAdherence, summarizeSetupByTag, countUntaggedTrades } from "../../lib/setup-adherence";
@@ -60,7 +60,17 @@ export default function AnalyticsDashboard() {
   }, []);
 
   useEffect(() => {
-    setPlaybookTrackingStart(getPlaybookTrackingStartDate());
+    let cancelled = false;
+    loadPlaybookTrackingStartDate()
+      .then((start) => {
+        if (!cancelled) setPlaybookTrackingStart(start);
+      })
+      .catch(() => {
+        if (!cancelled) setPlaybookTrackingStart(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -117,7 +127,7 @@ export default function AnalyticsDashboard() {
     load(dateFrom, dateTo, accountType);
   };
 
-  const handleTrackingReset = () => {
+  const handleTrackingReset = async () => {
     if (
       !window.confirm(
         "Reset playbook tracking to today? Trades before the new date will be excluded from playbook adherence."
@@ -125,7 +135,8 @@ export default function AnalyticsDashboard() {
     ) {
       return;
     }
-    setPlaybookTrackingStart(resetPlaybookTrackingStartDate());
+    const start = await resetPlaybookTrackingStartDate();
+    setPlaybookTrackingStart(start);
   };
 
   const importAccount = getImportAccount(settings || {});

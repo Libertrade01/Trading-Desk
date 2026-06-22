@@ -201,10 +201,15 @@ export async function loadTraderSettings() {
 
 export async function saveTraderSettings(settings) {
   const next = normalizeTraderSettings(settings);
-  await storage.set(
-    TRADER_SETTINGS_KEY,
-    JSON.stringify({ ...next, updatedAt: new Date().toISOString() })
-  );
+  const res = await fetch("/api/settings", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(next),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to save trader settings");
+  }
   applyTradingDayTimezoneFromSettings(next);
   return next;
 }

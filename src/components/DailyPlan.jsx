@@ -19,6 +19,7 @@ import {
   validatePlanMaxDailyLoss,
 } from "../lib/dll-recovery";
 import { loadDllSettings, DEFAULT_DLL_SETTINGS } from "../lib/dll-recovery-settings";
+import { notifySessionSaved } from "../lib/session-events";
 import { todayKey } from "../lib/today-key";
 
 async function loadData(key, fallback) {
@@ -157,6 +158,7 @@ export default function DailyPlan({ onBack }) {
       dllRecoveryApplied: recoveryActive ? true : formData.dllRecoveryApplied,
       savedAt: new Date().toISOString(),
     });
+    notifySessionSaved();
   }, [recoveryStatus]);
 
   const handleSave = async () => {

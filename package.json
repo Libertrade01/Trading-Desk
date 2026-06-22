@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test src/lib/market-events.test.js src/lib/econ-calendar.test.js"
+    "test": "node --test src/lib/market-events.test.js src/lib/econ-calendar.test.js src/lib/analytics-playbook-filter.test.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

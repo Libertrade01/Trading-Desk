@@ -6,6 +6,45 @@ export { getSupabaseBrowserClient };
 /** @deprecated Prefer getSupabaseBrowserClient() — kept for existing imports */
 export const supabase = getSupabaseBrowserClient();
 
+async function upsertAppDataRow(userId, key, value) {
+  const client = getSupabaseBrowserClient();
+  const now = new Date().toISOString();
+
+  const { data: rows, error: selectError } = await client
+    .from("app_data")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("key", key)
+    .order("updated_at", { ascending: false })
+    .limit(1);
+
+  if (selectError) {
+    throw new Error(selectError.message || "Storage read failed");
+  }
+
+  const existing = rows?.[0];
+
+  if (existing?.id) {
+    const { data, error } = await client
+      .from("app_data")
+      .update({ value, updated_at: now })
+      .eq("id", existing.id)
+      .eq("user_id", userId)
+      .select()
+      .single();
+    if (error) throw new Error(error.message || "Storage update failed");
+    return { key, value: data.value };
+  }
+
+  const { data, error } = await client
+    .from("app_data")
+    .insert({ user_id: userId, key, value, updated_at: now })
+    .select()
+    .single();
+  if (error) throw new Error(error.message || "Storage insert failed");
+  return { key, value: data.value };
+}
+
 /** Read a shared system row (user_id null). Requires auth + app_data_select_system RLS. */
 export async function getSystemAppData(key) {
   const { data, error } = await getSupabaseBrowserClient()
@@ -26,6 +65,8 @@ export const storage = {
       .select("value")
       .eq("user_id", userId)
       .eq("key", key)
+      .order("updated_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
     if (error || !data) return null;
     return { key, value: data.value };
@@ -33,19 +74,12 @@ export const storage = {
 
   async set(key, value) {
     const userId = await getCurrentUserId();
-    const { data, error } = await getSupabaseBrowserClient()
-      .from("app_data")
-      .upsert(
-        { user_id: userId, key, value, updated_at: new Date().toISOString() },
-        { onConflict: "user_id,key" }
-      )
-      .select()
-      .single();
-    if (error) {
+    try {
+      return await upsertAppDataRow(userId, key, value);
+    } catch (error) {
       console.error("Storage set error:", error);
-      return null;
+      throw error;
     }
-    return { key, value: data.value };
   },
 
   async delete(key) {

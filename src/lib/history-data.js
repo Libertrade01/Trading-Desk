@@ -12,7 +12,9 @@ const KEYS = {
 async function loadJson(key) {
   try {
     const r = await storage.get(key);
-    return r ? JSON.parse(r.value) : null;
+    if (!r?.value) return null;
+    const parsed = JSON.parse(r.value);
+    return typeof parsed === "string" ? JSON.parse(parsed) : parsed;
   } catch {
     return null;
   }
@@ -63,11 +65,24 @@ function resolveNetPnl(post, trades) {
   return null;
 }
 
+async function loadPostReview(dateKey) {
+  try {
+    const res = await fetch(`/api/sessions/${dateKey}/post`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.review) return data.review;
+    }
+  } catch {
+    /* fall through to storage */
+  }
+  return loadJson(`${KEYS.post}${dateKey}`);
+}
+
 export async function loadSessionDay(dateKey) {
   const [pre, plan, post, trades] = await Promise.all([
     loadJson(`${KEYS.pre}${dateKey}`),
     loadJson(`${KEYS.plan}${dateKey}`),
-    loadJson(`${KEYS.post}${dateKey}`),
+    loadPostReview(dateKey),
     fetchTradesForDate(dateKey),
   ]);
 
@@ -81,9 +96,9 @@ export async function loadSessionDay(dateKey) {
     post,
     trades,
     playbookAdherence: trades.length ? summarizeSetupAdherence(trades) : null,
-    hasPre: !!pre,
-    hasPlan: !!plan,
-    hasPost: !!post,
+    hasPre: !!(pre?.savedAt),
+    hasPlan: !!(plan?.savedAt),
+    hasPost: !!(post?.savedAt),
     readinessScore,
     readinessLabel: readiness?.label || null,
     readinessTone: readiness?.tone || null,
@@ -91,9 +106,9 @@ export async function loadSessionDay(dateKey) {
   };
 }
 
-export async function loadAllSessions() {
-  const dates = await fetchSessionDates();
-  return Promise.all(dates.map(loadSessionDay));
+export async function loadAllSessions({ maxDays = 90 } = {}) {
+  const dates = (await fetchSessionDates()).slice(0, maxDays);
+  return Promise.all(dates.map((dateKey) => loadSessionDay(dateKey)));
 }
 
 export async function deleteSessionDay(dateKey) {
@@ -104,7 +119,7 @@ export async function deleteSessionDay(dateKey) {
   }
 }
 
-import { todayKey } from "./today-key";
+import { todayKey, offsetDateKey } from "./today-key";
 
 export { todayKey };
 
@@ -149,13 +164,13 @@ export function getProcessStreakDayStatus(session) {
 export function countProcessStreakAsOf(sessions, asOfDateKey) {
   const byDate = new Map(sessions.map((s) => [s.date, s]));
   let streak = 0;
-  const d = new Date(`${asOfDateKey}T12:00:00`);
+  let key = asOfDateKey;
 
   for (let i = 0; i < 365; i++) {
-    const key = d.toISOString().split("T")[0];
+    const cal = new Date(`${key}T12:00:00`);
 
-    if (!isTradingDay(d)) {
-      d.setDate(d.getDate() - 1);
+    if (!isTradingDay(cal)) {
+      key = offsetDateKey(key, -1);
       continue;
     }
 
@@ -164,13 +179,13 @@ export function countProcessStreakAsOf(sessions, asOfDateKey) {
 
     if (status === "followed") {
       streak += 1;
-      d.setDate(d.getDate() - 1);
+      key = offsetDateKey(key, -1);
     } else if (status === "broken") {
       break;
     } else if (status === "unknown") {
-      d.setDate(d.getDate() - 1);
+      key = offsetDateKey(key, -1);
     } else if (isAnchor) {
-      d.setDate(d.getDate() - 1);
+      key = offsetDateKey(key, -1);
     } else {
       break;
     }
@@ -205,13 +220,13 @@ export function getPlaybookStreakDayStatus(session) {
 export function countPlaybookStreakAsOf(sessions, asOfDateKey) {
   const byDate = new Map(sessions.map((s) => [s.date, s]));
   let streak = 0;
-  const d = new Date(`${asOfDateKey}T12:00:00`);
+  let key = asOfDateKey;
 
   for (let i = 0; i < 365; i++) {
-    const key = d.toISOString().split("T")[0];
+    const cal = new Date(`${key}T12:00:00`);
 
-    if (!isTradingDay(d)) {
-      d.setDate(d.getDate() - 1);
+    if (!isTradingDay(cal)) {
+      key = offsetDateKey(key, -1);
       continue;
     }
 
@@ -220,13 +235,13 @@ export function countPlaybookStreakAsOf(sessions, asOfDateKey) {
 
     if (status === "followed") {
       streak += 1;
-      d.setDate(d.getDate() - 1);
+      key = offsetDateKey(key, -1);
     } else if (status === "broken") {
       break;
     } else if (status === "pending" && isAnchor) {
-      d.setDate(d.getDate() - 1);
+      key = offsetDateKey(key, -1);
     } else if (status === "skip") {
-      d.setDate(d.getDate() - 1);
+      key = offsetDateKey(key, -1);
     } else {
       break;
     }

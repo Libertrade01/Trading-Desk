@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   loadSessionDay,
   loadAllSessions,
   todayKey,
   isStepComplete,
-  countProcessStreak,
-  countPlaybookStreak,
+  countProcessStreakAsOf,
+  countPlaybookStreakAsOf,
   getProcessStreakDisplayForDay,
   formatTimeEyebrow,
   formatHomeBarDate,
@@ -22,16 +22,14 @@ import {
   loadRecoveryState,
   getRecoveryStatus,
   formatRecoveryUsd,
-  seedRecoveryDemo,
 } from "../lib/dll-recovery";
 import { loadDllSettings } from "../lib/dll-recovery-settings";
 import {
   loadHomeFocusItems,
   shouldShowWeeklyReviewPrompt,
 } from "../lib/weekly-process-review";
-
-/** Set localStorage to "750" to demo recovery UI; remove key to disable. */
-const DEMO_RECOVERY_KEY = "libertrade_demo_recovery";
+import { loadTraderSettings } from "../lib/trader-settings";
+import { SESSION_SAVED_EVENT } from "../lib/session-events";
 
 const WORKFLOW_STEPS = [
   { id: "premarket", label: "Pre-Market" },
@@ -207,12 +205,16 @@ function heroCopy(allComplete, completedCount, weekend, timeEyebrow) {
   };
 }
 
+function mergeTodaySession(sessions, todaySession) {
+  if (!todaySession?.date) return sessions;
+  const next = sessions.filter((s) => s.date !== todaySession.date);
+  next.unshift(todaySession);
+  return next;
+}
+
 export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeeklyReview }) {
-  const effectiveDateKey = todayKey();
-  const effectiveDate = useMemo(
-    () => dateFromKey(effectiveDateKey),
-    [effectiveDateKey]
-  );
+  const [dateKey, setDateKey] = useState(() => todayKey());
+  const effectiveDate = useMemo(() => dateFromKey(dateKey), [dateKey]);
 
   const [today, setToday] = useState(null);
   const [sessions, setSessions] = useState([]);
@@ -221,44 +223,57 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
   const [weekFocus, setWeekFocus] = useState({ items: [], complete: false });
   const [showReviewPrompt, setShowReviewPrompt] = useState(false);
 
+  const loadDashboard = useCallback(async ({ refreshTodayOnly = false } = {}) => {
+    await loadTraderSettings();
+    const key = todayKey();
+    setDateKey(key);
+
+    const todaySession = await loadSessionDay(key);
+    setToday(todaySession);
+    setSessions((prev) => mergeTodaySession(refreshTodayOnly ? prev : [], todaySession));
+    setLoading(false);
+
+    if (refreshTodayOnly) return;
+
+    const [all, focus, showPrompt, recoveryState, dllSettings] = await Promise.all([
+      loadAllSessions({ maxDays: 60 }),
+      loadHomeFocusItems(key),
+      shouldShowWeeklyReviewPrompt(key),
+      loadRecoveryState(),
+      loadDllSettings(),
+    ]);
+
+    setSessions(mergeTodaySession(all, todaySession));
+    setWeekFocus(focus);
+    setShowReviewPrompt(showPrompt);
+    setRecoveryStatus(getRecoveryStatus(recoveryState, dllSettings));
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      setLoading(true);
-
-      if (typeof window !== "undefined" && !localStorage.getItem(DEMO_RECOVERY_KEY)) {
-        localStorage.setItem(DEMO_RECOVERY_KEY, "750");
-      }
-
-      let recoveryState = await loadRecoveryState();
-      const dllSettings = await loadDllSettings();
-      if (
-        typeof window !== "undefined" &&
-        localStorage.getItem(DEMO_RECOVERY_KEY) === "750" &&
-        !recoveryState.active
-      ) {
-        await seedRecoveryDemo(750);
-        recoveryState = await loadRecoveryState();
-      }
-
-      const [todaySession, all, focus, showPrompt] = await Promise.all([
-        loadSessionDay(effectiveDateKey),
-        loadAllSessions(),
-        loadHomeFocusItems(effectiveDateKey),
-        shouldShowWeeklyReviewPrompt(effectiveDateKey),
-      ]);
-      if (cancelled) return;
-      setToday(todaySession);
-      setSessions(all);
-      setWeekFocus(focus);
-      setShowReviewPrompt(showPrompt);
-      setRecoveryStatus(getRecoveryStatus(recoveryState, dllSettings));
-      setLoading(false);
-    })();
+    setLoading(true);
+    loadDashboard().catch(() => {
+      if (!cancelled) setLoading(false);
+    });
     return () => {
       cancelled = true;
     };
-  }, [effectiveDateKey]);
+  }, [loadDashboard]);
+
+  useEffect(() => {
+    let timer;
+    const refresh = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        loadDashboard({ refreshTodayOnly: true }).catch(() => {});
+      }, 200);
+    };
+    window.addEventListener(SESSION_SAVED_EVENT, refresh);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener(SESSION_SAVED_EVENT, refresh);
+    };
+  }, [loadDashboard]);
 
   const preComplete = isStepComplete(today?.pre);
   const planComplete = isStepComplete(today?.plan);
@@ -284,8 +299,19 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
     today?.netPnl > 0 ? "positive" : today?.netPnl < 0 ? "negative" : "neutral";
   const pnlSmaller = today?.netPnl != null && today.netPnl < 0;
 
-  const processStreak = useMemo(() => countProcessStreak(sessions), [sessions]);
-  const playbookStreak = useMemo(() => countPlaybookStreak(sessions), [sessions]);
+  const sessionsForStreaks = useMemo(() => {
+    if (!today?.date) return sessions;
+    return mergeTodaySession(sessions, today);
+  }, [sessions, today]);
+
+  const processStreak = useMemo(
+    () => countProcessStreakAsOf(sessionsForStreaks, dateKey),
+    [sessionsForStreaks, dateKey]
+  );
+  const playbookStreak = useMemo(
+    () => countPlaybookStreakAsOf(sessionsForStreaks, dateKey),
+    [sessionsForStreaks, dateKey]
+  );
   const todayPlaybookLabel = useMemo(
     () => playbookAdherenceLabel(today?.playbookAdherence),
     [today?.playbookAdherence]
@@ -459,7 +485,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
             </section>
           )}
 
-          <HomeEventBanner dateKey={effectiveDateKey} />
+          <HomeEventBanner dateKey={dateKey} />
 
           {weekFocus.items.length > 0 && (
             <section className="home-week-focus" aria-label="This week's focus">

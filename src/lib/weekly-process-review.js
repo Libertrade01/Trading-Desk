@@ -170,14 +170,30 @@ export async function pruneProcessReviewsBefore(weekStart) {
 }
 
 const PROCESS_REVIEW_RESET_KEY = "weekly-process-review-reset";
+const LEGACY_PROCESS_REVIEW_RESET_KEY = "weekly-process-review-reset";
+
+async function hasProcessReviewResetRun() {
+  try {
+    const r = await storage.get(PROCESS_REVIEW_RESET_KEY);
+    if (r?.value) return true;
+  } catch {
+    /* fall through */
+  }
+
+  if (typeof window === "undefined") return false;
+  if (!localStorage.getItem(LEGACY_PROCESS_REVIEW_RESET_KEY)) return false;
+
+  await storage.set(PROCESS_REVIEW_RESET_KEY, "1");
+  localStorage.removeItem(LEGACY_PROCESS_REVIEW_RESET_KEY);
+  return true;
+}
 
 /** One-time cleanup: drop pre-current-week reviews when starting fresh. */
 export async function runInitialProcessReviewReset() {
-  if (typeof window === "undefined") return;
-  if (localStorage.getItem(PROCESS_REVIEW_RESET_KEY)) return;
+  if (await hasProcessReviewResetRun()) return;
   const { start } = getCurrentProcessWeek();
   await pruneProcessReviewsBefore(start);
-  localStorage.setItem(PROCESS_REVIEW_RESET_KEY, "1");
+  await storage.set(PROCESS_REVIEW_RESET_KEY, "1");
 }
 
 export function getWeekDayKeys(weekStart) {
