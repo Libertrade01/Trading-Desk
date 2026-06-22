@@ -31,19 +31,28 @@ const NAV_ITEMS = [
   { id: "propeconomics", href: "/prop-economics", label: "Prop Economics", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 12V6l6-3 6 3v6l-6 3-6-3z"/><path d="M8 3v10M2 6l6 3 6-3" strokeLinecap="round" strokeLinejoin="round"/></svg>
   )},
-  { id: "desk", href: "/desk", label: "Trade Desk", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
-  )},
   { id: "analytics", href: "/analytics", label: "Analytics", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="9" width="3" height="5" rx="0.5"/><rect x="6.5" y="5" width="3" height="9" rx="0.5"/><rect x="11" y="2" width="3" height="12" rx="0.5"/></svg>
+  )},
+];
+
+const FOUNDER_NAV_ITEMS = [
+  { id: "desk", href: "/desk", label: "Trade Desk", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
   )},
   { id: "wiki", href: "/wiki", label: "Wiki", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 2.5h10v11H3z"/><path d="M5.5 2.5v11M8 2.5v11M10.5 2.5v11"/></svg>
   )},
-  { id: "settings", href: "/settings", label: "Settings", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>
-  )},
 ];
+
+const SETTINGS_NAV_ITEM = {
+  id: "settings",
+  href: "/settings",
+  label: "Settings",
+  icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>
+  ),
+};
 
 function isNavActive(pathname, item) {
   if (item.id === "home") return pathname === "/";
@@ -52,7 +61,24 @@ function isNavActive(pathname, item) {
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
-function Sidebar({ pathname, open, onClose, userEmail, navItems }) {
+function NavLink({ item, pathname, onClose }) {
+  return (
+    <Link
+      href={item.href}
+      className={`sidebar-nav-item${isNavActive(pathname, item) ? " active" : ""}`}
+      onClick={onClose}
+    >
+      {item.icon}
+      {item.label}
+    </Link>
+  );
+}
+
+function NavLabel({ text, className = "" }) {
+  return <div className={`sidebar-nav-label${className ? ` ${className}` : ""}`}>{text}</div>;
+}
+
+function Sidebar({ pathname, open, onClose, userEmail, mainItems, founderItems, showFounderSection }) {
   return (
     <>
       <div className={`sidebar-overlay${open ? " visible" : ""}`} onClick={onClose} />
@@ -62,19 +88,26 @@ function Sidebar({ pathname, open, onClose, userEmail, navItems }) {
           <div className="sidebar-brand-sub">Trading Desk</div>
         </div>
         <nav className="sidebar-nav">
-          {navItems.map((item, i) => item.type === "label" ? (
-            <div key={`label-${i}`} className="sidebar-nav-label">{item.text}</div>
-          ) : (
-            <Link
-              key={item.id}
-              href={item.href}
-              className={`sidebar-nav-item${isNavActive(pathname, item) ? " active" : ""}`}
-              onClick={onClose}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
-          ))}
+          <div className="sidebar-nav-main">
+            {mainItems.map((item, i) =>
+              item.type === "label" ? (
+                <NavLabel key={`label-${i}`} text={item.text} />
+              ) : (
+                <NavLink key={item.id} item={item} pathname={pathname} onClose={onClose} />
+              )
+            )}
+          </div>
+          <div className="sidebar-nav-bottom">
+            <NavLink item={SETTINGS_NAV_ITEM} pathname={pathname} onClose={onClose} />
+            {showFounderSection && (
+              <>
+                <NavLabel text="Founder" className="sidebar-nav-label--founder" />
+                {founderItems.map((item) => (
+                  <NavLink key={item.id} item={item} pathname={pathname} onClose={onClose} />
+                ))}
+              </>
+            )}
+          </div>
         </nav>
         <div className="sidebar-footer">
           {userEmail && (
@@ -99,10 +132,14 @@ export default function AppShell({ children }) {
   const [userEmail, setUserEmail] = useState(null);
   const [isFounder, setIsFounder] = useState(false);
 
-  const navItems = useMemo(
-    () => filterNavItems(NAV_ITEMS, { isFounder }),
-    [isFounder]
-  );
+  const { mainItems, founderItems, showFounderSection } = useMemo(() => {
+    const founder = filterNavItems(FOUNDER_NAV_ITEMS, { isFounder });
+    return {
+      mainItems: filterNavItems(NAV_ITEMS, { isFounder }),
+      founderItems: founder,
+      showFounderSection: isFounder && founder.length > 0,
+    };
+  }, [isFounder]);
 
   useEffect(() => {
     loadTraderSettings().catch(() => {});
@@ -155,7 +192,9 @@ export default function AppShell({ children }) {
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         userEmail={userEmail}
-        navItems={navItems}
+        mainItems={mainItems}
+        founderItems={founderItems}
+        showFounderSection={showFounderSection}
       />
 
       <main className="main-content">{children}</main>

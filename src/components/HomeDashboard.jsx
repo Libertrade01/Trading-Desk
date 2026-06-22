@@ -374,6 +374,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
               {!allComplete && today?.playbookAdherence?.total > 0 && todayPlaybookLabel && (
                 <p className="home-hybrid-sub home-hybrid-sub--playbook">{todayPlaybookLabel.text}</p>
               )}
+              <ProcessStreaksPanel riskCount={processStreak} playbookCount={playbookStreak} />
               {allComplete && (
                 <div className="home-hybrid-edit">
                   <button type="button" onClick={() => onNavigate("premarket")}>
@@ -391,7 +392,6 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
               )}
             </div>
             <aside className="home-hybrid-hero-aside">
-              <ProcessStreaksPanel riskCount={processStreak} playbookCount={playbookStreak} />
               {showHeroReadiness && (
                 <ReadinessScoreWidget
                   score={today.readinessScore}
