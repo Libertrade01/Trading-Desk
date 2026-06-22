@@ -2574,17 +2574,36 @@ textarea:focus, input:focus, select:focus {
 
 .pm-checkin-main .pm-week-focus-reminder {
   margin: 0;
-  padding: 16px 20px;
+  padding: 0 0 0 14px;
+  background: transparent;
+  border: none;
+  border-left: 2px solid color-mix(in srgb, var(--brand) 45%, transparent);
+  border-radius: 0;
 }
 
 .pm-checkin-main .pm-week-focus-reminder-label {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .pm-checkin-main .pm-week-focus-reminder-list {
-  gap: 8px;
+  gap: 5px;
 }
 
+.pm-checkin-main .pm-week-focus-reminder-list li {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  line-height: 1.55;
+  padding-left: 0;
+  border-left: none;
+}
+
+.pm-checkin-main .pm-week-focus-reminder-list li::before {
+  content: "·";
+  color: var(--brand);
+  font-weight: 700;
+  margin-right: 8px;
+}
 
 .pm-back {
   background: none;
