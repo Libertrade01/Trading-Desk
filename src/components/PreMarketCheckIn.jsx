@@ -511,48 +511,47 @@ export default function PreMarketCheckIn({ onBack }) {
               </button>
             )}
           </div>
-            </div>
-          </div>
 
-          <section className="pm-mantra-inline">
-            <h2 className="pm-mantra-title hybrid-section-title">My mantra for today</h2>
-            <p className="pm-section-desc">One line to anchor your session. It rides on your scorecard.</p>
-            <input
-              type="text"
-              value={form.mantra}
-              onChange={(e) => set("mantra", e.target.value)}
-              className="pm-text-input pm-mantra-input"
-              placeholder="Wait for A+, Area then Execution."
-            />
-          </section>
-
-          <section className="pm-reminders-panel" aria-label="Pre-market reminders">
-            <div className="pm-reminders-head">
-              <div className="pm-reminders-eyebrow hybrid-eyebrow">Reminders</div>
-              <p className="pm-reminders-hint">Desk setup before the open. Not scored.</p>
+          <div className="pm-checkin-finish">
+            <div className="pm-checkin-finish-mantra">
+              <label className="pm-checkin-finish-label hybrid-label" htmlFor="pm-mantra-input">
+                Mantra
+              </label>
+              <input
+                id="pm-mantra-input"
+                type="text"
+                value={form.mantra}
+                onChange={(e) => set("mantra", e.target.value)}
+                className="pm-text-input pm-checkin-finish-mantra-input"
+                placeholder="One line for today — e.g. Wait for A+"
+              />
             </div>
-            <div className="pm-reminders-list">
-              <ToggleField label="Unlock Accounts" value={form.unlockAccounts} onChange={(v) => set("unlockAccounts", v)} />
-              <ToggleField label="Check CPU" value={form.checkCpu} onChange={(v) => set("checkCpu", v)} />
-              <ToggleField label="Select Risk Bracket Order" value={form.selectRiskBracketOrder} onChange={(v) => set("selectRiskBracketOrder", v)} />
-            </div>
-          </section>
 
-          <div className="pm-footer">
-            <div className="pm-actions-row">
+            <div className="pm-checkin-finish-reminders" aria-label="Pre-market reminders">
+              <span className="pm-checkin-finish-label hybrid-label">Desk setup</span>
+              <div className="pm-checkin-reminder-grid">
+                <ToggleField label="Unlock accounts" value={form.unlockAccounts} onChange={(v) => set("unlockAccounts", v)} />
+                <ToggleField label="Check CPU" value={form.checkCpu} onChange={(v) => set("checkCpu", v)} />
+                <ToggleField label="Risk bracket order" value={form.selectRiskBracketOrder} onChange={(v) => set("selectRiskBracketOrder", v)} />
+              </div>
+              <p className="pm-checkin-finish-note">Not scored — quick desk checks before the open.</p>
+            </div>
+
+            <div className="pm-checkin-finish-actions">
               <button type="button" className="pm-btn-link" onClick={handleReset}>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2.5 8a5.5 5.5 0 019.3-4M13.5 8a5.5 5.5 0 01-9.3 4" strokeLinecap="round"/><path d="M2.5 3.5V8h4.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 Reset
               </button>
-              <button type="button" className="pm-btn-link" onClick={handleSave}>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 2.5h10v11H3z"/><path d="M5 2.5V6h6V2.5"/></svg>
-                {saved ? "Updated" : "Update check-in"}
-              </button>
+              <div className="pm-checkin-finish-actions-right">
+                <button type="button" className="pm-btn-link" onClick={handleSave}>
+                  {saved ? "Updated" : "Save check-in"}
+                </button>
+                <button type="button" className="pm-btn-primary-sm" onClick={() => { handleSave(); onBack(); }}>
+                  Return to dashboard
+                </button>
+              </div>
             </div>
-            <button type="button" className="pm-btn-return" onClick={() => { handleSave(); onBack(); }}>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8l5 5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Return to dashboard
-            </button>
+          </div>
+            </div>
           </div>
         </div>
       </div>

@@ -2216,7 +2216,7 @@ textarea:focus, input:focus, select:focus {
 .pm-checkin-workspace {
   display: flex;
   gap: 16px;
-  align-items: stretch;
+  align-items: flex-start;
 }
 
 .pm-checkin-stage {
@@ -2238,7 +2238,7 @@ textarea:focus, input:focus, select:focus {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  align-self: stretch;
+  align-self: flex-start;
 }
 
 .pm-rail-score-block {
@@ -2281,7 +2281,6 @@ textarea:focus, input:focus, select:focus {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  flex: 1;
   width: 100%;
 }
 
@@ -2455,6 +2454,98 @@ textarea:focus, input:focus, select:focus {
   color: var(--muted);
   line-height: 1.5;
   margin: 0;
+}
+
+.pm-checkin-finish {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pm-checkin-finish-label {
+  display: block;
+  flex-shrink: 0;
+  width: 72px;
+  padding-top: 10px;
+}
+
+.pm-checkin-finish-mantra {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.pm-checkin-finish-mantra-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.pm-checkin-finish-reminders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: flex-start;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.pm-checkin-finish-reminders .pm-checkin-finish-label {
+  width: 100%;
+  padding-top: 0;
+  margin-bottom: 2px;
+}
+
+.pm-checkin-reminder-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.pm-checkin-reminder-grid .pm-toggle-field {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin: 0;
+}
+
+.pm-checkin-reminder-grid .pm-field-label {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.pm-checkin-finish-note {
+  width: 100%;
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.pm-checkin-finish-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.pm-checkin-finish-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .pm-mantra-inline {
@@ -4978,6 +5069,35 @@ input.pm-slider::-moz-range-thumb {
 
   .pm-rail-step-score {
     font-size: 11px;
+  }
+
+  .pm-checkin-reminder-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pm-checkin-finish-mantra {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pm-checkin-finish-label {
+    width: auto;
+    padding-top: 0;
+  }
+
+  .pm-checkin-finish-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pm-checkin-finish-actions-right {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pm-checkin-finish-actions-right .pm-btn-primary-sm {
+    width: 100%;
+    text-align: center;
   }
 
   .premarket-grid {
