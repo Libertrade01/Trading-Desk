@@ -13,7 +13,6 @@ import {
   processRTraderCSV,
   tradesForDate,
   computePerformanceFromTrades,
-  computePerformanceFromDbTrades,
   fetchTradesForDate,
   importTradesToSupabase,
   getMissingCommissionSymbols,
@@ -27,6 +26,7 @@ import {
   playbookAdherenceLabel,
 } from "../lib/setup-adherence";
 import RTraderImportPreview from "./RTraderImportPreview";
+import PostMarketStepper, { CLOSEOUT_STEPS } from "./PostMarketStepper";
 import {
   evaluateDay,
   loadRecoveryState,
@@ -75,7 +75,7 @@ function SliderField({ label, hint, minLabel, maxLabel, value, onChange }) {
   );
 }
 
-function SessionSummary({ form, netPnl, winRate, setupAdherence, adherenceLabel }) {
+function CloseoutMetrics({ form, netPnl, winRate, setupAdherence, adherenceLabel }) {
   const flagsRaised = countBehavioralFlags(form);
   const pnlTone = netPnl > 0 ? "var(--green)" : netPnl < 0 ? "var(--red)" : "var(--text)";
   const adherenceTone =
@@ -88,46 +88,35 @@ function SessionSummary({ form, netPnl, winRate, setupAdherence, adherenceLabel 
           : "var(--muted)";
 
   return (
-    <div className="pm-score-card">
-      <div className="pm-score-label hybrid-label-sm">Session summary</div>
+    <aside className="pm-closeout-metrics" aria-label="Session summary">
+      <div className="pm-closeout-metrics-pnl">
+        <span className="pm-closeout-metrics-label hybrid-label-sm">Net P&amp;L</span>
+        <span className="pm-closeout-metrics-pnl-value" style={{ color: pnlTone }}>
+          {netPnl !== "" && netPnl != null ? formatUsd(netPnl) : "—"}
+        </span>
+      </div>
+      <div className="pm-closeout-metrics-row">
+        <div>
+          <span className="pm-closeout-metrics-label hybrid-label-sm">Win rate</span>
+          <span className="pm-closeout-metrics-value">{winRate}</span>
+        </div>
+        <div>
+          <span className="pm-closeout-metrics-label hybrid-label-sm">Flags</span>
+          <span className="pm-closeout-metrics-value">
+            <span style={{ color: flagsRaised ? "var(--amber)" : "var(--green)" }}>{flagsRaised}</span>
+            <span className="pm-closeout-metrics-muted"> / {BEHAVIORAL_FLAGS.length}</span>
+          </span>
+        </div>
+      </div>
       {setupAdherence?.total > 0 && adherenceLabel && (
-        <div className="pm-playbook-adherence" style={{ borderColor: adherenceTone }}>
-          <div className="pm-playbook-adherence-label hybrid-label-sm">Playbook adherence</div>
-          <div className="pm-playbook-adherence-value" style={{ color: adherenceTone }}>
+        <div className="pm-closeout-metrics-playbook">
+          <span className="pm-closeout-metrics-label hybrid-label-sm">Playbook</span>
+          <span className="pm-closeout-metrics-value" style={{ color: adherenceTone }}>
             {adherenceLabel.text}
-          </div>
-          {!setupAdherence.processPass && (
-            <p className="pm-playbook-adherence-note">
-              Only playbook setups count. Invalid trades break process adherence.
-            </p>
-          )}
-          {setupAdherence.improvised > 0 && setupAdherence.processPass && (
-            <p className="pm-playbook-adherence-note">
-              Improvised trades are allowed occasionally — aim for playbook only.
-            </p>
-          )}
+          </span>
         </div>
       )}
-      <div className="pm-summary-net">
-        <div className="pm-summary-net-label">Net P&amp;L</div>
-        <div className="pm-summary-net-value" style={{ color: pnlTone }}>
-          {netPnl !== "" && netPnl != null ? formatUsd(netPnl) : "—"}
-        </div>
-      </div>
-      <div className="pm-summary-grid">
-        <div><span>Trades</span><strong>{form.trades || "0"}</strong></div>
-        <div><span>Win rate</span><strong>{winRate}</strong></div>
-        <div><span>Wins</span><strong className="pos">{form.wins || "0"}</strong></div>
-        <div><span>Losses</span><strong className="neg">{form.losses || "0"}</strong></div>
-      </div>
-      <div className="pm-summary-flags">
-        <div className="pm-summary-flags-label">Behavioral flags</div>
-        <div className="pm-summary-flags-count">
-          <span style={{ color: flagsRaised ? "var(--amber)" : "var(--green)" }}>{flagsRaised}</span>
-          <span className="pm-summary-flags-of"> of {BEHAVIORAL_FLAGS.length} raised</span>
-        </div>
-      </div>
-    </div>
+    </aside>
   );
 }
 
@@ -140,6 +129,7 @@ export default function PostMarketReview({ onBack }) {
   const [importMsg, setImportMsg] = useState("");
   const [dayTrades, setDayTrades] = useState([]);
   const [recoveryStatus, setRecoveryStatus] = useState(null);
+  const [activeStep, setActiveStep] = useState(0);
   const fileRef = useRef(null);
 
   const set = useCallback((key, value) => {
@@ -165,6 +155,10 @@ export default function PostMarketReview({ onBack }) {
 
   const setupAdherence = useMemo(() => summarizeSetupAdherence(dayTrades), [dayTrades]);
   const adherenceLabel = useMemo(() => playbookAdherenceLabel(setupAdherence), [setupAdherence]);
+
+  const step = CLOSEOUT_STEPS[activeStep];
+  const isFirstStep = activeStep === 0;
+  const isLastStep = activeStep === CLOSEOUT_STEPS.length - 1;
 
   const reloadDayTrades = useCallback(async (dateKey = todayKey()) => {
     const trades = await fetchTradesForDate(dateKey);
@@ -307,6 +301,7 @@ export default function PostMarketReview({ onBack }) {
     setImportPreview(null);
     setImportMsg("");
     setSaved(false);
+    setActiveStep(0);
   };
 
   const handleFile = async (e) => {
@@ -360,42 +355,54 @@ export default function PostMarketReview({ onBack }) {
         <span>{headerDate()}</span>
       </div>
 
-      <div className="premarket-grid postmarket-grid">
-        <div className="pm-header">
-          <div className="pm-eyebrow hybrid-eyebrow">Post-market · {sectionDate()}</div>
-          <h1 className="hybrid-page-title">CLOSE OUT.</h1>
-          <p className="pm-subtitle">Close the loop. What happened vs what you planned.</p>
-        </div>
-
-        <div className="premarket-form">
-          {/* Import */}
-          <section className="pm-card pm-import-card">
-            <div className="pm-import-row">
-              <div className="pm-import-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                  <path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <div className="pm-import-body">
-                <div className="pm-import-title">Import from rTrader</div>
-                <div className="pm-import-desc">Performance Summary or Trades export — auto-detects.</div>
-                <button type="button" className="pm-import-help" onClick={() => setShowHelp((s) => !s)}>
-                  How do I get this file from rTrader?
-                </button>
-                {showHelp && (
-                  <p className="pm-import-help-text">
-                    In rTrader, export your session as a CSV (Performance Summary or Trades). Upload here — trades import to Analytics and today&apos;s performance fields fill automatically.
-                  </p>
-                )}
-                {importMsg && <p className="pm-import-msg">{importMsg}</p>}
-              </div>
-              <button type="button" className="pm-upload-btn" onClick={() => fileRef.current?.click()}>
-                ↑ Import
-              </button>
-              <input ref={fileRef} type="file" accept=".csv" hidden onChange={handleFile} />
+      <div className="pm-closeout-layout">
+        <div className="pm-closeout-main">
+          <div className="pm-closeout-header-row">
+            <div className="pm-header">
+              <div className="pm-eyebrow hybrid-eyebrow">Post-market · {sectionDate()}</div>
+              <h1 className="hybrid-page-title">CLOSE OUT.</h1>
+              <p className="pm-subtitle">Close the loop. What happened vs what you planned.</p>
             </div>
-          </section>
+            <CloseoutMetrics
+              form={form}
+              netPnl={netPnl}
+              winRate={winRate}
+              setupAdherence={setupAdherence}
+              adherenceLabel={adherenceLabel}
+            />
+          </div>
+
+          {recoveryStatus?.active && (
+            <div className="pm-closeout-context-strip pm-closeout-context-strip--recovery">
+              <span className="hybrid-label-sm">DLL recovery active</span>
+              <p>
+                Drawdown {formatRecoveryUsd(recoveryStatus.cumulativeDrawdown)} ·{" "}
+                {formatRecoveryProgress(recoveryStatus)} · max daily loss{" "}
+                {formatRecoveryUsd(recoveryStatus.effectiveMaxDailyLoss)} until you recover{" "}
+                {formatRecoveryUsd(recoveryStatus.remaining)} more.
+              </p>
+            </div>
+          )}
+
+          <div className="pm-closeout-context-strip pm-closeout-import-strip">
+            <div className="pm-closeout-import-body">
+              <div className="pm-closeout-import-title">Import from rTrader</div>
+              <div className="pm-closeout-import-desc">Performance Summary or Trades export — auto-detects.</div>
+              <button type="button" className="pm-import-help" onClick={() => setShowHelp((s) => !s)}>
+                How do I get this file from rTrader?
+              </button>
+              {showHelp && (
+                <p className="pm-import-help-text">
+                  In rTrader, export your session as a CSV (Performance Summary or Trades). Upload here — trades import to Analytics and today&apos;s performance fields fill automatically.
+                </p>
+              )}
+              {importMsg && <p className="pm-import-msg">{importMsg}</p>}
+            </div>
+            <button type="button" className="pm-closeout-upload-btn" onClick={() => fileRef.current?.click()}>
+              Import
+            </button>
+            <input ref={fileRef} type="file" accept=".csv" hidden onChange={handleFile} />
+          </div>
 
           <RTraderImportPreview
             open={!!importPreview}
@@ -408,156 +415,155 @@ export default function PostMarketReview({ onBack }) {
             onConfirm={handleImportConfirm}
           />
 
-          {/* No trade */}
-          <section className="pm-card pm-no-trade-card">
-            <label className="pm-no-trade-check">
-              <input type="checkbox" checked={form.noTradeToday} onChange={(e) => set("noTradeToday", e.target.checked)} />
-              <div>
-                <div className="pm-field-label hybrid-label">I didn&apos;t trade today</div>
-                <div className="pm-field-hint">Honoring a low-readiness day or sitting out by choice. Counts as a protective day when paired with low/mid morning readiness.</div>
-              </div>
-            </label>
-          </section>
+          <label className="pm-closeout-context-strip pm-closeout-no-trade">
+            <input type="checkbox" checked={form.noTradeToday} onChange={(e) => set("noTradeToday", e.target.checked)} />
+            <div>
+              <div className="pm-field-label hybrid-label">I didn&apos;t trade today</div>
+              <div className="pm-field-hint">Honoring a low-readiness day or sitting out by choice. Counts as a protective day when paired with low/mid morning readiness.</div>
+            </div>
+          </label>
 
-          {/* 01 Performance */}
-          <section className="pm-card">
-            <div className="pm-section-head">
-              <span className="pm-section-num">01</span>
-              <div>
-                <h2 className="pm-section-title hybrid-section-title">Performance</h2>
-                <p className="pm-section-desc">The numbers from the session.</p>
-              </div>
-            </div>
-            <div className="pm-perf-grid">
-              <div><div className="pm-field-label hybrid-label">Trades</div><input type="text" value={form.trades} onChange={(e) => set("trades", e.target.value)} className="pm-text-input" disabled={form.noTradeToday} /></div>
-              <div><div className="pm-field-label hybrid-label">Wins</div><input type="text" value={form.wins} onChange={(e) => set("wins", e.target.value)} className="pm-text-input" disabled={form.noTradeToday} /></div>
-              <div><div className="pm-field-label hybrid-label">Losses</div><input type="text" value={form.losses} onChange={(e) => set("losses", e.target.value)} className="pm-text-input" disabled={form.noTradeToday} /></div>
-              <div><div className="pm-field-label hybrid-label">Gross P&amp;L</div><input type="text" value={form.grossPnl} onChange={(e) => set("grossPnl", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
-              <div><div className="pm-field-label hybrid-label">Best winner</div><input type="text" value={form.bestWinner} onChange={(e) => set("bestWinner", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
-              <div><div className="pm-field-label hybrid-label">Worst loss</div><input type="text" value={form.worstLoss} onChange={(e) => set("worstLoss", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
-              <div className="pm-perf-full"><div className="pm-field-label hybrid-label">Commissions &amp; fees</div><input type="text" value={form.commissionsFees} onChange={(e) => set("commissionsFees", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
-            </div>
-            <p className="pm-perf-note">Enter your gross P&amp;L above and your total commissions &amp; fees here; your net is calculated automatically. On imported days this is filled from your CSV.</p>
-          </section>
+          <PostMarketStepper activeIndex={activeStep} onSelect={setActiveStep} />
 
-          {/* 02 Process */}
-          <section className="pm-card">
-            <div className="pm-section-head">
-              <span className="pm-section-num">02</span>
-              <div>
-                <h2 className="pm-section-title hybrid-section-title">Process adherence</h2>
-                <p className="pm-section-desc">How well you executed your plan.</p>
+          <div className="pm-closeout-stage">
+            <div className="pm-section-panel">
+              <div className="pm-section-panel-head">
+                <div>
+                  <h2 className="pm-section-title hybrid-section-title">{step.label}</h2>
+                  <p className="pm-section-desc">{step.desc}</p>
+                </div>
+                <span className="pm-section-step hybrid-label-sm">
+                  {activeStep + 1} of {CLOSEOUT_STEPS.length}
+                </span>
               </div>
-            </div>
-            <SliderField label="Followed plan" minLabel="Not at all" maxLabel="Fully" value={form.followedPlan} onChange={(v) => set("followedPlan", v)} />
-            <SliderField label="Setup quality" hint="Were the setups you took A+?" minLabel="Marginal" maxLabel="A+" value={form.setupQuality} onChange={(v) => set("setupQuality", v)} />
-            <SliderField label="Risk discipline" hint="Stops respected, sizing right" minLabel="Loose" maxLabel="Tight" value={form.riskDiscipline} onChange={(v) => set("riskDiscipline", v)} />
-            <SliderField label="Execution quality" hint="Entries, exits, fills" minLabel="Sloppy" maxLabel="Sharp" value={form.executionQuality} onChange={(v) => set("executionQuality", v)} />
-            <div className="pm-risk-block">
-              <ToggleField
-                label="Risk plan followed?"
-                hint="Be brutally honest — this is your risk adherence streak. Yes only if you followed your plan and respected every limit today. Serious traders close out clean."
-                value={form.riskPlanFollowed === true}
-                onChange={(on) => set("riskPlanFollowed", on)}
-              />
-            </div>
-          </section>
 
-          {/* 03 Behavioral flags */}
-          <section className="pm-card">
-            <div className="pm-section-head">
-              <span className="pm-section-num">03</span>
-              <div>
-                <h2 className="pm-section-title hybrid-section-title">Behavioral flags</h2>
-                <p className="pm-section-desc">Honest answers help. Pattern recognition over time only works if you&apos;re truthful.</p>
-              </div>
-            </div>
-            <div className="pm-flags-categories">
-              {BEHAVIORAL_FLAG_CATEGORIES.map((category) => (
-                <div key={category.id} className="pm-flags-category">
-                  <div className="pm-flags-category-title">{category.label}</div>
-                  <div className="pm-flags-grid">
-                    {category.flags.map((flag) => (
-                      <div key={flag.key} className="pm-flag-item">
-                        <ToggleField label={flag.label} hint={flag.hint} value={form[flag.key]} onChange={(v) => set(flag.key, v)} />
+              <div className="pm-section-panel-body">
+                {step.id === "performance" && (
+                  <>
+                    <div className="pm-perf-grid">
+                      <div><div className="pm-field-label hybrid-label">Trades</div><input type="text" value={form.trades} onChange={(e) => set("trades", e.target.value)} className="pm-text-input" disabled={form.noTradeToday} /></div>
+                      <div><div className="pm-field-label hybrid-label">Wins</div><input type="text" value={form.wins} onChange={(e) => set("wins", e.target.value)} className="pm-text-input" disabled={form.noTradeToday} /></div>
+                      <div><div className="pm-field-label hybrid-label">Losses</div><input type="text" value={form.losses} onChange={(e) => set("losses", e.target.value)} className="pm-text-input" disabled={form.noTradeToday} /></div>
+                      <div><div className="pm-field-label hybrid-label">Gross P&amp;L</div><input type="text" value={form.grossPnl} onChange={(e) => set("grossPnl", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
+                      <div><div className="pm-field-label hybrid-label">Best winner</div><input type="text" value={form.bestWinner} onChange={(e) => set("bestWinner", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
+                      <div><div className="pm-field-label hybrid-label">Worst loss</div><input type="text" value={form.worstLoss} onChange={(e) => set("worstLoss", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
+                      <div className="pm-perf-full"><div className="pm-field-label hybrid-label">Commissions &amp; fees</div><input type="text" value={form.commissionsFees} onChange={(e) => set("commissionsFees", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
+                    </div>
+                    <p className="pm-perf-note">Enter your gross P&amp;L above and your total commissions &amp; fees here; your net is calculated automatically. On imported days this is filled from your CSV.</p>
+                  </>
+                )}
+
+                {step.id === "process" && (
+                  <>
+                    <SliderField label="Followed plan" minLabel="Not at all" maxLabel="Fully" value={form.followedPlan} onChange={(v) => set("followedPlan", v)} />
+                    <SliderField label="Setup quality" hint="Were the setups you took A+?" minLabel="Marginal" maxLabel="A+" value={form.setupQuality} onChange={(v) => set("setupQuality", v)} />
+                    <SliderField label="Risk discipline" hint="Stops respected, sizing right" minLabel="Loose" maxLabel="Tight" value={form.riskDiscipline} onChange={(v) => set("riskDiscipline", v)} />
+                    <SliderField label="Execution quality" hint="Entries, exits, fills" minLabel="Sloppy" maxLabel="Sharp" value={form.executionQuality} onChange={(v) => set("executionQuality", v)} />
+                    <div className="pm-risk-block">
+                      <ToggleField
+                        label="Risk plan followed?"
+                        hint="Be brutally honest — this is your risk adherence streak. Yes only if you followed your plan and respected every limit today. Serious traders close out clean."
+                        value={form.riskPlanFollowed === true}
+                        onChange={(on) => set("riskPlanFollowed", on)}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {step.id === "flags" && (
+                  <div className="pm-flags-categories">
+                    {BEHAVIORAL_FLAG_CATEGORIES.map((category) => (
+                      <div key={category.id} className="pm-flags-category">
+                        <div className="pm-flags-category-title">{category.label}</div>
+                        <div className="pm-flags-grid">
+                          {category.flags.map((flag) => (
+                            <div key={flag.key} className="pm-flag-item">
+                              <ToggleField label={flag.label} hint={flag.hint} value={form[flag.key]} onChange={(v) => set(flag.key, v)} />
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>
-                </div>
-              ))}
-            </div>
-          </section>
+                )}
 
-          {/* 04 After the close */}
-          <section className="pm-card">
-            <div className="pm-section-head">
-              <span className="pm-section-num">04</span>
-              <div>
-                <h2 className="pm-section-title hybrid-section-title">After the close</h2>
-                <p className="pm-section-desc">How you feel right now.</p>
+                {step.id === "close" && (
+                  <>
+                    <SliderField label="Emotional state" minLabel="Off" maxLabel="Centered" value={form.emotionalState} onChange={(v) => set("emotionalState", v)} />
+                    <SliderField label="Satisfaction" hint="With process, not P&L" minLabel="Low" maxLabel="High" value={form.satisfaction} onChange={(v) => set("satisfaction", v)} />
+                    <SliderField label="Frustration" minLabel="None" maxLabel="High" value={form.frustration} onChange={(v) => set("frustration", v)} />
+                  </>
+                )}
+
+                {step.id === "journal" && (
+                  <>
+                    <div className="pm-field">
+                      <div className="pm-field-label hybrid-label">What went well</div>
+                      <textarea value={form.wentWell} onChange={(e) => set("wentWell", e.target.value)} className="pm-textarea" rows={3} />
+                    </div>
+                    <div className="pm-field">
+                      <div className="pm-field-label hybrid-label">What went wrong</div>
+                      <textarea value={form.wentWrong} onChange={(e) => set("wentWrong", e.target.value)} className="pm-textarea" rows={3} />
+                    </div>
+                    <div className="pm-field">
+                      <div className="pm-field-label hybrid-label">One lesson</div>
+                      <textarea value={form.oneLesson} onChange={(e) => set("oneLesson", e.target.value)} className="pm-textarea" placeholder="If today taught you one thing, what was it?" rows={3} />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
-            <SliderField label="Emotional state" minLabel="Off" maxLabel="Centered" value={form.emotionalState} onChange={(v) => set("emotionalState", v)} />
-            <SliderField label="Satisfaction" hint="With process, not P&L" minLabel="Low" maxLabel="High" value={form.satisfaction} onChange={(v) => set("satisfaction", v)} />
-            <SliderField label="Frustration" minLabel="None" maxLabel="High" value={form.frustration} onChange={(v) => set("frustration", v)} />
-          </section>
 
-          {/* Journal */}
-          <section className="pm-card">
-            <h2 className="pm-mantra-title hybrid-section-title">Journal</h2>
-            <p className="pm-section-desc">Three short prompts. Don&apos;t overthink them.</p>
-            <div className="pm-field">
-              <div className="pm-field-label hybrid-label">What went well</div>
-              <textarea value={form.wentWell} onChange={(e) => set("wentWell", e.target.value)} className="pm-textarea" rows={3} />
+            <div className="pm-section-nav">
+              <button
+                type="button"
+                className="pm-btn-link"
+                onClick={() => setActiveStep((i) => Math.max(0, i - 1))}
+                disabled={isFirstStep}
+              >
+                Previous
+              </button>
+              {!isLastStep ? (
+                <button
+                  type="button"
+                  className="pm-btn-primary-sm"
+                  onClick={() => setActiveStep((i) => Math.min(CLOSEOUT_STEPS.length - 1, i + 1))}
+                >
+                  Next — {CLOSEOUT_STEPS[activeStep + 1].label}
+                </button>
+              ) : (
+                <span className="pm-closeout-nav-spacer" aria-hidden="true" />
+              )}
             </div>
-            <div className="pm-field">
-              <div className="pm-field-label hybrid-label">What went wrong</div>
-              <textarea value={form.wentWrong} onChange={(e) => set("wentWrong", e.target.value)} className="pm-textarea" rows={3} />
-            </div>
-            <div className="pm-field">
-              <div className="pm-field-label hybrid-label">One lesson</div>
-              <textarea value={form.oneLesson} onChange={(e) => set("oneLesson", e.target.value)} className="pm-textarea" placeholder="If today taught you one thing, what was it?" rows={3} />
-            </div>
-          </section>
 
-          <div className="pm-footer pm-footer-postmarket">
-            <button type="button" className="pm-btn-link" onClick={handleReset}>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2.5 8a5.5 5.5 0 019.3-4M13.5 8a5.5 5.5 0 01-9.3 4" strokeLinecap="round"/><path d="M2.5 3.5V8h4.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Reset
-            </button>
-            <button type="button" className="pm-btn-save-review" onClick={handleSave}>
-              {saved ? "✓ Saved" : "Save review"}
-            </button>
+            {isLastStep && (
+              <div className="pm-closeout-finish">
+                <div className="pm-closeout-finish-actions">
+                  <button type="button" className="pm-btn-link" onClick={handleReset}>
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2.5 8a5.5 5.5 0 019.3-4M13.5 8a5.5 5.5 0 01-9.3 4" strokeLinecap="round"/><path d="M2.5 3.5V8h4.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    Reset
+                  </button>
+                  <div className="pm-closeout-finish-actions-right">
+                    <button type="button" className="pm-btn-save-review" onClick={handleSave}>
+                      {saved ? "Saved" : "Save review"}
+                    </button>
+                    <button
+                      type="button"
+                      className="pm-btn-return"
+                      onClick={async () => {
+                        const ok = await handleSave();
+                        if (ok !== false) onBack();
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8l5 5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      Return to dashboard
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-
-          <button type="button" className="pm-btn-return" onClick={async () => { const ok = await handleSave(); if (ok !== false) onBack(); }}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8l5 5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            Return to dashboard
-          </button>
         </div>
-
-        <aside className="premarket-score-panel">
-          {recoveryStatus?.active && (
-            <div className="pm-dll-recovery-notice">
-              <div className="pm-dll-recovery-notice-label hybrid-label-sm">DLL recovery active</div>
-              <p>
-                Drawdown {formatRecoveryUsd(recoveryStatus.cumulativeDrawdown)} ·{" "}
-                {formatRecoveryProgress(recoveryStatus)}
-              </p>
-              <p className="pm-dll-recovery-notice-hint">
-                Max daily loss is {formatRecoveryUsd(recoveryStatus.effectiveMaxDailyLoss)} until you recover{" "}
-                {formatRecoveryUsd(recoveryStatus.remaining)} more.
-              </p>
-            </div>
-          )}
-          <SessionSummary
-            form={form}
-            netPnl={netPnl}
-            winRate={winRate}
-            setupAdherence={setupAdherence}
-            adherenceLabel={adherenceLabel}
-          />
-        </aside>
       </div>
     </div>
   );

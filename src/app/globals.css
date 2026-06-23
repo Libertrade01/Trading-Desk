@@ -3578,6 +3578,303 @@ input.pm-slider::-moz-range-thumb {
   grid-row: 2;
 }
 
+/* ── Close-out: top stepper layout (Option C) ── */
+.pm-closeout-layout {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 28px 28px 64px;
+}
+
+.pm-closeout-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pm-closeout-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.pm-closeout-header-row .pm-header {
+  flex: 1;
+  min-width: 0;
+}
+
+.pm-closeout-metrics {
+  flex-shrink: 0;
+  min-width: 140px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: right;
+}
+
+.pm-closeout-metrics-label {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.pm-closeout-metrics-pnl-value {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.pm-closeout-metrics-row {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+}
+
+.pm-closeout-metrics-row > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.pm-closeout-metrics-value {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pm-closeout-metrics-muted {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.pm-closeout-metrics-playbook {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.pm-closeout-context-strip {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+}
+
+.pm-closeout-context-strip--recovery {
+  border-left: 3px solid var(--amber);
+  background: color-mix(in srgb, var(--amber) 6%, var(--surface2));
+}
+
+.pm-closeout-context-strip--recovery p {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.pm-closeout-import-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pm-closeout-import-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.pm-closeout-import-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.pm-closeout-import-desc {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pm-closeout-import-strip .pm-import-help {
+  margin-top: 6px;
+}
+
+.pm-closeout-import-strip .pm-import-help-text {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.pm-closeout-import-strip .pm-import-msg {
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
+.pm-closeout-upload-btn {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  background: rgba(0, 101, 189, 0.12);
+  border: 1px solid rgba(0, 101, 189, 0.25);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.pm-closeout-upload-btn:hover {
+  background: rgba(0, 101, 189, 0.2);
+}
+
+.pm-closeout-no-trade {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.pm-closeout-no-trade input[type="checkbox"] {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.pm-closeout-stepper {
+  width: 100%;
+}
+
+.pm-closeout-stepper-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+.pm-closeout-stepper-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.pm-closeout-stepper-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--muted);
+  transition: color 0.15s;
+}
+
+.pm-closeout-stepper-btn:hover {
+  color: var(--text);
+}
+
+.pm-closeout-stepper-btn--active {
+  color: var(--text);
+}
+
+.pm-closeout-stepper-btn--active .pm-closeout-stepper-fill {
+  background: var(--brand);
+}
+
+.pm-closeout-stepper-btn--done .pm-closeout-stepper-fill {
+  background: var(--green);
+  opacity: 0.65;
+}
+
+.pm-closeout-stepper-track {
+  display: block;
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border2);
+  overflow: hidden;
+}
+
+.pm-closeout-stepper-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--border);
+  transition: background 0.15s;
+}
+
+.pm-closeout-stepper-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.pm-closeout-stepper-btn--active .pm-closeout-stepper-label {
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.pm-closeout-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pm-closeout-nav-spacer {
+  flex: 1;
+}
+
+.pm-closeout-finish {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+
+.pm-closeout-finish-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.pm-closeout-finish-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pm-closeout-finish-actions-right .pm-btn-return {
+  margin-top: 0;
+}
+
+.pm-closeout-main .pm-subtitle {
+  margin-bottom: 0;
+}
+
+
 .pm-import-card {
   padding: 0;
   overflow: hidden;
@@ -5141,6 +5438,58 @@ input.pm-slider::-moz-range-thumb {
   .pm-checkin-finish-actions-right .pm-btn-primary-sm {
     width: 100%;
     text-align: center;
+  }
+
+  .pm-closeout-layout {
+    padding: 20px 16px 48px;
+  }
+
+  .pm-closeout-header-row {
+    flex-direction: column;
+  }
+
+  .pm-closeout-metrics {
+    width: 100%;
+    text-align: left;
+  }
+
+  .pm-closeout-metrics-row {
+    justify-content: flex-start;
+  }
+
+  .pm-closeout-metrics-row > div,
+  .pm-closeout-metrics-playbook {
+    align-items: flex-start;
+  }
+
+  .pm-closeout-import-strip {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pm-closeout-upload-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .pm-closeout-stepper-label {
+    font-size: 8px;
+  }
+
+  .pm-closeout-finish-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pm-closeout-finish-actions-right {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .pm-closeout-finish-actions-right .pm-btn-save-review,
+  .pm-closeout-finish-actions-right .pm-btn-return {
+    width: 100%;
+    justify-content: center;
   }
 
   .premarket-grid {
