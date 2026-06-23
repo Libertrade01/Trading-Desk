@@ -29,7 +29,7 @@ export const CLOSEOUT_STEPS = [
     id: "journal",
     short: "Journal",
     label: "Journal",
-    desc: "Three short prompts. Don't overthink them.",
+    desc: "Four short prompts. Start with your read vs what happened.",
   },
 ];
 

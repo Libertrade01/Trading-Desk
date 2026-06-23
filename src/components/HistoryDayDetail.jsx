@@ -390,6 +390,10 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
             </div>
 
             <div className="history-journal-grid">
+              <div className="history-journal-card history-journal-card--wide">
+                <div className="history-notes-label hybrid-label-sm">Read vs reality</div>
+                <p>{post.readVsReality || "—"}</p>
+              </div>
               <div className="history-journal-card">
                 <div className="history-notes-label hybrid-label-sm">What went well</div>
                 <p>{post.wentWell || "—"}</p>

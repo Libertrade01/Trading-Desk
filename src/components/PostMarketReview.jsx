@@ -37,6 +37,7 @@ import {
 import { loadDllSettings } from "../lib/dll-recovery-settings";
 import { loadTraderSettings } from "../lib/trader-settings";
 import { todayKey } from "../lib/today-key";
+import { sliderValueColor } from "../lib/premarket-scoring";
 
 function headerDate() {
   return new Date().toLocaleDateString("en-US", {
@@ -55,8 +56,8 @@ function sectionDate() {
   }).toUpperCase();
 }
 
-function SliderField({ label, hint, minLabel, maxLabel, value, onChange }) {
-  const tone = value >= 7 ? "var(--green)" : value >= 5 ? "var(--amber)" : "var(--red)";
+function SliderField({ label, hint, minLabel, maxLabel, value, onChange, inverted }) {
+  const tone = sliderValueColor(value, inverted);
   return (
     <div className="pm-field">
       <div className="pm-field-top">
@@ -491,12 +492,23 @@ export default function PostMarketReview({ onBack }) {
                   <>
                     <SliderField label="Emotional state" minLabel="Off" maxLabel="Centered" value={form.emotionalState} onChange={(v) => set("emotionalState", v)} />
                     <SliderField label="Satisfaction" hint="With process, not P&L" minLabel="Low" maxLabel="High" value={form.satisfaction} onChange={(v) => set("satisfaction", v)} />
-                    <SliderField label="Frustration" minLabel="None" maxLabel="High" value={form.frustration} onChange={(v) => set("frustration", v)} />
+                    <SliderField label="Frustration" minLabel="None" maxLabel="High" value={form.frustration} onChange={(v) => set("frustration", v)} inverted />
                   </>
                 )}
 
                 {step.id === "journal" && (
                   <>
+                    <div className="pm-field">
+                      <div className="pm-field-label hybrid-label">Read vs reality</div>
+                      <div className="pm-field-hint">Your morning bias vs how the session actually played out.</div>
+                      <textarea
+                        value={form.readVsReality}
+                        onChange={(e) => set("readVsReality", e.target.value)}
+                        className="pm-textarea"
+                        placeholder="What you expected going in — what happened instead — and whether your levels and setup read held up."
+                        rows={3}
+                      />
+                    </div>
                     <div className="pm-field">
                       <div className="pm-field-label hybrid-label">What went well</div>
                       <textarea value={form.wentWell} onChange={(e) => set("wentWell", e.target.value)} className="pm-textarea" rows={3} />

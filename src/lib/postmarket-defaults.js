@@ -95,6 +95,7 @@ export const DEFAULT_POSTMARKET = {
   frustration: 4,
   /** null = unanswered; true/false drive risk adherence streak on save */
   riskPlanFollowed: null,
+  readVsReality: "",
   wentWell: "",
   wentWrong: "",
   oneLesson: "",
