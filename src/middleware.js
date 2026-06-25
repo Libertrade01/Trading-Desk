@@ -13,8 +13,17 @@ const PUBLIC_PATHS = [
   "/auth/callback",
 ];
 
+/** Logged-in users are redirected away from these paths only (not recovery flows). */
+const AUTH_REDIRECT_IF_LOGGED_IN = ["/login", "/signup"];
+
 function isPublicPath(pathname) {
   return PUBLIC_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
+}
+
+function shouldRedirectLoggedInUser(pathname) {
+  return AUTH_REDIRECT_IF_LOGGED_IN.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
 }
@@ -46,7 +55,7 @@ export async function middleware(request) {
   }
 
   if (isPublicPath(pathname)) {
-    if (user && !AUTH_DISABLED) {
+    if (user && !AUTH_DISABLED && shouldRedirectLoggedInUser(pathname)) {
       return NextResponse.redirect(new URL("/", request.url));
     }
     return supabaseResponse;

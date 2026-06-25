@@ -17,6 +17,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     try {
       const supabase = createClient();
+      // Supabase redirect allow list must include /auth/callback and /reset-password
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
         email.trim(),
         { redirectTo: `${getAuthCallbackUrl()}?type=recovery` }

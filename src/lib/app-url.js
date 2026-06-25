@@ -14,3 +14,7 @@ export function getAppUrl() {
 export function getAuthCallbackUrl() {
   return `${getAppUrl()}/auth/callback`;
 }
+
+export function getResetPasswordUrl() {
+  return `${getAppUrl()}/reset-password`;
+}
