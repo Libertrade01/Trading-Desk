@@ -1,4 +1,5 @@
 import { VALID_SETUPS, SETUP_IMPROVISED, SETUP_INVALID } from "./setup-options";
+import { getPlaybookSetupNames } from "./trader-profile";
 
 const SETUP_SHORT = {
   "Peak and Fail (PAF)": "PAF",
@@ -10,8 +11,12 @@ const SETUP_SHORT = {
   Untagged: "Untagged",
 };
 
+function playbookSetups() {
+  return getPlaybookSetupNames();
+}
+
 export function setupTagColor(setupName) {
-  if (VALID_SETUPS.includes(setupName)) return "var(--green)";
+  if (playbookSetups().includes(setupName)) return "var(--green)";
   if (setupName === SETUP_IMPROVISED) return "var(--amber)";
   if (setupName === SETUP_INVALID) return "var(--red)";
   return "var(--muted)";
@@ -49,7 +54,7 @@ export const SETUP_CATEGORY = {
 /** Unknown / legacy tags count as invalid — fresh playbook-only tracking from here. */
 export function categorizeSetup(value) {
   if (value == null || String(value).trim() === "") return SETUP_CATEGORY.UNTAGGED;
-  if (VALID_SETUPS.includes(value)) return SETUP_CATEGORY.PLAYBOOK;
+  if (playbookSetups().includes(value)) return SETUP_CATEGORY.PLAYBOOK;
   if (value === SETUP_IMPROVISED) return SETUP_CATEGORY.IMPROVISED;
   if (value === SETUP_INVALID) return SETUP_CATEGORY.INVALID;
   return SETUP_CATEGORY.INVALID;

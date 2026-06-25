@@ -1,3 +1,19 @@
+export async function getUserAppData(supabase, userId, key) {
+  const { data: rows, error } = await supabase
+    .from("app_data")
+    .select("value")
+    .eq("user_id", userId)
+    .eq("key", key)
+    .order("updated_at", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    throw new Error(error.message || "Failed to read app_data");
+  }
+
+  return rows?.[0] ?? null;
+}
+
 /**
  * Reliable app_data write — select-then-update/insert (avoids partial-index upsert issues).
  */

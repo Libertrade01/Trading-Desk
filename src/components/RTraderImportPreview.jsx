@@ -3,11 +3,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { formatLimaTime } from "../lib/trade-time";
 import {
-  SETUP_OPTIONS,
   MGMT_OPTIONS,
   POST_EXIT_OPTIONS,
   ACCOUNT_TYPE_OPTIONS,
 } from "../lib/trade-import-options";
+import { buildSetupOptions } from "../lib/setup-options";
+import { loadTraderProfile, getPlaybookSetupNames } from "../lib/trader-profile";
 import { loadTraderSettings, saveTraderSettings } from "../lib/trader-settings";
 import {
   summarizeSetupAdherence,
@@ -46,15 +47,20 @@ export default function RTraderImportPreview({
   const [defaultRisk, setDefaultRisk] = useState("15");
   const [accountType, setAccountType] = useState(account?.account_type || "eval");
   const [importing, setImporting] = useState(false);
+  const [setupOptions, setSetupOptions] = useState(() => buildSetupOptions());
 
   useEffect(() => {
     if (!open || !incomingTrades.length) return;
     let cancelled = false;
     (async () => {
-      const settings = await loadTraderSettings();
+      const [settings] = await Promise.all([
+        loadTraderSettings(),
+        loadTraderProfile(),
+      ]);
       if (cancelled) return;
       const risk = settings.defaultRisk;
       setDefaultRisk(String(risk));
+      setSetupOptions(buildSetupOptions(getPlaybookSetupNames()));
       setPendingTrades(initTrades(incomingTrades, risk));
       setAccountType(account?.account_type || "eval");
       setImporting(false);
@@ -220,7 +226,7 @@ export default function RTraderImportPreview({
                         value={t.setup || ""}
                         onChange={(e) => updateTrade(i, { setup: e.target.value || null })}
                       >
-                        {SETUP_OPTIONS.map((o) => (
+                        {setupOptions.map((o) => (
                           <option key={o.value || "empty"} value={o.value}>{o.label}</option>
                         ))}
                       </select>

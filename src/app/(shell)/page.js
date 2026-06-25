@@ -8,6 +8,7 @@ const SECTION_ROUTES = {
   premarket: "/premarket",
   dailyplan: "/plan",
   postmarket: "/postmarket",
+  process: "/settings?section=process",
 };
 
 export default function HomePage() {

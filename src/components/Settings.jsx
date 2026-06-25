@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   loadDllSettings,
   saveDllSettings,
@@ -19,6 +20,40 @@ import {
 } from "../lib/trader-settings";
 import { formatRecoveryUsd } from "../lib/dll-recovery";
 import { ACCOUNT_TYPE_OPTIONS } from "../lib/trade-import-options";
+import MyProcessSettings from "./MyProcessSettings";
+
+const SECTIONS = [
+  {
+    id: "process",
+    label: "Process",
+    hint: "Playbook & flags",
+    title: "Your playbook",
+    desc: "Setups, commitments, desk checks, streaks, and close-out flags.",
+  },
+  {
+    id: "desk",
+    label: "Desk",
+    hint: "Timezone & imports",
+    title: "Desk setup",
+    desc: "When your trading day rolls over and how rTrader imports are pre-filled.",
+  },
+  {
+    id: "risk",
+    label: "Risk",
+    hint: "Daily loss limits",
+    title: "Daily loss & recovery",
+    desc: "Hard limits for the session plan and automatic half-size mode after a full DLL hit.",
+  },
+  {
+    id: "accounts",
+    label: "Accounts",
+    hint: "Commissions & types",
+    title: "Trading accounts",
+    desc: "Commission rates, account types, and which account rTrader imports attach to.",
+  },
+];
+
+const VALID_SECTIONS = new Set(SECTIONS.map((s) => s.id));
 
 function headerDate() {
   return new Date().toLocaleDateString("en-US", {
@@ -91,6 +126,9 @@ function AccountCard({
         <span className="settings-account-name">{account.name || "Untitled account"}</span>
         <span className="settings-account-meta">
           {account.forImport ? "Import default" : account.account_type}
+        </span>
+        <span className="settings-account-chevron" aria-hidden="true">
+          {expanded ? "−" : "+"}
         </span>
       </button>
 
@@ -204,7 +242,34 @@ function AccountCard({
   );
 }
 
-export default function Settings() {
+function SettingsSidebar({ active, onChange }) {
+  return (
+    <nav className="settings-sidebar" aria-label="Settings sections">
+      <div className="settings-sidebar-label hybrid-label-sm">Configure</div>
+      {SECTIONS.map((section) => (
+        <button
+          key={section.id}
+          type="button"
+          className={`settings-sidebar-item${active === section.id ? " active" : ""}`}
+          onClick={() => onChange(section.id)}
+          aria-current={active === section.id ? "page" : undefined}
+        >
+          <span className="settings-sidebar-item-label">{section.label}</span>
+          <span className="settings-sidebar-item-hint">{section.hint}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+function SettingsInner({ initialSection = "desk" }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const sectionParam = searchParams.get("section");
+  const resolvedInitial =
+    sectionParam && VALID_SECTIONS.has(sectionParam) ? sectionParam : initialSection;
+
+  const [activeSection, setActiveSection] = useState(resolvedInitial);
   const [dllForm, setDllForm] = useState({
     fullDll: String(DEFAULT_DLL_SETTINGS.fullDll),
     halfDll: String(DEFAULT_DLL_SETTINGS.halfDll),
@@ -216,6 +281,7 @@ export default function Settings() {
   const [expandedAccount, setExpandedAccount] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const markDirty = useCallback(() => setSaved(false), []);
 
@@ -223,6 +289,20 @@ export default function Settings() {
     setDllForm((f) => ({ ...f, [key]: value }));
     markDirty();
   }, [markDirty]);
+
+  const selectSection = useCallback(
+    (id) => {
+      setActiveSection(id);
+      router.replace(`/settings?section=${id}`, { scroll: false });
+    },
+    [router]
+  );
+
+  useEffect(() => {
+    if (sectionParam && VALID_SECTIONS.has(sectionParam) && sectionParam !== activeSection) {
+      setActiveSection(sectionParam);
+    }
+  }, [sectionParam, activeSection]);
 
   useEffect(() => {
     (async () => {
@@ -262,6 +342,7 @@ export default function Settings() {
     });
     setAccounts((rows) => [...rows, next]);
     setExpandedAccount(next.id);
+    selectSection("accounts");
     markDirty();
   };
 
@@ -299,23 +380,32 @@ export default function Settings() {
       return;
     }
 
-    await Promise.all([
-      saveDllSettings(dllCheck.settings),
-      saveTraderSettings(traderCheck.settings),
-    ]);
+    setSaving(true);
+    try {
+      await Promise.all([
+        saveDllSettings(dllCheck.settings),
+        saveTraderSettings(traderCheck.settings),
+      ]);
 
-    setDllForm({
-      fullDll: String(dllCheck.settings.fullDll),
-      halfDll: String(dllCheck.settings.halfDll),
-      recoveryEnabled: dllCheck.settings.recoveryEnabled,
-    });
-    setDefaultRisk(String(traderCheck.settings.defaultRisk));
-    setTradingDayTimezone(traderCheck.settings.tradingDayTimezone);
-    setAccounts(traderCheck.settings.accounts);
-    setSaved(true);
+      setDllForm({
+        fullDll: String(dllCheck.settings.fullDll),
+        halfDll: String(dllCheck.settings.halfDll),
+        recoveryEnabled: dllCheck.settings.recoveryEnabled,
+      });
+      setDefaultRisk(String(traderCheck.settings.defaultRisk));
+      setTradingDayTimezone(traderCheck.settings.tradingDayTimezone);
+      setAccounts(traderCheck.settings.accounts);
+      setSaved(true);
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) return <div className="pm-loading">Loading...</div>;
+
+  const importAccount = accounts.find((a) => a.forImport) || accounts[0];
+  const meta = SECTIONS.find((s) => s.id === activeSection) || SECTIONS[0];
+  const showDeskSave = activeSection !== "process";
 
   return (
     <div className="premarket-page hybrid-page settings-page">
@@ -325,166 +415,177 @@ export default function Settings() {
 
       <div className="daily-plan-content settings-content">
         <div className="pm-eyebrow hybrid-eyebrow">Settings</div>
-        <h1 className="hybrid-page-title">YOUR RULES.</h1>
-        <p className="pm-subtitle">
-          Risk limits, import defaults, and accounts — synced to your desk.
+        <h1 className="hybrid-page-title">YOUR DESK.</h1>
+        <p className="pm-subtitle settings-lead">
+          Process, desk rules, risk limits, and accounts — everything that shapes your trading day.
         </p>
 
-        {/* 01 — highest-level risk rules */}
-        <section className="pm-card">
-          <div className="pm-section-head">
-            <span className="pm-section-num">01</span>
-            <div>
-              <h2 className="pm-section-title hybrid-section-title">Daily loss &amp; recovery</h2>
-              <p className="pm-section-desc">
-                Governs session plan limits and automatic half-size recovery after a full DLL hit.
-              </p>
+        <div className="settings-layout">
+          <SettingsSidebar active={activeSection} onChange={selectSection} />
+
+          <div className="settings-main">
+            <div className="settings-main-head">
+              <h2 className="pm-section-title hybrid-section-title">{meta.title}</h2>
+              <p className="pm-section-desc">{meta.desc}</p>
             </div>
+
+            {activeSection === "process" && (
+              <div className="settings-panel settings-panel--process">
+                <MyProcessSettings standalone />
+              </div>
+            )}
+
+            {activeSection === "desk" && (
+              <section className="pm-card settings-panel">
+                <div className="settings-field-block">
+                  <div className="settings-field-block-label hybrid-label-sm">Trading day</div>
+                  <div className="pm-field">
+                    <div className="pm-field-label hybrid-label">Calendar timezone</div>
+                    <select
+                      value={tradingDayTimezone}
+                      onChange={(e) => {
+                        setTradingDayTimezone(e.target.value);
+                        markDirty();
+                      }}
+                      className="pm-text-input settings-timezone-select"
+                    >
+                      {TRADING_DAY_TIMEZONE_OPTIONS.map((opt) => (
+                        <option key={opt.id} value={opt.id}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="pm-field-hint">
+                      Defines &ldquo;today&rdquo; for check-in, close out, history, and analytics. Import CSV dates are unchanged.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="settings-field-divider" />
+
+                <div className="settings-field-block">
+                  <div className="settings-field-block-label hybrid-label-sm">Close-out imports</div>
+                  <div className="pm-field">
+                    <div className="pm-field-label hybrid-label">Default risk (stop points)</div>
+                    <input
+                      type="text"
+                      value={defaultRisk}
+                      onChange={(e) => {
+                        setDefaultRisk(e.target.value);
+                        markDirty();
+                      }}
+                      className="pm-text-input settings-default-risk-input"
+                      placeholder="15"
+                    />
+                    <p className="pm-field-hint">
+                      Pre-fills stop distance on every rTrader import. You can still edit per trade in the preview.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {activeSection === "risk" && (
+              <section className="pm-card settings-panel">
+                <div className="pm-field-grid">
+                  <div>
+                    <div className="pm-field-label hybrid-label">Full-size DLL ($)</div>
+                    <input
+                      type="text"
+                      value={dllForm.fullDll}
+                      onChange={(e) => setDll("fullDll", e.target.value)}
+                      className="pm-text-input"
+                      placeholder="750"
+                    />
+                    <p className="pm-field-hint">
+                      Enters recovery when net P&amp;L ≤ −
+                      {formatRecoveryUsd(Number(dllForm.fullDll) || DEFAULT_DLL_SETTINGS.fullDll)}.
+                    </p>
+                  </div>
+                  <div>
+                    <div className="pm-field-label hybrid-label">Recovery DLL ($)</div>
+                    <input
+                      type="text"
+                      value={dllForm.halfDll}
+                      onChange={(e) => setDll("halfDll", e.target.value)}
+                      className="pm-text-input"
+                      placeholder="400"
+                    />
+                    <p className="pm-field-hint">Max daily loss while in recovery. Session plan blocks above this.</p>
+                  </div>
+                </div>
+
+                <div className="pm-risk-rails">
+                  <ToggleField
+                    label="Automatic recovery"
+                    hint="Hitting full DLL enters recovery; exit automatically after 50% of drawdown is recovered."
+                    value={dllForm.recoveryEnabled}
+                    onChange={(v) => setDll("recoveryEnabled", v)}
+                  />
+                </div>
+              </section>
+            )}
+
+            {activeSection === "accounts" && (
+              <section className="pm-card settings-panel">
+                {importAccount && (
+                  <div className="settings-accounts-summary">
+                    <span className="hybrid-label-sm">Import default</span>
+                    <strong>{importAccount.name || "Untitled account"}</strong>
+                    <span className="settings-accounts-summary-meta">{importAccount.account_type}</span>
+                  </div>
+                )}
+
+                <div className="settings-accounts-list">
+                  {accounts.map((account, index) => (
+                    <AccountCard
+                      key={account.id}
+                      account={account}
+                      index={index}
+                      expanded={expandedAccount === account.id}
+                      onToggle={() =>
+                        setExpandedAccount((id) => (id === account.id ? null : account.id))
+                      }
+                      onChange={updateAccount}
+                      onDelete={deleteAccount}
+                      onSetImport={setImportAccount}
+                      canDelete={accounts.length > 1}
+                    />
+                  ))}
+                </div>
+
+                <button type="button" className="pm-add-btn" onClick={addAccount}>
+                  + Add account
+                </button>
+              </section>
+            )}
+
+            {showDeskSave && (
+              <div className={`settings-sticky-save${saved ? "" : " settings-sticky-save--dirty"}`}>
+                <p className="settings-sticky-save-hint">
+                  {saved ? "All changes saved to your desk." : "Unsaved changes — save before leaving."}
+                </p>
+                <button
+                  type="button"
+                  className="pm-btn-save-review"
+                  onClick={handleSave}
+                  disabled={saving}
+                >
+                  {saving ? "Saving…" : saved ? "✓ Saved" : "Save settings"}
+                </button>
+              </div>
+            )}
           </div>
-
-          <div className="pm-field-grid">
-            <div>
-              <div className="pm-field-label hybrid-label">Full-size DLL ($)</div>
-              <input
-                type="text"
-                value={dllForm.fullDll}
-                onChange={(e) => setDll("fullDll", e.target.value)}
-                className="pm-text-input"
-                placeholder="750"
-              />
-              <p className="pm-field-hint">
-                Enters recovery when net P&amp;L ≤ −
-                {formatRecoveryUsd(Number(dllForm.fullDll) || DEFAULT_DLL_SETTINGS.fullDll)}.
-              </p>
-            </div>
-            <div>
-              <div className="pm-field-label hybrid-label">Recovery DLL ($)</div>
-              <input
-                type="text"
-                value={dllForm.halfDll}
-                onChange={(e) => setDll("halfDll", e.target.value)}
-                className="pm-text-input"
-                placeholder="400"
-              />
-              <p className="pm-field-hint">Max daily loss while in recovery. Session plan blocks above this.</p>
-            </div>
-          </div>
-
-          <div className="pm-risk-rails">
-            <ToggleField
-              label="Automatic recovery"
-              hint="Hitting full DLL enters recovery; exit automatically after 50% of drawdown is recovered."
-              value={dllForm.recoveryEnabled}
-              onChange={(v) => setDll("recoveryEnabled", v)}
-            />
-          </div>
-        </section>
-
-        {/* 02 — trading day calendar */}
-        <section className="pm-card">
-          <div className="pm-section-head">
-            <span className="pm-section-num">02</span>
-            <div>
-              <h2 className="pm-section-title hybrid-section-title">Trading day</h2>
-              <p className="pm-section-desc">
-                Which timezone defines &ldquo;today&rdquo; for check-in, close out, history, and analytics ranges.
-              </p>
-            </div>
-          </div>
-
-          <div className="pm-field">
-            <div className="pm-field-label hybrid-label">Calendar timezone</div>
-            <select
-              value={tradingDayTimezone}
-              onChange={(e) => {
-                setTradingDayTimezone(e.target.value);
-                markDirty();
-              }}
-              className="pm-text-input settings-timezone-select"
-            >
-              {TRADING_DAY_TIMEZONE_OPTIONS.map((opt) => (
-                <option key={opt.id} value={opt.id}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <p className="pm-field-hint">
-              Trade dates in your import CSV are unchanged — this only affects desk workflows and date filters.
-            </p>
-          </div>
-        </section>
-
-        {/* 03 — per-trade import default */}
-        <section className="pm-card">
-          <div className="pm-section-head">
-            <span className="pm-section-num">03</span>
-            <div>
-              <h2 className="pm-section-title hybrid-section-title">Import defaults</h2>
-              <p className="pm-section-desc">
-                Pre-fills stop distance when tagging rTrader imports in close out.
-              </p>
-            </div>
-          </div>
-
-          <div className="pm-field">
-            <div className="pm-field-label hybrid-label">Default risk (stop points)</div>
-            <input
-              type="text"
-              value={defaultRisk}
-              onChange={(e) => {
-                setDefaultRisk(e.target.value);
-                markDirty();
-              }}
-              className="pm-text-input settings-default-risk-input"
-              placeholder="15"
-            />
-            <p className="pm-field-hint">
-              Applied to every trade on import. You can still edit per trade in the preview.
-            </p>
-          </div>
-        </section>
-
-        {/* 04 — accounts & commissions */}
-        <section className="pm-card">
-          <div className="pm-section-head">
-            <span className="pm-section-num">04</span>
-            <div>
-              <h2 className="pm-section-title hybrid-section-title">Trading accounts</h2>
-              <p className="pm-section-desc">
-                Commission rates and the account used for imports. Analytics uses these for net P&amp;L.
-              </p>
-            </div>
-          </div>
-
-          <div className="settings-accounts-list">
-            {accounts.map((account, index) => (
-              <AccountCard
-                key={account.id}
-                account={account}
-                index={index}
-                expanded={expandedAccount === account.id}
-                onToggle={() =>
-                  setExpandedAccount((id) => (id === account.id ? null : account.id))
-                }
-                onChange={updateAccount}
-                onDelete={deleteAccount}
-                onSetImport={setImportAccount}
-                canDelete={accounts.length > 1}
-              />
-            ))}
-          </div>
-
-          <button type="button" className="pm-add-btn" onClick={addAccount}>
-            + Add account
-          </button>
-        </section>
-
-        <div className="pm-footer pm-footer-postmarket">
-          <button type="button" className="pm-btn-save-review" onClick={handleSave}>
-            {saved ? "✓ Saved" : "Save settings"}
-          </button>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Settings({ initialSection = "desk" }) {
+  return (
+    <Suspense fallback={<div className="pm-loading">Loading...</div>}>
+      <SettingsInner initialSection={initialSection} />
+    </Suspense>
   );
 }

@@ -6,7 +6,6 @@ import {
   BIAS_OPTIONS,
   VOLATILITY_OPTIONS,
   LEVEL_TYPE_OPTIONS,
-  VALID_SETUPS,
   DEFAULT_DAILY_PLAN,
   newKeyLevel,
   newSetup,
@@ -21,6 +20,16 @@ import {
 import { loadDllSettings, DEFAULT_DLL_SETTINGS } from "../lib/dll-recovery-settings";
 import { notifySessionSaved } from "../lib/session-events";
 import { todayKey } from "../lib/today-key";
+import {
+  loadTraderProfile,
+  PROFILE_UPDATED_EVENT,
+  getPlaybookSetupNames,
+  getEnabledBiasItems,
+  riskRailsReady,
+  biasChecklistReady,
+  commitmentsReady,
+  migratePlanCommitments,
+} from "../lib/trader-profile";
 import DailyPlanStepper, { PLAN_STEPS } from "./DailyPlanStepper";
 
 async function loadData(key, fallback) {
@@ -86,72 +95,61 @@ function ToggleField({ label, hint, value, onChange }) {
   );
 }
 
-function PlanProgressMetrics({ form }) {
-  const chartMarks =
-    (form.biasMarkedValueArea ? 1 : 0) +
-    (form.biasMarkedNodesLvns ? 1 : 0) +
-    (form.biasMarkedWeeklyProfile ? 1 : 0);
+function PlanProgressMetrics({ form, profile }) {
+  const biasItems = getEnabledBiasItems(profile);
+  const chartMarks = biasItems.filter((item) => form[item.fieldKey]).length;
+  const chartTotal = biasItems.length || 0;
+  const riskTotal = profile?.showColdTurkeyBlocker ? 2 : 1;
   const riskRails =
-    (form.maxDailyLossSetInBroker ? 1 : 0) + (form.coldTurkeyBlockerSet ? 1 : 0);
-  const commitments =
-    (form.selfCommitmentAccepted ? 1 : 0) + (form.selfRegulatedCommitmentAccepted ? 1 : 0);
+    (form.maxDailyLossSetInBroker ? 1 : 0) +
+    (profile?.showColdTurkeyBlocker && form.coldTurkeyBlockerSet ? 1 : 0);
+  const commitmentTotal = profile?.commitments?.length || 0;
+  const commitments = commitmentTotal
+    ? Object.values(form.commitmentAccepted || {}).filter(Boolean).length
+    : 0;
 
   return (
     <aside className="pm-plan-metrics" aria-label="Plan completion">
-      <div className="pm-plan-metrics-row">
-        <span className="pm-plan-metrics-label hybrid-label-sm">Chart marks</span>
-        <span className="pm-plan-metrics-value">
-          <span className={chartMarks === 3 ? "pos" : ""}>{chartMarks}</span>
-          <span className="pm-plan-metrics-muted"> / 3</span>
-        </span>
-      </div>
+      {chartTotal > 0 && (
+        <div className="pm-plan-metrics-row">
+          <span className="pm-plan-metrics-label hybrid-label-sm">Chart marks</span>
+          <span className="pm-plan-metrics-value">
+            <span className={chartMarks === chartTotal ? "pos" : ""}>{chartMarks}</span>
+            <span className="pm-plan-metrics-muted"> / {chartTotal}</span>
+          </span>
+        </div>
+      )}
       <div className="pm-plan-metrics-row">
         <span className="pm-plan-metrics-label hybrid-label-sm">Risk rails</span>
         <span className="pm-plan-metrics-value">
-          <span className={riskRails === 2 ? "pos" : ""}>{riskRails}</span>
-          <span className="pm-plan-metrics-muted"> / 2</span>
+          <span className={riskRails === riskTotal ? "pos" : ""}>{riskRails}</span>
+          <span className="pm-plan-metrics-muted"> / {riskTotal}</span>
         </span>
       </div>
-      <div className="pm-plan-metrics-row">
-        <span className="pm-plan-metrics-label hybrid-label-sm">Commitments</span>
-        <span className="pm-plan-metrics-value">
-          <span className={commitments === 2 ? "pos" : commitments > 0 ? "" : "neg"}>{commitments}</span>
-          <span className="pm-plan-metrics-muted"> / 2</span>
-        </span>
-      </div>
+      {commitmentTotal > 0 && (
+        <div className="pm-plan-metrics-row">
+          <span className="pm-plan-metrics-label hybrid-label-sm">Commitments</span>
+          <span className="pm-plan-metrics-value">
+            <span className={commitments === commitmentTotal ? "pos" : commitments > 0 ? "" : "neg"}>
+              {commitments}
+            </span>
+            <span className="pm-plan-metrics-muted"> / {commitmentTotal}</span>
+          </span>
+        </div>
+      )}
     </aside>
   );
 }
 
 const RISK_RAILS_MESSAGE = "I can not trade until risk rails are in place";
-const BIAS_CHECKLIST_MESSAGE =
-  "Complete the chart marks checklist (value area, nodes/LVNs, weekly profile) before saving the plan.";
-const COMMITMENT_MESSAGE = "Confirm both commitments before saving the plan.";
-const COMMITMENT_TEXT =
-  "I believe in myself and I respect myself enough to follow my plan. Following my plans allows me and my family to live our dream.";
-const COMMITMENT_TEXT_2 =
-  "I will not place any risk when I am not in a self-regulated state.";
+const BIAS_CHECKLIST_MESSAGE = "Complete the chart marks checklist before saving the plan.";
+const COMMITMENT_MESSAGE = "Confirm all commitments before saving the plan.";
 const BIAS_GUIDANCE =
   "This is the bias of my plan — where is price in relation to these levels? Where is volume building and where does price not want to go?";
 
-function riskRailsReady(form) {
-  return form.maxDailyLossSetInBroker && form.coldTurkeyBlockerSet;
-}
-
-function biasChecklistReady(form) {
-  return (
-    form.biasMarkedValueArea &&
-    form.biasMarkedNodesLvns &&
-    form.biasMarkedWeeklyProfile
-  );
-}
-
-function commitmentsReady(form) {
-  return form.selfCommitmentAccepted && form.selfRegulatedCommitmentAccepted;
-}
-
 export default function DailyPlan({ onBack }) {
   const [form, setForm] = useState(DEFAULT_DAILY_PLAN);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [recoveryStatus, setRecoveryStatus] = useState(null);
@@ -169,16 +167,21 @@ export default function DailyPlan({ onBack }) {
 
   useEffect(() => {
     (async () => {
-      const [data, recoveryState, settings] = await Promise.all([
+      const [data, recoveryState, settings, traderProfile] = await Promise.all([
         loadData(`daily-plan-${todayKey()}`, null),
         loadRecoveryState(),
         loadDllSettings(),
+        loadTraderProfile(),
       ]);
+      setProfile(traderProfile);
       setDllSettings(settings);
       const status = getRecoveryStatus(recoveryState, settings);
       setRecoveryStatus(status);
 
-      let next = { ...DEFAULT_DAILY_PLAN, ...(data || {}) };
+      let next = migratePlanCommitments(
+        { ...DEFAULT_DAILY_PLAN, ...(data || {}) },
+        traderProfile
+      );
       if (
         status.active &&
         (!next.maxDailyLoss || !next.dllRecoveryApplied)
@@ -194,6 +197,14 @@ export default function DailyPlan({ onBack }) {
     })();
   }, []);
 
+  useEffect(() => {
+    const refreshProfile = () => {
+      loadTraderProfile({ force: true }).then(setProfile).catch(() => {});
+    };
+    window.addEventListener(PROFILE_UPDATED_EVENT, refreshProfile);
+    return () => window.removeEventListener(PROFILE_UPDATED_EVENT, refreshProfile);
+  }, []);
+
   const persistPlan = useCallback(async (formData, recoveryActive = recoveryStatus?.active) => {
     await saveData(`daily-plan-${todayKey()}`, {
       date: todayKey(),
@@ -205,15 +216,15 @@ export default function DailyPlan({ onBack }) {
   }, [recoveryStatus]);
 
   const handleSave = async () => {
-    if (!riskRailsReady(form)) {
+    if (!riskRailsReady(form, profile)) {
       window.alert(RISK_RAILS_MESSAGE);
       return false;
     }
-    if (!biasChecklistReady(form)) {
+    if (!biasChecklistReady(form, profile)) {
       window.alert(BIAS_CHECKLIST_MESSAGE);
       return false;
     }
-    if (!commitmentsReady(form)) {
+    if (!commitmentsReady(form, profile)) {
       window.alert(COMMITMENT_MESSAGE);
       return false;
     }
@@ -255,7 +266,11 @@ export default function DailyPlan({ onBack }) {
     set("setups", form.setups.map((s) => (s.id === id ? { ...s, ...patch } : s)));
   const removeSetup = (id) => set("setups", form.setups.filter((s) => s.id !== id));
 
-  if (loading) return <div className="pm-loading">Loading...</div>;
+  if (loading || !profile) return <div className="pm-loading">Loading...</div>;
+
+  const playbookSetups = getPlaybookSetupNames(profile);
+  const biasItems = getEnabledBiasItems(profile);
+  const commitmentList = profile.commitments || [];
 
   return (
     <div className="premarket-page hybrid-page">
@@ -271,7 +286,7 @@ export default function DailyPlan({ onBack }) {
               <h1 className="hybrid-page-title">THE PLAN.</h1>
               <p className="pm-subtitle">Lock in bias, levels, and risk before the open.</p>
             </div>
-            <PlanProgressMetrics form={form} />
+            <PlanProgressMetrics form={form} profile={profile} />
           </div>
 
           {recoveryStatus?.active && (
@@ -303,37 +318,25 @@ export default function DailyPlan({ onBack }) {
               <div className="pm-section-panel-body">
                 {step.id === "bias" && (
                   <>
-                    <div className="pm-field">
-                      <div className="pm-field-label hybrid-label">Profiles</div>
-                      <p className="pm-field-hint pm-bias-guidance">{BIAS_GUIDANCE}</p>
-                      <div className="pm-bias-checklist">
-                        <label className="pm-commitment-check">
-                          <input
-                            type="checkbox"
-                            checked={form.biasMarkedValueArea}
-                            onChange={(e) => set("biasMarkedValueArea", e.target.checked)}
-                          />
-                          <span className="pm-commitment-text">Mark previous day Value Area</span>
-                        </label>
-                        <label className="pm-commitment-check">
-                          <input
-                            type="checkbox"
-                            checked={form.biasMarkedNodesLvns}
-                            onChange={(e) => set("biasMarkedNodesLvns", e.target.checked)}
-                          />
-                          <span className="pm-commitment-text">Mark prominent nodes and LVNs</span>
-                        </label>
-                        <label className="pm-commitment-check">
-                          <input
-                            type="checkbox"
-                            checked={form.biasMarkedWeeklyProfile}
-                            onChange={(e) => set("biasMarkedWeeklyProfile", e.target.checked)}
-                          />
-                          <span className="pm-commitment-text">Mark weekly profile levels</span>
-                        </label>
+                    {biasItems.length > 0 && (
+                      <div className="pm-field">
+                        <div className="pm-field-label hybrid-label">Profiles</div>
+                        <p className="pm-field-hint pm-bias-guidance">{BIAS_GUIDANCE}</p>
+                        <div className="pm-bias-checklist">
+                          {biasItems.map((item) => (
+                            <label key={item.id} className="pm-commitment-check">
+                              <input
+                                type="checkbox"
+                                checked={!!form[item.fieldKey]}
+                                onChange={(e) => set(item.fieldKey, e.target.checked)}
+                              />
+                              <span className="pm-commitment-text">{item.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <p className="pm-commitment-hint">All items required to save today&apos;s plan.</p>
                       </div>
-                      <p className="pm-commitment-hint">All three required to save today&apos;s plan.</p>
-                    </div>
+                    )}
                     <div className="pm-field">
                       <div className="pm-field-label hybrid-label">Directional bias</div>
                       <select value={form.directionalBias} onChange={(e) => set("directionalBias", e.target.value)} className="pm-select">
@@ -403,7 +406,7 @@ export default function DailyPlan({ onBack }) {
                 {step.id === "setups" && (
                   <>
                     <ul className="pm-valid-setups pm-valid-setups--inline">
-                      {VALID_SETUPS.map((setup) => (
+                      {playbookSetups.map((setup) => (
                         <li key={setup}>{setup}</li>
                       ))}
                     </ul>
@@ -509,11 +512,13 @@ export default function DailyPlan({ onBack }) {
                         value={form.maxDailyLossSetInBroker}
                         onChange={(v) => set("maxDailyLossSetInBroker", v)}
                       />
-                      <ToggleField
-                        label="Cold Turkey Blocker Set"
-                        value={form.coldTurkeyBlockerSet}
-                        onChange={(v) => set("coldTurkeyBlockerSet", v)}
-                      />
+                      {profile.showColdTurkeyBlocker && (
+                        <ToggleField
+                          label="Cold Turkey Blocker Set"
+                          value={form.coldTurkeyBlockerSet}
+                          onChange={(v) => set("coldTurkeyBlockerSet", v)}
+                        />
+                      )}
                     </div>
                   </>
                 )}
@@ -540,28 +545,29 @@ export default function DailyPlan({ onBack }) {
                         rows={3}
                       />
                     </div>
-                    <section
-                      className={`pm-commitment pm-commitment--in-panel${commitmentsReady(form) ? " pm-commitment--checked" : ""}`}
-                    >
-                      <div className="pm-commitment-eyebrow hybrid-eyebrow">Commitment</div>
-                      <label className="pm-commitment-check">
-                        <input
-                          type="checkbox"
-                          checked={form.selfCommitmentAccepted}
-                          onChange={(e) => set("selfCommitmentAccepted", e.target.checked)}
-                        />
-                        <span className="pm-commitment-text">{COMMITMENT_TEXT}</span>
-                      </label>
-                      <label className="pm-commitment-check">
-                        <input
-                          type="checkbox"
-                          checked={form.selfRegulatedCommitmentAccepted}
-                          onChange={(e) => set("selfRegulatedCommitmentAccepted", e.target.checked)}
-                        />
-                        <span className="pm-commitment-text">{COMMITMENT_TEXT_2}</span>
-                      </label>
-                      <p className="pm-commitment-hint">Both required to save today&apos;s plan.</p>
-                    </section>
+                    {commitmentList.length > 0 && (
+                      <section
+                        className={`pm-commitment pm-commitment--in-panel${commitmentsReady(form, profile) ? " pm-commitment--checked" : ""}`}
+                      >
+                        <div className="pm-commitment-eyebrow hybrid-eyebrow">Commitment</div>
+                        {commitmentList.map((commitment) => (
+                          <label key={commitment.id} className="pm-commitment-check">
+                            <input
+                              type="checkbox"
+                              checked={!!form.commitmentAccepted?.[commitment.id]}
+                              onChange={(e) =>
+                                set("commitmentAccepted", {
+                                  ...(form.commitmentAccepted || {}),
+                                  [commitment.id]: e.target.checked,
+                                })
+                              }
+                            />
+                            <span className="pm-commitment-text">{commitment.text}</span>
+                          </label>
+                        ))}
+                        <p className="pm-commitment-hint">All required to save today&apos;s plan.</p>
+                      </section>
+                    )}
                   </>
                 )}
               </div>

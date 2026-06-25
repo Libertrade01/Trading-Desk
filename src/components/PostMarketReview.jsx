@@ -2,12 +2,16 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
-  BEHAVIORAL_FLAG_CATEGORIES,
-  BEHAVIORAL_FLAGS,
   countBehavioralFlags,
   DEFAULT_POSTMARKET,
   normalizePostmarketFlags,
 } from "../lib/postmarket-defaults";
+import {
+  loadTraderProfile,
+  PROFILE_UPDATED_EVENT,
+  getVisibleBehavioralFlagCategories,
+  countVisibleBehavioralFlags,
+} from "../lib/trader-profile";
 import { notifySessionSaved, TRADES_CHANGED_EVENT } from "../lib/session-events";
 import {
   processRTraderCSV,
@@ -76,8 +80,10 @@ function SliderField({ label, hint, minLabel, maxLabel, value, onChange, inverte
   );
 }
 
-function CloseoutMetrics({ form, netPnl, winRate, setupAdherence, adherenceLabel }) {
-  const flagsRaised = countBehavioralFlags(form);
+function CloseoutMetrics({ form, netPnl, winRate, setupAdherence, adherenceLabel, profile }) {
+  const flagCategories = getVisibleBehavioralFlagCategories(profile);
+  const flagTotal = flagCategories.flatMap((c) => c.flags).length;
+  const flagsRaised = countVisibleBehavioralFlags(form, profile);
   const pnlTone = netPnl > 0 ? "var(--green)" : netPnl < 0 ? "var(--red)" : "var(--text)";
   const adherenceTone =
     adherenceLabel?.tone === "green"
@@ -105,7 +111,7 @@ function CloseoutMetrics({ form, netPnl, winRate, setupAdherence, adherenceLabel
           <span className="pm-closeout-metrics-label hybrid-label-sm">Flags</span>
           <span className="pm-closeout-metrics-value">
             <span style={{ color: flagsRaised ? "var(--amber)" : "var(--green)" }}>{flagsRaised}</span>
-            <span className="pm-closeout-metrics-muted"> / {BEHAVIORAL_FLAGS.length}</span>
+            <span className="pm-closeout-metrics-muted"> / {flagTotal || "—"}</span>
           </span>
         </div>
       </div>
@@ -123,6 +129,7 @@ function CloseoutMetrics({ form, netPnl, winRate, setupAdherence, adherenceLabel
 
 export default function PostMarketReview({ onBack }) {
   const [form, setForm] = useState(DEFAULT_POSTMARKET);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -174,12 +181,14 @@ export default function PostMarketReview({ onBack }) {
   const hydrateDay = useCallback(async () => {
     await loadTraderSettings();
     const dateKey = todayKey();
-    const [reviewRes, dbTrades] = await Promise.all([
+    const [reviewRes, dbTrades, traderProfile] = await Promise.all([
       fetch(`/api/sessions/${dateKey}/post`).then((r) =>
         r.ok ? r.json() : { review: null }
       ),
       fetchTradesForDate(dateKey),
+      loadTraderProfile(),
     ]);
+    setProfile(traderProfile);
     const savedReview = reviewRes?.review ?? null;
 
     setDayTrades(dbTrades);
@@ -259,7 +268,7 @@ export default function PostMarketReview({ onBack }) {
       ...formData,
       netPnl: computedNet,
       winRate,
-      behavioralFlagsRaised: countBehavioralFlags(formData),
+      behavioralFlagsRaised: countVisibleBehavioralFlags(formData, profile),
       playbookAdherence: adherence,
       playbookProcessPass: adherence.total > 0 ? adherence.processPass : null,
       savedAt: new Date().toISOString(),
@@ -277,7 +286,7 @@ export default function PostMarketReview({ onBack }) {
 
     notifySessionSaved();
     await maybeEvaluateRecovery(computedNet, formData.noTradeToday);
-  }, [winRate, dayTrades, maybeEvaluateRecovery]);
+  }, [winRate, dayTrades, maybeEvaluateRecovery, profile]);
 
   const handleSave = async () => {
     if (!form.noTradeToday && setupAdherence.untagged > 0) {
@@ -348,7 +357,15 @@ export default function PostMarketReview({ onBack }) {
     }
   };
 
-  if (loading) return <div className="pm-loading">Loading...</div>;
+  useEffect(() => {
+    const refreshProfile = () => {
+      loadTraderProfile({ force: true }).then(setProfile).catch(() => {});
+    };
+    window.addEventListener(PROFILE_UPDATED_EVENT, refreshProfile);
+    return () => window.removeEventListener(PROFILE_UPDATED_EVENT, refreshProfile);
+  }, []);
+
+  if (loading || !profile) return <div className="pm-loading">Loading...</div>;
 
   return (
     <div className="premarket-page hybrid-page">
@@ -370,6 +387,7 @@ export default function PostMarketReview({ onBack }) {
               winRate={winRate}
               setupAdherence={setupAdherence}
               adherenceLabel={adherenceLabel}
+              profile={profile}
             />
           </div>
 
@@ -473,13 +491,31 @@ export default function PostMarketReview({ onBack }) {
 
                 {step.id === "flags" && (
                   <div className="pm-flags-categories">
-                    {BEHAVIORAL_FLAG_CATEGORIES.map((category) => (
+                    {getVisibleBehavioralFlagCategories(profile).map((category) => (
                       <div key={category.id} className="pm-flags-category">
                         <div className="pm-flags-category-title">{category.label}</div>
                         <div className="pm-flags-grid">
                           {category.flags.map((flag) => (
                             <div key={flag.key} className="pm-flag-item">
-                              <ToggleField label={flag.label} hint={flag.hint} value={form[flag.key]} onChange={(v) => set(flag.key, v)} />
+                              <ToggleField
+                                label={flag.label}
+                                hint={flag.hint}
+                                value={
+                                  flag.customId
+                                    ? !!form.customBehavioralFlags?.[flag.customId]
+                                    : !!form[flag.key]
+                                }
+                                onChange={(v) => {
+                                  if (flag.customId) {
+                                    set("customBehavioralFlags", {
+                                      ...(form.customBehavioralFlags || {}),
+                                      [flag.customId]: v,
+                                    });
+                                  } else {
+                                    set(flag.key, v);
+                                  }
+                                }}
+                              />
                             </div>
                           ))}
                         </div>

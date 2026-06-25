@@ -19,6 +19,13 @@ import CheckInRail, { CHECKIN_RAIL_SECTIONS } from "./CheckInRail";
 import { todayKey, offsetDateKey } from "../lib/today-key";
 import { loadHomeFocusItems } from "../lib/weekly-process-review";
 import { notifySessionSaved } from "../lib/session-events";
+import {
+  loadTraderProfile,
+  PROFILE_UPDATED_EVENT,
+  migratePremarketDeskChecks,
+  deskCheckValue,
+  setDeskCheck,
+} from "../lib/trader-profile";
 
 async function loadData(key, fallback) {
   try {
@@ -127,18 +134,25 @@ function ProtectiveDayBanner({ recoveryDay, acknowledged, onAcknowledge }) {
 
 export default function PreMarketCheckIn({ onBack }) {
   const [form, setForm] = useState(DEFAULT_PREMARKET_FORM);
+  const [profile, setProfile] = useState(null);
   const [yesterdaySleepDebtMinutes, setYesterdaySleepDebtMinutes] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [weekFocus, setWeekFocus] = useState([]);
   const [activeSection, setActiveSection] = useState(0);
 
-  const scores = useMemo(() => computeReadinessScore(form), [form]);
+  const usesWearable = profile?.usesWearable ?? false;
+
+  const scores = useMemo(
+    () => computeReadinessScore(form, { usesWearable }),
+    [form, usesWearable]
+  );
   const status = useMemo(() => readinessStatus(scores.composite), [scores.composite]);
 
   const sleepDebtMinutes = parseSleepDebtMinutes(form.sleepDebtMinutes);
-  const sleepDebtSevere = isSleepDebtSevere(sleepDebtMinutes);
-  const recoveryDay = requiresSleepDebtStandDown(sleepDebtMinutes, yesterdaySleepDebtMinutes);
+  const sleepDebtSevere = usesWearable && isSleepDebtSevere(sleepDebtMinutes);
+  const recoveryDay = usesWearable
+    && requiresSleepDebtStandDown(sleepDebtMinutes, yesterdaySleepDebtMinutes);
   const showProtectiveBanner =
     recoveryDay || scores.composite < PROTECTIVE_DAY_THRESHOLD;
 
@@ -161,22 +175,36 @@ export default function PreMarketCheckIn({ onBack }) {
     (async () => {
       const dateKey = todayKey();
       const yesterdayKey = offsetDateKey(dateKey, -1);
-      const [data, yesterdayData, focus] = await Promise.all([
+      const [data, yesterdayData, focus, traderProfile] = await Promise.all([
         loadData(`premarket-checkin-${dateKey}`, null),
         loadData(`premarket-checkin-${yesterdayKey}`, null),
         loadHomeFocusItems(dateKey),
+        loadTraderProfile(),
       ]);
+      setProfile(traderProfile);
       if (data) {
-        setForm({ ...DEFAULT_PREMARKET_FORM, ...data });
+        setForm(migratePremarketDeskChecks({ ...DEFAULT_PREMARKET_FORM, ...data }, traderProfile));
       }
       setWeekFocus(focus.items || []);
-      if (yesterdayData?.sleepDebtMinutes != null && yesterdayData.sleepDebtMinutes !== "") {
+      if (
+        traderProfile?.usesWearable
+        && yesterdayData?.sleepDebtMinutes != null
+        && yesterdayData.sleepDebtMinutes !== ""
+      ) {
         setYesterdaySleepDebtMinutes(parseSleepDebtMinutes(yesterdayData.sleepDebtMinutes));
       } else {
         setYesterdaySleepDebtMinutes(null);
       }
       setLoading(false);
     })();
+  }, []);
+
+  useEffect(() => {
+    const refreshProfile = () => {
+      loadTraderProfile({ force: true }).then(setProfile).catch(() => {});
+    };
+    window.addEventListener(PROFILE_UPDATED_EVENT, refreshProfile);
+    return () => window.removeEventListener(PROFILE_UPDATED_EVENT, refreshProfile);
   }, []);
 
   const buildSavePayload = useCallback((formData, scoreData, statusData) => ({
@@ -195,13 +223,13 @@ export default function PreMarketCheckIn({ onBack }) {
     standDownAcknowledgedAt: formData.standDownAcknowledged
       ? (formData.standDownAcknowledgedAt || new Date().toISOString())
       : null,
-    sleepDebtSevere: isSleepDebtSevere(formData.sleepDebtMinutes),
-    sleepDebtStandDownRequired: requiresSleepDebtStandDown(
+    sleepDebtSevere: usesWearable && isSleepDebtSevere(formData.sleepDebtMinutes),
+    sleepDebtStandDownRequired: usesWearable && requiresSleepDebtStandDown(
       formData.sleepDebtMinutes,
       yesterdaySleepDebtMinutes,
     ),
     savedAt: new Date().toISOString(),
-  }), [yesterdaySleepDebtMinutes]);
+  }), [yesterdaySleepDebtMinutes, usesWearable]);
 
   const persistCheckin = useCallback(async (formData, scoreData, statusData) => {
     const payload = buildSavePayload(formData, scoreData, statusData);
@@ -242,7 +270,7 @@ export default function PreMarketCheckIn({ onBack }) {
 
   const section = CHECKIN_RAIL_SECTIONS[activeSection];
 
-  if (loading) {
+  if (loading || !profile) {
     return <div className="pm-loading">Loading...</div>;
   }
 
@@ -310,26 +338,28 @@ export default function PreMarketCheckIn({ onBack }) {
                         className="pm-number-input"
                       />
                     </div>
-                    <div className="pm-field">
-                      <div className="pm-field-label hybrid-label">Sleep debt (mins)</div>
-                      <input
-                        type="number"
-                        min={0}
-                        max={600}
-                        step={5}
-                        value={form.sleepDebtMinutes}
-                        onChange={(e) => set("sleepDebtMinutes", e.target.value)}
-                        className={`pm-number-input${sleepDebtSevere ? " pm-number-input--caution" : ""}`}
-                      />
-                    </div>
+                    {usesWearable && (
+                      <div className="pm-field">
+                        <div className="pm-field-label hybrid-label">Sleep debt (mins)</div>
+                        <input
+                          type="number"
+                          min={0}
+                          max={600}
+                          step={5}
+                          value={form.sleepDebtMinutes}
+                          onChange={(e) => set("sleepDebtMinutes", e.target.value)}
+                          className={`pm-number-input${sleepDebtSevere ? " pm-number-input--caution" : ""}`}
+                        />
+                      </div>
+                    )}
                   </div>
-                  {sleepDebtSevere && !recoveryDay && (
+                  {usesWearable && sleepDebtSevere && !recoveryDay && (
                     <div className="pm-sleep-debt-caution" role="status">
                       <strong>Severe caution</strong> — sleep debt is {sleepDebtMinutes} min (≥{" "}
                       {SLEEP_DEBT_SEVERE_CAUTION_MINS}). {PROTECTIVE_DAY_COPY.sleepDebtCaution}
                     </div>
                   )}
-                  {recoveryDay && (
+                  {usesWearable && recoveryDay && (
                     <div className="pm-sleep-debt-caution pm-sleep-debt-caution--recovery" role="alert">
                       <strong>{PROTECTIVE_DAY_COPY.sleepDebtMandatory}</strong> — sleep debt has been ≥{" "}
                       {SLEEP_DEBT_SEVERE_CAUTION_MINS} min for two consecutive days.
@@ -350,22 +380,24 @@ export default function PreMarketCheckIn({ onBack }) {
                     value={form.energy}
                     onChange={(v) => set("energy", v)}
                   />
-                  <div className="pm-field">
-                    <div className="pm-field-label hybrid-label">HRV</div>
-                    <div className="pm-field-hint">Recovery score from your wearable (0–100%)</div>
-                    <div className="pm-hrv-input-row">
-                      <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        step={1}
-                        value={form.hrvScore}
-                        onChange={(e) => set("hrvScore", e.target.value)}
-                        className="pm-number-input pm-hrv-input"
-                      />
-                      <span className="pm-hrv-suffix">%</span>
+                  {usesWearable && (
+                    <div className="pm-field">
+                      <div className="pm-field-label hybrid-label">HRV</div>
+                      <div className="pm-field-hint">Recovery score from your wearable (0–100%)</div>
+                      <div className="pm-hrv-input-row">
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={1}
+                          value={form.hrvScore}
+                          onChange={(e) => set("hrvScore", e.target.value)}
+                          className="pm-number-input pm-hrv-input"
+                        />
+                        <span className="pm-hrv-suffix">%</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   <div className="pm-toggle-row">
                     <ToggleField label="Hydrated" hint="Water in" value={form.hydrated} onChange={(v) => set("hydrated", v)} />
                     <ToggleField label="Movement" hint="Walk, stretch, or workout" value={form.movement} onChange={(v) => set("movement", v)} />
@@ -530,9 +562,17 @@ export default function PreMarketCheckIn({ onBack }) {
             <div className="pm-checkin-finish-reminders" aria-label="Check-in reminders">
               <span className="pm-checkin-finish-label hybrid-label">Desk setup</span>
               <div className="pm-checkin-reminder-grid">
-                <ToggleField label="Unlock accounts" value={form.unlockAccounts} onChange={(v) => set("unlockAccounts", v)} />
-                <ToggleField label="Check CPU" value={form.checkCpu} onChange={(v) => set("checkCpu", v)} />
-                <ToggleField label="Risk bracket order" value={form.selectRiskBracketOrder} onChange={(v) => set("selectRiskBracketOrder", v)} />
+                {(profile?.finishChecklist || []).map((item) => (
+                  <ToggleField
+                    key={item.id}
+                    label={item.label}
+                    value={deskCheckValue(form, item.id)}
+                    onChange={(v) => {
+                      setSaved(false);
+                      setForm((f) => setDeskCheck(f, item.id, v));
+                    }}
+                  />
+                ))}
               </div>
               <p className="pm-checkin-finish-note">Not scored — quick desk checks before the open.</p>
             </div>

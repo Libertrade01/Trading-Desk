@@ -145,7 +145,21 @@ export function scoreEmotional(fields) {
   return { score: weightedSum(scores, EMOTIONAL_FIELD_WEIGHTS), fields: scores };
 }
 
-export function scorePhysical(fields) {
+function normalizePhysicalWeights(usesWearable) {
+  let weights = { ...PHYSICAL_FIELD_WEIGHTS };
+  if (!usesWearable) {
+    const filtered = Object.fromEntries(
+      Object.entries(weights).filter(([key]) => key !== "hrvScore" && key !== "sleepDebt")
+    );
+    const sum = Object.values(filtered).reduce((acc, w) => acc + w, 0);
+    weights = Object.fromEntries(
+      Object.entries(filtered).map(([key, w]) => [key, w / sum])
+    );
+  }
+  return weights;
+}
+
+export function scorePhysical(fields, { usesWearable = true } = {}) {
   const scores = {
     sleepHours: sleepHoursToScore(fields.sleepHours),
     sleepQuality: sliderToScore(fields.sleepQuality),
@@ -155,7 +169,10 @@ export function scorePhysical(fields) {
     hrvScore: hrvScoreToScore(fields.hrvScore),
     movement: toggleToScore(fields.movement),
   };
-  return { score: weightedSum(scores, PHYSICAL_FIELD_WEIGHTS), fields: scores };
+  return {
+    score: weightedSum(scores, normalizePhysicalWeights(usesWearable)),
+    fields: scores,
+  };
 }
 
 export function scoreExternal(fields) {
@@ -178,9 +195,9 @@ export function scorePreparation(fields) {
   return { score: weightedSum(scores, PREPARATION_FIELD_WEIGHTS), fields: scores };
 }
 
-export function computeReadinessScore(form) {
+export function computeReadinessScore(form, { usesWearable = true } = {}) {
   const emotional = scoreEmotional(form);
-  const physical = scorePhysical(form);
+  const physical = scorePhysical(form, { usesWearable });
   const external = scoreExternal(form);
   const preparation = scorePreparation(form);
 
@@ -273,4 +290,5 @@ export const DEFAULT_PREMARKET_FORM = {
   unlockAccounts: false,
   checkCpu: false,
   selectRiskBracketOrder: false,
+  deskChecks: {},
 };

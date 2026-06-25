@@ -28,6 +28,7 @@ import {
   shouldShowWeeklyReviewPrompt,
 } from "../lib/weekly-process-review";
 import { loadTraderSettings } from "../lib/trader-settings";
+import { loadTraderProfile, PROFILE_UPDATED_EVENT, WELCOME_HINT_STORAGE_KEY } from "../lib/trader-profile";
 import { SESSION_SAVED_EVENT, TRADES_CHANGED_EVENT } from "../lib/session-events";
 
 const WORKFLOW_STEPS = [
@@ -35,8 +36,6 @@ const WORKFLOW_STEPS = [
   { id: "dailyplan", label: "Session Plan" },
   { id: "postmarket", label: "Close out" },
 ];
-
-const RISK_STREAK_GOAL = 21;
 
 function buildProgressSubline(preComplete, planComplete, postComplete) {
   const parts = [];
@@ -337,6 +336,9 @@ function HomeTodayHero({
   today,
   processStreak,
   playbookStreak,
+  streakTargetDays,
+  showRiskStreak,
+  showPlaybookStreak,
   loadingPanels,
   showHeroReadiness,
   showReadinessStat,
@@ -347,22 +349,26 @@ function HomeTodayHero({
 }) {
   const processStats = (
     <>
-      <div className="prop-economics-hero-stat">
-        <span className="prop-economics-hero-cap">Risk streak</span>
-        <span className="prop-economics-hero-value">
-          {loadingPanels ? "—" : processStreak}
-          <span className="home-today-hero-goal">/{RISK_STREAK_GOAL}</span>
-        </span>
-      </div>
-      <div
-        className={`prop-economics-hero-stat${allComplete ? "" : " prop-economics-hero-stat--subtle"}`}
-      >
-        <span className="prop-economics-hero-cap">Playbook streak</span>
-        <span className="prop-economics-hero-value">
-          {loadingPanels ? "—" : playbookStreak}
-          <span className="home-today-hero-goal">/{RISK_STREAK_GOAL}</span>
-        </span>
-      </div>
+      {showRiskStreak && (
+        <div className="prop-economics-hero-stat">
+          <span className="prop-economics-hero-cap">Risk streak</span>
+          <span className="prop-economics-hero-value">
+            {loadingPanels ? "—" : processStreak}
+            <span className="home-today-hero-goal">/{streakTargetDays}</span>
+          </span>
+        </div>
+      )}
+      {showPlaybookStreak && (
+        <div
+          className={`prop-economics-hero-stat${allComplete ? "" : " prop-economics-hero-stat--subtle"}`}
+        >
+          <span className="prop-economics-hero-cap">Playbook streak</span>
+          <span className="prop-economics-hero-value">
+            {loadingPanels ? "—" : playbookStreak}
+            <span className="home-today-hero-goal">/{streakTargetDays}</span>
+          </span>
+        </div>
+      )}
       {showReadinessStat && today?.readinessScore != null && !(showHeroReadiness && !allComplete) && (
         <div className="prop-economics-hero-stat">
           <span className="prop-economics-hero-cap">Ready</span>
@@ -489,6 +495,24 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
   const [recoveryStatus, setRecoveryStatus] = useState(null);
   const [weekFocus, setWeekFocus] = useState({ items: [], complete: false });
   const [showReviewPrompt, setShowReviewPrompt] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [showWelcomeHint, setShowWelcomeHint] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && sessionStorage.getItem(WELCOME_HINT_STORAGE_KEY) === "1") {
+      sessionStorage.removeItem(WELCOME_HINT_STORAGE_KEY);
+      setShowWelcomeHint(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTraderProfile().then(setProfile).catch(() => {});
+    const refreshProfile = () => {
+      loadTraderProfile({ force: true }).then(setProfile).catch(() => {});
+    };
+    window.addEventListener(PROFILE_UPDATED_EVENT, refreshProfile);
+    return () => window.removeEventListener(PROFILE_UPDATED_EVENT, refreshProfile);
+  }, []);
 
   const reloadPanels = useCallback(async (todaySession, key = todayKey()) => {
     setLoadingPanels(true);
@@ -629,6 +653,26 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
         <div className="pm-closeout-main">
           <HomeEventBanner dateKey={dateKey} />
 
+          {showWelcomeHint && (
+            <div className="home-welcome-hint">
+              <p>
+                You&apos;re set up. Start with check-in, then customize your full process anytime in{" "}
+                <button type="button" className="home-welcome-hint-link" onClick={() => onNavigate("process")}>
+                  My process
+                </button>
+                {" "}or Settings.
+              </p>
+              <button
+                type="button"
+                className="home-welcome-hint-dismiss"
+                onClick={() => setShowWelcomeHint(false)}
+                aria-label="Dismiss"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
           <div className="pm-header">
             <div
               className={`pm-eyebrow hybrid-eyebrow${hero.eyebrowMuted ? " hybrid-eyebrow--muted" : ""}${hero.poster ? " home-today-eyebrow--poster" : ""}`}
@@ -656,6 +700,9 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
             today={today}
             processStreak={processStreak}
             playbookStreak={playbookStreak}
+            streakTargetDays={profile?.streakTargetDays ?? 21}
+            showRiskStreak={profile?.riskStreakEnabled !== false}
+            showPlaybookStreak={profile?.playbookStreakEnabled !== false}
             loadingPanels={loadingPanels}
             showHeroReadiness={showHeroReadiness}
             showReadinessStat={showReadinessStat}

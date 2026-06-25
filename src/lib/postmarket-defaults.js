@@ -92,6 +92,7 @@ export const DEFAULT_POSTMARKET = {
   exitedFromEmotion: false,
   ignoredPoorState: false,
   distractedDuringSession: false,
+  customBehavioralFlags: {},
   emotionalState: 6,
   satisfaction: 6,
   frustration: 4,

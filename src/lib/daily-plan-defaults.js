@@ -37,6 +37,7 @@ export const DEFAULT_DAILY_PLAN = {
   oneThing: "",
   selfCommitmentAccepted: false,
   selfRegulatedCommitmentAccepted: false,
+  commitmentAccepted: {},
 };
 
 export function newKeyLevel() {

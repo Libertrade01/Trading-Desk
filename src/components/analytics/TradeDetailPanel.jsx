@@ -9,7 +9,8 @@ import {
 } from "../../lib/analytics-trades";
 import { calcR, formatPnl } from "../../lib/analytics-stats";
 import { MGMT_OPTIONS } from "../../lib/trade-import-options";
-import { VALID_SETUPS, SETUP_IMPROVISED, SETUP_INVALID } from "../../lib/setup-options";
+import { SETUP_IMPROVISED, SETUP_INVALID } from "../../lib/setup-options";
+import { getPlaybookSetupNames } from "../../lib/trader-profile";
 import { formatLimaTime, toNYTimeStr } from "../../lib/trade-time";
 import AnalyticsSlidePanel from "./AnalyticsSlidePanel";
 
@@ -65,7 +66,7 @@ export default function TradeDetailPanel({ trade, onClose, onUpdated, onDeleted 
 
   const setupOptions = [
     { value: "", label: "Untagged" },
-    ...VALID_SETUPS.map((v) => ({ value: v, label: v })),
+    ...getPlaybookSetupNames().map((v) => ({ value: v, label: v })),
     { value: SETUP_IMPROVISED, label: SETUP_IMPROVISED },
     { value: SETUP_INVALID, label: SETUP_INVALID },
   ];

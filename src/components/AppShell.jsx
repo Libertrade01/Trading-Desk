@@ -1,9 +1,14 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { loadTraderSettings } from "../lib/trader-settings";
+import {
+  loadTraderProfile,
+  ensureFounderProfile,
+  isOnboardingComplete,
+} from "../lib/trader-profile";
 import { filterNavItems } from "../lib/features";
 import { getCurrentUser } from "../lib/user-storage";
 
@@ -25,6 +30,9 @@ const NAV_ITEMS = [
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5v4l2.5 1.5" strokeLinecap="round"/></svg>
   )},
   { type: "label", text: "Reference" },
+  { id: "process", href: "/settings?section=process", label: "My process", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 3.5h10v9H3z"/><path d="M5.5 6.5h5M5.5 9h3.5" strokeLinecap="round"/></svg>
+  )},
   { id: "weeklyreview", href: "/weekly-review", label: "Weekly Review", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3" strokeLinecap="round"/></svg>
   )},
@@ -54,18 +62,24 @@ const SETTINGS_NAV_ITEM = {
   ),
 };
 
-function isNavActive(pathname, item) {
+function isNavActive(pathname, item, settingsSection) {
   if (item.id === "home") return pathname === "/";
   if (item.id === "history") return pathname === "/history" || pathname.startsWith("/history/");
   if (item.id === "weeklyreview") return pathname === "/weekly-review" || pathname.startsWith("/weekly-review/");
+  if (item.id === "process") {
+    return pathname === "/settings" && settingsSection === "process";
+  }
+  if (item.id === "settings") {
+    return pathname === "/settings" && settingsSection !== "process";
+  }
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
-function NavLink({ item, pathname, onClose }) {
+function NavLink({ item, pathname, settingsSection, onClose }) {
   return (
     <Link
       href={item.href}
-      className={`sidebar-nav-item${isNavActive(pathname, item) ? " active" : ""}${item.className ? ` ${item.className}` : ""}`}
+      className={`sidebar-nav-item${isNavActive(pathname, item, settingsSection) ? " active" : ""}${item.className ? ` ${item.className}` : ""}`}
       onClick={onClose}
     >
       {item.icon}
@@ -78,7 +92,7 @@ function NavLabel({ text, className = "" }) {
   return <div className={`sidebar-nav-label${className ? ` ${className}` : ""}`}>{text}</div>;
 }
 
-function Sidebar({ pathname, open, onClose, userEmail, mainItems, founderItems, showFounderSection }) {
+function Sidebar({ pathname, settingsSection, open, onClose, userEmail, mainItems, founderItems, showFounderSection }) {
   return (
     <>
       <div className={`sidebar-overlay${open ? " visible" : ""}`} onClick={onClose} />
@@ -93,17 +107,17 @@ function Sidebar({ pathname, open, onClose, userEmail, mainItems, founderItems, 
               item.type === "label" ? (
                 <NavLabel key={`label-${i}`} text={item.text} className={item.className} />
               ) : (
-                <NavLink key={item.id} item={item} pathname={pathname} onClose={onClose} />
+                <NavLink key={item.id} item={item} pathname={pathname} settingsSection={settingsSection} onClose={onClose} />
               )
             )}
           </div>
           <div className="sidebar-nav-bottom">
-            <NavLink item={SETTINGS_NAV_ITEM} pathname={pathname} onClose={onClose} />
+            <NavLink item={SETTINGS_NAV_ITEM} pathname={pathname} settingsSection={settingsSection} onClose={onClose} />
             {showFounderSection && (
               <>
                 <NavLabel text="Founder" className="sidebar-nav-label--founder" />
                 {founderItems.map((item) => (
-                  <NavLink key={item.id} item={item} pathname={pathname} onClose={onClose} />
+                  <NavLink key={item.id} item={item} pathname={pathname} settingsSection={settingsSection} onClose={onClose} />
                 ))}
               </>
             )}
@@ -126,8 +140,11 @@ function Sidebar({ pathname, open, onClose, userEmail, mainItems, founderItems, 
   );
 }
 
-export default function AppShell({ children }) {
+function AppShellInner({ children }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const settingsSection = pathname === "/settings" ? searchParams.get("section") : null;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userEmail, setUserEmail] = useState(null);
   const [isFounder, setIsFounder] = useState(false);
@@ -143,26 +160,50 @@ export default function AppShell({ children }) {
 
   useEffect(() => {
     loadTraderSettings().catch(() => {});
+    loadTraderProfile().catch(() => {});
   }, []);
 
   useEffect(() => {
     let cancelled = false;
 
     async function initAuth() {
-      const user = await getCurrentUser();
-      if (cancelled) return;
-      setUserEmail(user?.email ?? null);
+      try {
+        const user = await getCurrentUser();
+        if (cancelled) return;
+        setUserEmail(user?.email ?? null);
 
-      if (user) {
+        if (!user) return;
+
+        let founder = false;
+        let serverAuthOk = false;
+
         try {
           const res = await fetch("/api/auth/founder-migrate", { method: "POST" });
           if (res.ok) {
+            serverAuthOk = true;
             const data = await res.json();
-            if (!cancelled) setIsFounder(!!data.isFounder);
+            founder = !!data.isFounder;
+            if (!cancelled) setIsFounder(founder);
+            if (founder) {
+              await ensureFounderProfile();
+            }
           }
         } catch {
-          /* only founder with service role migrates orphan rows */
+          /* dev / offline — continue without server auth */
         }
+
+        if (serverAuthOk) {
+          try {
+            const profile = await loadTraderProfile({ force: true });
+            if (!cancelled && !isOnboardingComplete(profile) && !founder) {
+              router.replace("/onboarding");
+            }
+          } catch {
+            /* profile unavailable — show app anyway */
+          }
+        }
+      } catch {
+        /* dev / offline — continue without server auth */
       }
     }
 
@@ -170,7 +211,7 @@ export default function AppShell({ children }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [router]);
 
   return (
     <div className="app-layout">
@@ -189,6 +230,7 @@ export default function AppShell({ children }) {
 
       <Sidebar
         pathname={pathname}
+        settingsSection={settingsSection}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         userEmail={userEmail}
@@ -199,5 +241,13 @@ export default function AppShell({ children }) {
 
       <main className="main-content">{children}</main>
     </div>
+  );
+}
+
+export default function AppShell({ children }) {
+  return (
+    <Suspense fallback={<div className="pm-loading">Loading...</div>}>
+      <AppShellInner>{children}</AppShellInner>
+    </Suspense>
   );
 }
