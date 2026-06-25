@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   "/forgot-password",
   "/reset-password",
   "/auth/callback",
+  "/auth/recovery",
 ];
 
 /** Logged-in users are redirected away from these paths only (not recovery flows). */

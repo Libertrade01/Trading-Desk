@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "../../lib/supabase/client";
-import { getAuthCallbackUrl } from "../../lib/app-url";
+import { getAuthRecoveryUrl } from "../../lib/app-url";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -17,10 +17,9 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     try {
       const supabase = createClient();
-      // Supabase redirect allow list must include /auth/callback and /reset-password
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
         email.trim(),
-        { redirectTo: `${getAuthCallbackUrl()}?type=recovery` }
+        { redirectTo: getAuthRecoveryUrl() }
       );
       if (resetError) {
         setError(resetError.message);

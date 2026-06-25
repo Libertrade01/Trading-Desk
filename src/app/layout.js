@@ -1,4 +1,5 @@
 import './globals.css';
+import AuthRecoveryRedirect from '../components/AuthRecoveryRedirect';
 
 export const metadata = {
   title: 'Trade Desk',
@@ -26,7 +27,10 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body>{children}</body>
+      <body>
+        <AuthRecoveryRedirect />
+        {children}
+      </body>
     </html>
   );
 }

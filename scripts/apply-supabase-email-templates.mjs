@@ -30,8 +30,14 @@ const customerUrl = "https://libertrade-app.vercel.app";
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || founderUrl;
 const redirectUrls = [
   `${founderUrl}/auth/callback`,
+  `${founderUrl}/auth/recovery`,
+  `${founderUrl}/reset-password`,
   `${customerUrl}/auth/callback`,
+  `${customerUrl}/auth/recovery`,
+  `${customerUrl}/reset-password`,
   "http://localhost:3000/auth/callback",
+  "http://localhost:3000/auth/recovery",
+  "http://localhost:3000/reset-password",
 ];
 
 const payload = {

@@ -15,6 +15,11 @@ export function getAuthCallbackUrl() {
   return `${getAppUrl()}/auth/callback`;
 }
 
+/** Password reset emails — path only (no query) for Supabase redirect allow list. */
+export function getAuthRecoveryUrl() {
+  return `${getAppUrl()}/auth/recovery`;
+}
+
 export function getResetPasswordUrl() {
   return `${getAppUrl()}/reset-password`;
 }
