@@ -134,10 +134,10 @@ function formatPosterPnl(value) {
 
 const RISK_STREAK_GOAL = 21;
 
-function ProcessStreaksPanel({ riskCount, playbookCount }) {
+function ProcessStreaksPanel({ riskCount, playbookCount, loading }) {
   return (
     <div
-      className="home-process-streaks"
+      className={`home-process-streaks${loading ? " home-process-streaks--loading" : ""}`}
       title="Risk: consecutive days you followed your risk plan. Playbook: consecutive days with no invalid or untagged trades."
     >
       <div className="home-process-streaks-eyebrow hybrid-eyebrow">Process streaks</div>
@@ -145,9 +145,9 @@ function ProcessStreaksPanel({ riskCount, playbookCount }) {
         <div className="home-process-streak-pillar">
           <div
             className="home-process-streak-num home-process-streak-num--risk"
-            aria-label={`${riskCount} of ${RISK_STREAK_GOAL} day risk adherence streak`}
+            aria-label={loading ? "Loading risk streak" : `${riskCount} of ${RISK_STREAK_GOAL} day risk adherence streak`}
           >
-            {riskCount}
+            {loading ? "—" : riskCount}
             <span className="home-process-streak-goal">/{RISK_STREAK_GOAL}</span>
           </div>
           <div className="home-process-streak-label">Risk</div>
@@ -155,9 +155,9 @@ function ProcessStreaksPanel({ riskCount, playbookCount }) {
         <div className="home-process-streak-pillar home-process-streak-pillar--divider">
           <div
             className="home-process-streak-num home-process-streak-num--playbook"
-            aria-label={`${playbookCount} of ${RISK_STREAK_GOAL} day playbook process streak`}
+            aria-label={loading ? "Loading playbook streak" : `${playbookCount} of ${RISK_STREAK_GOAL} day playbook process streak`}
           >
-            {playbookCount}
+            {loading ? "—" : playbookCount}
             <span className="home-process-streak-goal">/{RISK_STREAK_GOAL}</span>
           </div>
           <div className="home-process-streak-label">Playbook</div>
@@ -219,35 +219,56 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
   const [today, setToday] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingPanels, setLoadingPanels] = useState(true);
   const [recoveryStatus, setRecoveryStatus] = useState(null);
   const [weekFocus, setWeekFocus] = useState({ items: [], complete: false });
   const [showReviewPrompt, setShowReviewPrompt] = useState(false);
 
+  const reloadPanels = useCallback(async (todaySession, key = todayKey()) => {
+    setLoadingPanels(true);
+    try {
+      const [recent, focus, showPrompt, recoveryState, dllSettings] = await Promise.all([
+        loadRecentSessions({ asOfDateKey: key, limit: 35, lookbackDays: 90 }),
+        loadHomeFocusItems(key),
+        shouldShowWeeklyReviewPrompt(key),
+        loadRecoveryState(),
+        loadDllSettings(),
+      ]);
+      setSessions(mergeTodaySession(recent, todaySession));
+      setWeekFocus(focus);
+      setShowReviewPrompt(showPrompt);
+      setRecoveryStatus(getRecoveryStatus(recoveryState, dllSettings));
+    } finally {
+      setLoadingPanels(false);
+    }
+  }, []);
+
   const loadDashboard = useCallback(async ({ refreshTodayOnly = false } = {}) => {
-    await loadTraderSettings();
     const key = todayKey();
     setDateKey(key);
 
-    const todaySession = await loadSessionDay(key, { postFromApi: true });
+    const loadToday = async () => {
+      await loadTraderSettings();
+      return loadSessionDay(key, { postFromApi: true });
+    };
+
+    if (refreshTodayOnly) {
+      const todaySession = await loadToday();
+      setToday(todaySession);
+      await reloadPanels(todaySession, key);
+      return;
+    }
+
+    setLoading(true);
+    setLoadingPanels(true);
+
+    const todaySession = await loadToday();
     setToday(todaySession);
-    setSessions((prev) => mergeTodaySession(refreshTodayOnly ? prev : [], todaySession));
+    setSessions((prev) => mergeTodaySession(prev, todaySession));
     setLoading(false);
 
-    if (refreshTodayOnly) return;
-
-    const [recent, focus, showPrompt, recoveryState, dllSettings] = await Promise.all([
-      loadRecentSessions({ asOfDateKey: key, limit: 12 }),
-      loadHomeFocusItems(key),
-      shouldShowWeeklyReviewPrompt(key),
-      loadRecoveryState(),
-      loadDllSettings(),
-    ]);
-
-    setSessions(mergeTodaySession(recent, todaySession));
-    setWeekFocus(focus);
-    setShowReviewPrompt(showPrompt);
-    setRecoveryStatus(getRecoveryStatus(recoveryState, dllSettings));
-  }, []);
+    await reloadPanels(todaySession, key);
+  }, [reloadPanels]);
 
   useEffect(() => {
     let cancelled = false;
@@ -402,7 +423,11 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
               {!allComplete && today?.playbookAdherence?.total > 0 && todayPlaybookLabel && (
                 <p className="home-hybrid-sub home-hybrid-sub--playbook">{todayPlaybookLabel.text}</p>
               )}
-              <ProcessStreaksPanel riskCount={processStreak} playbookCount={playbookStreak} />
+              <ProcessStreaksPanel
+                riskCount={processStreak}
+                playbookCount={playbookStreak}
+                loading={loadingPanels}
+              />
               {allComplete && (
                 <div className="home-hybrid-edit">
                   <button type="button" onClick={() => onNavigate("premarket")}>
@@ -489,7 +514,14 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
 
           <HomeEventBanner dateKey={dateKey} />
 
-          {weekFocus.items.length > 0 && (
+          {loadingPanels && weekFocus.items.length === 0 && (
+            <section className="home-week-focus home-panel-loading" aria-hidden="true">
+              <div className="home-week-focus-eyebrow hybrid-eyebrow">This week&apos;s focus</div>
+              <p className="home-panel-loading-text">Loading focus…</p>
+            </section>
+          )}
+
+          {!loadingPanels && weekFocus.items.length > 0 && (
             <section className="home-week-focus" aria-label="This week's focus">
               <div className="home-week-focus-eyebrow hybrid-eyebrow">This week&apos;s focus</div>
               <ul className="home-week-focus-list">
@@ -566,7 +598,11 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
             <section className="home-hybrid-calm-block">
               <div>
                 <h3 className="home-hybrid-block-label">Readiness trend</h3>
-                <ReadinessTrend sessions={sessions} />
+                {loadingPanels ? (
+                  <p className="home-panel-loading-text">Loading trend…</p>
+                ) : (
+                  <ReadinessTrend sessions={sessions} />
+                )}
               </div>
               <div>
                 <div className="home-hybrid-block-head">
@@ -579,7 +615,9 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
                     History →
                   </button>
                 </div>
-                {recent.length === 0 ? (
+                {loadingPanels ? (
+                  <p className="home-panel-loading-text">Loading recent sessions…</p>
+                ) : recent.length === 0 ? (
                   <p className="home-panel-empty">No sessions yet.</p>
                 ) : (
                   <>

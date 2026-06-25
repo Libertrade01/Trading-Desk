@@ -816,6 +816,21 @@ textarea:focus, input:focus, select:focus {
   margin-top: 8px;
 }
 
+.home-process-streaks--loading .home-process-streak-num {
+  opacity: 0.45;
+}
+
+.home-panel-loading-text {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+  padding: 8px 0;
+}
+
+.home-panel-loading .home-panel-loading-text {
+  padding: 4px 0 0;
+}
+
 .home-hybrid-streak {
   text-align: right;
 }

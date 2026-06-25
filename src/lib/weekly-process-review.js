@@ -611,15 +611,30 @@ export function getFocusDisplayWeek() {
   return getProcessWeekRange(-1);
 }
 
-export async function loadHomeFocusItems(dateKey = todayKey()) {
-  const { keys } = await storage.list(REVIEW_KEY_PREFIX);
-  const weekEnds = (keys || [])
-    .map((key) => key.slice(REVIEW_KEY_PREFIX.length))
-    .filter((weekEnd) => /^\d{4}-\d{2}-\d{2}$/.test(weekEnd))
-    .sort((a, b) => b.localeCompare(a));
+function fridayOnOrBefore(dateKey) {
+  const d = new Date(`${dateKey}T12:00:00`);
+  while (d.getDay() !== 5) d.setDate(d.getDate() - 1);
+  return dateKeyStr(d);
+}
 
-  for (const weekEnd of weekEnds) {
-    const review = await loadSavedReview(weekEnd);
+/** Recent Friday week-ends that could own focus for this date (newest first). */
+function candidateFocusReviewWeekEnds(dateKey, count = 6) {
+  const ends = [];
+  const d = new Date(`${fridayOnOrBefore(dateKey)}T12:00:00`);
+  for (let i = 0; i < count; i += 1) {
+    ends.push(dateKeyStr(d));
+    d.setDate(d.getDate() - 7);
+  }
+  return ends;
+}
+
+export async function loadHomeFocusItems(dateKey = todayKey()) {
+  const candidates = candidateFocusReviewWeekEnds(dateKey);
+  const reviews = await Promise.all(candidates.map((weekEnd) => loadSavedReview(weekEnd)));
+
+  for (let i = 0; i < candidates.length; i += 1) {
+    const weekEnd = candidates[i];
+    const review = reviews[i];
     if (!isReviewComplete(review)) continue;
     const items = review.focusItems.filter((f) => f.trim());
     if (!items.length) continue;

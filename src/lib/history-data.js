@@ -1,4 +1,6 @@
 import { storage } from "./supabase";
+import { getSupabaseBrowserClient } from "./supabase/client";
+import { getCurrentUserId } from "./user-storage";
 import { computeReadinessScore, readinessStatus } from "./premarket-scoring";
 import { computePerformanceFromDbTrades, fetchTradesForDate, fetchTradesGroupedByDate, performanceFromDbOrImport } from "./rtrader-import";
 import { summarizeSetupAdherence } from "./setup-adherence";
@@ -21,6 +23,53 @@ async function loadJson(key) {
   } catch {
     return null;
   }
+}
+
+function parseStorageValue(raw) {
+  if (raw == null) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return typeof parsed === "string" ? JSON.parse(parsed) : parsed;
+  } catch {
+    return null;
+  }
+}
+
+/** One query per prefix — replaces list + N individual gets for home/history loads. */
+async function loadJsonMapByPrefix(prefix) {
+  const userId = await getCurrentUserId();
+  const { data, error } = await getSupabaseBrowserClient()
+    .from("app_data")
+    .select("key, value")
+    .eq("user_id", userId)
+    .like("key", `${prefix}%`);
+  if (error) {
+    console.error("loadJsonMapByPrefix:", prefix, error);
+    return new Map();
+  }
+  const map = new Map();
+  for (const row of data || []) {
+    const val = parseStorageValue(row.value);
+    if (val != null) map.set(row.key, val);
+  }
+  return map;
+}
+
+function collectDatesFromMaps(preMap, planMap, postMap) {
+  const dates = new Set();
+  for (const key of preMap.keys()) {
+    const d = dateFromKey(key, KEYS.pre);
+    if (d) dates.add(d);
+  }
+  for (const key of planMap.keys()) {
+    const d = dateFromKey(key, KEYS.plan);
+    if (d) dates.add(d);
+  }
+  for (const key of postMap.keys()) {
+    const d = dateFromKey(key, KEYS.post);
+    if (d) dates.add(d);
+  }
+  return dates;
 }
 
 function dateFromKey(key, prefix) {
@@ -114,7 +163,7 @@ export async function loadSessionDay(dateKey, { postFromApi = false } = {}) {
   return buildSessionRecord(dateKey, pre, plan, post, trades);
 }
 
-/** Lightweight list load: one trades query, storage reads only (no per-day API). */
+/** Lightweight list load: bulk storage reads + one trades query. */
 export async function loadRecentSessions({
   asOfDateKey,
   limit = 12,
@@ -122,42 +171,52 @@ export async function loadRecentSessions({
 } = {}) {
   const anchor = asOfDateKey || todayKey();
   const minDate = offsetDateKey(anchor, -lookbackDays);
-  const dates = (await fetchSessionDates())
+
+  const [preMap, planMap, postMap] = await Promise.all([
+    loadJsonMapByPrefix(KEYS.pre),
+    loadJsonMapByPrefix(KEYS.plan),
+    loadJsonMapByPrefix(KEYS.post),
+  ]);
+
+  const dates = [...collectDatesFromMaps(preMap, planMap, postMap)]
     .filter((d) => d >= minDate && d <= anchor)
+    .sort((a, b) => b.localeCompare(a))
     .slice(0, limit);
 
   if (!dates.length) return [];
 
   const tradesByDate = await fetchTradesGroupedByDate(dates);
 
-  return Promise.all(
-    dates.map(async (dateKey) => {
-      const [pre, plan, post] = await Promise.all([
-        loadJson(`${KEYS.pre}${dateKey}`),
-        loadJson(`${KEYS.plan}${dateKey}`),
-        loadJson(`${KEYS.post}${dateKey}`),
-      ]);
-      const trades = tradesByDate.get(dateKey) || [];
-      return buildSessionRecord(dateKey, pre, plan, post, trades);
-    })
-  );
+  return dates.map((dateKey) => {
+    const pre = preMap.get(`${KEYS.pre}${dateKey}`) ?? null;
+    const plan = planMap.get(`${KEYS.plan}${dateKey}`) ?? null;
+    const post = postMap.get(`${KEYS.post}${dateKey}`) ?? null;
+    const trades = tradesByDate.get(dateKey) || [];
+    return buildSessionRecord(dateKey, pre, plan, post, trades);
+  });
 }
 
 export async function loadAllSessions({ maxDays = 90 } = {}) {
-  const dates = (await fetchSessionDates()).slice(0, maxDays);
+  const [preMap, planMap, postMap] = await Promise.all([
+    loadJsonMapByPrefix(KEYS.pre),
+    loadJsonMapByPrefix(KEYS.plan),
+    loadJsonMapByPrefix(KEYS.post),
+  ]);
+
+  const dates = [...collectDatesFromMaps(preMap, planMap, postMap)]
+    .sort((a, b) => b.localeCompare(a))
+    .slice(0, maxDays);
+
   if (!dates.length) return [];
+
   const tradesByDate = await fetchTradesGroupedByDate(dates);
-  return Promise.all(
-    dates.map(async (dateKey) => {
-      const [pre, plan, post] = await Promise.all([
-        loadJson(`${KEYS.pre}${dateKey}`),
-        loadJson(`${KEYS.plan}${dateKey}`),
-        loadJson(`${KEYS.post}${dateKey}`),
-      ]);
-      const trades = tradesByDate.get(dateKey) || [];
-      return buildSessionRecord(dateKey, pre, plan, post, trades);
-    })
-  );
+  return dates.map((dateKey) => {
+    const pre = preMap.get(`${KEYS.pre}${dateKey}`) ?? null;
+    const plan = planMap.get(`${KEYS.plan}${dateKey}`) ?? null;
+    const post = postMap.get(`${KEYS.post}${dateKey}`) ?? null;
+    const trades = tradesByDate.get(dateKey) || [];
+    return buildSessionRecord(dateKey, pre, plan, post, trades);
+  });
 }
 
 export async function deleteSessionDay(dateKey) {
