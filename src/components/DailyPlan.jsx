@@ -267,7 +267,7 @@ export default function DailyPlan({ onBack }) {
         <div className="pm-plan-main">
           <div className="pm-plan-header-row">
             <div className="pm-header">
-              <div className="pm-eyebrow hybrid-eyebrow">Daily plan · {sectionDate()}</div>
+              <div className="pm-eyebrow hybrid-eyebrow">Session plan · {sectionDate()}</div>
               <h1 className="hybrid-page-title">THE PLAN.</h1>
               <p className="pm-subtitle">Lock in bias, levels, and risk before the open.</p>
             </div>

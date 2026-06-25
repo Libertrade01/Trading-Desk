@@ -35,7 +35,7 @@ export const PLAN_STEPS = [
 
 export default function DailyPlanStepper({ activeIndex, onSelect }) {
   return (
-    <nav className="pm-closeout-stepper" aria-label="Daily plan steps">
+    <nav className="pm-closeout-stepper" aria-label="Session plan steps">
       <ol className="pm-closeout-stepper-list">
         {PLAN_STEPS.map((step, i) => {
           const active = i === activeIndex;

@@ -18,7 +18,7 @@ export default function AnalyticsUntaggedBanner({ untaggedCount, onTagTrade }) {
           </button>
         ) : null}
         <Link href="/postmarket" className="analytics-link-btn">
-          Post-Market
+          Close out
         </Link>
       </div>
     </div>

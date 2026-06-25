@@ -249,6 +249,10 @@ textarea:focus, input:focus, select:focus {
   color: var(--brand);
 }
 
+.sidebar-nav-item--daily-gap {
+  margin-top: 14px;
+}
+
 .sidebar-footer {
   padding: 14px 18px;
   border-top: 1px solid var(--border);
@@ -3301,14 +3305,16 @@ input.pm-slider::-moz-range-thumb {
 
 .pm-plan-metrics {
   flex-shrink: 0;
-  min-width: 120px;
-  padding: 12px 14px;
+  padding: 12px 16px;
   border-radius: 8px;
   background: var(--surface2);
   border: 1px solid var(--border);
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 24px 32px;
   text-align: right;
 }
 
@@ -5505,6 +5511,16 @@ input.pm-slider::-moz-range-thumb {
   opacity: 0.7;
 }
 
+.sidebar-nav-label.sidebar-nav-label--daily {
+  color: var(--brand);
+  opacity: 1;
+}
+
+.sidebar-nav-label.sidebar-nav-label--founder {
+  color: var(--brand);
+  opacity: 0.85;
+}
+
 @media (max-width: 900px) {
   .pm-checkin-layout {
     padding: 20px 16px 48px;
@@ -5652,7 +5668,6 @@ input.pm-slider::-moz-range-thumb {
 
   .pm-plan-metrics {
     width: 100%;
-    flex-direction: row;
     justify-content: space-between;
     text-align: left;
   }
@@ -7951,5 +7966,304 @@ input.pm-slider::-moz-range-thumb {
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+/* ── Prop economics hero metrics ── */
+.prop-economics-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px 32px;
+  padding: 20px 0 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.prop-economics-hero-net {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.prop-economics-hero-cap {
+  font-family: var(--font-poster);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.prop-economics-hero-net-value {
+  font-family: var(--font-mono);
+  font-size: clamp(36px, 7vw, 52px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--text);
+}
+
+.prop-economics-hero-net-value.positive { color: var(--green); }
+.prop-economics-hero-net-value.negative { color: var(--red); }
+.prop-economics-hero-net-value.neutral { color: var(--muted); }
+
+.prop-economics-hero-supporting {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 28px 40px;
+}
+
+.prop-economics-hero-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.prop-economics-hero-value {
+  font-family: var(--font-mono);
+  font-size: clamp(20px, 4vw, 26px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: var(--text);
+}
+
+.prop-economics-hero-value.positive { color: var(--green); }
+.prop-economics-hero-value.negative { color: var(--red); }
+.prop-economics-hero-value.neutral { color: var(--muted); }
+
+.prop-economics-hero-stat--subtle .prop-economics-hero-value {
+  color: var(--muted);
+}
+
+/* ── Home today hero ── */
+.home-today-hero {
+  margin-bottom: 0;
+}
+
+.home-today-hero-goal {
+  font-size: 0.65em;
+  font-weight: 500;
+  color: var(--muted);
+  margin-left: 2px;
+}
+
+/* Day complete: process metrics lead, P&L demoted */
+.home-today-hero--complete {
+  align-items: flex-end;
+  gap: 20px 32px;
+}
+
+.home-today-hero-process {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 28px 40px;
+  flex: 1;
+  min-width: 0;
+}
+
+.home-today-hero--complete .home-today-hero-process .prop-economics-hero-value {
+  font-size: clamp(28px, 5vw, 38px);
+}
+
+.home-today-hero-pnl {
+  flex-shrink: 0;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.home-today-hero-pnl .prop-economics-hero-value {
+  font-size: clamp(18px, 3vw, 22px);
+  font-weight: 500;
+}
+
+.home-today-hero-pnl .prop-economics-hero-cap {
+  text-align: right;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .home-today-hero--complete {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .home-today-hero-process {
+    gap: 20px 28px;
+  }
+
+  .home-today-hero-pnl {
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .home-today-hero-pnl .prop-economics-hero-cap {
+    text-align: left;
+  }
+}
+
+.home-today-eyebrow--poster {
+  color: var(--brand);
+}
+
+.home-today-title--poster {
+  letter-spacing: -0.02em;
+}
+
+.home-workflow-panel {
+  margin-bottom: 0;
+}
+
+.home-workflow-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+}
+
+.home-workflow-steps .home-hybrid-step:first-of-type {
+  border-top: none;
+}
+
+.home-workflow-steps .home-hybrid-step {
+  margin: 0 -4px;
+}
+
+.home-trend-chart-wrap {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.home-trend-chart-range {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  padding: 2px 0;
+  flex-shrink: 0;
+}
+
+.home-trend-chart {
+  flex: 1;
+  width: 100%;
+  height: 56px;
+  display: block;
+}
+
+/* Home week focus strip (under poster title) */
+.home-week-focus-strip {
+  margin: 0 0 20px;
+}
+
+.home-week-focus-reminder {
+  margin: 0;
+}
+
+.home-week-focus-strip .pm-week-focus-reminder-list {
+  gap: 8px;
+}
+
+.home-week-focus-strip .pm-week-focus-reminder-list li {
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.home-week-focus-strip .pm-week-focus-reminder-label {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  margin-bottom: 8px;
+}
+
+.home-week-focus-strip--loading {
+  min-height: 52px;
+}
+
+.home-week-focus-strip-skeleton {
+  height: 52px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--surface) 0%,
+    rgba(255, 255, 255, 0.04) 50%,
+    var(--surface) 100%
+  );
+  background-size: 200% 100%;
+  animation: home-focus-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes home-focus-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.home-review-prompt--focus {
+  margin: 0;
+}
+
+.home-week-focus-strip--complete {
+  margin-bottom: 16px;
+}
+
+.home-week-focus-strip--complete .home-week-focus-reminder {
+  padding: 12px 16px;
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.home-week-focus-strip--complete .pm-week-focus-reminder-list li {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.home-week-focus-strip--complete .pm-week-focus-reminder-label {
+  font-size: 11px;
+  margin-bottom: 8px;
+}
+
+/* Combined recent sessions panel */
+.home-recent-panel .home-trend-chart-wrap--embedded,
+.home-recent-panel .home-trend-compact--embedded {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.home-recent-panel .home-trend-compact--embedded .home-hybrid-stat-num {
+  font-size: 28px;
+}
+
+.home-recent-panel .home-trend-compact--embedded .home-trend-compact-note {
+  font-size: 12px;
+}
+
+.home-hybrid-recent-row--today {
+  background: rgba(0, 101, 189, 0.08);
+}
+
+.home-hybrid-recent-row--today:hover {
+  background: rgba(0, 101, 189, 0.12);
+}
+
+.home-hybrid-recent-today-tag {
+  display: inline-block;
+  margin-left: 8px;
+  font-family: var(--font-poster);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand);
+  vertical-align: middle;
 }
 

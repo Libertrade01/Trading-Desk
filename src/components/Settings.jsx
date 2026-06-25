@@ -337,7 +337,7 @@ export default function Settings() {
             <div>
               <h2 className="pm-section-title hybrid-section-title">Daily loss &amp; recovery</h2>
               <p className="pm-section-desc">
-                Governs daily plan limits and automatic half-size recovery after a full DLL hit.
+                Governs session plan limits and automatic half-size recovery after a full DLL hit.
               </p>
             </div>
           </div>
@@ -366,7 +366,7 @@ export default function Settings() {
                 className="pm-text-input"
                 placeholder="400"
               />
-              <p className="pm-field-hint">Max daily loss while in recovery. Daily plan blocks above this.</p>
+              <p className="pm-field-hint">Max daily loss while in recovery. Session plan blocks above this.</p>
             </div>
           </div>
 
@@ -387,7 +387,7 @@ export default function Settings() {
             <div>
               <h2 className="pm-section-title hybrid-section-title">Trading day</h2>
               <p className="pm-section-desc">
-                Which timezone defines &ldquo;today&rdquo; for pre-market, post-market, history, and analytics ranges.
+                Which timezone defines &ldquo;today&rdquo; for check-in, close out, history, and analytics ranges.
               </p>
             </div>
           </div>
@@ -421,7 +421,7 @@ export default function Settings() {
             <div>
               <h2 className="pm-section-title hybrid-section-title">Import defaults</h2>
               <p className="pm-section-desc">
-                Pre-fills stop distance when tagging rTrader imports in post-market.
+                Pre-fills stop distance when tagging rTrader imports in close out.
               </p>
             </div>
           </div>

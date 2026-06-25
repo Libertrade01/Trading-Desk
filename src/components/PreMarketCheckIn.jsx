@@ -255,7 +255,7 @@ export default function PreMarketCheckIn({ onBack }) {
       <div className="pm-checkin-layout">
         <div className="pm-checkin-main">
           <div className="pm-header">
-            <div className="pm-eyebrow hybrid-eyebrow">Pre-market · {sectionDate()}</div>
+            <div className="pm-eyebrow hybrid-eyebrow">Check-in · {sectionDate()}</div>
             <h1 className="hybrid-page-title">CHECK IN.</h1>
             <p className="pm-subtitle">
               Be honest before the open. Your score updates as you go.
@@ -457,7 +457,7 @@ export default function PreMarketCheckIn({ onBack }) {
                   <div className="pm-prep-grid">
                     <ToggleField label="Reviewed key levels" value={form.reviewedKeyLevels} onChange={(v) => set("reviewedKeyLevels", v)} />
                     <ToggleField label="Reviewed news / catalysts" value={form.reviewedNews} onChange={(v) => set("reviewedNews", v)} />
-                    <ToggleField label="Daily plan written" value={form.dailyPlanWritten} onChange={(v) => set("dailyPlanWritten", v)} />
+                    <ToggleField label="Session plan written" value={form.dailyPlanWritten} onChange={(v) => set("dailyPlanWritten", v)} />
                     <ToggleField label="Followed routine" value={form.followedRoutine} onChange={(v) => set("followedRoutine", v)} />
                     <ToggleField label="Meditation / breathwork" value={form.meditation} onChange={(v) => set("meditation", v)} />
                   </div>
@@ -527,7 +527,7 @@ export default function PreMarketCheckIn({ onBack }) {
               />
             </div>
 
-            <div className="pm-checkin-finish-reminders" aria-label="Pre-market reminders">
+            <div className="pm-checkin-finish-reminders" aria-label="Check-in reminders">
               <span className="pm-checkin-finish-label hybrid-label">Desk setup</span>
               <div className="pm-checkin-reminder-grid">
                 <ToggleField label="Unlock accounts" value={form.unlockAccounts} onChange={(v) => set("unlockAccounts", v)} />

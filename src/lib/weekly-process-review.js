@@ -470,7 +470,7 @@ export function detectProcessFindings(summary, sessions, priorSummary = null) {
   if (summary.avgPostSliders != null && summary.avgPostSliders < 6) {
     findings.push({
       severity: "amber",
-      title: "Weak post-market scores",
+      title: "Weak close-out scores",
       detail: `Average process slider score ${summary.avgPostSliders.toFixed(1)}/10 — below target.`,
     });
   }
@@ -521,7 +521,7 @@ export function detectProcessFindings(summary, sessions, priorSummary = null) {
     findings.push({
       severity: "green",
       title: "Risk plan intact",
-      detail: "Risk plan followed every day you answered post-market.",
+      detail: "Risk plan followed every day you completed close out.",
     });
   }
 

@@ -272,7 +272,7 @@ export default function PostMarketReview({ onBack }) {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || "Failed to save post-market review");
+      throw new Error(data.error || "Failed to save close out");
     }
 
     notifySessionSaved();
@@ -360,7 +360,7 @@ export default function PostMarketReview({ onBack }) {
         <div className="pm-closeout-main">
           <div className="pm-closeout-header-row">
             <div className="pm-header">
-              <div className="pm-eyebrow hybrid-eyebrow">Post-market · {sectionDate()}</div>
+              <div className="pm-eyebrow hybrid-eyebrow">Close out · {sectionDate()}</div>
               <h1 className="hybrid-page-title">CLOSE OUT.</h1>
               <p className="pm-subtitle">Close the loop. What happened vs what you planned.</p>
             </div>
@@ -510,15 +510,15 @@ export default function PostMarketReview({ onBack }) {
                       />
                     </div>
                     <div className="pm-field">
-                      <div className="pm-field-label hybrid-label">What went well</div>
+                      <div className="pm-field-label hybrid-label">What i did well</div>
                       <textarea value={form.wentWell} onChange={(e) => set("wentWell", e.target.value)} className="pm-textarea" rows={3} />
                     </div>
                     <div className="pm-field">
-                      <div className="pm-field-label hybrid-label">What went wrong</div>
+                      <div className="pm-field-label hybrid-label">what i can improve</div>
                       <textarea value={form.wentWrong} onChange={(e) => set("wentWrong", e.target.value)} className="pm-textarea" rows={3} />
                     </div>
                     <div className="pm-field">
-                      <div className="pm-field-label hybrid-label">One lesson</div>
+                      <div className="pm-field-label hybrid-label">Main takeaway and Lesson</div>
                       <textarea value={form.oneLesson} onChange={(e) => set("oneLesson", e.target.value)} className="pm-textarea" placeholder="If today taught you one thing, what was it?" rows={3} />
                     </div>
                   </>
@@ -557,7 +557,7 @@ export default function PostMarketReview({ onBack }) {
                   </button>
                   <div className="pm-closeout-finish-actions-right">
                     <button type="button" className="pm-btn-save-review" onClick={handleSave}>
-                      {saved ? "Saved" : "Save review"}
+                      {saved ? "Saved" : "Save close out"}
                     </button>
                     <button
                       type="button"

@@ -11,20 +11,20 @@ const NAV_ITEMS = [
   { id: "home", href: "/", label: "Home", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="5" height="5" rx="0.5"/><rect x="9" y="2" width="5" height="5" rx="0.5"/><rect x="2" y="9" width="5" height="5" rx="0.5"/><rect x="9" y="9" width="5" height="5" rx="0.5"/></svg>
   )},
-  { type: "label", text: "Today" },
-  { id: "premarket", href: "/premarket", label: "Pre-Market", icon: (
+  { type: "label", text: "Daily", className: "sidebar-nav-label--daily" },
+  { id: "premarket", href: "/premarket", label: "Check-in", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/></svg>
   )},
-  { id: "dailyplan", href: "/plan", label: "Daily Plan", icon: (
+  { id: "dailyplan", href: "/plan", label: "Session Plan", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5" strokeLinecap="round"/></svg>
   )},
-  { id: "postmarket", href: "/postmarket", label: "Post-Market", icon: (
+  { id: "postmarket", href: "/postmarket", label: "Close out", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 12h12M4 9l3-3 2 2 4-4" strokeLinecap="round" strokeLinejoin="round"/></svg>
   )},
-  { type: "label", text: "Reference" },
-  { id: "history", href: "/history", label: "History", icon: (
+  { id: "history", href: "/history", label: "History", className: "sidebar-nav-item--daily-gap", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5v4l2.5 1.5" strokeLinecap="round"/></svg>
   )},
+  { type: "label", text: "Reference" },
   { id: "weeklyreview", href: "/weekly-review", label: "Weekly Review", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3" strokeLinecap="round"/></svg>
   )},
@@ -65,7 +65,7 @@ function NavLink({ item, pathname, onClose }) {
   return (
     <Link
       href={item.href}
-      className={`sidebar-nav-item${isNavActive(pathname, item) ? " active" : ""}`}
+      className={`sidebar-nav-item${isNavActive(pathname, item) ? " active" : ""}${item.className ? ` ${item.className}` : ""}`}
       onClick={onClose}
     >
       {item.icon}
@@ -91,7 +91,7 @@ function Sidebar({ pathname, open, onClose, userEmail, mainItems, founderItems, 
           <div className="sidebar-nav-main">
             {mainItems.map((item, i) =>
               item.type === "label" ? (
-                <NavLabel key={`label-${i}`} text={item.text} />
+                <NavLabel key={`label-${i}`} text={item.text} className={item.className} />
               ) : (
                 <NavLink key={item.id} item={item} pathname={pathname} onClose={onClose} />
               )

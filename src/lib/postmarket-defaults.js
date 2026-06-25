@@ -24,6 +24,7 @@ export const BEHAVIORAL_FLAG_CATEGORIES = [
     flags: [
       { key: "hesitatedOnAPlusSetup", label: "Hesitated on A+ setup", hint: "Passed on or delayed an A+ entry" },
       { key: "enteredLate", label: "Entered late", hint: "Got in after the ideal entry" },
+      { key: "enteredEarly", label: "Entered early", hint: "Got in before the ideal entry or confirmation" },
       { key: "exitedFromEmotion", label: "Exited from emotion", hint: "Closed from fear, hope, or impatience" },
     ],
   },
@@ -87,6 +88,7 @@ export const DEFAULT_POSTMARKET = {
   tradedToFixTheDay: false,
   hesitatedOnAPlusSetup: false,
   enteredLate: false,
+  enteredEarly: false,
   exitedFromEmotion: false,
   ignoredPoorState: false,
   distractedDuringSession: false,

@@ -101,9 +101,9 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
       </div>
 
       <div className="history-detail-grid">
-        <SectionCard num="01" title="Pre-Market" subtitle="The state you arrived in.">
+        <SectionCard num="01" title="Check-in" subtitle="The state you arrived in.">
           {!pre ? (
-            <p className="history-missing">No pre-market check-in saved for this day.</p>
+            <p className="history-missing">No check-in saved for this day.</p>
           ) : (
             <div className="history-stat-groups">
               <StatGrid
@@ -147,7 +147,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                 items={[
                   { label: "Reviewed levels", value: yesNo(pre.reviewedKeyLevels) },
                   { label: "Reviewed news", value: yesNo(pre.reviewedNews) },
-                  { label: "Plan written", value: yesNo(pre.dailyPlanWritten) },
+                  { label: "Session plan written", value: yesNo(pre.dailyPlanWritten) },
                   { label: "Routine", value: yesNo(pre.followedRoutine) },
                   { label: "Meditation", value: yesNo(pre.meditation) },
                 ]}
@@ -172,9 +172,9 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
           )}
         </SectionCard>
 
-        <SectionCard num="02" title="Daily Plan" subtitle="What you said you'd do.">
+        <SectionCard num="02" title="Session Plan" subtitle="What you said you'd do.">
           {!plan ? (
-            <p className="history-missing">No daily plan saved for this day.</p>
+            <p className="history-missing">No session plan saved for this day.</p>
           ) : (
             <>
               <div className="history-plan-tags">
@@ -300,9 +300,9 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
         </SectionCard>
       </div>
 
-      <SectionCard num="03" title="Post-Market" subtitle="How it actually went.">
+      <SectionCard num="03" title="Close out" subtitle="How it actually went.">
         {!post ? (
-          <p className="history-missing">No post-market review saved for this day.</p>
+          <p className="history-missing">No close out saved for this day.</p>
         ) : (
           <>
             <div className="history-post-metrics">
@@ -412,7 +412,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
       </SectionCard>
 
       <div className="history-delete-bar">
-        <p>Removing this day deletes all of its data — pre-market, plan, post-market, and imported trades — and cannot be undone.</p>
+        <p>Removing this day deletes all of its data — check-in, session plan, close out, and imported trades — and cannot be undone.</p>
         <button type="button" className="history-delete-btn" onClick={handleDelete} disabled={deleting}>
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M3 4h10M6 4V2.5h4V4M5.5 4v9h5V4" strokeLinecap="round" strokeLinejoin="round" />

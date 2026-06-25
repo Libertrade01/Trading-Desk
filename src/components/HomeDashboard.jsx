@@ -16,7 +16,6 @@ import {
   isWeekend,
 } from "../lib/history-data";
 import HomeEventBanner from "./HomeEventBanner";
-import ReadinessScoreWidget from "./ReadinessScoreWidget";
 import { playbookAdherenceLabel } from "../lib/setup-adherence";
 import {
   loadRecoveryState,
@@ -32,22 +31,24 @@ import { loadTraderSettings } from "../lib/trader-settings";
 import { SESSION_SAVED_EVENT, TRADES_CHANGED_EVENT } from "../lib/session-events";
 
 const WORKFLOW_STEPS = [
-  { id: "premarket", label: "Pre-Market" },
-  { id: "dailyplan", label: "Daily Plan" },
-  { id: "postmarket", label: "Post-Market" },
+  { id: "premarket", label: "Check-in" },
+  { id: "dailyplan", label: "Session Plan" },
+  { id: "postmarket", label: "Close out" },
 ];
+
+const RISK_STREAK_GOAL = 21;
 
 function buildProgressSubline(preComplete, planComplete, postComplete) {
   const parts = [];
-  if (preComplete) parts.push("Pre-market done");
+  if (preComplete) parts.push("Check-in done");
   const open = [];
-  if (!planComplete) open.push("Plan");
-  if (!postComplete) open.push("Review");
+  if (!planComplete) open.push("Session plan");
+  if (!postComplete) open.push("Close out");
   if (open.length) parts.push(`${open.join(" + ")} open`);
   return parts.join(" · ") || "All steps open";
 }
 
-function ReadinessTrend({ sessions }) {
+function ReadinessTrend({ sessions, embedded = false }) {
   const points = useMemo(() => {
     return sessions
       .filter((s) => s.readinessScore != null)
@@ -57,25 +58,31 @@ function ReadinessTrend({ sessions }) {
 
   const chart = useMemo(() => {
     if (points.length < 3) return null;
-    const w = 200;
-    const h = 48;
-    const pad = 4;
+    const w = 280;
+    const h = 56;
+    const padX = 8;
+    const padY = 8;
+    const scores = points.map((p) => p.readinessScore);
+    const minScore = Math.min(...scores);
+    const maxScore = Math.max(...scores);
+    const spread = Math.max(maxScore - minScore, 10);
+    const yMin = Math.max(0, minScore - spread * 0.2);
+    const yMax = Math.min(100, maxScore + spread * 0.2);
+    const yRange = yMax - yMin || 1;
     const coords = points.map((s, i) => {
-      const x =
-        points.length === 1
-          ? w / 2
-          : pad + (i / (points.length - 1)) * (w - pad * 2);
-      const y = pad + (1 - s.readinessScore / 100) * (h - pad * 2);
-      return { x, y };
+      const x = padX + (i / (points.length - 1)) * (w - padX * 2);
+      const y = padY + (1 - (s.readinessScore - yMin) / yRange) * (h - padY * 2);
+      return { x, y, score: s.readinessScore };
     });
     const line = coords.map((p) => `${p.x},${p.y}`).join(" ");
-    return { w, h, line };
+    return { w, h, line, coords, yMin: Math.round(yMin), yMax: Math.round(yMax) };
   }, [points]);
 
   if (points.length === 0) {
+    if (embedded) return null;
     return (
       <p className="home-panel-empty">
-        Complete pre-market check-ins to see your trend.
+        Complete check-ins to see your trend.
       </p>
     );
   }
@@ -83,7 +90,7 @@ function ReadinessTrend({ sessions }) {
   if (points.length < 3) {
     const last = points[points.length - 1];
     return (
-      <div className="home-trend-compact">
+      <div className={`home-trend-compact${embedded ? " home-trend-compact--embedded" : ""}`}>
         <div className="home-hybrid-stat-num">{last.readinessScore}</div>
         <p className="home-trend-compact-note">
           {points.length === 1 ? "First scored session" : "One more for trend line"}
@@ -93,19 +100,36 @@ function ReadinessTrend({ sessions }) {
   }
 
   return (
-    <div className="home-trend-chart-wrap">
+    <div className={`home-trend-chart-wrap${embedded ? " home-trend-chart-wrap--embedded" : ""}`}>
+      <div className="home-trend-chart-range" aria-hidden="true">
+        <span>{chart.yMax}</span>
+        <span>{chart.yMin}</span>
+      </div>
       <svg
         viewBox={`0 0 ${chart.w} ${chart.h}`}
         className="home-trend-chart"
-        preserveAspectRatio="none"
+        preserveAspectRatio="xMidYMid meet"
         aria-hidden="true"
       >
         <polyline
           points={chart.line}
           fill="none"
           stroke="var(--brand)"
-          strokeWidth="2.5"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
+        {chart.coords.map((p, i) => (
+          <circle
+            key={i}
+            cx={p.x}
+            cy={p.y}
+            r="2"
+            fill="var(--brand)"
+            stroke="var(--bg)"
+            strokeWidth="1"
+          />
+        ))}
       </svg>
     </div>
   );
@@ -127,43 +151,285 @@ function stepStarted(stepId, today) {
   return !!stepData(stepId, today);
 }
 
-function formatPosterPnl(value) {
-  if (value == null) return "—";
-  return String(Math.abs(Math.round(value)));
+function WeekFocusStrip({ items, loading, showReviewPrompt, onOpenWeeklyReview, allComplete }) {
+  if (loading && items.length === 0 && !allComplete) {
+    return (
+      <div className="home-week-focus-strip home-week-focus-strip--loading" aria-hidden="true">
+        <div className="home-week-focus-strip-skeleton" />
+      </div>
+    );
+  }
+
+  if (items.length > 0) {
+    return (
+      <div
+        className={`home-week-focus-strip${allComplete ? " home-week-focus-strip--complete" : ""}`}
+        role="note"
+        aria-label="This week's focus"
+      >
+        <div className="pm-week-focus-reminder home-week-focus-reminder">
+          <div className="pm-week-focus-reminder-label hybrid-eyebrow">This week&apos;s focus</div>
+          <ul className="pm-week-focus-reminder-list">
+            {items.map((item, i) => (
+              <li key={i}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+  }
+
+  if (showReviewPrompt && onOpenWeeklyReview) {
+    return (
+      <div className={`home-week-focus-strip${allComplete ? " home-week-focus-strip--complete" : ""}`}>
+        <button
+          type="button"
+          className="home-review-prompt home-review-prompt--focus"
+          onClick={onOpenWeeklyReview}
+        >
+          <span className="home-review-prompt-label">Set this week&apos;s focus</span>
+          <span className="home-review-prompt-action">Weekly review →</span>
+        </button>
+      </div>
+    );
+  }
+
+  return null;
 }
 
-const RISK_STREAK_GOAL = 21;
+function RecoveryBanner({ recoveryStatus }) {
+  if (!recoveryStatus?.active) return null;
 
-function ProcessStreaksPanel({ riskCount, playbookCount, loading }) {
   return (
-    <div
-      className={`home-process-streaks${loading ? " home-process-streaks--loading" : ""}`}
-      title="Risk: consecutive days you followed your risk plan. Playbook: consecutive days with no invalid or untagged trades."
-    >
-      <div className="home-process-streaks-eyebrow hybrid-eyebrow">Process streaks</div>
-      <div className="home-process-streaks-pillars">
-        <div className="home-process-streak-pillar">
-          <div
-            className="home-process-streak-num home-process-streak-num--risk"
-            aria-label={loading ? "Loading risk streak" : `${riskCount} of ${RISK_STREAK_GOAL} day risk adherence streak`}
-          >
-            {loading ? "—" : riskCount}
-            <span className="home-process-streak-goal">/{RISK_STREAK_GOAL}</span>
-          </div>
-          <div className="home-process-streak-label">Risk</div>
+    <div className="dll-recovery-banner" role="status" aria-label="DLL recovery mode">
+      <div className="dll-recovery-banner-eyebrow hybrid-eyebrow">Recovery mode</div>
+      <div className="dll-recovery-banner-stats">
+        <div className="dll-recovery-banner-stat">
+          <span className="dll-recovery-banner-stat-label">Today max</span>
+          <span className="dll-recovery-banner-stat-value dll-recovery-banner-stat-value--accent">
+            {formatRecoveryUsd(recoveryStatus.effectiveMaxDailyLoss)}
+          </span>
         </div>
-        <div className="home-process-streak-pillar home-process-streak-pillar--divider">
+        <div className="dll-recovery-banner-stat dll-recovery-banner-stat--divider">
+          <span className="dll-recovery-banner-stat-label">Drawdown</span>
+          <span className="dll-recovery-banner-stat-value">
+            {formatRecoveryUsd(recoveryStatus.cumulativeDrawdown)}
+          </span>
+        </div>
+        <div className="dll-recovery-banner-stat dll-recovery-banner-stat--divider">
+          <span className="dll-recovery-banner-stat-label">Recovered</span>
+          <span className="dll-recovery-banner-stat-value">
+            {formatRecoveryUsd(recoveryStatus.recoveredSoFar)}
+            <span className="dll-recovery-banner-stat-sub">
+              / {formatRecoveryUsd(recoveryStatus.recoveryTarget)}
+            </span>
+          </span>
+        </div>
+      </div>
+      <div className="dll-recovery-banner-progress">
+        <div
+          className="dll-recovery-banner-track"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={recoveryStatus.recoveryTarget}
+          aria-valuenow={recoveryStatus.recoveredSoFar}
+          aria-label="Recovery progress"
+        >
           <div
-            className="home-process-streak-num home-process-streak-num--playbook"
-            aria-label={loading ? "Loading playbook streak" : `${playbookCount} of ${RISK_STREAK_GOAL} day playbook process streak`}
-          >
-            {loading ? "—" : playbookCount}
-            <span className="home-process-streak-goal">/{RISK_STREAK_GOAL}</span>
-          </div>
-          <div className="home-process-streak-label">Playbook</div>
+            className="dll-recovery-banner-fill"
+            style={{ width: `${recoveryStatus.progressPct}%` }}
+          />
+        </div>
+        <div className="dll-recovery-banner-progress-meta">
+          <span>
+            {formatRecoveryUsd(recoveryStatus.recoveredSoFar)} of{" "}
+            {formatRecoveryUsd(recoveryStatus.recoveryTarget)} recovered
+          </span>
+          <span>{recoveryStatus.progressPct}%</span>
         </div>
       </div>
     </div>
+  );
+}
+
+function RecentSessionsPanel({
+  sessions,
+  recent,
+  todayDateKey,
+  loadingPanels,
+  onNavigate,
+  onOpenHistoryDay,
+}) {
+  return (
+    <div className="pm-section-panel home-recent-panel">
+      <div className="pm-section-panel-head">
+        <div>
+          <h2 className="pm-section-title hybrid-section-title">Recent sessions</h2>
+          <p className="pm-section-desc">Readiness trend and your last few days.</p>
+        </div>
+        <button
+          type="button"
+          className="home-hybrid-block-link"
+          onClick={() => onNavigate("history")}
+        >
+          History →
+        </button>
+      </div>
+      <div className="pm-section-panel-body">
+        {loadingPanels ? (
+          <p className="home-panel-loading-text">Loading sessions…</p>
+        ) : recent.length === 0 ? (
+          <p className="home-panel-empty">No sessions yet.</p>
+        ) : (
+          <>
+            <ReadinessTrend sessions={sessions} embedded />
+            <div className="home-hybrid-recent-head" aria-hidden="true">
+              <span className="home-hybrid-recent-date">Date</span>
+              <span className="home-hybrid-recent-col-ready">Ready</span>
+              <span className="home-hybrid-recent-col-risk">Risk</span>
+              <span className="home-hybrid-recent-col-pnl">P&amp;L</span>
+            </div>
+            {recent.map((s) => {
+              const pnlCls =
+                s.netPnl > 0 ? "positive" : s.netPnl < 0 ? "negative" : "neutral";
+              const readyCls = s.readinessScore != null ? "scored" : "muted";
+              const proc = getProcessStreakDisplayForDay(s, sessions);
+              const procCls =
+                proc.type === "followed"
+                  ? "positive"
+                  : proc.type === "broken"
+                    ? "broken"
+                    : "muted";
+              const isToday = s.date === todayDateKey;
+              return (
+                <button
+                  key={s.date}
+                  type="button"
+                  className={`home-hybrid-recent-row${isToday ? " home-hybrid-recent-row--today" : ""}`}
+                  onClick={() => onOpenHistoryDay(s.date)}
+                >
+                  <span className="home-hybrid-recent-date">
+                    {formatShortHistoryDate(s.date)}
+                    {isToday && <span className="home-hybrid-recent-today-tag">Today</span>}
+                  </span>
+                  <span className={`home-hybrid-recent-ready ${readyCls}`}>
+                    {s.readinessScore != null ? s.readinessScore : "—"}
+                  </span>
+                  <span className={`home-hybrid-recent-proc ${procCls}`}>
+                    {proc.type === "unanswered" ? "—" : proc.streak}
+                  </span>
+                  <span className={`home-hybrid-recent-pnl ${pnlCls}`}>
+                    {s.netPnl != null ? formatUsd(s.netPnl, { signed: true }) : "—"}
+                  </span>
+                </button>
+              );
+            })}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function HomeTodayHero({
+  allComplete,
+  completedCount,
+  today,
+  processStreak,
+  playbookStreak,
+  loadingPanels,
+  showHeroReadiness,
+  showReadinessStat,
+  showPnlStat,
+  showPlaybookStat,
+  todayPlaybookLabel,
+  pnlTone,
+}) {
+  const processStats = (
+    <>
+      <div className="prop-economics-hero-stat">
+        <span className="prop-economics-hero-cap">Risk streak</span>
+        <span className="prop-economics-hero-value">
+          {loadingPanels ? "—" : processStreak}
+          <span className="home-today-hero-goal">/{RISK_STREAK_GOAL}</span>
+        </span>
+      </div>
+      <div
+        className={`prop-economics-hero-stat${allComplete ? "" : " prop-economics-hero-stat--subtle"}`}
+      >
+        <span className="prop-economics-hero-cap">Playbook streak</span>
+        <span className="prop-economics-hero-value">
+          {loadingPanels ? "—" : playbookStreak}
+          <span className="home-today-hero-goal">/{RISK_STREAK_GOAL}</span>
+        </span>
+      </div>
+      {showReadinessStat && today?.readinessScore != null && !(showHeroReadiness && !allComplete) && (
+        <div className="prop-economics-hero-stat">
+          <span className="prop-economics-hero-cap">Ready</span>
+          <span className="prop-economics-hero-value positive">{today.readinessScore}</span>
+        </div>
+      )}
+      {showPlaybookStat && (
+        <div className="prop-economics-hero-stat">
+          <span className="prop-economics-hero-cap">Playbook setups</span>
+          <span
+            className={`prop-economics-hero-value ${
+              todayPlaybookLabel.tone === "green"
+                ? "positive"
+                : todayPlaybookLabel.tone === "amber"
+                  ? "neutral"
+                  : "negative"
+            }`}
+          >
+            {today.playbookAdherence.playbookRate}%
+          </span>
+        </div>
+      )}
+    </>
+  );
+
+  if (allComplete) {
+    return (
+      <section
+        className="prop-economics-hero home-today-hero home-today-hero--complete"
+        aria-label="Today summary"
+      >
+        <div className="home-today-hero-process">{processStats}</div>
+        {showPnlStat && today?.netPnl != null && (
+          <div className="prop-economics-hero-stat home-today-hero-pnl">
+            <span className="prop-economics-hero-cap">Net P&amp;L</span>
+            <span
+              className={`prop-economics-hero-value ${
+                pnlTone === "positive" ? "positive" : pnlTone === "negative" ? "negative" : "neutral"
+              }`}
+            >
+              {formatUsd(today.netPnl, { signed: true })}
+            </span>
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  let primaryLabel = "Today's workflow";
+  let primaryValue = `${completedCount} / 3`;
+  let primaryClass = "";
+
+  if (showHeroReadiness && today?.readinessScore != null) {
+    primaryLabel = "Ready";
+    primaryValue = String(today.readinessScore);
+    primaryClass =
+      today.readinessScore >= 70 ? "positive" : today.readinessScore >= 50 ? "neutral" : "negative";
+  }
+
+  return (
+    <section className="prop-economics-hero home-today-hero" aria-label="Today summary">
+      <div className="prop-economics-hero-net">
+        <span className="prop-economics-hero-cap">{primaryLabel}</span>
+        <span className={`prop-economics-hero-net-value ${primaryClass}`}>{primaryValue}</span>
+      </div>
+      <div className="prop-economics-hero-supporting">{processStats}</div>
+    </section>
   );
 }
 
@@ -186,7 +452,7 @@ function heroCopy(allComplete, completedCount, weekend, timeEyebrow) {
       eyebrow: `${completedCount} of 3 complete`,
       eyebrowMuted: true,
       title: `${timeEyebrow} underway.`,
-      sub: null, // filled by caller with actual step state
+      sub: null,
     };
   }
   if (weekend) {
@@ -201,7 +467,7 @@ function heroCopy(allComplete, completedCount, weekend, timeEyebrow) {
     eyebrow: "0 of 3 complete",
     eyebrowMuted: true,
     title: "READY WHEN YOU ARE.",
-    sub: "Pre-market, plan, and review still open.",
+    sub: "Check-in, session plan, and close out still open.",
   };
 }
 
@@ -320,7 +586,6 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
 
   const pnlTone =
     today?.netPnl > 0 ? "positive" : today?.netPnl < 0 ? "negative" : "neutral";
-  const pnlSmaller = today?.netPnl != null && today.netPnl < 0;
 
   const sessionsForStreaks = useMemo(() => {
     if (!today?.date) return sessions;
@@ -355,319 +620,160 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
   if (loading) return <div className="pm-loading">Loading...</div>;
 
   return (
-    <div className="home-dashboard home-dashboard--hybrid">
-      <div className="home-hybrid-stripe" aria-hidden="true" />
-
-      <div className="home-hybrid-bar">
-        <span className="home-hybrid-date">{formatHomeBarDate(effectiveDate)}</span>
+    <div className="premarket-page hybrid-page">
+      <div className="pm-topbar">
+        <span>{formatHomeBarDate(effectiveDate)}</span>
       </div>
 
-      <div className="home-dashboard-inner">
-        <div className="home-hybrid-body">
-          <header
-            className={`home-hybrid-hero${allComplete ? " home-hybrid-hero--complete" : ""}`}
-          >
-            <div className="home-hybrid-hero-copy">
-              <div
-                className={`home-hybrid-eyebrow hybrid-eyebrow${hero.eyebrowMuted ? " home-hybrid-eyebrow--muted hybrid-eyebrow--muted" : ""}${hero.poster ? " home-hybrid-eyebrow--poster" : ""}`}
-              >
-                {hero.eyebrow}
-              </div>
-              <h1
-                className={`home-hybrid-title hybrid-title hybrid-page-title${hero.poster ? " home-hybrid-title--poster" : ""}`}
-              >
-                {hero.title}
-              </h1>
-              {allComplete && <div className="home-hybrid-rule" aria-hidden="true" />}
-              {allComplete && (showReadinessStat || showPnlStat || showPlaybookStat) && (
-                <div className="home-hybrid-stats-row">
-                  {showReadinessStat && (
-                    <div className="home-hybrid-stat">
-                      <div
-                        className={`home-hybrid-stat-num${today?.readinessScore != null ? " positive" : ""}`}
-                      >
-                        {today?.readinessScore != null ? today.readinessScore : "—"}
-                      </div>
-                      <div className="home-hybrid-stat-cap">Ready</div>
-                    </div>
-                  )}
-                  {showPlaybookStat && (
-                    <div className="home-hybrid-stat">
-                      <div
-                        className={`home-hybrid-stat-num ${
-                          todayPlaybookLabel.tone === "green"
-                            ? "positive"
-                            : todayPlaybookLabel.tone === "amber"
-                              ? "neutral"
-                              : "negative"
-                        }`}
-                      >
-                        {today.playbookAdherence.playbookRate}%
-                      </div>
-                      <div className="home-hybrid-stat-cap">Playbook</div>
-                    </div>
-                  )}
-                  {showPnlStat && (
-                    <div className="home-hybrid-stat">
-                      <div
-                        className={`home-hybrid-stat-num ${pnlTone}${pnlSmaller ? " sm" : ""}`}
-                      >
-                        {formatPosterPnl(today?.netPnl)}
-                      </div>
-                      <div className="home-hybrid-stat-cap">P&amp;L</div>
-                    </div>
-                  )}
-                </div>
-              )}
-              {hero.sub && <p className="home-hybrid-sub">{hero.sub}</p>}
-              {!allComplete && today?.playbookAdherence?.total > 0 && todayPlaybookLabel && (
-                <p className="home-hybrid-sub home-hybrid-sub--playbook">{todayPlaybookLabel.text}</p>
-              )}
-              <ProcessStreaksPanel
-                riskCount={processStreak}
-                playbookCount={playbookStreak}
-                loading={loadingPanels}
-              />
-              {allComplete && (
-                <div className="home-hybrid-edit">
-                  <button type="button" onClick={() => onNavigate("premarket")}>
-                    Edit pre-market
-                  </button>
-                  <span className="home-hybrid-edit-sep">·</span>
-                  <button type="button" onClick={() => onNavigate("dailyplan")}>
-                    Edit plan
-                  </button>
-                  <span className="home-hybrid-edit-sep">·</span>
-                  <button type="button" onClick={() => onNavigate("postmarket")}>
-                    Edit review
-                  </button>
-                </div>
-              )}
-            </div>
-            <aside className="home-hybrid-hero-aside">
-              {showHeroReadiness && (
-                <ReadinessScoreWidget
-                  score={today.readinessScore}
-                  statusLabel={today.readinessLabel}
-                  statusTone={today.readinessTone}
-                  variant="compact"
-                  className="home-hybrid-readiness"
-                />
-              )}
-            </aside>
-          </header>
-
-          {!allComplete && (
-            <section className="home-hybrid-workflow" aria-label="Today's workflow">
-              <div className="home-hybrid-workflow-head">Today&apos;s workflow</div>
-              {WORKFLOW_STEPS.map((step) => {
-                const complete = stepComplete(
-                  step.id,
-                  preComplete,
-                  planComplete,
-                  postComplete
-                );
-                const isNext = nextStep?.id === step.id;
-                const started = stepStarted(step.id, today);
-                const showEdit = !isNext && started;
-                return (
-                  <div
-                    key={step.id}
-                    className={`home-hybrid-step${complete ? " done" : ""}${isNext ? " next" : ""}${started && !complete ? " partial" : ""}`}
-                  >
-                    <button
-                      type="button"
-                      className="home-hybrid-step-hit"
-                      onClick={() => onNavigate(step.id)}
-                    >
-                      <span className="home-hybrid-step-icon" aria-hidden="true">
-                        {complete ? "✓" : ""}
-                      </span>
-                      <span className="home-hybrid-step-label">{step.label}</span>
-                    </button>
-                    {(isNext || showEdit) && (
-                      <span className="home-hybrid-step-action">
-                        {isNext ? (
-                          <button
-                            type="button"
-                            className="home-hybrid-step-badge"
-                            onClick={() => onNavigate(step.id)}
-                          >
-                            {completedCount === 0 ? "Start" : "Next"}
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className="home-hybrid-step-edit"
-                            onClick={() => onNavigate(step.id)}
-                          >
-                            Edit
-                          </button>
-                        )}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </section>
-          )}
-
+      <div className="pm-closeout-layout">
+        <div className="pm-closeout-main">
           <HomeEventBanner dateKey={dateKey} />
 
-          {loadingPanels && weekFocus.items.length === 0 && (
-            <section className="home-week-focus home-panel-loading" aria-hidden="true">
-              <div className="home-week-focus-eyebrow hybrid-eyebrow">This week&apos;s focus</div>
-              <p className="home-panel-loading-text">Loading focus…</p>
-            </section>
-          )}
-
-          {!loadingPanels && weekFocus.items.length > 0 && (
-            <section className="home-week-focus" aria-label="This week's focus">
-              <div className="home-week-focus-eyebrow hybrid-eyebrow">This week&apos;s focus</div>
-              <ul className="home-week-focus-list">
-                {weekFocus.items.map((item, i) => (
-                  <li key={i} className="home-week-focus-item">{item}</li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {showReviewPrompt && onOpenWeeklyReview && (
-            <button
-              type="button"
-              className="home-review-prompt"
-              onClick={onOpenWeeklyReview}
+          <div className="pm-header">
+            <div
+              className={`pm-eyebrow hybrid-eyebrow${hero.eyebrowMuted ? " hybrid-eyebrow--muted" : ""}${hero.poster ? " home-today-eyebrow--poster" : ""}`}
             >
-              <span className="home-review-prompt-label">Weekly process review</span>
-              <span className="home-review-prompt-action">Review this week →</span>
-            </button>
-          )}
+              {hero.eyebrow}
+            </div>
+            <h1 className="hybrid-page-title home-today-title--poster">{hero.title}</h1>
+            {hero.sub && <p className="pm-subtitle">{hero.sub}</p>}
+            {!allComplete && today?.playbookAdherence?.total > 0 && todayPlaybookLabel && (
+              <p className="pm-subtitle home-hybrid-sub--playbook">{todayPlaybookLabel.text}</p>
+            )}
+          </div>
 
-          {recoveryStatus?.active && (
-            <div className="dll-recovery-banner" role="status" aria-label="DLL recovery mode">
-              <div className="dll-recovery-banner-eyebrow hybrid-eyebrow">Recovery mode</div>
-              <div className="dll-recovery-banner-stats">
-                <div className="dll-recovery-banner-stat">
-                  <span className="dll-recovery-banner-stat-label">Today max</span>
-                  <span className="dll-recovery-banner-stat-value dll-recovery-banner-stat-value--accent">
-                    {formatRecoveryUsd(recoveryStatus.effectiveMaxDailyLoss)}
-                  </span>
-                </div>
-                <div className="dll-recovery-banner-stat dll-recovery-banner-stat--divider">
-                  <span className="dll-recovery-banner-stat-label">Drawdown</span>
-                  <span className="dll-recovery-banner-stat-value">
-                    {formatRecoveryUsd(recoveryStatus.cumulativeDrawdown)}
-                  </span>
-                </div>
-                <div className="dll-recovery-banner-stat dll-recovery-banner-stat--divider">
-                  <span className="dll-recovery-banner-stat-label">Recovered</span>
-                  <span className="dll-recovery-banner-stat-value">
-                    {formatRecoveryUsd(recoveryStatus.recoveredSoFar)}
-                    <span className="dll-recovery-banner-stat-sub">
-                      / {formatRecoveryUsd(recoveryStatus.recoveryTarget)}
-                    </span>
-                  </span>
-                </div>
-              </div>
-              <div className="dll-recovery-banner-progress">
-                <div
-                  className="dll-recovery-banner-track"
-                  role="progressbar"
-                  aria-valuemin={0}
-                  aria-valuemax={recoveryStatus.recoveryTarget}
-                  aria-valuenow={recoveryStatus.recoveredSoFar}
-                  aria-label="Recovery progress"
-                >
-                  <div
-                    className="dll-recovery-banner-fill"
-                    style={{ width: `${recoveryStatus.progressPct}%` }}
-                  />
-                </div>
-                <div className="dll-recovery-banner-progress-meta">
-                  <span>
-                    {formatRecoveryUsd(recoveryStatus.recoveredSoFar)} of{" "}
-                    {formatRecoveryUsd(recoveryStatus.recoveryTarget)} recovered
-                  </span>
-                  <span>{recoveryStatus.progressPct}%</span>
-                </div>
-              </div>
+          <WeekFocusStrip
+            items={weekFocus.items}
+            loading={loadingPanels}
+            showReviewPrompt={showReviewPrompt}
+            onOpenWeeklyReview={onOpenWeeklyReview}
+            allComplete={allComplete}
+          />
+
+          <HomeTodayHero
+            allComplete={allComplete}
+            completedCount={completedCount}
+            today={today}
+            processStreak={processStreak}
+            playbookStreak={playbookStreak}
+            loadingPanels={loadingPanels}
+            showHeroReadiness={showHeroReadiness}
+            showReadinessStat={showReadinessStat}
+            showPnlStat={showPnlStat}
+            showPlaybookStat={showPlaybookStat}
+            todayPlaybookLabel={todayPlaybookLabel}
+            pnlTone={pnlTone}
+          />
+
+          {allComplete && (
+            <div className="home-hybrid-edit">
+              <button type="button" onClick={() => onNavigate("premarket")}>
+                Edit check-in
+              </button>
+              <span className="home-hybrid-edit-sep">·</span>
+              <button type="button" onClick={() => onNavigate("dailyplan")}>
+                Edit session plan
+              </button>
+              <span className="home-hybrid-edit-sep">·</span>
+              <button type="button" onClick={() => onNavigate("postmarket")}>
+                Edit close out
+              </button>
             </div>
           )}
 
-          {allComplete && (
-            <section className="home-hybrid-calm-block">
-              <div>
-                <h3 className="home-hybrid-block-label">Readiness trend</h3>
-                {loadingPanels ? (
-                  <p className="home-panel-loading-text">Loading trend…</p>
-                ) : (
-                  <ReadinessTrend sessions={sessions} />
-                )}
-              </div>
-              <div>
-                <div className="home-hybrid-block-head">
-                  <h3 className="home-hybrid-block-label">Recent</h3>
-                  <button
-                    type="button"
-                    className="home-hybrid-block-link"
-                    onClick={() => onNavigate("history")}
-                  >
-                    History →
-                  </button>
+          <div className="pm-closeout-stage">
+            <RecoveryBanner recoveryStatus={recoveryStatus} />
+
+            {!allComplete && (
+              <div className="pm-section-panel home-workflow-panel">
+                <div className="pm-section-panel-head">
+                  <div>
+                    <h2 className="pm-section-title hybrid-section-title">Today&apos;s workflow</h2>
+                    <p className="pm-section-desc">
+                      {completedCount === 0
+                        ? "Start with check-in, then session plan and close out."
+                        : `${completedCount} of 3 steps complete.`}
+                    </p>
+                  </div>
                 </div>
-                {loadingPanels ? (
-                  <p className="home-panel-loading-text">Loading recent sessions…</p>
-                ) : recent.length === 0 ? (
-                  <p className="home-panel-empty">No sessions yet.</p>
-                ) : (
-                  <>
-                    <div className="home-hybrid-recent-head" aria-hidden="true">
-                      <span className="home-hybrid-recent-date">Date</span>
-                      <span className="home-hybrid-recent-col-ready">Ready</span>
-                      <span className="home-hybrid-recent-col-risk">Risk</span>
-                      <span className="home-hybrid-recent-col-pnl">P&amp;L</span>
-                    </div>
-                    {recent.map((s) => {
-                      const pnlCls =
-                        s.netPnl > 0 ? "positive" : s.netPnl < 0 ? "negative" : "neutral";
-                      const readyCls =
-                        s.readinessScore != null ? "scored" : "muted";
-                      const proc = getProcessStreakDisplayForDay(s, sessions);
-                      const procCls =
-                        proc.type === "followed"
-                          ? "positive"
-                          : proc.type === "broken"
-                            ? "broken"
-                            : "muted";
+                <div className="pm-section-panel-body">
+                  <div className="home-workflow-steps" aria-label="Today's workflow">
+                    {WORKFLOW_STEPS.map((step) => {
+                      const complete = stepComplete(
+                        step.id,
+                        preComplete,
+                        planComplete,
+                        postComplete
+                      );
+                      const isNext = nextStep?.id === step.id;
+                      const started = stepStarted(step.id, today);
+                      const showEdit = !isNext && started;
                       return (
-                        <button
-                          key={s.date}
-                          type="button"
-                          className="home-hybrid-recent-row"
-                          onClick={() => onOpenHistoryDay(s.date)}
+                        <div
+                          key={step.id}
+                          className={`home-hybrid-step${complete ? " done" : ""}${isNext ? " next" : ""}${started && !complete ? " partial" : ""}`}
                         >
-                          <span className="home-hybrid-recent-date">
-                            {formatShortHistoryDate(s.date)}
-                          </span>
-                          <span className={`home-hybrid-recent-ready ${readyCls}`}>
-                            {s.readinessScore != null ? s.readinessScore : "—"}
-                          </span>
-                          <span className={`home-hybrid-recent-proc ${procCls}`}>
-                            {proc.type === "unanswered" ? "—" : proc.streak}
-                          </span>
-                          <span className={`home-hybrid-recent-pnl ${pnlCls}`}>
-                            {s.netPnl != null
-                              ? formatUsd(s.netPnl, { signed: true })
-                              : "—"}
-                          </span>
-                        </button>
+                          <button
+                            type="button"
+                            className="home-hybrid-step-hit"
+                            onClick={() => onNavigate(step.id)}
+                          >
+                            <span className="home-hybrid-step-icon" aria-hidden="true">
+                              {complete ? "✓" : ""}
+                            </span>
+                            <span className="home-hybrid-step-label">{step.label}</span>
+                          </button>
+                          {(isNext || showEdit) && (
+                            <span className="home-hybrid-step-action">
+                              {isNext ? (
+                                <button
+                                  type="button"
+                                  className="home-hybrid-step-badge"
+                                  onClick={() => onNavigate(step.id)}
+                                >
+                                  {completedCount === 0 ? "Start" : "Next"}
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="home-hybrid-step-edit"
+                                  onClick={() => onNavigate(step.id)}
+                                >
+                                  Edit
+                                </button>
+                              )}
+                            </span>
+                          )}
+                        </div>
                       );
                     })}
-                  </>
-                )}
+                  </div>
+                </div>
               </div>
-            </section>
-          )}
+            )}
+
+            {showReviewPrompt && onOpenWeeklyReview && weekFocus.items.length > 0 && (
+              <button
+                type="button"
+                className="home-review-prompt"
+                onClick={onOpenWeeklyReview}
+              >
+                <span className="home-review-prompt-label">Weekly process review</span>
+                <span className="home-review-prompt-action">Review this week →</span>
+              </button>
+            )}
+
+            {allComplete && (
+              <RecentSessionsPanel
+                sessions={sessions}
+                recent={recent}
+                todayDateKey={dateKey}
+                loadingPanels={loadingPanels}
+                onNavigate={onNavigate}
+                onOpenHistoryDay={onOpenHistoryDay}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>
