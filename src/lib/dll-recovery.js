@@ -1,5 +1,10 @@
 import { storage } from "./supabase";
-import { loadDllSettings, DEFAULT_DLL_SETTINGS } from "./dll-recovery-settings";
+import {
+  loadDllSettings,
+  DEFAULT_DLL_SETTINGS,
+  getActivationThreshold,
+  ACTIVATION_MODES,
+} from "./dll-recovery-settings";
 
 export const DLL_RECOVERY_KEY = "dll-recovery-state";
 
@@ -20,6 +25,18 @@ function emptyState() {
   };
 }
 
+export function computeRecoveryTarget(cumulativeDrawdown, settings = DEFAULT_DLL_SETTINGS) {
+  const pct = settings.exitRecoveryPercent ?? DEFAULT_DLL_SETTINGS.exitRecoveryPercent;
+  const clamped = Math.min(100, Math.max(1, pct));
+  return round2(cumulativeDrawdown * (clamped / 100));
+}
+
+export function dayActivatesRecovery(net, settings = DEFAULT_DLL_SETTINGS) {
+  if (net == null || Number.isNaN(net) || net >= 0) return false;
+  const threshold = getActivationThreshold(settings);
+  return Math.abs(net) >= threshold;
+}
+
 export async function loadRecoveryState() {
   try {
     const r = await storage.get(DLL_RECOVERY_KEY);
@@ -36,7 +53,6 @@ export async function saveRecoveryState(state) {
 }
 
 function recomputeFromDays(days, settings) {
-  const { fullDll } = settings;
   const sortedKeys = Object.keys(days).sort();
 
   let active = false;
@@ -51,12 +67,12 @@ function recomputeFromDays(days, settings) {
     if (net == null || Number.isNaN(net)) continue;
 
     if (!active) {
-      if (net <= -fullDll) {
+      if (dayActivatesRecovery(net, settings)) {
         active = true;
         startedAt = key;
         cumulativeDrawdown = net < 0 ? round2(Math.abs(net)) : 0;
         recoveredSoFar = 0;
-        recoveryTarget = round2(cumulativeDrawdown * 0.5);
+        recoveryTarget = computeRecoveryTarget(cumulativeDrawdown, settings);
         exitedAt = null;
       }
       continue;
@@ -66,7 +82,7 @@ function recomputeFromDays(days, settings) {
       recoveredSoFar = round2(recoveredSoFar + net);
     } else if (net < 0) {
       cumulativeDrawdown = round2(cumulativeDrawdown + Math.abs(net));
-      recoveryTarget = round2(cumulativeDrawdown * 0.5);
+      recoveryTarget = computeRecoveryTarget(cumulativeDrawdown, settings);
     }
 
     if (recoveryTarget > 0 && recoveredSoFar >= recoveryTarget) {
@@ -99,6 +115,7 @@ export function getEffectiveMaxDailyLoss(state, settings = DEFAULT_DLL_SETTINGS)
 }
 
 export function getRecoveryStatus(state, settings = DEFAULT_DLL_SETTINGS) {
+  const normalized = { ...DEFAULT_DLL_SETTINGS, ...settings };
   const active = isRecoveryActive(state);
   const target = state?.recoveryTarget || 0;
   const recovered = state?.recoveredSoFar || 0;
@@ -114,10 +131,13 @@ export function getRecoveryStatus(state, settings = DEFAULT_DLL_SETTINGS) {
     recoveryTarget: target,
     progressPct,
     remaining: active ? round2(Math.max(0, target - recovered)) : 0,
-    effectiveMaxDailyLoss: getEffectiveMaxDailyLoss(state, settings),
-    fullDll: settings.fullDll,
-    halfDll: settings.halfDll,
-    recoveryEnabled: settings.recoveryEnabled,
+    effectiveMaxDailyLoss: getEffectiveMaxDailyLoss(state, normalized),
+    fullDll: normalized.fullDll,
+    halfDll: normalized.halfDll,
+    recoveryEnabled: normalized.recoveryEnabled,
+    activationMode: normalized.activationMode,
+    activationThreshold: getActivationThreshold(normalized),
+    exitRecoveryPercent: normalized.exitRecoveryPercent,
   };
 }
 
@@ -132,6 +152,19 @@ export function formatRecoveryUsd(n) {
   return n >= 0 ? `$${abs}` : `-$${abs}`;
 }
 
+export function formatActivationRule(settings = DEFAULT_DLL_SETTINGS) {
+  const normalized = { ...DEFAULT_DLL_SETTINGS, ...settings };
+  if (normalized.activationMode === ACTIVATION_MODES.DRAWDOWN_AMOUNT) {
+    return `Single-day loss ≥ ${formatRecoveryUsd(normalized.activationDrawdown)}`;
+  }
+  return `Full daily loss (≥ ${formatRecoveryUsd(normalized.fullDll)})`;
+}
+
+export function formatExitRule(settings = DEFAULT_DLL_SETTINGS) {
+  const pct = settings.exitRecoveryPercent ?? DEFAULT_DLL_SETTINGS.exitRecoveryPercent;
+  return `Recover ${pct}% of cumulative drawdown`;
+}
+
 export function parseMaxDailyLossValue(raw) {
   if (raw == null || raw === "") return null;
   const cleaned = String(raw).replace(/[$,\s]/g, "");
@@ -139,7 +172,7 @@ export function parseMaxDailyLossValue(raw) {
   return Number.isFinite(n) ? round2(Math.abs(n)) : null;
 }
 
-/** Block save when plan max daily loss exceeds effective DLL (half or full). */
+/** Block save when plan max daily loss exceeds effective cap (recovery or full-size). */
 export function validatePlanMaxDailyLoss(rawMaxDailyLoss, recoveryState, settings = DEFAULT_DLL_SETTINGS) {
   const parsed = parseMaxDailyLossValue(rawMaxDailyLoss);
   const status = getRecoveryStatus(recoveryState, settings);
@@ -162,8 +195,8 @@ export function validatePlanMaxDailyLoss(rawMaxDailyLoss, recoveryState, setting
       limit,
       inRecovery: status.active,
       message: status.active
-        ? `Max daily loss is ${formatRecoveryUsd(parsed)} but recovery mode allows ${formatRecoveryUsd(limit)} at most. Set your broker limit to ${formatRecoveryUsd(limit)} or less before saving.`
-        : `Max daily loss is ${formatRecoveryUsd(parsed)} but your full-size DLL is ${formatRecoveryUsd(limit)}. Set your broker limit to ${formatRecoveryUsd(limit)} or less before saving.`,
+        ? `Max daily loss is ${formatRecoveryUsd(parsed)} but Drawdown Recovery allows ${formatRecoveryUsd(limit)} at most today. Set your broker limit to ${formatRecoveryUsd(limit)} or less before saving.`
+        : `Max daily loss is ${formatRecoveryUsd(parsed)} but your full-size limit is ${formatRecoveryUsd(limit)}. Set your broker limit to ${formatRecoveryUsd(limit)} or less before saving.`,
     };
   }
 
@@ -182,7 +215,7 @@ export async function loadRecoveryWithSettings() {
   };
 }
 
-/** Dev/demo: seed an active recovery from a single full-DLL loss day. */
+/** Dev/demo: seed an active recovery from a single loss day. */
 export async function seedRecoveryDemo(drawdown = 750, dateKey = null) {
   const settings = await loadDllSettings();
   const lossDay =

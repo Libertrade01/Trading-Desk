@@ -291,9 +291,9 @@ export default function DailyPlan({ onBack }) {
 
           {recoveryStatus?.active && (
             <div className="pm-closeout-context-strip pm-closeout-context-strip--recovery">
-              <span className="hybrid-label-sm">DLL recovery mode</span>
+              <span className="hybrid-label-sm">Drawdown Recovery</span>
               <p>
-                Use max daily loss of {formatRecoveryUsd(recoveryStatus.effectiveMaxDailyLoss)} today (half DLL).
+                Use max daily loss of {formatRecoveryUsd(recoveryStatus.effectiveMaxDailyLoss)} today (recovery cap).
                 {formatRecoveryProgress(recoveryStatus)
                   ? ` ${formatRecoveryProgress(recoveryStatus)}.`
                   : ""}

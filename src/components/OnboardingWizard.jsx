@@ -11,6 +11,11 @@ import {
   DEFAULT_TRADING_DAY_TIMEZONE,
 } from "../lib/trader-settings";
 import {
+  loadDllSettings,
+  saveDllSettings,
+  DEFAULT_DLL_SETTINGS,
+} from "../lib/dll-recovery-settings";
+import {
   loadTraderProfile,
   saveTraderProfile,
   completeOnboarding,
@@ -28,6 +33,7 @@ const STEPS = [
   { id: "playbook", label: "Playbook" },
   { id: "commitment", label: "Commitment" },
   { id: "streaks", label: "Streaks" },
+  { id: "drawdown-recovery", label: "Drawdown Recovery" },
   { id: "extras", label: "Extras" },
 ];
 
@@ -80,6 +86,9 @@ export default function OnboardingWizard() {
   const [playbookStreakEnabled, setPlaybookStreakEnabled] = useState(true);
   const [streakTargetDays, setStreakTargetDays] = useState(21);
   const [biasChecklistEnabled, setBiasChecklistEnabled] = useState(false);
+  const [drawdownRecoveryEnabled, setDrawdownRecoveryEnabled] = useState(
+    DEFAULT_DLL_SETTINGS.recoveryEnabled
+  );
 
   useEffect(() => {
     (async () => {
@@ -178,6 +187,12 @@ export default function OnboardingWizard() {
         streakTargetDays: Number(streakTargetDays) || 21,
       });
 
+      const dllSettings = await loadDllSettings().catch(() => ({ ...DEFAULT_DLL_SETTINGS }));
+      await saveDllSettings({
+        ...dllSettings,
+        recoveryEnabled: drawdownRecoveryEnabled,
+      });
+
       router.replace("/");
       router.refresh();
     } catch (err) {
@@ -229,7 +244,7 @@ export default function OnboardingWizard() {
               Not a broker — a daily process loop: check-in, session plan, trade, close out.
             </p>
             <p className="pm-field-hint onboarding-copy">
-              This takes about three minutes. You can change everything later in My process and Settings.
+              This takes about three minutes. You can change everything later in My process and Settings — including Drawdown Recovery, our automatic half-size protocol after a loss day.
             </p>
             {isFounder && (
               <button
@@ -403,6 +418,31 @@ export default function OnboardingWizard() {
                 className="pm-number-input"
               />
             </div>
+          </>
+        )}
+
+        {step.id === "drawdown-recovery" && (
+          <>
+            <h1 className="hybrid-page-title">DRAWDOWN RECOVERY.</h1>
+            <p className="pm-subtitle onboarding-lead">
+              A built-in protocol for bad loss days — the desk downshifts you to half size until you&apos;ve earned your way back.
+            </p>
+            <div className="onboarding-feature-card">
+              <p className="onboarding-feature-copy">
+                When a session hits your loss threshold, Drawdown Recovery activates. Your next session plan caps at a lower max daily loss, and the desk tracks how much of the drawdown you&apos;ve recovered before you return to full size.
+              </p>
+              <ul className="onboarding-feature-list">
+                <li>Triggers on a full daily loss or a custom drawdown amount</li>
+                <li>Exits when you&apos;ve recovered a set percentage of cumulative drawdown</li>
+                <li>Session plan won&apos;t save above your recovery cap while active</li>
+              </ul>
+            </div>
+            <ToggleField
+              label="Enable Drawdown Recovery"
+              hint="Default rules work for most traders. Customize activation, exit, and dollar amounts in Settings → Risk."
+              value={drawdownRecoveryEnabled}
+              onChange={setDrawdownRecoveryEnabled}
+            />
           </>
         )}
 

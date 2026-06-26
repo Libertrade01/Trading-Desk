@@ -1915,6 +1915,52 @@ textarea:focus, input:focus, select:focus {
   text-transform: uppercase;
 }
 
+.settings-field-block-lead {
+  margin: 0;
+}
+
+.settings-field-nested {
+  margin-top: 4px;
+}
+
+.settings-rule-summary {
+  margin: 4px 0 0;
+  font-style: italic;
+}
+
+.settings-percent-input {
+  max-width: 120px;
+}
+
+.settings-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-radio-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.settings-radio-row input {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.settings-radio-row > span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-radio-label {
+  font-size: 14px;
+  color: var(--text);
+}
+
 .settings-field-divider {
   height: 1px;
   margin: 20px 0;
@@ -2157,6 +2203,36 @@ textarea:focus, input:focus, select:focus {
 
 .onboarding-copy {
   margin-bottom: 20px;
+}
+
+.onboarding-feature-card {
+  margin: 20px 0 24px;
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.onboarding-feature-copy {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.onboarding-feature-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.onboarding-feature-list li {
+  padding-left: 2px;
 }
 
 .onboarding-template-btn {

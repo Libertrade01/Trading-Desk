@@ -7,6 +7,8 @@ import {
   saveDllSettings,
   validateDllSettingsInput,
   DEFAULT_DLL_SETTINGS,
+  ACTIVATION_MODES,
+  ACTIVATION_MODE_OPTIONS,
 } from "../lib/dll-recovery-settings";
 import {
   loadTraderSettings,
@@ -18,7 +20,11 @@ import {
   DEFAULT_TRADING_DAY_TIMEZONE,
   COMMISSION_SYMBOLS,
 } from "../lib/trader-settings";
-import { formatRecoveryUsd } from "../lib/dll-recovery";
+import {
+  formatRecoveryUsd,
+  formatActivationRule,
+  formatExitRule,
+} from "../lib/dll-recovery";
 import { ACCOUNT_TYPE_OPTIONS } from "../lib/trade-import-options";
 import MyProcessSettings from "./MyProcessSettings";
 
@@ -40,9 +46,9 @@ const SECTIONS = [
   {
     id: "risk",
     label: "Risk",
-    hint: "Daily loss limits",
-    title: "Daily loss & recovery",
-    desc: "Hard limits for the session plan and automatic half-size mode after a full DLL hit.",
+    hint: "Drawdown Recovery",
+    title: "Drawdown Recovery",
+    desc: "Automatic half-size mode after a loss day. Set when it activates, when you exit, and your daily loss caps.",
   },
   {
     id: "accounts",
@@ -274,6 +280,9 @@ function SettingsInner({ initialSection = "desk" }) {
     fullDll: String(DEFAULT_DLL_SETTINGS.fullDll),
     halfDll: String(DEFAULT_DLL_SETTINGS.halfDll),
     recoveryEnabled: DEFAULT_DLL_SETTINGS.recoveryEnabled,
+    activationMode: DEFAULT_DLL_SETTINGS.activationMode,
+    activationDrawdown: String(DEFAULT_DLL_SETTINGS.activationDrawdown),
+    exitRecoveryPercent: String(DEFAULT_DLL_SETTINGS.exitRecoveryPercent),
   });
   const [defaultRisk, setDefaultRisk] = useState(String(DEFAULT_TRADER_SETTINGS.defaultRisk));
   const [tradingDayTimezone, setTradingDayTimezone] = useState(DEFAULT_TRADING_DAY_TIMEZONE);
@@ -311,6 +320,9 @@ function SettingsInner({ initialSection = "desk" }) {
         fullDll: String(dll.fullDll),
         halfDll: String(dll.halfDll),
         recoveryEnabled: dll.recoveryEnabled,
+        activationMode: dll.activationMode,
+        activationDrawdown: String(dll.activationDrawdown),
+        exitRecoveryPercent: String(dll.exitRecoveryPercent),
       });
       setDefaultRisk(String(trader.defaultRisk));
       setTradingDayTimezone(trader.tradingDayTimezone);
@@ -391,6 +403,9 @@ function SettingsInner({ initialSection = "desk" }) {
         fullDll: String(dllCheck.settings.fullDll),
         halfDll: String(dllCheck.settings.halfDll),
         recoveryEnabled: dllCheck.settings.recoveryEnabled,
+        activationMode: dllCheck.settings.activationMode,
+        activationDrawdown: String(dllCheck.settings.activationDrawdown),
+        exitRecoveryPercent: String(dllCheck.settings.exitRecoveryPercent),
       });
       setDefaultRisk(String(traderCheck.settings.defaultRisk));
       setTradingDayTimezone(traderCheck.settings.tradingDayTimezone);
@@ -487,42 +502,134 @@ function SettingsInner({ initialSection = "desk" }) {
 
             {activeSection === "risk" && (
               <section className="pm-card settings-panel">
-                <div className="pm-field-grid">
-                  <div>
-                    <div className="pm-field-label hybrid-label">Full-size DLL ($)</div>
-                    <input
-                      type="text"
-                      value={dllForm.fullDll}
-                      onChange={(e) => setDll("fullDll", e.target.value)}
-                      className="pm-text-input"
-                      placeholder="750"
-                    />
-                    <p className="pm-field-hint">
-                      Enters recovery when net P&amp;L ≤ −
-                      {formatRecoveryUsd(Number(dllForm.fullDll) || DEFAULT_DLL_SETTINGS.fullDll)}.
-                    </p>
-                  </div>
-                  <div>
-                    <div className="pm-field-label hybrid-label">Recovery DLL ($)</div>
-                    <input
-                      type="text"
-                      value={dllForm.halfDll}
-                      onChange={(e) => setDll("halfDll", e.target.value)}
-                      className="pm-text-input"
-                      placeholder="400"
-                    />
-                    <p className="pm-field-hint">Max daily loss while in recovery. Session plan blocks above this.</p>
-                  </div>
-                </div>
-
                 <div className="pm-risk-rails">
                   <ToggleField
-                    label="Automatic recovery"
-                    hint="Hitting full DLL enters recovery; exit automatically after 50% of drawdown is recovered."
+                    label="Enable Drawdown Recovery"
+                    hint="After a loss day triggers your activation rule, the desk switches to half-size until your exit rule is met."
                     value={dllForm.recoveryEnabled}
                     onChange={(v) => setDll("recoveryEnabled", v)}
                   />
                 </div>
+
+                {dllForm.recoveryEnabled && (
+                  <>
+                    <div className="settings-field-divider" />
+
+                    <div className="settings-field-block">
+                      <div className="settings-field-block-label hybrid-label-sm">Daily loss caps</div>
+                      <div className="pm-field-grid">
+                        <div>
+                          <div className="pm-field-label hybrid-label">Full-size max daily loss ($)</div>
+                          <input
+                            type="text"
+                            value={dllForm.fullDll}
+                            onChange={(e) => setDll("fullDll", e.target.value)}
+                            className="pm-text-input"
+                            placeholder="750"
+                          />
+                          <p className="pm-field-hint">
+                            Normal-day cap on the session plan when not in recovery.
+                          </p>
+                        </div>
+                        <div>
+                          <div className="pm-field-label hybrid-label">Recovery max daily loss ($)</div>
+                          <input
+                            type="text"
+                            value={dllForm.halfDll}
+                            onChange={(e) => setDll("halfDll", e.target.value)}
+                            className="pm-text-input"
+                            placeholder="400"
+                          />
+                          <p className="pm-field-hint">
+                            Cap while Drawdown Recovery is active. Session plan blocks above this.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="settings-field-divider" />
+
+                    <div className="settings-field-block">
+                      <div className="settings-field-block-label hybrid-label-sm">Activation rule</div>
+                      <p className="pm-field-hint settings-field-block-lead">
+                        When should Drawdown Recovery start?
+                      </p>
+                      <div className="settings-radio-group">
+                        {ACTIVATION_MODE_OPTIONS.map((opt) => (
+                          <label key={opt.value} className="settings-radio-row">
+                            <input
+                              type="radio"
+                              name="activationMode"
+                              value={opt.value}
+                              checked={dllForm.activationMode === opt.value}
+                              onChange={() => setDll("activationMode", opt.value)}
+                            />
+                            <span>
+                              <span className="settings-radio-label">{opt.label}</span>
+                              <span className="pm-field-hint">{opt.hint}</span>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                      {dllForm.activationMode === ACTIVATION_MODES.DRAWDOWN_AMOUNT && (
+                        <div className="pm-field settings-field-nested">
+                          <div className="pm-field-label hybrid-label">Activation drawdown ($)</div>
+                          <input
+                            type="text"
+                            value={dllForm.activationDrawdown}
+                            onChange={(e) => setDll("activationDrawdown", e.target.value)}
+                            className="pm-text-input"
+                            placeholder="500"
+                          />
+                          <p className="pm-field-hint">
+                            Enter recovery when a single day loses at least this amount.
+                          </p>
+                        </div>
+                      )}
+                      <p className="pm-field-hint settings-rule-summary">
+                        Active rule:{" "}
+                        {formatActivationRule({
+                          ...DEFAULT_DLL_SETTINGS,
+                          ...dllForm,
+                          fullDll: Number(dllForm.fullDll) || DEFAULT_DLL_SETTINGS.fullDll,
+                          activationDrawdown:
+                            Number(String(dllForm.activationDrawdown).replace(/[$,\s]/g, "")) ||
+                            DEFAULT_DLL_SETTINGS.activationDrawdown,
+                        })}
+                      </p>
+                    </div>
+
+                    <div className="settings-field-divider" />
+
+                    <div className="settings-field-block">
+                      <div className="settings-field-block-label hybrid-label-sm">Exit rule</div>
+                      <div className="pm-field">
+                        <div className="pm-field-label hybrid-label">Recover before exiting (%)</div>
+                        <input
+                          type="text"
+                          value={dllForm.exitRecoveryPercent}
+                          onChange={(e) => setDll("exitRecoveryPercent", e.target.value)}
+                          className="pm-text-input settings-percent-input"
+                          placeholder="50"
+                        />
+                        <p className="pm-field-hint">
+                          {formatExitRule({
+                            exitRecoveryPercent:
+                              Number(String(dllForm.exitRecoveryPercent).replace(/[%\s]/g, "")) ||
+                              DEFAULT_DLL_SETTINGS.exitRecoveryPercent,
+                          })}
+                          . Additional loss days extend the drawdown and recalculate the target.
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {!dllForm.recoveryEnabled && (
+                  <p className="pm-field-hint settings-field-block-lead">
+                    Drawdown Recovery is off. Session plan still uses your full-size max daily loss when set.
+                  </p>
+                )}
               </section>
             )}
 

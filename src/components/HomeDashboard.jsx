@@ -200,8 +200,8 @@ function RecoveryBanner({ recoveryStatus }) {
   if (!recoveryStatus?.active) return null;
 
   return (
-    <div className="dll-recovery-banner" role="status" aria-label="DLL recovery mode">
-      <div className="dll-recovery-banner-eyebrow hybrid-eyebrow">Recovery mode</div>
+    <div className="dll-recovery-banner" role="status" aria-label="Drawdown Recovery active">
+      <div className="dll-recovery-banner-eyebrow hybrid-eyebrow">Drawdown Recovery</div>
       <div className="dll-recovery-banner-stats">
         <div className="dll-recovery-banner-stat">
           <span className="dll-recovery-banner-stat-label">Today max</span>

@@ -393,7 +393,7 @@ export default function PostMarketReview({ onBack }) {
 
           {recoveryStatus?.active && (
             <div className="pm-closeout-context-strip pm-closeout-context-strip--recovery">
-              <span className="hybrid-label-sm">DLL recovery active</span>
+              <span className="hybrid-label-sm">Drawdown Recovery active</span>
               <p>
                 Drawdown {formatRecoveryUsd(recoveryStatus.cumulativeDrawdown)} ·{" "}
                 {formatRecoveryProgress(recoveryStatus)} · max daily loss{" "}
