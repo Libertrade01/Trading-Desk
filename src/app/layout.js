@@ -2,8 +2,8 @@ import './globals.css';
 import AuthRecoveryRedirect from '../components/AuthRecoveryRedirect';
 
 export const metadata = {
-  title: 'Trade Desk',
-  description: 'Libertrade Trading Desk',
+  title: 'Libertrade Loop',
+  description: 'Prepare, trade your plan, manage risk, and close out each session.',
   manifest: '/manifest.json',
   themeColor: '#111217',
   viewport: {

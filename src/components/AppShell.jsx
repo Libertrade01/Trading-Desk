@@ -99,7 +99,7 @@ function Sidebar({ pathname, settingsSection, open, onClose, userEmail, mainItem
       <aside className={`sidebar${open ? " open" : ""}`}>
         <div className="sidebar-brand">
           <div className="sidebar-wordmark">Liber<span>trade</span></div>
-          <div className="sidebar-brand-sub">Trading Desk</div>
+          <div className="sidebar-brand-sub">Loop</div>
         </div>
         <nav className="sidebar-nav">
           <div className="sidebar-nav-main">

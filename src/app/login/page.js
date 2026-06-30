@@ -44,7 +44,7 @@ function LoginForm() {
         <div className="auth-brand">
           Liber<span>trade</span>
         </div>
-        <p className="auth-sub">Sign in to your trading desk</p>
+        <p className="auth-sub">Sign in to Libertrade Loop</p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-label">
