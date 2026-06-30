@@ -13,7 +13,7 @@ export default function ProcessOverviewPanel({ metrics }) {
   if (!hasProcess) {
     return (
       <div className="analytics-empty">
-        No close outs or rule data in this range — complete Close out to track process here.
+        No close loops or rule data in this range — complete Close loop to track process here.
       </div>
     );
   }
@@ -36,7 +36,7 @@ export default function ProcessOverviewPanel({ metrics }) {
                       : "negative"
               }
               className="an-stat--hero"
-              sub={`${metrics.reviewDays} close-out day${metrics.reviewDays === 1 ? "" : "s"}`}
+              sub={`${metrics.reviewDays} close loop day${metrics.reviewDays === 1 ? "" : "s"}`}
             />
             {metrics.behavioralFlags > 0 ? (
               <div className="an-playbook-status" style={{ color: "var(--amber)" }}>

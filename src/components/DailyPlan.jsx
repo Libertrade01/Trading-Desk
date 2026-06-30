@@ -502,8 +502,8 @@ export default function DailyPlan({ onBack }) {
                         <input type="text" value={form.maxTrades} onChange={(e) => set("maxTrades", e.target.value)} className="pm-text-input" />
                       </div>
                       <div>
-                        <div className="pm-field-label hybrid-label">Position size</div>
-                        <input type="text" value={form.positionSize} onChange={(e) => set("positionSize", e.target.value)} className="pm-text-input" placeholder="2 MNQ" />
+                        <div className="pm-field-label hybrid-label">Position size ($ or contracts)</div>
+                        <input type="text" value={form.positionSize} onChange={(e) => set("positionSize", e.target.value)} className="pm-text-input" placeholder="$500 or 2 MNQ" />
                       </div>
                       <div>
                         <div className="pm-field-label hybrid-label">Stop trading at</div>

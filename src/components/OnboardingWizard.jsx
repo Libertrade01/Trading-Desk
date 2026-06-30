@@ -27,6 +27,7 @@ import {
 import { ACCOUNT_TYPE_OPTIONS } from "../lib/trade-import-options";
 import { getCurrentUser } from "../lib/user-storage";
 import OnboardingLoopPreview from "./OnboardingLoopPreview";
+import OnboardingWelcome from "./OnboardingWelcome";
 
 const STEPS = [
   { id: "welcome", label: "Welcome" },
@@ -64,7 +65,7 @@ function onboardingEyebrow(step) {
 function primaryCtaLabel(step, { saving, isLast }) {
   if (saving) return "Saving…";
   if (step.id === "welcome") return "Build my loop";
-  if (isLast) return "Open my loop";
+  if (isLast) return "Finish setup";
   return "Continue";
 }
 
@@ -262,6 +263,34 @@ export default function OnboardingWizard() {
 
   if (loading) return <div className="pm-loading onboarding-page">Loading...</div>;
 
+  if (step.id === "welcome") {
+    return (
+      <div className="premarket-page hybrid-page onboarding-page onboarding-page--welcome">
+        <div className="onboarding-welcome-glow" aria-hidden="true" />
+        <div className="onboarding-welcome-layout">
+          <OnboardingWelcome
+            onContinue={goNext}
+            saving={saving}
+            error={error}
+            isFounder={isFounder}
+            onFounderTemplate={handleFounderTemplate}
+          />
+          <OnboardingLoopPreview
+            variant="hero"
+            stepId={step.id}
+            tradingDayTimezone={tradingDayTimezone}
+            accountName={accountName}
+            setups={setups}
+            defaultMaxDailyLoss={defaultMaxDailyLoss}
+            defaultMaxTrades={defaultMaxTrades}
+            defaultPositionSize={defaultPositionSize}
+            drawdownRecoveryEnabled={drawdownRecoveryEnabled}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="premarket-page hybrid-page onboarding-page">
       <div className="onboarding-layout">
@@ -280,49 +309,7 @@ export default function OnboardingWizard() {
 
           <header className="pm-header onboarding-header">
             <div className="pm-eyebrow hybrid-eyebrow">{onboardingEyebrow(step)}</div>
-
-            {step.id === "welcome" && (
-              <>
-                <h1 className="onboarding-hero-title">Build your daily trading loop.</h1>
-                <p className="onboarding-lead-copy">
-                  Libertrade Loop helps you prepare, trade your plan, manage risk, and close out each session
-                  with a clear review.
-                </p>
-              </>
-            )}
           </header>
-
-        {step.id === "welcome" && (
-          <>
-            <div className="onboarding-welcome-card">
-              <p className="onboarding-body-copy">
-                Every session follows the same rhythm: check in, set your plan, trade your playbook, and close
-                the loop.
-              </p>
-              <p className="onboarding-body-copy onboarding-body-copy--emphasis">
-                The goal is simple: stay inside your process when the market gets emotional.
-              </p>
-            </div>
-            <p className="onboarding-reassurance-copy">
-              You&apos;ll set up your trading day, account, playbook, commitments, risk limits, and recovery
-              rules.
-            </p>
-            <ul className="onboarding-reassurance-list">
-              <li>No broker connection needed.</li>
-              <li>You can change everything later.</li>
-            </ul>
-            {isFounder && (
-              <button
-                type="button"
-                className="pm-btn-save-review onboarding-template-btn"
-                onClick={handleFounderTemplate}
-                disabled={saving}
-              >
-                {saving ? "Applying…" : "Use Libertrade template"}
-              </button>
-            )}
-          </>
-        )}
 
         {step.id === "timezone" && (
           <>
@@ -382,7 +369,7 @@ export default function OnboardingWizard() {
           <>
             <h1 className="hybrid-page-title">YOUR PLAYBOOK.</h1>
             <p className="onboarding-step-lead">
-              Name the setups you trade with a plan. They appear on your session plan and in close-out so you can
+              Name the setups you trade with a plan. They appear on your session plan and in close loop so you can
               track whether you followed the book.
             </p>
             <div className="onboarding-welcome-card">
@@ -495,13 +482,13 @@ export default function OnboardingWizard() {
                 />
               </div>
               <div>
-                <div className="pm-field-label hybrid-label">Usual position size</div>
+                <div className="pm-field-label hybrid-label">Usual position size ($ or contracts)</div>
                 <input
                   type="text"
                   value={defaultPositionSize}
                   onChange={(e) => setDefaultPositionSize(e.target.value)}
                   className="pm-text-input"
-                  placeholder="Optional — e.g. 2 MNQ"
+                  placeholder="Optional — e.g. $500 or 2 MNQ"
                 />
               </div>
             </div>
@@ -544,7 +531,7 @@ export default function OnboardingWizard() {
             <div className="onboarding-welcome-card">
               <ul className="onboarding-feature-list">
                 <li>
-                  <strong>Risk streak</strong> — extends when close-out shows you stayed inside your risk limits.
+                  <strong>Risk streak</strong> — extends when close loop shows you stayed inside your risk limits.
                 </li>
                 <li>
                   <strong>Playbook streak</strong> — extends when every trade is tagged to a real setup.
@@ -595,7 +582,7 @@ export default function OnboardingWizard() {
 
         {error && <p className="onboarding-error">{error}</p>}
 
-        <div className={`onboarding-nav${step.id === "welcome" ? " onboarding-nav--welcome" : ""}`}>
+        <div className="onboarding-nav">
           {!isFirst && (
             <button
               type="button"
@@ -622,7 +609,7 @@ export default function OnboardingWizard() {
             )}
             <button
               type="button"
-              className={`pm-btn-primary-sm${step.id === "welcome" ? " onboarding-cta-primary" : ""}`}
+              className="pm-btn-primary-sm"
               onClick={goNext}
               disabled={saving}
             >
@@ -633,6 +620,7 @@ export default function OnboardingWizard() {
         </div>
 
         <OnboardingLoopPreview
+          variant="compact"
           stepId={step.id}
           tradingDayTimezone={tradingDayTimezone}
           accountName={accountName}

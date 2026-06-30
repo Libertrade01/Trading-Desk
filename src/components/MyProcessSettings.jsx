@@ -89,7 +89,7 @@ export default function MyProcessSettings({ standalone = false }) {
           <div>
             <h2 className="pm-section-title hybrid-section-title">My process</h2>
             <p className="pm-section-desc">
-              Playbook setups, commitments, check-in desk list, and close-out flags — tailored to how you trade.
+              Playbook setups, commitments, check-in desk list, and close loop flags — tailored to how you trade.
             </p>
           </div>
         </div>
@@ -203,13 +203,13 @@ export default function MyProcessSettings({ standalone = false }) {
             />
           </div>
           <div>
-            <div className="pm-field-label hybrid-label">Usual position size</div>
+            <div className="pm-field-label hybrid-label">Usual position size ($ or contracts)</div>
             <input
               type="text"
               value={profile.defaultPositionSize ?? ""}
               onChange={(e) => patch({ defaultPositionSize: e.target.value })}
               className="pm-text-input"
-              placeholder="Optional — e.g. 2 MNQ"
+              placeholder="Optional — e.g. $500 or 2 MNQ"
             />
           </div>
         </div>
@@ -332,8 +332,8 @@ export default function MyProcessSettings({ standalone = false }) {
       </div>
 
       <div className="pm-field">
-        <div className="pm-field-label hybrid-label">Close-out behavioral flags</div>
-        <p className="pm-field-hint">Choose which flags appear in close out. Journal prompts stay standard.</p>
+        <div className="pm-field-label hybrid-label">Close loop behavioral flags</div>
+        <p className="pm-field-hint">Choose which flags appear in close loop. Journal prompts stay standard.</p>
         {BEHAVIORAL_FLAG_CATEGORIES.map((category) => (
           <div key={category.id} className="settings-flag-category">
             <div className="hybrid-label-sm settings-flag-category-title">{category.label}</div>

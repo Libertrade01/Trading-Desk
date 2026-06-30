@@ -39,7 +39,7 @@ const SECTIONS = [
     label: "Process",
     hint: "Playbook & flags",
     title: "Your playbook",
-    desc: "Setups, commitments, desk checks, streaks, and close-out flags.",
+    desc: "Setups, commitments, desk checks, streaks, and close loop flags.",
   },
   {
     id: "desk",
@@ -536,7 +536,7 @@ function SettingsInner({ initialSection = "desk" }) {
                       ))}
                     </select>
                     <p className="pm-field-hint">
-                      Defines &ldquo;today&rdquo; for check-in, close out, history, and analytics. Import CSV dates are unchanged.
+                      Defines &ldquo;today&rdquo; for check-in, close loop, history, and analytics. Import CSV dates are unchanged.
                     </p>
                   </div>
                 </div>
@@ -544,7 +544,7 @@ function SettingsInner({ initialSection = "desk" }) {
                 <div className="settings-field-divider" />
 
                 <div className="settings-field-block">
-                  <div className="settings-field-block-label hybrid-label-sm">Close-out imports</div>
+                  <div className="settings-field-block-label hybrid-label-sm">Close loop imports</div>
                   <div className="pm-field">
                     <div className="pm-field-label hybrid-label">Default risk (stop points)</div>
                     <input

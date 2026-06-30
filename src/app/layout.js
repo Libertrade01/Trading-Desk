@@ -3,7 +3,7 @@ import AuthRecoveryRedirect from '../components/AuthRecoveryRedirect';
 
 export const metadata = {
   title: 'Libertrade Loop',
-  description: 'Prepare, trade your plan, manage risk, and close out each session.',
+  description: 'Prepare, trade your plan, manage risk, and close the loop after each session.',
   manifest: '/manifest.json',
   themeColor: '#111217',
   viewport: {

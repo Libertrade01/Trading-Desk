@@ -35,7 +35,7 @@ export const CLOSEOUT_STEPS = [
 
 export default function PostMarketStepper({ activeIndex, onSelect }) {
   return (
-    <nav className="pm-closeout-stepper" aria-label="Close-out steps">
+    <nav className="pm-closeout-stepper" aria-label="Close loop steps">
       <ol className="pm-closeout-stepper-list">
         {CLOSEOUT_STEPS.map((step, i) => {
           const active = i === activeIndex;

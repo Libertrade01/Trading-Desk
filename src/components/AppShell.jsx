@@ -23,7 +23,7 @@ const NAV_ITEMS = [
   { id: "dailyplan", href: "/plan", label: "Session Plan", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5" strokeLinecap="round"/></svg>
   )},
-  { id: "postmarket", href: "/postmarket", label: "Close out", icon: (
+  { id: "postmarket", href: "/postmarket", label: "Close loop", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 12h12M4 9l3-3 2 2 4-4" strokeLinecap="round" strokeLinejoin="round"/></svg>
   )},
   { id: "history", href: "/history", label: "History", className: "sidebar-nav-item--daily-gap", icon: (

@@ -61,7 +61,7 @@ export default function HistoryPage({ onSelectDay }) {
 
         {sessions.length === 0 ? (
           <div className="history-empty">
-            No sessions logged yet. Complete Check-in, Session Plan, or Close out to build your history.
+            No sessions logged yet. Complete Check-in, Session Plan, or Close loop to build your history.
           </div>
         ) : (
           <div className="history-list">

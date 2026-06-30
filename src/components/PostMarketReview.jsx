@@ -281,7 +281,7 @@ export default function PostMarketReview({ onBack }) {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || "Failed to save close out");
+      throw new Error(data.error || "Failed to save close loop");
     }
 
     notifySessionSaved();
@@ -377,8 +377,8 @@ export default function PostMarketReview({ onBack }) {
         <div className="pm-closeout-main">
           <div className="pm-closeout-header-row">
             <div className="pm-header">
-              <div className="pm-eyebrow hybrid-eyebrow">Close out · {sectionDate()}</div>
-              <h1 className="hybrid-page-title">CLOSE OUT.</h1>
+              <div className="pm-eyebrow hybrid-eyebrow">Close loop · {sectionDate()}</div>
+              <h1 className="hybrid-page-title">CLOSE LOOP.</h1>
               <p className="pm-subtitle">Close the loop. What happened vs what you planned.</p>
             </div>
             <CloseoutMetrics
@@ -481,7 +481,7 @@ export default function PostMarketReview({ onBack }) {
                     <div className="pm-risk-block">
                       <ToggleField
                         label="Risk plan followed?"
-                        hint="Be brutally honest — this is your risk adherence streak. Yes only if you followed your plan and respected every limit today. Serious traders close out clean."
+                        hint="Be brutally honest — this is your risk adherence streak. Yes only if you followed your plan and respected every limit today. Serious traders close the loop clean."
                         value={form.riskPlanFollowed === true}
                         onChange={(on) => set("riskPlanFollowed", on)}
                       />
@@ -593,7 +593,7 @@ export default function PostMarketReview({ onBack }) {
                   </button>
                   <div className="pm-closeout-finish-actions-right">
                     <button type="button" className="pm-btn-save-review" onClick={handleSave}>
-                      {saved ? "Saved" : "Save close out"}
+                      {saved ? "Saved" : "Save close loop"}
                     </button>
                     <button
                       type="button"

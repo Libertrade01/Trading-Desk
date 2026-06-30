@@ -314,9 +314,9 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
         </SectionCard>
       </div>
 
-      <SectionCard num="03" title="Close out" subtitle="How it actually went.">
+      <SectionCard num="03" title="Close loop" subtitle="How it actually went.">
         {!post ? (
-          <p className="history-missing">No close out saved for this day.</p>
+          <p className="history-missing">No close loop saved for this day.</p>
         ) : (
           <>
             <div className="history-post-metrics">
@@ -426,7 +426,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
       </SectionCard>
 
       <div className="history-delete-bar">
-        <p>Removing this day deletes all of its data — check-in, session plan, close out, and imported trades — and cannot be undone.</p>
+        <p>Removing this day deletes all of its data — check-in, session plan, close loop, and imported trades — and cannot be undone.</p>
         <button type="button" className="history-delete-btn" onClick={handleDelete} disabled={deleting}>
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M3 4h10M6 4V2.5h4V4M5.5 4v9h5V4" strokeLinecap="round" strokeLinejoin="round" />

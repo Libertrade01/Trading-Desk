@@ -18,7 +18,7 @@ export default function AnalyticsWorkflowNotice() {
     <div className="analytics-desk-notice analytics-desk-notice--compact">
       <span className="hybrid-eyebrow">Workflow</span>
       <p>
-        Import in <Link href="/postmarket">Close out</Link> · tag every setup · accounts in{" "}
+        Import in <Link href="/postmarket">Close loop</Link> · tag every setup · accounts in{" "}
         <Link href="/settings">Settings</Link>.
       </p>
       <button

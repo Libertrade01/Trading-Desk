@@ -38,7 +38,7 @@ import { SESSION_SAVED_EVENT, TRADES_CHANGED_EVENT } from "../lib/session-events
 const WORKFLOW_STEPS = [
   { id: "premarket", label: "Check-in" },
   { id: "dailyplan", label: "Session Plan" },
-  { id: "postmarket", label: "Close out" },
+  { id: "postmarket", label: "Close loop" },
 ];
 
 function buildProgressSubline(preComplete, planComplete, postComplete) {
@@ -46,7 +46,7 @@ function buildProgressSubline(preComplete, planComplete, postComplete) {
   if (preComplete) parts.push("Check-in done");
   const open = [];
   if (!planComplete) open.push("Session plan");
-  if (!postComplete) open.push("Close out");
+  if (!postComplete) open.push("Close loop");
   if (open.length) parts.push(`${open.join(" + ")} open`);
   return parts.join(" · ") || "All steps open";
 }
@@ -502,7 +502,7 @@ function heroCopy(allComplete, completedCount, weekend, timeEyebrow) {
     eyebrow: "0 of 3 complete",
     eyebrowMuted: true,
     title: "READY WHEN YOU ARE.",
-    sub: "Check-in, session plan, and close out still open.",
+    sub: "Check-in, session plan, and close loop still open.",
   };
 }
 
@@ -767,7 +767,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
               </button>
               <span className="home-hybrid-edit-sep">·</span>
               <button type="button" onClick={() => onNavigate("postmarket")}>
-                Edit close out
+                Edit close loop
               </button>
             </div>
           )}
@@ -782,7 +782,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
                     <h2 className="pm-section-title hybrid-section-title">Today&apos;s workflow</h2>
                     <p className="pm-section-desc">
                       {completedCount === 0
-                        ? "Start with check-in, then session plan and close out."
+                        ? "Start with check-in, then session plan and close loop."
                         : `${completedCount} of 3 steps complete.`}
                     </p>
                   </div>
