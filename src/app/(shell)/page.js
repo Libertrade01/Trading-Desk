@@ -10,6 +10,8 @@ const SECTION_ROUTES = {
   postmarket: "/postmarket",
   process: "/settings?section=process",
   "settings-risk": "/settings?section=risk",
+  analytics: "/analytics",
+  weeklyreview: "/weekly-review",
 };
 
 export default function HomePage() {
