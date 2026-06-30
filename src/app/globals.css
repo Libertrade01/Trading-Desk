@@ -2247,116 +2247,103 @@ textarea:focus, input:focus, select:focus {
 
 .onboarding-setup-flow {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 20px;
+  flex-direction: column;
+  gap: 14px;
   margin-bottom: 32px;
   padding-bottom: 28px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.onboarding-setup-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 20px;
+}
+
+.onboarding-setup-row--center {
+  grid-template-columns: repeat(2, minmax(0, max-content));
+  justify-content: center;
+  gap: 32px;
 }
 
 .onboarding-setup-chip {
   display: inline-flex;
   align-items: center;
   gap: 9px;
+  min-width: 0;
 }
 
 .onboarding-setup-chip-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: rgba(0, 101, 189, 0.14);
-  color: rgba(140, 190, 255, 0.95);
+  background: rgba(0, 101, 189, 0.12);
+  color: rgba(140, 190, 255, 0.9);
   flex-shrink: 0;
 }
 
 .onboarding-setup-chip-icon svg {
-  width: 17px;
-  height: 17px;
+  width: 16px;
+  height: 16px;
 }
 
 .onboarding-setup-chip-label {
   font-size: 12px;
   line-height: 1.25;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.68);
-  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .onboarding-welcome-cta {
-  position: relative;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: center;
+  gap: 10px;
   width: 100%;
   margin: 0 0 16px;
-  padding: 6px 6px 6px 22px;
-  border: 1px solid rgba(120, 180, 255, 0.22);
-  border-radius: 12px;
-  background: linear-gradient(145deg, rgba(0, 116, 232, 1) 0%, rgba(0, 91, 184, 1) 55%, rgba(0, 75, 150, 1) 100%);
-  color: #fff;
+  padding: 14px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.97);
+  color: #05070a;
   font-family: var(--font-poster);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
-  overflow: hidden;
-  box-shadow:
-    0 0 0 1px rgba(0, 101, 189, 0.25),
-    0 10px 36px rgba(0, 101, 189, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-}
-
-.onboarding-welcome-cta-shine {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0.02) 42%,
-    transparent 100%
-  );
-  pointer-events: none;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .onboarding-welcome-cta-label {
-  position: relative;
-  z-index: 1;
+  line-height: 1;
 }
 
 .onboarding-welcome-cta-arrow {
-  position: relative;
-  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 9px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  flex-shrink: 0;
-  transition: background 0.18s ease, transform 0.18s ease;
+  color: rgba(5, 7, 10, 0.55);
+  transition: transform 0.18s ease, color 0.18s ease;
 }
 
 .onboarding-welcome-cta:hover:not(:disabled) {
+  background: #fff;
+  border-color: rgba(255, 255, 255, 0.28);
   transform: translateY(-1px);
-  border-color: rgba(160, 200, 255, 0.35);
-  box-shadow:
-    0 0 0 1px rgba(0, 101, 189, 0.35),
-    0 14px 44px rgba(0, 101, 189, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
 }
 
 .onboarding-welcome-cta:hover:not(:disabled) .onboarding-welcome-cta-arrow {
-  background: rgba(255, 255, 255, 0.22);
-  transform: translateX(2px);
+  transform: translateX(3px);
+  color: var(--brand);
 }
 
 .onboarding-welcome-cta:active:not(:disabled) {
@@ -2615,12 +2602,15 @@ textarea:focus, input:focus, select:focus {
     order: -1;
   }
 
-  .onboarding-setup-flow {
-    gap: 12px 16px;
+  .onboarding-setup-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 
-  .onboarding-setup-chip-label {
-    white-space: normal;
+  .onboarding-setup-row--center {
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+    gap: 12px;
   }
 
   .onboarding-welcome-glow {
@@ -2632,10 +2622,8 @@ textarea:focus, input:focus, select:focus {
 }
 
 @media (max-width: 520px) {
-  .onboarding-setup-flow {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px 12px;
+  .onboarding-setup-row:not(.onboarding-setup-row--center) {
+    grid-template-columns: 1fr;
   }
 }
 

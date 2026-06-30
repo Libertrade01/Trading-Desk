@@ -41,15 +41,27 @@ export default function OnboardingWelcome({
 
       <p className="onboarding-welcome-section-label">What you&apos;ll set up</p>
 
-      <div className="onboarding-setup-flow" role="list" aria-label="Setup steps">
-        {SETUP_TILES.map(({ id, label, Icon }) => (
-          <div key={id} className="onboarding-setup-chip" role="listitem">
-            <span className="onboarding-setup-chip-icon">
-              <Icon />
-            </span>
-            <span className="onboarding-setup-chip-label">{label}</span>
-          </div>
-        ))}
+      <div className="onboarding-setup-flow" aria-label="Setup steps">
+        <div className="onboarding-setup-row" role="list">
+          {SETUP_TILES.slice(0, 3).map(({ id, label, Icon }) => (
+            <div key={id} className="onboarding-setup-chip" role="listitem">
+              <span className="onboarding-setup-chip-icon">
+                <Icon />
+              </span>
+              <span className="onboarding-setup-chip-label">{label}</span>
+            </div>
+          ))}
+        </div>
+        <div className="onboarding-setup-row onboarding-setup-row--center" role="list">
+          {SETUP_TILES.slice(3).map(({ id, label, Icon }) => (
+            <div key={id} className="onboarding-setup-chip" role="listitem">
+              <span className="onboarding-setup-chip-icon">
+                <Icon />
+              </span>
+              <span className="onboarding-setup-chip-label">{label}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {error ? <p className="onboarding-error">{error}</p> : null}
@@ -60,7 +72,6 @@ export default function OnboardingWelcome({
         onClick={onContinue}
         disabled={saving}
       >
-        <span className="onboarding-welcome-cta-shine" aria-hidden="true" />
         <span className="onboarding-welcome-cta-label">
           {saving ? "Saving…" : "Build my loop"}
         </span>
