@@ -2247,54 +2247,53 @@ textarea:focus, input:focus, select:focus {
 
 .onboarding-setup-flow {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-bottom: 32px;
-  padding-bottom: 28px;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 6px;
+  row-gap: 10px;
+  margin-bottom: 28px;
+  padding-bottom: 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.onboarding-setup-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px 20px;
-}
-
-.onboarding-setup-row--center {
-  grid-template-columns: repeat(2, minmax(0, max-content));
-  justify-content: center;
-  gap: 32px;
 }
 
 .onboarding-setup-chip {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  min-width: 0;
+  gap: 7px;
+}
+
+.onboarding-setup-chip:not(:last-child)::after {
+  content: "·";
+  margin-left: 6px;
+  font-size: 12px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.18);
+  pointer-events: none;
 }
 
 .onboarding-setup-chip-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background: rgba(0, 101, 189, 0.12);
-  color: rgba(140, 190, 255, 0.9);
+  background: rgba(0, 101, 189, 0.1);
+  color: rgba(140, 190, 255, 0.85);
   flex-shrink: 0;
 }
 
 .onboarding-setup-chip-icon svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 .onboarding-setup-chip-label {
   font-size: 12px;
-  line-height: 1.25;
+  line-height: 1.2;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.68);
+  white-space: nowrap;
 }
 
 .onboarding-welcome-cta {
@@ -2611,15 +2610,8 @@ textarea:focus, input:focus, select:focus {
     order: -1;
   }
 
-  .onboarding-setup-row {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .onboarding-setup-row--center {
-    grid-template-columns: 1fr;
-    justify-content: stretch;
-    gap: 12px;
+  .onboarding-setup-chip-label {
+    white-space: normal;
   }
 
   .onboarding-welcome-glow {
@@ -2630,11 +2622,6 @@ textarea:focus, input:focus, select:focus {
   }
 }
 
-@media (max-width: 520px) {
-  .onboarding-setup-row:not(.onboarding-setup-row--center) {
-    grid-template-columns: 1fr;
-  }
-}
 
 .onboarding-layout {
   display: grid;
