@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { upsertUserAppData, getUserAppData } from "@/lib/app-data-server";
-import { isDevUser } from "@/lib/dev-access";
+import { isDevUser, canUseDevTools } from "@/lib/dev-access";
 import {
   TRADER_PROFILE_KEY,
   normalizeTraderProfile,
@@ -18,7 +18,7 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!isDevUser(user)) {
+  if (!canUseDevTools(user)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

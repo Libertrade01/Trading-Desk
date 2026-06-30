@@ -341,9 +341,22 @@ function SettingsInner({ initialSection = "desk" }) {
   }, [sectionParam, activeSection, validSections]);
 
   useEffect(() => {
-    getCurrentUser()
-      .then((user) => setShowDevTools(isDevUser(user)))
-      .catch(() => setShowDevTools(false));
+    (async () => {
+      try {
+        const user = await getCurrentUser();
+        if (isDevUser(user)) {
+          setShowDevTools(true);
+          return;
+        }
+        const res = await fetch("/api/dev/tools");
+        if (res.ok) {
+          const data = await res.json();
+          setShowDevTools(!!data.enabled);
+        }
+      } catch {
+        setShowDevTools(false);
+      }
+    })();
   }, []);
 
   useEffect(() => {

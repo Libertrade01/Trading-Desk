@@ -1,19 +1,15 @@
 export const ONBOARDING_STEP_COPY = {
-  timezone: {
-    title: "Trading day.",
-    lead: "When does your trading day roll over?",
-  },
   account: {
     title: "One account.",
     lead: "Add your first account and tell us what to call you on Home.",
   },
   playbook: {
     title: "Your playbook.",
-    lead: "Name the setups you trade with a plan. They appear on your session plan and in close loop.",
+    lead: "Name the setups you trade with a plan. They appear on your session plan, in close loop, and each imported trade is tagged with these setups.",
   },
   commitment: {
     title: "Your commitment.",
-    lead: "You'll confirm these each morning before you trade.",
+    lead: "You'll commit to these each morning before you trade.",
   },
   "plan-rails": {
     title: "Your daily risk.",

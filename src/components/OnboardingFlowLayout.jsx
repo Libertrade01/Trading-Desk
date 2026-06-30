@@ -1,11 +1,11 @@
 "use client";
 
 import { IconArrowRight } from "./onboarding-icons";
+import BrandWordmark from "./BrandWordmark";
 
-export function OnboardingStepHeader({ eyebrow, title, lead }) {
+export function OnboardingStepHeader({ title, lead }) {
   return (
     <header className="onboarding-step-header">
-      <p className="onboarding-welcome-eyebrow hybrid-eyebrow">{eyebrow}</p>
       <h1 className="onboarding-step-title">{title}</h1>
       {lead ? <p className="onboarding-step-lead">{lead}</p> : null}
     </header>
@@ -66,6 +66,7 @@ export function OnboardingStepNav({
 export default function OnboardingFlowLayout({ children, preview }) {
   return (
     <div className="premarket-page hybrid-page onboarding-page onboarding-page--flow">
+      <BrandWordmark className="onboarding-page-brand" size="sidebar" />
       <div className="onboarding-welcome-glow" aria-hidden="true" />
       <div className="onboarding-welcome-layout">
         <div className="onboarding-flow-main">{children}</div>

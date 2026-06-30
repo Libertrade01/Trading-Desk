@@ -2282,6 +2282,24 @@ textarea:focus, input:focus, select:focus {
   background: #05070a;
 }
 
+.onboarding-page-brand {
+  position: absolute;
+  top: 32px;
+  left: max(28px, calc(50% - 560px));
+  z-index: 2;
+  opacity: 0.88;
+}
+
+.onboarding-page-brand.brand-wordmark--sidebar .brand-wordmark-line,
+.onboarding-page-brand.brand-wordmark--sidebar .brand-wordmark-loop {
+  font-size: clamp(22px, 2.4vw, 28px);
+  letter-spacing: 0.05em;
+}
+
+.onboarding-page-brand.brand-wordmark--sidebar .brand-wordmark-loop {
+  margin-top: 6px;
+}
+
 .onboarding-welcome-glow {
   position: absolute;
   right: -8%;
@@ -2294,8 +2312,8 @@ textarea:focus, input:focus, select:focus {
 
 .onboarding-welcome-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
-  gap: 40px 56px;
+  grid-template-columns: minmax(0, 3fr) minmax(220px, 1fr);
+  gap: 40px 48px;
   align-items: center;
   width: 100%;
   max-width: 1120px;
@@ -2307,22 +2325,18 @@ textarea:focus, input:focus, select:focus {
   max-width: 520px;
 }
 
-.onboarding-welcome-brand {
-  margin-bottom: 28px;
-}
-
 .onboarding-welcome-eyebrow {
-  margin: 0 0 14px;
+  margin: 0 0 16px;
 }
 
 .onboarding-welcome-title {
   font-family: 'Outfit', var(--font-poster);
-  font-size: clamp(36px, 4.2vw, 48px);
+  font-size: clamp(42px, 5vw, 56px);
   font-weight: 700;
   letter-spacing: -0.035em;
-  line-height: 1.06;
+  line-height: 1.04;
   color: #fff;
-  margin: 0 0 16px;
+  margin: 0 0 18px;
 }
 
 .onboarding-welcome-lead {
@@ -2333,14 +2347,14 @@ textarea:focus, input:focus, select:focus {
   max-width: 46ch;
 }
 
-.onboarding-welcome-section-label {
-  margin: 0 0 14px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.38);
+.onboarding-welcome-setup {
+  margin: 0 0 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.4);
+  max-width: 42ch;
 }
 
 .onboarding-setup-flow {
@@ -2462,12 +2476,7 @@ textarea:focus, input:focus, select:focus {
 }
 
 .onboarding-flow-main {
-  max-width: 520px;
   min-width: 0;
-}
-
-.onboarding-flow-brand {
-  margin-bottom: 22px;
 }
 
 .onboarding-step-header {
@@ -2502,6 +2511,10 @@ textarea:focus, input:focus, select:focus {
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.onboarding-flow-panel-note {
+  margin: -4px 0 18px;
 }
 
 .onboarding-page--flow .onboarding-body-copy {
@@ -2676,214 +2689,37 @@ textarea:focus, input:focus, select:focus {
 }
 
 .onboarding-preview-card--hero {
-  padding: 22px 24px 20px;
-  border-radius: 16px;
+  padding: 18px 20px;
+  border-radius: 14px;
   background: rgba(11, 14, 20, 0.94);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  box-shadow:
-    0 0 0 1px rgba(0, 101, 189, 0.06),
-    0 28px 72px rgba(0, 0, 0, 0.5);
-}
-
-.onboarding-preview-card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 22px;
-}
-
-.onboarding-preview-brand--card {
-  margin-bottom: 0;
-  font-size: 20px;
-}
-
-.onboarding-preview-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.04);
-  font-size: 11px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.55);
-  white-space: nowrap;
-}
-
-.onboarding-preview-module {
-  margin-bottom: 20px;
-}
-
-.onboarding-preview-module--rails {
-  margin-bottom: 0;
-  padding-top: 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.onboarding-preview-module-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.onboarding-preview-module-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-family: 'Outfit', var(--font-poster);
-  font-size: 14px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.onboarding-preview-module-title svg {
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.onboarding-preview-module-meta {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.38);
-}
-
-.onboarding-preview-timeline {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.onboarding-preview-timeline-item {
-  display: grid;
-  grid-template-columns: 28px 1fr;
-  gap: 14px;
-  padding-bottom: 18px;
-}
-
-.onboarding-preview-timeline-item--last {
-  padding-bottom: 0;
-}
-
-.onboarding-preview-timeline-rail {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100%;
-}
-
-.onboarding-preview-step-dot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.04);
-  font-size: 11px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.45);
-  flex-shrink: 0;
-}
-
-.onboarding-preview-step-dot--active {
-  border-color: var(--brand);
-  background: var(--brand);
-  color: #fff;
-}
-
-.onboarding-preview-step-line {
-  flex: 1;
-  width: 1px;
-  min-height: 20px;
-  margin-top: 6px;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.onboarding-preview-timeline-body {
-  min-width: 0;
-  padding-top: 2px;
-}
-
-.onboarding-preview-timeline-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 4px;
-}
-
-.onboarding-preview-timeline-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.onboarding-preview-timeline-desc {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.42);
-}
-
-.onboarding-preview-status-pill {
-  flex-shrink: 0;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 10px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.42);
-  white-space: nowrap;
+  box-shadow:
+    0 0 0 1px rgba(0, 101, 189, 0.05),
+    0 20px 48px rgba(0, 0, 0, 0.4);
 }
 
-.onboarding-preview-rail-rows {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.onboarding-preview-card--hero .onboarding-preview-eyebrow {
+  margin-bottom: 8px;
 }
 
-.onboarding-preview-rail-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 11px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+.onboarding-preview-card--hero .onboarding-preview-loop {
+  gap: 6px;
+}
+
+.onboarding-preview-card--hero .onboarding-preview-loop-item {
   font-size: 13px;
 }
 
-.onboarding-preview-rail-row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+.onboarding-preview-card--hero .onboarding-preview-divider {
+  margin: 12px 0;
 }
 
-.onboarding-preview-rail-row-left {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: rgba(255, 255, 255, 0.55);
+.onboarding-preview-card--hero .onboarding-preview-rails {
+  gap: 6px;
 }
 
-.onboarding-preview-rail-icon {
-  display: flex;
-  color: rgba(255, 255, 255, 0.38);
-}
-
-.onboarding-preview-rail-value {
-  color: rgba(255, 255, 255, 0.38);
+.onboarding-preview-card--hero .onboarding-preview-rails li {
   font-size: 12px;
-}
-
-.onboarding-preview-card--compact {
-  padding: 20px 22px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 @media (max-width: 960px) {
@@ -2896,6 +2732,11 @@ textarea:focus, input:focus, select:focus {
   .onboarding-welcome-main,
   .onboarding-flow-main {
     max-width: none;
+  }
+
+  .onboarding-preview {
+    max-width: none;
+    justify-self: stretch;
   }
 
   .onboarding-preview--hero {
@@ -2975,6 +2816,10 @@ textarea:focus, input:focus, select:focus {
   margin-top: 12px;
 }
 
+.onboarding-body-copy + .onboarding-feature-list {
+  margin-top: 14px;
+}
+
 .onboarding-body-copy--emphasis {
   color: rgba(255, 255, 255, 0.88);
 }
@@ -3042,6 +2887,9 @@ textarea:focus, input:focus, select:focus {
 .onboarding-preview {
   position: sticky;
   top: 32px;
+  width: 100%;
+  max-width: 280px;
+  justify-self: end;
 }
 
 .onboarding-preview-card {
@@ -3049,19 +2897,6 @@ textarea:focus, input:focus, select:focus {
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.onboarding-preview-brand {
-  font-family: var(--font-wordmark);
-  font-size: 22px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: -0.03em;
-  margin-bottom: 18px;
-}
-
-.onboarding-preview-brand span {
-  color: var(--brand);
 }
 
 .onboarding-preview-eyebrow {
@@ -3074,38 +2909,32 @@ textarea:focus, input:focus, select:focus {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .onboarding-preview-loop-item {
   display: grid;
-  grid-template-columns: 24px 1fr auto;
-  gap: 10px;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
   align-items: baseline;
   font-size: 14px;
 }
 
-.onboarding-preview-loop-num {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--brand);
-}
-
 .onboarding-preview-loop-label {
-  color: rgba(255, 255, 255, 0.92);
+  color: rgba(255, 255, 255, 0.82);
   font-weight: 500;
 }
 
 .onboarding-preview-loop-status {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.45);
+  font-size: 11px;
+  color: var(--muted);
   text-align: right;
 }
 
 .onboarding-preview-divider {
   height: 1px;
   background: rgba(255, 255, 255, 0.08);
-  margin: 18px 0;
+  margin: 14px 0;
 }
 
 .onboarding-preview-rails {
@@ -3130,8 +2959,15 @@ textarea:focus, input:focus, select:focus {
 }
 
 .onboarding-preview-rails li span:last-child {
-  color: rgba(255, 255, 255, 0.88);
+  color: rgba(255, 255, 255, 0.42);
   text-align: right;
+}
+
+.onboarding-preview-card--compact {
+  padding: 18px 20px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .onboarding-preview-foot {
@@ -3169,11 +3005,11 @@ textarea:focus, input:focus, select:focus {
 }
 
 .onboarding-progress-dot.active {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .onboarding-progress-dot.current {
-  background: var(--green);
+  background: var(--stepper-done);
 }
 
 .onboarding-lead {

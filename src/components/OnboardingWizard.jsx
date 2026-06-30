@@ -7,8 +7,6 @@ import {
   saveTraderSettings,
   createDefaultAccount,
   DEFAULT_TRADER_SETTINGS,
-  TRADING_DAY_TIMEZONE_OPTIONS,
-  DEFAULT_TRADING_DAY_TIMEZONE,
 } from "../lib/trader-settings";
 import {
   loadDllSettings,
@@ -38,7 +36,6 @@ import BrandWordmark from "./BrandWordmark";
 
 const STEPS = [
   { id: "welcome", label: "Welcome" },
-  { id: "timezone", label: "Trading day" },
   { id: "account", label: "Account" },
   { id: "playbook", label: "Playbook" },
   { id: "commitment", label: "Commitment" },
@@ -49,7 +46,7 @@ const STEPS = [
 ];
 
 const ONBOARDING_SECTIONS = [
-  { id: "basics", label: "Basics", steps: ["timezone", "account"] },
+  { id: "basics", label: "Basics", steps: ["account"] },
   { id: "process", label: "Your process", steps: ["playbook", "commitment"] },
   { id: "risk", label: "Risk rails", steps: ["plan-rails", "drawdown-recovery"] },
   { id: "finish", label: "Finish", steps: ["streaks", "extras"] },
@@ -62,19 +59,10 @@ function resolveOnboardingSection(stepId) {
   return { ...ONBOARDING_SECTIONS[index], index };
 }
 
-function onboardingEyebrow(step) {
-  if (step.id === "welcome") return "Set up your loop · about 3 minutes";
-  const section = resolveOnboardingSection(step.id);
-  if (!section) return "Setup";
-  const within = section.steps.indexOf(step.id);
-  const micro =
-    within >= 0 ? ` · ${within + 1} of ${section.steps.length}` : "";
-  return `3-minute setup · Step ${section.index + 1} of 4 — ${section.label}${micro}`;
-}
+const BROWSER_LOCAL_TRADING_DAY = "local";
 
 const previewProps = ({
   step,
-  tradingDayTimezone,
   accountName,
   setups,
   defaultMaxDailyLoss,
@@ -84,7 +72,7 @@ const previewProps = ({
 }) => ({
   variant: "hero",
   stepId: step.id,
-  tradingDayTimezone,
+  tradingDayTimezone: BROWSER_LOCAL_TRADING_DAY,
   accountName,
   setups,
   defaultMaxDailyLoss,
@@ -119,17 +107,6 @@ function ToggleField({ label, hint, value, onChange }) {
   );
 }
 
-function detectBrowserTimezone() {
-  try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    return TRADING_DAY_TIMEZONE_OPTIONS.some((opt) => opt.id === tz)
-      ? tz
-      : DEFAULT_TRADING_DAY_TIMEZONE;
-  } catch {
-    return DEFAULT_TRADING_DAY_TIMEZONE;
-  }
-}
-
 export default function OnboardingWizard() {
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
@@ -138,13 +115,12 @@ export default function OnboardingWizard() {
   const [isFounder, setIsFounder] = useState(false);
   const [error, setError] = useState("");
 
-  const [tradingDayTimezone, setTradingDayTimezone] = useState(detectBrowserTimezone);
   const [accountName, setAccountName] = useState("");
   const [preferredName, setPreferredName] = useState("");
   const [accountType, setAccountType] = useState("funded");
   const [setups, setSetups] = useState([{ id: crypto.randomUUID(), name: "" }]);
   const [commitments, setCommitments] = useState([
-    { id: crypto.randomUUID(), text: "I respect myself enough to fully agree to follow my plan today." },
+    { id: crypto.randomUUID(), text: "I respect myself enough to fully follow my plan today" },
   ]);
   const [riskStreakEnabled, setRiskStreakEnabled] = useState(true);
   const [playbookStreakEnabled, setPlaybookStreakEnabled] = useState(true);
@@ -238,7 +214,7 @@ export default function OnboardingWizard() {
       const currentSettings = await loadTraderSettings().catch(() => null);
       await saveTraderSettings({
         defaultRisk: currentSettings?.defaultRisk ?? DEFAULT_TRADER_SETTINGS.defaultRisk,
-        tradingDayTimezone,
+        tradingDayTimezone: BROWSER_LOCAL_TRADING_DAY,
         accounts: [account],
       });
 
@@ -299,6 +275,7 @@ export default function OnboardingWizard() {
   if (step.id === "welcome") {
     return (
       <div className="premarket-page hybrid-page onboarding-page onboarding-page--flow">
+        <BrandWordmark className="onboarding-page-brand" size="sidebar" />
         <div className="onboarding-welcome-glow" aria-hidden="true" />
         <div className="onboarding-welcome-layout">
           <OnboardingWelcome
@@ -311,7 +288,7 @@ export default function OnboardingWizard() {
           <OnboardingLoopPreview
             variant="hero"
             stepId={step.id}
-            tradingDayTimezone={tradingDayTimezone}
+            tradingDayTimezone={BROWSER_LOCAL_TRADING_DAY}
             accountName={accountName}
             setups={setups}
             defaultMaxDailyLoss={defaultMaxDailyLoss}
@@ -329,7 +306,6 @@ export default function OnboardingWizard() {
     <OnboardingLoopPreview
       {...previewProps({
         step,
-        tradingDayTimezone,
         accountName,
         setups,
         defaultMaxDailyLoss,
@@ -342,8 +318,6 @@ export default function OnboardingWizard() {
 
   return (
     <OnboardingFlowLayout preview={loopPreview}>
-      <BrandWordmark className="onboarding-flow-brand" size="flow" />
-
       {activeSection && (
         <OnboardingSectionProgress
           sections={ONBOARDING_SECTIONS}
@@ -353,30 +327,10 @@ export default function OnboardingWizard() {
 
       {stepCopy && (
         <OnboardingStepHeader
-          eyebrow={onboardingEyebrow(step)}
           title={stepCopy.title}
           lead={stepCopy.lead}
         />
       )}
-
-        {step.id === "timezone" && (
-          <>
-            <div className="pm-field">
-              <div className="pm-field-label hybrid-label">Calendar timezone</div>
-              <select
-                value={tradingDayTimezone}
-                onChange={(e) => setTradingDayTimezone(e.target.value)}
-                className="pm-text-input settings-timezone-select"
-              >
-                {TRADING_DAY_TIMEZONE_OPTIONS.map((opt) => (
-                  <option key={opt.id} value={opt.id}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </>
-        )}
 
         {step.id === "account" && (
           <>
@@ -443,7 +397,7 @@ export default function OnboardingWizard() {
                       )
                     }
                     className="pm-text-input"
-                    placeholder={index === 0 ? "e.g. VWAP rejection" : "Another setup"}
+                    placeholder={index === 0 ? "e.g. Break and Retest" : "Another setup"}
                   />
                 </div>
               ))}
@@ -502,7 +456,7 @@ export default function OnboardingWizard() {
         {step.id === "plan-rails" && (
           <>
             <p className="onboarding-body-copy onboarding-body-copy--compact">
-              When recovery mode is active, your max daily loss on the plan adjusts automatically.
+              recovery mode feature
             </p>
             <div className="pm-field-grid">
               <div>
@@ -533,7 +487,7 @@ export default function OnboardingWizard() {
                   value={defaultPositionSize}
                   onChange={(e) => setDefaultPositionSize(e.target.value)}
                   className="pm-text-input"
-                  placeholder="Optional — e.g. $500 or 2 MNQ"
+                  placeholder="e.g. $200 or 8 micros"
                 />
               </div>
             </div>
@@ -573,10 +527,10 @@ export default function OnboardingWizard() {
                   <strong>Playbook streak</strong> — extends when every trade is tagged to a real setup.
                 </li>
               </ul>
-              <p className="onboarding-body-copy onboarding-body-copy--compact">
-                Set your target below. Turn either streak off if you don&apos;t want it tracked.
-              </p>
             </div>
+            <p className="onboarding-body-copy onboarding-body-copy--compact onboarding-flow-panel-note">
+              Set your target below. Turn either streak off if you don&apos;t want it tracked.
+            </p>
             <div className="pm-toggle-row">
               <ToggleField
                 label="Risk adherence streak"
