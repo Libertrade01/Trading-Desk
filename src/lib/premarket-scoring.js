@@ -233,7 +233,7 @@ export function readinessStatus(score) {
 
 /** User-facing copy for low-readiness / protective days (not "stand down"). */
 export const PROTECTIVE_DAY_COPY = {
-  scoreTitle: "Protective day",
+  scoreTitle: "Defense day",
   scoreBody:
     "Your readiness is below 50. Sitting out counts as a win. If you trade, keep size minimal and rules tight.",
   scoreAckLabel: "I'll sit out or trade minimal size today.",

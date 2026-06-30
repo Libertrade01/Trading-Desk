@@ -50,7 +50,7 @@ export function ReadinessScoreRing({ score, variant = "full" }) {
         cy={cfg.cy}
         r={cfg.r}
         fill="none"
-        stroke="var(--border)"
+        stroke={cfg.trackStroke ?? "var(--border)"}
         strokeWidth={cfg.strokeWidth}
       />
       <circle
@@ -76,14 +76,16 @@ export function ReadinessScoreRing({ score, variant = "full" }) {
         >
           {score}
         </tspan>
-        <tspan
-          x={cfg.cx}
-          y={cfg.denomY}
-          dominantBaseline="middle"
-          className={cfg.denomClass}
-        >
-          / 100
-        </tspan>
+        {!cfg.hideDenom && (
+          <tspan
+            x={cfg.cx}
+            y={cfg.denomY}
+            dominantBaseline="middle"
+            className={cfg.denomClass}
+          >
+            / 100
+          </tspan>
+        )}
       </text>
     </svg>
   );

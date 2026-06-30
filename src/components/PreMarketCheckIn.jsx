@@ -283,15 +283,7 @@ export default function PreMarketCheckIn({ onBack }) {
   return (
     <WorkflowPageLayout>
       <div className="pm-checkin-layout pm-checkin-layout--loop">
-        <CheckInRail
-          activeIndex={activeSection}
-          onSelect={setActiveSection}
-          composite={scores.composite}
-          dimensions={railDimensions}
-          cautionActive={showProtectiveBanner && !form.standDownAcknowledged}
-        />
-
-        <div className="pm-checkin-content">
+        <div className="pm-checkin-intro">
           <header className="pm-checkin-header">
             <p className="pm-checkin-date">{headerDate()}</p>
             <div className="pm-eyebrow hybrid-eyebrow">Check-in · {sectionDateEyebrow()}</div>
@@ -313,8 +305,17 @@ export default function PreMarketCheckIn({ onBack }) {
           )}
 
           <CheckInHorizontalStepper activeIndex={activeSection} onSelect={setActiveSection} />
+        </div>
 
-          <div className="pm-checkin-stage">
+        <CheckInRail
+          activeIndex={activeSection}
+          onSelect={setActiveSection}
+          composite={scores.composite}
+          dimensions={railDimensions}
+          cautionActive={showProtectiveBanner && !form.standDownAcknowledged}
+        />
+
+        <div className="pm-checkin-stage">
             <div className="pm-section-panel checkin-section-panel">
               <div className="pm-section-panel-head checkin-section-panel-head">
                 <div>
@@ -552,6 +553,7 @@ export default function PreMarketCheckIn({ onBack }) {
               />
             )}
 
+            {section.id === "preparation" && (
             <div className="pm-checkin-finish checkin-finish-card">
               <div className="pm-checkin-finish-reminders" aria-label="Check-in reminders">
                 <span className="pm-checkin-finish-label hybrid-label">Desk setup</span>
@@ -600,7 +602,7 @@ export default function PreMarketCheckIn({ onBack }) {
                 </div>
               </div>
             </div>
-          </div>
+            )}
         </div>
       </div>
     </WorkflowPageLayout>

@@ -4,27 +4,24 @@ import { CHECKIN_RAIL_SECTIONS } from "./CheckInRail";
 
 export default function CheckInHorizontalStepper({ activeIndex, onSelect }) {
   return (
-    <nav className="checkin-h-stepper" aria-label="Check-in progress">
-      <ol className="checkin-h-stepper-list">
+    <nav className="pm-closeout-stepper" aria-label="Check-in progress">
+      <ol className="pm-closeout-stepper-list">
         {CHECKIN_RAIL_SECTIONS.map((section, i) => {
           const active = i === activeIndex;
           const done = i < activeIndex;
           return (
-            <li key={section.id} className="checkin-h-stepper-item">
+            <li key={section.id} className="pm-closeout-stepper-item">
               <button
                 type="button"
-                className={`checkin-h-stepper-btn${active ? " checkin-h-stepper-btn--active" : ""}${done ? " checkin-h-stepper-btn--done" : ""}`}
+                className={`pm-closeout-stepper-btn${active ? " pm-closeout-stepper-btn--active" : ""}${done ? " pm-closeout-stepper-btn--done" : ""}`}
                 onClick={() => onSelect(i)}
                 aria-current={active ? "step" : undefined}
               >
-                <span className="checkin-h-stepper-num" aria-hidden="true">
-                  {i + 1}
+                <span className="pm-closeout-stepper-track" aria-hidden="true">
+                  <span className="pm-closeout-stepper-fill" />
                 </span>
-                <span className="checkin-h-stepper-label">{section.stepLabel}</span>
+                <span className="pm-closeout-stepper-label">{section.stepLabel}</span>
               </button>
-              {i < CHECKIN_RAIL_SECTIONS.length - 1 && (
-                <span className="checkin-h-stepper-line" aria-hidden="true" />
-              )}
             </li>
           );
         })}
