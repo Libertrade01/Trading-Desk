@@ -5,7 +5,7 @@ export const ONBOARDING_STEP_COPY = {
   },
   account: {
     title: "One account.",
-    lead: "You can add more accounts later.",
+    lead: "Add your first account and tell us what to call you on Home.",
   },
   playbook: {
     title: "Your playbook.",

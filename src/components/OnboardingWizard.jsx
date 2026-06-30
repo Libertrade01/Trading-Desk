@@ -34,6 +34,7 @@ import OnboardingFlowLayout, {
   OnboardingStepNav,
 } from "./OnboardingFlowLayout";
 import { ONBOARDING_STEP_COPY } from "../lib/onboarding-step-copy";
+import BrandWordmark from "./BrandWordmark";
 
 const STEPS = [
   { id: "welcome", label: "Welcome" },
@@ -139,6 +140,7 @@ export default function OnboardingWizard() {
 
   const [tradingDayTimezone, setTradingDayTimezone] = useState(detectBrowserTimezone);
   const [accountName, setAccountName] = useState("");
+  const [preferredName, setPreferredName] = useState("");
   const [accountType, setAccountType] = useState("funded");
   const [setups, setSetups] = useState([{ id: crypto.randomUUID(), name: "" }]);
   const [commitments, setCommitments] = useState([
@@ -244,6 +246,7 @@ export default function OnboardingWizard() {
       const fullSizeDll = parsePlanRailMoney(defaultMaxDailyLoss);
       await completeOnboarding({
         ...base,
+        preferredName: preferredName.trim(),
         setups: setupNames.map((name) => ({ id: crypto.randomUUID(), name })),
         commitments: namedCommitments.slice(0, 3).map((text) => ({
           id: crypto.randomUUID(),
@@ -339,7 +342,7 @@ export default function OnboardingWizard() {
 
   return (
     <OnboardingFlowLayout preview={loopPreview}>
-      <div className="onboarding-flow-brand auth-brand">Libertrade Loop</div>
+      <BrandWordmark className="onboarding-flow-brand" size="flow" />
 
       {activeSection && (
         <OnboardingSectionProgress
@@ -377,6 +380,18 @@ export default function OnboardingWizard() {
 
         {step.id === "account" && (
           <>
+            <div className="pm-field">
+              <div className="pm-field-label hybrid-label">What should we call you?</div>
+              <input
+                type="text"
+                value={preferredName}
+                onChange={(e) => setPreferredName(e.target.value)}
+                className="pm-text-input"
+                placeholder="Mike"
+                autoComplete="nickname"
+              />
+              <p className="pm-field-hint">Optional — used in your Home greeting.</p>
+            </div>
             <div className="pm-field-grid">
               <div>
                 <div className="pm-field-label hybrid-label">Account name</div>

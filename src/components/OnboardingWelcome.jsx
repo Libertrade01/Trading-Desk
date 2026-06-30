@@ -9,6 +9,7 @@ import {
   IconShieldCheck,
   IconUser,
 } from "./onboarding-icons";
+import BrandWordmark from "./BrandWordmark";
 
 const SETUP_TILES = [
   { id: "day", label: "Trading day", Icon: IconCalendar },
@@ -27,9 +28,7 @@ export default function OnboardingWelcome({
 }) {
   return (
     <div className="onboarding-welcome-main">
-      <div className="onboarding-welcome-brand auth-brand">
-        Liber<span>trade</span> Loop
-      </div>
+      <BrandWordmark className="onboarding-welcome-brand" size="hero" />
 
       <p className="onboarding-welcome-eyebrow hybrid-eyebrow">Set up your loop · about 3 minutes</p>
 

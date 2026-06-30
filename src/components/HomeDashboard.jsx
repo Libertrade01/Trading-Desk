@@ -241,14 +241,6 @@ function stepStarted(stepId, today) {
 }
 
 function WeekFocusStrip({ items, loading, showReviewPrompt, onOpenWeeklyReview, allComplete }) {
-  if (loading && items.length === 0 && !allComplete) {
-    return (
-      <div className="home-week-focus home-week-focus--loading" aria-hidden="true">
-        <div className="home-week-focus-skeleton" />
-      </div>
-    );
-  }
-
   if (items.length > 0) {
     return (
       <section
@@ -283,7 +275,20 @@ function WeekFocusStrip({ items, loading, showReviewPrompt, onOpenWeeklyReview, 
     );
   }
 
-  return null;
+  return (
+    <section
+      className={`home-week-focus home-week-focus--empty${loading ? " home-week-focus--loading" : ""}`}
+      aria-label="This week's focus"
+    >
+      <h2 className="home-week-focus-label">This week&apos;s focus</h2>
+      <div className="home-week-focus-item home-week-focus-item--placeholder">
+        <span className="home-week-focus-bar" aria-hidden="true" />
+        <p className="home-week-focus-placeholder">
+          This will fill in after your first weekly review.
+        </p>
+      </div>
+    </section>
+  );
 }
 
 function DrawdownRecoverySetupHint({ dllSettings, onOpenSettings, onDismiss }) {
@@ -776,12 +781,13 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
 
   const marketOpen = isNyseTradingDay(dateKey);
   const greeting = formatTimeGreeting();
-  const greetingLine = userName ? `${greeting}, ${userName}.` : `${greeting}.`;
+  const displayName = profile?.preferredName?.trim() || userName;
+  const greetingLine = displayName ? `${greeting}, ${displayName}.` : `${greeting}.`;
 
-  if (loading) return <div className="pm-loading home-page home-page--loop">Loading...</div>;
+  if (loading) return <div className="pm-loading home-page--loop">Loading...</div>;
 
   return (
-    <div className="premarket-page hybrid-page home-page home-page--loop">
+    <div className="premarket-page hybrid-page home-page--loop">
       <div className="home-page-glow" aria-hidden="true" />
 
       <div className="home-page-inner">
@@ -795,6 +801,10 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
             {marketOpen ? "Market open" : "Market closed"}
           </div>
         </header>
+
+        <div className="home-page-context home-page-context--top">
+          <HomeMarketContextCard dateKey={dateKey} />
+        </div>
 
         {showWelcomeHint && (
           <div className="home-welcome-hint">
@@ -854,21 +864,15 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
             </div>
           </section>
 
-          <div className="home-page-context">
-            <HomeMarketContextCard dateKey={dateKey} />
+          <div className="home-page-focus">
+            <WeekFocusStrip
+              items={weekFocus.items}
+              loading={loadingPanels}
+              showReviewPrompt={showReviewPrompt}
+              onOpenWeeklyReview={onOpenWeeklyReview}
+              allComplete={allComplete}
+            />
           </div>
-
-          {(weekFocus.items.length > 0 || (showReviewPrompt && onOpenWeeklyReview) || (loadingPanels && !allComplete)) && (
-            <div className="home-page-focus">
-              <WeekFocusStrip
-                items={weekFocus.items}
-                loading={loadingPanels}
-                showReviewPrompt={showReviewPrompt}
-                onOpenWeeklyReview={onOpenWeeklyReview}
-                allComplete={allComplete}
-              />
-            </div>
-          )}
 
           <div className="home-page-metrics">
             <HomeMetricsCard

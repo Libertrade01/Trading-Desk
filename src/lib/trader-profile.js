@@ -55,6 +55,12 @@ function defaultFinishChecklist(labels) {
   return labels.map((label) => ({ id: newId(), label }));
 }
 
+function normalizePreferredName(value) {
+  const name = String(value ?? "").trim();
+  if (!name) return "";
+  return name.slice(0, 32);
+}
+
 function normalizePlanRail(value) {
   if (value == null || value === "") return "";
   return String(value).trim();
@@ -192,6 +198,7 @@ export function normalizeTraderProfile(raw = {}) {
 
   return {
     profileKind,
+    preferredName: normalizePreferredName(raw.preferredName),
     onboardingCompletedAt:
       raw.onboardingCompletedAt != null && raw.onboardingCompletedAt !== ""
         ? String(raw.onboardingCompletedAt)

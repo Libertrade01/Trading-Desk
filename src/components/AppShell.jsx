@@ -11,6 +11,7 @@ import {
 } from "../lib/trader-profile";
 import { filterNavItems } from "../lib/features";
 import { getCurrentUser } from "../lib/user-storage";
+import BrandWordmark from "./BrandWordmark";
 
 const NAV_ITEMS = [
   { id: "home", href: "/", label: "Home", icon: (
@@ -98,8 +99,7 @@ function Sidebar({ pathname, settingsSection, open, onClose, userEmail, mainItem
       <div className={`sidebar-overlay${open ? " visible" : ""}`} onClick={onClose} />
       <aside className={`sidebar${open ? " open" : ""}`}>
         <div className="sidebar-brand">
-          <div className="sidebar-wordmark">Liber<span>trade</span></div>
-          <div className="sidebar-brand-sub">Loop</div>
+          <BrandWordmark size="sidebar" />
         </div>
         <nav className="sidebar-nav">
           <div className="sidebar-nav-main">

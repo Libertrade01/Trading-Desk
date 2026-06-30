@@ -149,6 +149,58 @@ textarea:focus, input:focus, select:focus {
   border-bottom: 1px solid var(--border);
 }
 
+.brand-wordmark {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+  user-select: none;
+}
+
+.brand-wordmark-line {
+  font-family: var(--font-wordmark);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.brand-wordmark-liber {
+  color: #fff;
+}
+
+.brand-wordmark-trade,
+.brand-wordmark-loop {
+  color: var(--brand);
+}
+
+.brand-wordmark-loop {
+  font-family: var(--font-wordmark);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+.brand-wordmark--sidebar .brand-wordmark-line,
+.brand-wordmark--sidebar .brand-wordmark-loop {
+  font-size: 14px;
+}
+
+.brand-wordmark--flow .brand-wordmark-line,
+.brand-wordmark--flow .brand-wordmark-loop {
+  font-size: clamp(22px, 2.5vw, 26px);
+}
+
+.brand-wordmark--hero .brand-wordmark-line,
+.brand-wordmark--hero .brand-wordmark-loop {
+  font-size: clamp(26px, 3vw, 32px);
+}
+
+.brand-wordmark--hero .brand-wordmark-loop {
+  margin-top: 4px;
+}
+
 .sidebar-wordmark {
   font-family: var(--font-wordmark);
   font-size: 15px;
@@ -413,7 +465,9 @@ textarea:focus, input:focus, select:focus {
 }
 
 .main-content {
-  flex: 1;
+  flex: 1 1 auto;
+  width: calc(100vw - 220px);
+  max-width: none;
   margin-left: 220px;
   height: 100vh;
   min-width: 0;
@@ -421,6 +475,16 @@ textarea:focus, input:focus, select:focus {
   overflow-x: hidden;
   background: var(--bg);
   -webkit-overflow-scrolling: touch;
+}
+
+.main-content:has(.home-page--loop) {
+  background: #05070a;
+}
+
+.main-content > .premarket-page,
+.main-content > .hybrid-page {
+  width: 100%;
+  max-width: none;
 }
 
 .embed-frame {
@@ -518,8 +582,8 @@ textarea:focus, input:focus, select:focus {
   display: none;
 }
 
-/* ── Home page ── */
-.home-page {
+/* ── Home page (legacy landing — not loop dashboard) ── */
+.home-page:not(.home-page--loop) {
   min-height: 100vh;
   padding: 40px 32px;
   animation: fadeIn 0.4s ease;
@@ -2211,7 +2275,6 @@ textarea:focus, input:focus, select:focus {
 }
 
 .onboarding-welcome-brand {
-  font-size: clamp(26px, 3vw, 32px);
   margin-bottom: 28px;
 }
 
@@ -2371,7 +2434,6 @@ textarea:focus, input:focus, select:focus {
 }
 
 .onboarding-flow-brand {
-  font-size: clamp(22px, 2.5vw, 26px);
   margin-bottom: 22px;
 }
 
@@ -7239,9 +7301,11 @@ input.pm-slider::-moz-range-thumb {
 
   .main-content {
     margin-left: 0;
+    width: 100vw;
+    max-width: none;
   }
 
-  .home-page {
+  .home-page:not(.home-page--loop) {
     padding: 56px 20px 32px;
   }
 
@@ -9717,9 +9781,13 @@ input.pm-slider::-moz-range-thumb {
 /* ── Home page · Libertrade Loop design ── */
 .home-page--loop {
   position: relative;
+  width: 100%;
+  max-width: none;
   min-height: 100vh;
+  padding: 0;
   background: #05070a;
   overflow: hidden;
+  animation: fadeIn 0.4s ease;
 }
 
 .home-page--loop.hybrid-page::before {
@@ -9727,6 +9795,8 @@ input.pm-slider::-moz-range-thumb {
 }
 
 .premarket-page.home-page--loop {
+  width: 100%;
+  max-width: none;
   background: #05070a;
 }
 
@@ -9744,9 +9814,9 @@ input.pm-slider::-moz-range-thumb {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 28px 28px 56px;
+  max-width: none;
+  margin: 0;
+  padding: 28px 32px 56px;
 }
 
 .home-page-header {
@@ -9800,37 +9870,28 @@ input.pm-slider::-moz-range-thumb {
 }
 
 .home-page-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
-  gap: 18px 22px;
-}
-
-.home-page-hero {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.home-page-context {
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.home-page-focus {
-  grid-column: 1 / -1;
-  grid-row: 2;
-}
-
-.home-page-metrics {
-  grid-column: 1;
-  grid-row: 3;
   display: flex;
   flex-direction: column;
   gap: 18px;
+  width: 100%;
 }
 
+.home-page-context--top {
+  margin-bottom: 18px;
+  width: 100%;
+}
+
+.home-page-hero,
+.home-page-focus,
+.home-page-metrics,
 .home-page-recent {
-  grid-column: 2;
-  grid-row: 3;
+  width: 100%;
+}
+
+.home-page-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .home-loop-card {
@@ -10011,7 +10072,22 @@ input.pm-slider::-moz-range-thumb {
 }
 
 .home-week-focus--loading {
-  min-height: 72px;
+  min-height: 0;
+}
+
+.home-week-focus--empty {
+  opacity: 1;
+}
+
+.home-week-focus-item--placeholder {
+  margin: 0;
+}
+
+.home-week-focus-placeholder {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.42);
 }
 
 .home-week-focus-skeleton {
@@ -10081,7 +10157,7 @@ input.pm-slider::-moz-range-thumb {
 
 .home-metrics-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 18px 24px;
 }
 
@@ -10341,35 +10417,22 @@ input.pm-slider::-moz-range-thumb {
 }
 
 @media (max-width: 960px) {
-  .home-page-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .home-page-hero,
-  .home-page-context,
-  .home-page-focus,
-  .home-page-metrics,
-  .home-page-recent {
-    grid-column: 1;
-    grid-row: auto;
-  }
-
-  .home-page-context {
-    order: -1;
-  }
-
   .home-page-header {
     flex-direction: column;
     gap: 14px;
   }
 
   .home-metrics-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 640px) {
   .home-page-inner {
     padding: 20px 18px 48px;
+  }
+
+  .home-metrics-grid {
+    grid-template-columns: 1fr;
   }
 }
