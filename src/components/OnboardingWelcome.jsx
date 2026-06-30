@@ -41,13 +41,13 @@ export default function OnboardingWelcome({
 
       <p className="onboarding-welcome-section-label">What you&apos;ll set up</p>
 
-      <div className="onboarding-setup-grid">
+      <div className="onboarding-setup-flow" role="list" aria-label="Setup steps">
         {SETUP_TILES.map(({ id, label, Icon }) => (
-          <div key={id} className="onboarding-setup-tile">
-            <span className="onboarding-setup-tile-icon">
+          <div key={id} className="onboarding-setup-chip" role="listitem">
+            <span className="onboarding-setup-chip-icon">
               <Icon />
             </span>
-            <span className="onboarding-setup-tile-label">{label}</span>
+            <span className="onboarding-setup-chip-label">{label}</span>
           </div>
         ))}
       </div>
@@ -60,8 +60,15 @@ export default function OnboardingWelcome({
         onClick={onContinue}
         disabled={saving}
       >
-        {saving ? "Saving…" : "Build my loop"}
-        {!saving ? <IconArrowRight /> : null}
+        <span className="onboarding-welcome-cta-shine" aria-hidden="true" />
+        <span className="onboarding-welcome-cta-label">
+          {saving ? "Saving…" : "Build my loop"}
+        </span>
+        {!saving ? (
+          <span className="onboarding-welcome-cta-arrow" aria-hidden="true">
+            <IconArrowRight />
+          </span>
+        ) : null}
       </button>
 
       <p className="onboarding-welcome-trust">
