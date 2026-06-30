@@ -22,7 +22,11 @@ import {
   getRecoveryStatus,
   formatRecoveryUsd,
 } from "../lib/dll-recovery";
-import { loadDllSettings } from "../lib/dll-recovery-settings";
+import {
+  loadDllSettings,
+  shouldShowDrawdownRecoverySetupHint,
+  dismissDrawdownRecoverySetupHint,
+} from "../lib/dll-recovery-settings";
 import {
   loadHomeFocusItems,
   shouldShowWeeklyReviewPrompt,
@@ -194,6 +198,31 @@ function WeekFocusStrip({ items, loading, showReviewPrompt, onOpenWeeklyReview, 
   }
 
   return null;
+}
+
+function DrawdownRecoverySetupHint({ dllSettings, onOpenSettings, onDismiss }) {
+  if (!shouldShowDrawdownRecoverySetupHint(dllSettings)) return null;
+
+  return (
+    <div className="home-dr-setup-hint" role="note">
+      <p>
+        <strong>Drawdown Recovery</strong> is off and not configured yet. After a loss day, it
+        automatically downshifts you to half size until you&apos;ve recovered enough drawdown.{" "}
+        <button type="button" className="home-welcome-hint-link" onClick={onOpenSettings}>
+          Set it up in Settings → Risk
+        </button>
+        .
+      </p>
+      <button
+        type="button"
+        className="home-welcome-hint-dismiss"
+        onClick={onDismiss}
+        aria-label="Dismiss"
+      >
+        ×
+      </button>
+    </div>
+  );
 }
 
 function RecoveryBanner({ recoveryStatus }) {
@@ -493,6 +522,8 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
   const [loading, setLoading] = useState(true);
   const [loadingPanels, setLoadingPanels] = useState(true);
   const [recoveryStatus, setRecoveryStatus] = useState(null);
+  const [dllSettings, setDllSettings] = useState(null);
+  const [showDrSetupHint, setShowDrSetupHint] = useState(false);
   const [weekFocus, setWeekFocus] = useState({ items: [], complete: false });
   const [showReviewPrompt, setShowReviewPrompt] = useState(false);
   const [profile, setProfile] = useState(null);
@@ -528,6 +559,8 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
       setWeekFocus(focus);
       setShowReviewPrompt(showPrompt);
       setRecoveryStatus(getRecoveryStatus(recoveryState, dllSettings));
+      setDllSettings(dllSettings);
+      setShowDrSetupHint(shouldShowDrawdownRecoverySetupHint(dllSettings));
     } finally {
       setLoadingPanels(false);
     }
@@ -671,6 +704,17 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
                 ×
               </button>
             </div>
+          )}
+
+          {showDrSetupHint && (
+            <DrawdownRecoverySetupHint
+              dllSettings={dllSettings}
+              onOpenSettings={() => onNavigate("settings-risk")}
+              onDismiss={() => {
+                dismissDrawdownRecoverySetupHint();
+                setShowDrSetupHint(false);
+              }}
+            />
           )}
 
           <div className="pm-header">

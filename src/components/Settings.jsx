@@ -9,6 +9,8 @@ import {
   DEFAULT_DLL_SETTINGS,
   ACTIVATION_MODES,
   ACTIVATION_MODE_OPTIONS,
+  EXIT_MODES,
+  EXIT_MODE_OPTIONS,
 } from "../lib/dll-recovery-settings";
 import {
   loadTraderSettings,
@@ -282,7 +284,9 @@ function SettingsInner({ initialSection = "desk" }) {
     recoveryEnabled: DEFAULT_DLL_SETTINGS.recoveryEnabled,
     activationMode: DEFAULT_DLL_SETTINGS.activationMode,
     activationDrawdown: String(DEFAULT_DLL_SETTINGS.activationDrawdown),
+    exitMode: DEFAULT_DLL_SETTINGS.exitMode,
     exitRecoveryPercent: String(DEFAULT_DLL_SETTINGS.exitRecoveryPercent),
+    exitRecoveryAmount: String(DEFAULT_DLL_SETTINGS.exitRecoveryAmount),
   });
   const [defaultRisk, setDefaultRisk] = useState(String(DEFAULT_TRADER_SETTINGS.defaultRisk));
   const [tradingDayTimezone, setTradingDayTimezone] = useState(DEFAULT_TRADING_DAY_TIMEZONE);
@@ -322,7 +326,9 @@ function SettingsInner({ initialSection = "desk" }) {
         recoveryEnabled: dll.recoveryEnabled,
         activationMode: dll.activationMode,
         activationDrawdown: String(dll.activationDrawdown),
+        exitMode: dll.exitMode,
         exitRecoveryPercent: String(dll.exitRecoveryPercent),
+        exitRecoveryAmount: String(dll.exitRecoveryAmount),
       });
       setDefaultRisk(String(trader.defaultRisk));
       setTradingDayTimezone(trader.tradingDayTimezone);
@@ -405,7 +411,9 @@ function SettingsInner({ initialSection = "desk" }) {
         recoveryEnabled: dllCheck.settings.recoveryEnabled,
         activationMode: dllCheck.settings.activationMode,
         activationDrawdown: String(dllCheck.settings.activationDrawdown),
+        exitMode: dllCheck.settings.exitMode,
         exitRecoveryPercent: String(dllCheck.settings.exitRecoveryPercent),
+        exitRecoveryAmount: String(dllCheck.settings.exitRecoveryAmount),
       });
       setDefaultRisk(String(traderCheck.settings.defaultRisk));
       setTradingDayTimezone(traderCheck.settings.tradingDayTimezone);
@@ -603,24 +611,65 @@ function SettingsInner({ initialSection = "desk" }) {
 
                     <div className="settings-field-block">
                       <div className="settings-field-block-label hybrid-label-sm">Exit rule</div>
-                      <div className="pm-field">
-                        <div className="pm-field-label hybrid-label">Recover before exiting (%)</div>
-                        <input
-                          type="text"
-                          value={dllForm.exitRecoveryPercent}
-                          onChange={(e) => setDll("exitRecoveryPercent", e.target.value)}
-                          className="pm-text-input settings-percent-input"
-                          placeholder="50"
-                        />
-                        <p className="pm-field-hint">
-                          {formatExitRule({
-                            exitRecoveryPercent:
-                              Number(String(dllForm.exitRecoveryPercent).replace(/[%\s]/g, "")) ||
-                              DEFAULT_DLL_SETTINGS.exitRecoveryPercent,
-                          })}
-                          . Additional loss days extend the drawdown and recalculate the target.
-                        </p>
+                      <p className="pm-field-hint settings-field-block-lead">
+                        When do you return to full size?
+                      </p>
+                      <div className="settings-radio-group">
+                        {EXIT_MODE_OPTIONS.map((opt) => (
+                          <label key={opt.value} className="settings-radio-row">
+                            <input
+                              type="radio"
+                              name="exitMode"
+                              value={opt.value}
+                              checked={dllForm.exitMode === opt.value}
+                              onChange={() => setDll("exitMode", opt.value)}
+                            />
+                            <span>
+                              <span className="settings-radio-label">{opt.label}</span>
+                              <span className="pm-field-hint">{opt.hint}</span>
+                            </span>
+                          </label>
+                        ))}
                       </div>
+                      {dllForm.exitMode === EXIT_MODES.PERCENT ? (
+                        <div className="pm-field settings-field-nested">
+                          <div className="pm-field-label hybrid-label">Recover before exiting (%)</div>
+                          <input
+                            type="text"
+                            value={dllForm.exitRecoveryPercent}
+                            onChange={(e) => setDll("exitRecoveryPercent", e.target.value)}
+                            className="pm-text-input settings-percent-input"
+                            placeholder="50"
+                          />
+                        </div>
+                      ) : (
+                        <div className="pm-field settings-field-nested">
+                          <div className="pm-field-label hybrid-label">Recover before exiting ($)</div>
+                          <input
+                            type="text"
+                            value={dllForm.exitRecoveryAmount}
+                            onChange={(e) => setDll("exitRecoveryAmount", e.target.value)}
+                            className="pm-text-input"
+                            placeholder="400"
+                          />
+                          <p className="pm-field-hint">
+                            Additional loss days while in recovery add to this target.
+                          </p>
+                        </div>
+                      )}
+                      <p className="pm-field-hint settings-rule-summary">
+                        Active rule:{" "}
+                        {formatExitRule({
+                          ...DEFAULT_DLL_SETTINGS,
+                          ...dllForm,
+                          exitRecoveryPercent:
+                            Number(String(dllForm.exitRecoveryPercent).replace(/[%\s]/g, "")) ||
+                            DEFAULT_DLL_SETTINGS.exitRecoveryPercent,
+                          exitRecoveryAmount:
+                            Number(String(dllForm.exitRecoveryAmount).replace(/[$,\s]/g, "")) ||
+                            DEFAULT_DLL_SETTINGS.exitRecoveryAmount,
+                        })}
+                      </p>
                     </div>
                   </>
                 )}

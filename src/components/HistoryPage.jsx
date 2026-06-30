@@ -2,6 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { loadAllSessions, formatHistoryRowDate, formatUsd } from "../lib/history-data";
+import {
+  loadRecoveryState,
+  buildRecoveryDayAnnotations,
+  getRecoveryDayLabel,
+} from "../lib/dll-recovery";
+import { loadDllSettings } from "../lib/dll-recovery-settings";
 import HistoryStagePipeline from "./history/HistoryStagePipeline";
 
 function headerDate() {
@@ -19,8 +25,18 @@ export default function HistoryPage({ onSelectDay }) {
 
   useEffect(() => {
     (async () => {
-      const rows = await loadAllSessions();
-      setSessions(rows);
+      const [rows, recoveryState, settings] = await Promise.all([
+        loadAllSessions(),
+        loadRecoveryState(),
+        loadDllSettings(),
+      ]);
+      const annotations = buildRecoveryDayAnnotations(recoveryState.days, settings);
+      setSessions(
+        rows.map((session) => ({
+          ...session,
+          recoveryLabel: getRecoveryDayLabel(annotations[session.date]),
+        }))
+      );
       setLoading(false);
     })();
   }, []);
@@ -62,6 +78,9 @@ export default function HistoryPage({ onSelectDay }) {
                 >
                   <div className="history-row__primary">
                     <span className="history-row-date">{formatHistoryRowDate(session.date)}</span>
+                    {session.recoveryLabel && (
+                      <span className="history-row-recovery-badge">{session.recoveryLabel}</span>
+                    )}
                     <HistoryStagePipeline session={session} compact />
                   </div>
 

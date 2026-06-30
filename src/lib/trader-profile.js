@@ -8,7 +8,7 @@ export const PROFILE_UPDATED_EVENT = "trader-profile-updated";
 export const WELCOME_HINT_STORAGE_KEY = "libertrade-show-welcome-hint";
 
 const DEFAULT_COMMITMENT =
-  "I believe in myself and agree to follow my plan.";
+  "I respect myself enough to fully agree to follow my plan today.";
 
 const FOUNDER_COMMITMENTS = [
   "I believe in myself and I respect myself enough to follow my plan. Following my plans allows me and my family to live our dream.",
@@ -55,6 +55,43 @@ function defaultFinishChecklist(labels) {
   return labels.map((label) => ({ id: newId(), label }));
 }
 
+function normalizePlanRail(value) {
+  if (value == null || value === "") return "";
+  return String(value).trim();
+}
+
+function normalizePlanRails(raw = {}) {
+  return {
+    defaultMaxDailyLoss: normalizePlanRail(raw.defaultMaxDailyLoss),
+    defaultMaxTrades: normalizePlanRail(raw.defaultMaxTrades),
+    defaultPositionSize: normalizePlanRail(raw.defaultPositionSize),
+  };
+}
+
+export function applyPlanRailDefaults(form, profile) {
+  const rails = normalizePlanRails(profile);
+  const next = { ...form };
+
+  if (!String(next.maxDailyLoss ?? "").trim() && rails.defaultMaxDailyLoss) {
+    next.maxDailyLoss = rails.defaultMaxDailyLoss;
+  }
+  if (!String(next.maxTrades ?? "").trim() && rails.defaultMaxTrades) {
+    next.maxTrades = rails.defaultMaxTrades;
+  }
+  if (!String(next.positionSize ?? "").trim() && rails.defaultPositionSize) {
+    next.positionSize = rails.defaultPositionSize;
+  }
+
+  return next;
+}
+
+export function parsePlanRailMoney(raw) {
+  const cleaned = String(raw ?? "").replace(/[$,\s]/g, "");
+  if (!cleaned) return null;
+  const n = Number(cleaned);
+  return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+}
+
 export function createCustomerDefaultProfile() {
   return normalizeTraderProfile({
     profileKind: "customer",
@@ -70,6 +107,7 @@ export function createCustomerDefaultProfile() {
     showColdTurkeyBlocker: false,
     finishChecklist: defaultFinishChecklist(["Unlock accounts"]),
     behavioralFlags: defaultBehavioralFlags(),
+    ...normalizePlanRails({}),
   });
 }
 
@@ -88,6 +126,7 @@ export function createFounderDefaultProfile() {
     showColdTurkeyBlocker: true,
     finishChecklist: defaultFinishChecklist(FOUNDER_FINISH_CHECKLIST),
     behavioralFlags: defaultBehavioralFlags(),
+    ...normalizePlanRails({}),
   });
 }
 
@@ -172,6 +211,7 @@ export function normalizeTraderProfile(raw = {}) {
       profileKind === "founder" ? !!raw.showColdTurkeyBlocker : false,
     finishChecklist,
     behavioralFlags: normalizeBehavioralFlags(raw.behavioralFlags),
+    ...normalizePlanRails(raw),
     updatedAt: raw.updatedAt ?? null,
   };
 }
@@ -199,7 +239,7 @@ export function validateTraderProfileInput(form) {
   if (profile.biasChecklistEnabled) {
     const items = profile.biasChecklistItems.filter((item) => item.label.trim());
     if (!items.length) {
-      return { ok: false, message: "Add at least one chart marks checklist item or disable the checklist." };
+      return { ok: false, message: "Add at least one chart annotation checklist item or disable the checklist." };
     }
   }
 

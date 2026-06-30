@@ -1,10 +1,16 @@
 import { storage } from "./supabase";
 
 export const DLL_SETTINGS_KEY = "dll-risk-settings";
+export const DR_SETUP_HINT_DISMISS_KEY = "libertrade-dismiss-dr-setup-hint";
 
 export const ACTIVATION_MODES = {
   FULL_DLL: "full_dll",
   DRAWDOWN_AMOUNT: "drawdown_amount",
+};
+
+export const EXIT_MODES = {
+  PERCENT: "percent",
+  FIXED_AMOUNT: "fixed_amount",
 };
 
 export const ACTIVATION_MODE_OPTIONS = [
@@ -20,13 +26,29 @@ export const ACTIVATION_MODE_OPTIONS = [
   },
 ];
 
+export const EXIT_MODE_OPTIONS = [
+  {
+    value: EXIT_MODES.PERCENT,
+    label: "Percent of drawdown",
+    hint: "Exit after recovering a percentage of cumulative drawdown.",
+  },
+  {
+    value: EXIT_MODES.FIXED_AMOUNT,
+    label: "Fixed dollar amount",
+    hint: "Exit after earning back a set dollar amount. Extra loss days add to the target.",
+  },
+];
+
 export const DEFAULT_DLL_SETTINGS = {
   fullDll: 750,
   halfDll: 400,
   recoveryEnabled: true,
   activationMode: ACTIVATION_MODES.FULL_DLL,
   activationDrawdown: 750,
+  exitMode: EXIT_MODES.PERCENT,
   exitRecoveryPercent: 50,
+  exitRecoveryAmount: 400,
+  drawdownRecoveryConfigured: false,
 };
 
 const LEGACY_KEYS = {
@@ -59,6 +81,7 @@ function readLegacyLocalStorage() {
       recoveryRaw == null
         ? DEFAULT_DLL_SETTINGS.recoveryEnabled
         : recoveryRaw === "true",
+    drawdownRecoveryConfigured: true,
   });
 }
 
@@ -82,11 +105,15 @@ export function normalizeDllSettings(raw = {}) {
   const halfDll = Number(raw.halfDll);
   const activationDrawdown = Number(raw.activationDrawdown);
   const exitRecoveryPercent = Number(raw.exitRecoveryPercent);
+  const exitRecoveryAmount = Number(raw.exitRecoveryAmount);
 
   const activationMode =
     raw.activationMode === ACTIVATION_MODES.DRAWDOWN_AMOUNT
       ? ACTIVATION_MODES.DRAWDOWN_AMOUNT
       : ACTIVATION_MODES.FULL_DLL;
+
+  const exitMode =
+    raw.exitMode === EXIT_MODES.FIXED_AMOUNT ? EXIT_MODES.FIXED_AMOUNT : EXIT_MODES.PERCENT;
 
   const normalizedFull =
     Number.isFinite(fullDll) && fullDll > 0
@@ -100,10 +127,19 @@ export function normalizeDllSettings(raw = {}) {
     Number.isFinite(activationDrawdown) && activationDrawdown > 0
       ? Math.round(activationDrawdown)
       : normalizedFull;
-  const normalizedExit =
+  const normalizedExitPercent =
     Number.isFinite(exitRecoveryPercent) && exitRecoveryPercent >= 1 && exitRecoveryPercent <= 100
       ? Math.round(exitRecoveryPercent)
       : DEFAULT_DLL_SETTINGS.exitRecoveryPercent;
+  const normalizedExitAmount =
+    Number.isFinite(exitRecoveryAmount) && exitRecoveryAmount > 0
+      ? Math.round(exitRecoveryAmount)
+      : DEFAULT_DLL_SETTINGS.exitRecoveryAmount;
+
+  const configured =
+    raw.drawdownRecoveryConfigured === true ||
+    raw.updatedAt != null ||
+    raw.configuredAt != null;
 
   return {
     fullDll: normalizedFull,
@@ -114,8 +150,26 @@ export function normalizeDllSettings(raw = {}) {
         : !!raw.recoveryEnabled,
     activationMode,
     activationDrawdown: normalizedActivation,
-    exitRecoveryPercent: normalizedExit,
+    exitMode,
+    exitRecoveryPercent: normalizedExitPercent,
+    exitRecoveryAmount: normalizedExitAmount,
+    drawdownRecoveryConfigured: configured,
   };
+}
+
+export function shouldShowDrawdownRecoverySetupHint(settings = DEFAULT_DLL_SETTINGS) {
+  const normalized = normalizeDllSettings(settings);
+  if (normalized.drawdownRecoveryConfigured) return false;
+  if (normalized.recoveryEnabled) return false;
+  if (typeof window !== "undefined" && localStorage.getItem(DR_SETUP_HINT_DISMISS_KEY) === "1") {
+    return false;
+  }
+  return true;
+}
+
+export function dismissDrawdownRecoverySetupHint() {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(DR_SETUP_HINT_DISMISS_KEY, "1");
 }
 
 export function getActivationThreshold(settings = DEFAULT_DLL_SETTINGS) {
@@ -146,8 +200,11 @@ export async function loadDllSettings() {
   return { ...DEFAULT_DLL_SETTINGS };
 }
 
-export async function saveDllSettings(settings) {
-  const next = normalizeDllSettings(settings);
+export async function saveDllSettings(settings, { markConfigured = true } = {}) {
+  const next = normalizeDllSettings({
+    ...settings,
+    drawdownRecoveryConfigured: markConfigured ? true : settings.drawdownRecoveryConfigured,
+  });
   await storage.set(
     DLL_SETTINGS_KEY,
     JSON.stringify({ ...next, updatedAt: new Date().toISOString() })
@@ -160,6 +217,7 @@ export function validateDllSettingsInput(form) {
   const halfDll = parseMoney(form.halfDll);
   const activationDrawdown = parseMoney(form.activationDrawdown);
   const exitRecoveryPercent = parsePercent(form.exitRecoveryPercent);
+  const exitRecoveryAmount = parseMoney(form.exitRecoveryAmount);
 
   if (!Number.isFinite(fullDll) || fullDll <= 0) {
     return { ok: false, message: "Full-size max daily loss must be a positive dollar amount." };
@@ -188,10 +246,20 @@ export function validateDllSettingsInput(form) {
     }
   }
 
-  if (!Number.isFinite(exitRecoveryPercent) || exitRecoveryPercent < 1 || exitRecoveryPercent > 100) {
+  const exitMode =
+    form.exitMode === EXIT_MODES.FIXED_AMOUNT ? EXIT_MODES.FIXED_AMOUNT : EXIT_MODES.PERCENT;
+
+  if (exitMode === EXIT_MODES.PERCENT) {
+    if (!Number.isFinite(exitRecoveryPercent) || exitRecoveryPercent < 1 || exitRecoveryPercent > 100) {
+      return {
+        ok: false,
+        message: "Exit rule must be between 1% and 100% of cumulative drawdown recovered.",
+      };
+    }
+  } else if (!Number.isFinite(exitRecoveryAmount) || exitRecoveryAmount <= 0) {
     return {
       ok: false,
-      message: "Exit rule must be between 1% and 100% of cumulative drawdown recovered.",
+      message: "Exit recovery amount must be a positive dollar amount.",
     };
   }
 
@@ -206,7 +274,10 @@ export function validateDllSettingsInput(form) {
         activationMode === ACTIVATION_MODES.DRAWDOWN_AMOUNT
           ? Math.round(activationDrawdown)
           : Math.round(fullDll),
+      exitMode,
       exitRecoveryPercent: Math.round(exitRecoveryPercent),
+      exitRecoveryAmount: Math.round(exitRecoveryAmount),
+      drawdownRecoveryConfigured: true,
     }),
   };
 }

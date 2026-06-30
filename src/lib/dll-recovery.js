@@ -4,6 +4,7 @@ import {
   DEFAULT_DLL_SETTINGS,
   getActivationThreshold,
   ACTIVATION_MODES,
+  EXIT_MODES,
 } from "./dll-recovery-settings";
 
 export const DLL_RECOVERY_KEY = "dll-recovery-state";
@@ -25,8 +26,16 @@ function emptyState() {
   };
 }
 
+function normalizedSettings(settings = DEFAULT_DLL_SETTINGS) {
+  return { ...DEFAULT_DLL_SETTINGS, ...settings };
+}
+
 export function computeRecoveryTarget(cumulativeDrawdown, settings = DEFAULT_DLL_SETTINGS) {
-  const pct = settings.exitRecoveryPercent ?? DEFAULT_DLL_SETTINGS.exitRecoveryPercent;
+  const normalized = normalizedSettings(settings);
+  if (normalized.exitMode === EXIT_MODES.FIXED_AMOUNT) {
+    return round2(normalized.exitRecoveryAmount);
+  }
+  const pct = normalized.exitRecoveryPercent ?? DEFAULT_DLL_SETTINGS.exitRecoveryPercent;
   const clamped = Math.min(100, Math.max(1, pct));
   return round2(cumulativeDrawdown * (clamped / 100));
 }
@@ -35,6 +44,14 @@ export function dayActivatesRecovery(net, settings = DEFAULT_DLL_SETTINGS) {
   if (net == null || Number.isNaN(net) || net >= 0) return false;
   const threshold = getActivationThreshold(settings);
   return Math.abs(net) >= threshold;
+}
+
+function bumpRecoveryTarget(currentTarget, cumulativeDrawdown, netLoss, settings) {
+  const normalized = normalizedSettings(settings);
+  if (normalized.exitMode === EXIT_MODES.FIXED_AMOUNT) {
+    return round2(currentTarget + Math.abs(netLoss));
+  }
+  return computeRecoveryTarget(cumulativeDrawdown, normalized);
 }
 
 export async function loadRecoveryState() {
@@ -82,7 +99,7 @@ function recomputeFromDays(days, settings) {
       recoveredSoFar = round2(recoveredSoFar + net);
     } else if (net < 0) {
       cumulativeDrawdown = round2(cumulativeDrawdown + Math.abs(net));
-      recoveryTarget = computeRecoveryTarget(cumulativeDrawdown, settings);
+      recoveryTarget = bumpRecoveryTarget(recoveryTarget, cumulativeDrawdown, net, settings);
     }
 
     if (recoveryTarget > 0 && recoveredSoFar >= recoveryTarget) {
@@ -106,6 +123,68 @@ function recomputeFromDays(days, settings) {
   };
 }
 
+/** Per-day Drawdown Recovery flags for history UI. */
+export function buildRecoveryDayAnnotations(days, settings = DEFAULT_DLL_SETTINGS) {
+  const sortedKeys = Object.keys(days || {}).sort();
+  const annotations = {};
+
+  let active = false;
+  let cumulativeDrawdown = 0;
+  let recoveredSoFar = 0;
+  let recoveryTarget = 0;
+
+  for (const key of sortedKeys) {
+    const net = days[key]?.netPnl;
+    if (net == null || Number.isNaN(net)) continue;
+
+    if (!active) {
+      if (dayActivatesRecovery(net, settings)) {
+        active = true;
+        cumulativeDrawdown = net < 0 ? round2(Math.abs(net)) : 0;
+        recoveredSoFar = 0;
+        recoveryTarget = computeRecoveryTarget(cumulativeDrawdown, settings);
+        annotations[key] = {
+          activatedDrawdownRecovery: true,
+          inDrawdownRecovery: true,
+          exitedDrawdownRecovery: false,
+        };
+      }
+      continue;
+    }
+
+    annotations[key] = {
+      activatedDrawdownRecovery: false,
+      inDrawdownRecovery: true,
+      exitedDrawdownRecovery: false,
+    };
+
+    if (net > 0) {
+      recoveredSoFar = round2(recoveredSoFar + net);
+    } else if (net < 0) {
+      cumulativeDrawdown = round2(cumulativeDrawdown + Math.abs(net));
+      recoveryTarget = bumpRecoveryTarget(recoveryTarget, cumulativeDrawdown, net, settings);
+    }
+
+    if (recoveryTarget > 0 && recoveredSoFar >= recoveryTarget) {
+      annotations[key].exitedDrawdownRecovery = true;
+      active = false;
+      cumulativeDrawdown = 0;
+      recoveredSoFar = 0;
+      recoveryTarget = 0;
+    }
+  }
+
+  return annotations;
+}
+
+export function getRecoveryDayLabel(flags) {
+  if (!flags) return null;
+  if (flags.activatedDrawdownRecovery) return "Drawdown Recovery triggered";
+  if (flags.exitedDrawdownRecovery) return "Drawdown Recovery complete";
+  if (flags.inDrawdownRecovery) return "In Drawdown Recovery";
+  return null;
+}
+
 export function isRecoveryActive(state) {
   return !!state?.active;
 }
@@ -115,7 +194,7 @@ export function getEffectiveMaxDailyLoss(state, settings = DEFAULT_DLL_SETTINGS)
 }
 
 export function getRecoveryStatus(state, settings = DEFAULT_DLL_SETTINGS) {
-  const normalized = { ...DEFAULT_DLL_SETTINGS, ...settings };
+  const normalized = normalizedSettings(settings);
   const active = isRecoveryActive(state);
   const target = state?.recoveryTarget || 0;
   const recovered = state?.recoveredSoFar || 0;
@@ -137,7 +216,10 @@ export function getRecoveryStatus(state, settings = DEFAULT_DLL_SETTINGS) {
     recoveryEnabled: normalized.recoveryEnabled,
     activationMode: normalized.activationMode,
     activationThreshold: getActivationThreshold(normalized),
+    exitMode: normalized.exitMode,
     exitRecoveryPercent: normalized.exitRecoveryPercent,
+    exitRecoveryAmount: normalized.exitRecoveryAmount,
+    drawdownRecoveryConfigured: normalized.drawdownRecoveryConfigured,
   };
 }
 
@@ -153,7 +235,7 @@ export function formatRecoveryUsd(n) {
 }
 
 export function formatActivationRule(settings = DEFAULT_DLL_SETTINGS) {
-  const normalized = { ...DEFAULT_DLL_SETTINGS, ...settings };
+  const normalized = normalizedSettings(settings);
   if (normalized.activationMode === ACTIVATION_MODES.DRAWDOWN_AMOUNT) {
     return `Single-day loss ≥ ${formatRecoveryUsd(normalized.activationDrawdown)}`;
   }
@@ -161,8 +243,11 @@ export function formatActivationRule(settings = DEFAULT_DLL_SETTINGS) {
 }
 
 export function formatExitRule(settings = DEFAULT_DLL_SETTINGS) {
-  const pct = settings.exitRecoveryPercent ?? DEFAULT_DLL_SETTINGS.exitRecoveryPercent;
-  return `Recover ${pct}% of cumulative drawdown`;
+  const normalized = normalizedSettings(settings);
+  if (normalized.exitMode === EXIT_MODES.FIXED_AMOUNT) {
+    return `Recover ${formatRecoveryUsd(normalized.exitRecoveryAmount)} (extra loss days add to target)`;
+  }
+  return `Recover ${normalized.exitRecoveryPercent}% of cumulative drawdown`;
 }
 
 export function parseMaxDailyLossValue(raw) {
@@ -212,6 +297,7 @@ export async function loadRecoveryWithSettings() {
     state,
     settings,
     status: getRecoveryStatus(state, settings),
+    dayAnnotations: buildRecoveryDayAnnotations(state.days, settings),
   };
 }
 

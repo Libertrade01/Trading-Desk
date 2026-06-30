@@ -176,9 +176,49 @@ export default function MyProcessSettings({ standalone = false }) {
       </div>
 
       <div className="pm-field">
+        <div className="pm-field-label hybrid-label">Default session plan rails</div>
+        <p className="pm-field-hint">
+          Pre-fill max daily loss, max trades, and position size on each new session plan. You still confirm or edit every day.
+          Drawdown Recovery overrides max daily loss when active. Full-size caps live in Settings → Risk.
+        </p>
+        <div className="pm-field-grid">
+          <div>
+            <div className="pm-field-label hybrid-label">Usual max daily loss ($)</div>
+            <input
+              type="text"
+              value={profile.defaultMaxDailyLoss ?? ""}
+              onChange={(e) => patch({ defaultMaxDailyLoss: e.target.value })}
+              className="pm-text-input"
+              placeholder="Optional — e.g. 750"
+            />
+          </div>
+          <div>
+            <div className="pm-field-label hybrid-label">Usual max trades</div>
+            <input
+              type="text"
+              value={profile.defaultMaxTrades ?? ""}
+              onChange={(e) => patch({ defaultMaxTrades: e.target.value })}
+              className="pm-text-input"
+              placeholder="Optional"
+            />
+          </div>
+          <div>
+            <div className="pm-field-label hybrid-label">Usual position size</div>
+            <input
+              type="text"
+              value={profile.defaultPositionSize ?? ""}
+              onChange={(e) => patch({ defaultPositionSize: e.target.value })}
+              className="pm-text-input"
+              placeholder="Optional — e.g. 2 MNQ"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="pm-field">
         <ToggleField
-          label="Chart marks checklist"
-          hint="Required items on the session plan bias step."
+          label="Chart annotation checklist"
+          hint="When enabled, required on the session plan bias step. Edit the items below — e.g. value area marked, nodes/LVNs, weekly profile."
           value={profile.biasChecklistEnabled}
           onChange={(v) => patch({ biasChecklistEnabled: v })}
         />

@@ -9,6 +9,7 @@ const SECTION_ROUTES = {
   dailyplan: "/plan",
   postmarket: "/postmarket",
   process: "/settings?section=process",
+  "settings-risk": "/settings?section=risk",
 };
 
 export default function HomePage() {

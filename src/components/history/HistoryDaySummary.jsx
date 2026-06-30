@@ -35,7 +35,7 @@ function ScoreRing({ score, size = 88 }) {
   );
 }
 
-export default function HistoryDaySummary({ session }) {
+export default function HistoryDaySummary({ session, recoveryLabel }) {
   const pnlTone = session.netPnl > 0 ? "pos" : session.netPnl < 0 ? "neg" : "dim";
   const pre = session.pre;
 
@@ -69,12 +69,17 @@ export default function HistoryDaySummary({ session }) {
         </div>
       </div>
 
-      {(pre?.standDownAcknowledged || pre?.sleepDebtStandDownRequired) && (
+      {(pre?.standDownAcknowledged || pre?.sleepDebtStandDownRequired || recoveryLabel) && (
         <div className="history-day-summary__alerts">
-          {pre.standDownAcknowledged && (
+          {recoveryLabel && (
+            <span className="history-day-summary__alert history-day-summary__alert--recovery">
+              {recoveryLabel}
+            </span>
+          )}
+          {pre?.standDownAcknowledged && (
             <span className="history-day-summary__alert">Protective day acknowledged</span>
           )}
-          {pre.sleepDebtStandDownRequired && (
+          {pre?.sleepDebtStandDownRequired && (
             <span className="history-day-summary__alert history-day-summary__alert--severe">
               Recovery day
             </span>

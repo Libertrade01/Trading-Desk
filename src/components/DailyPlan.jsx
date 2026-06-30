@@ -29,6 +29,8 @@ import {
   biasChecklistReady,
   commitmentsReady,
   migratePlanCommitments,
+  applyPlanRailDefaults,
+  parsePlanRailMoney,
 } from "../lib/trader-profile";
 import DailyPlanStepper, { PLAN_STEPS } from "./DailyPlanStepper";
 
@@ -112,7 +114,7 @@ function PlanProgressMetrics({ form, profile }) {
     <aside className="pm-plan-metrics" aria-label="Plan completion">
       {chartTotal > 0 && (
         <div className="pm-plan-metrics-row">
-          <span className="pm-plan-metrics-label hybrid-label-sm">Chart marks</span>
+          <span className="pm-plan-metrics-label hybrid-label-sm">Chart annotations</span>
           <span className="pm-plan-metrics-value">
             <span className={chartMarks === chartTotal ? "pos" : ""}>{chartMarks}</span>
             <span className="pm-plan-metrics-muted"> / {chartTotal}</span>
@@ -142,7 +144,7 @@ function PlanProgressMetrics({ form, profile }) {
 }
 
 const RISK_RAILS_MESSAGE = "I can not trade until risk rails are in place";
-const BIAS_CHECKLIST_MESSAGE = "Complete the chart marks checklist before saving the plan.";
+const BIAS_CHECKLIST_MESSAGE = "Complete the chart annotation checklist before saving the plan.";
 const COMMITMENT_MESSAGE = "Confirm all commitments before saving the plan.";
 const BIAS_GUIDANCE =
   "This is the bias of my plan — where is price in relation to these levels? Where is volume building and where does price not want to go?";
@@ -191,6 +193,8 @@ export default function DailyPlan({ onBack }) {
           maxDailyLoss: String(status.effectiveMaxDailyLoss),
           dllRecoveryApplied: false,
         };
+      } else {
+        next = applyPlanRailDefaults(next, traderProfile);
       }
       setForm(next);
       setLoading(false);

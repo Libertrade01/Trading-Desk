@@ -14,6 +14,12 @@ import {
 } from "../lib/history-data";
 import { playbookAdherenceLabel } from "../lib/setup-adherence";
 import HistoryDaySummary from "./history/HistoryDaySummary";
+import {
+  loadRecoveryState,
+  buildRecoveryDayAnnotations,
+  getRecoveryDayLabel,
+} from "../lib/dll-recovery";
+import { loadDllSettings } from "../lib/dll-recovery-settings";
 
 function StatGrid({ title, items }) {
   return (
@@ -55,13 +61,21 @@ function yesNo(val) {
 
 export default function HistoryDayDetail({ date, onBack, onDeleted }) {
   const [session, setSession] = useState(null);
+  const [recoveryLabel, setRecoveryLabel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
-      setSession(await loadSessionDay(date));
+      const [loadedSession, recoveryState, settings] = await Promise.all([
+        loadSessionDay(date),
+        loadRecoveryState(),
+        loadDllSettings(),
+      ]);
+      const annotations = buildRecoveryDayAnnotations(recoveryState.days, settings);
+      setSession(loadedSession);
+      setRecoveryLabel(getRecoveryDayLabel(annotations[date]));
       setLoading(false);
     })();
   }, [date]);
@@ -97,7 +111,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
       <div className="history-detail-top">
         <button type="button" className="pm-back" onClick={onBack}>← Back to history</button>
         <h1 className="history-detail-title hybrid-title">{formatDetailTitle(date)}</h1>
-        <HistoryDaySummary session={session} />
+        <HistoryDaySummary session={session} recoveryLabel={recoveryLabel} />
       </div>
 
       <div className="history-detail-grid">
