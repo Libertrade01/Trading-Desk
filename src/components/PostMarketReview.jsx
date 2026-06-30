@@ -31,6 +31,7 @@ import {
 } from "../lib/setup-adherence";
 import RTraderImportPreview from "./RTraderImportPreview";
 import PostMarketStepper, { CLOSEOUT_STEPS } from "./PostMarketStepper";
+import WorkflowPageLayout from "./WorkflowPageLayout";
 import {
   evaluateDay,
   loadRecoveryState,
@@ -46,10 +47,10 @@ import { sliderValueColor } from "../lib/premarket-scoring";
 function headerDate() {
   return new Date().toLocaleDateString("en-US", {
     weekday: "long",
-    month: "short",
+    month: "long",
     day: "numeric",
     year: "numeric",
-  }).toUpperCase();
+  });
 }
 
 function sectionDate() {
@@ -365,10 +366,10 @@ export default function PostMarketReview({ onBack }) {
     return () => window.removeEventListener(PROFILE_UPDATED_EVENT, refreshProfile);
   }, []);
 
-  if (loading || !profile) return <div className="pm-loading">Loading...</div>;
+  if (loading || !profile) return <div className="pm-loading home-page--loop workflow-page--loop">Loading...</div>;
 
   return (
-    <div className="premarket-page hybrid-page">
+    <WorkflowPageLayout>
       <div className="pm-topbar">
         <span>{headerDate()}</span>
       </div>
@@ -378,7 +379,7 @@ export default function PostMarketReview({ onBack }) {
           <div className="pm-closeout-header-row">
             <div className="pm-header">
               <div className="pm-eyebrow hybrid-eyebrow">Close loop · {sectionDate()}</div>
-              <h1 className="hybrid-page-title">CLOSE LOOP.</h1>
+              <h1 className="hybrid-page-title">Close loop.</h1>
               <p className="pm-subtitle">Close the loop. What happened vs what you planned.</p>
             </div>
             <CloseoutMetrics
@@ -613,7 +614,7 @@ export default function PostMarketReview({ onBack }) {
           </div>
         </div>
       </div>
-    </div>
+    </WorkflowPageLayout>
   );
 }
 

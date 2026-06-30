@@ -16,6 +16,9 @@ import {
 } from "../lib/premarket-scoring";
 import MarketEventNudge from "./MarketEventNudge";
 import CheckInRail, { CHECKIN_RAIL_SECTIONS } from "./CheckInRail";
+import CheckInHorizontalStepper from "./CheckInHorizontalStepper";
+import WorkflowPageLayout from "./WorkflowPageLayout";
+import { IconShieldCheck } from "./onboarding-icons";
 import { todayKey, offsetDateKey } from "../lib/today-key";
 import { loadHomeFocusItems } from "../lib/weekly-process-review";
 import { notifySessionSaved } from "../lib/session-events";
@@ -47,18 +50,16 @@ async function saveData(key, value) {
 function headerDate() {
   return new Date().toLocaleDateString("en-US", {
     weekday: "long",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).toUpperCase();
-}
-
-function sectionDate() {
-  return new Date().toLocaleDateString("en-US", {
-    weekday: "long",
     month: "long",
     day: "numeric",
+    year: "numeric",
   });
+}
+
+function sectionDateEyebrow() {
+  return new Date()
+    .toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
+    .toUpperCase();
 }
 
 function SliderField({ label, hint, minLabel, maxLabel, value, onChange, inverted }) {
@@ -113,21 +114,24 @@ function ProtectiveDayBanner({ recoveryDay, acknowledged, onAcknowledge }) {
 
   return (
     <div
-      className={`pm-protective-banner${acknowledged ? " pm-protective-banner--acknowledged" : ""}`}
+      className={`checkin-protective-card${acknowledged ? " checkin-protective-card--acknowledged" : ""}`}
       role={recoveryDay ? "alert" : "status"}
     >
-      <div className="pm-protective-banner-head">
-        <span className="pm-protective-banner-eyebrow hybrid-eyebrow">{title}</span>
-        {!acknowledged && <p className="pm-protective-banner-text">{body}</p>}
+      <div className="checkin-protective-card-icon" aria-hidden="true">
+        <IconShieldCheck />
       </div>
-      <label className={`pm-protective-check${acknowledged ? " pm-protective-check--done" : ""}`}>
-        <input
-          type="checkbox"
-          checked={acknowledged}
-          onChange={(e) => onAcknowledge(e.target.checked)}
-        />
-        <span>{acknowledged ? PROTECTIVE_DAY_COPY.scoreAckDone : ackLabel}</span>
-      </label>
+      <div className="checkin-protective-card-body">
+        <span className="checkin-protective-card-eyebrow">{title}</span>
+        {!acknowledged && <p className="checkin-protective-card-text">{body}</p>}
+        <label className={`checkin-protective-check${acknowledged ? " checkin-protective-check--done" : ""}`}>
+          <input
+            type="checkbox"
+            checked={acknowledged}
+            onChange={(e) => onAcknowledge(e.target.checked)}
+          />
+          <span>{acknowledged ? PROTECTIVE_DAY_COPY.scoreAckDone : ackLabel}</span>
+        </label>
+      </div>
     </div>
   );
 }
@@ -269,26 +273,33 @@ export default function PreMarketCheckIn({ onBack }) {
   const goNext = () => setActiveSection((i) => Math.min(CHECKIN_RAIL_SECTIONS.length - 1, i + 1));
 
   const section = CHECKIN_RAIL_SECTIONS[activeSection];
+  const isLastSection = activeSection === CHECKIN_RAIL_SECTIONS.length - 1;
+  const nextSection = !isLastSection ? CHECKIN_RAIL_SECTIONS[activeSection + 1] : null;
 
   if (loading || !profile) {
-    return <div className="pm-loading">Loading...</div>;
+    return <div className="pm-loading home-page--loop workflow-page--loop">Loading...</div>;
   }
 
   return (
-    <div className="premarket-page hybrid-page">
-      <div className="pm-topbar">
-        <span>{headerDate()}</span>
-      </div>
+    <WorkflowPageLayout>
+      <div className="pm-checkin-layout pm-checkin-layout--loop">
+        <CheckInRail
+          activeIndex={activeSection}
+          onSelect={setActiveSection}
+          composite={scores.composite}
+          dimensions={railDimensions}
+          cautionActive={showProtectiveBanner && !form.standDownAcknowledged}
+        />
 
-      <div className="pm-checkin-layout">
-        <div className="pm-checkin-main">
-          <div className="pm-header">
-            <div className="pm-eyebrow hybrid-eyebrow">Check-in · {sectionDate()}</div>
-            <h1 className="hybrid-page-title">CHECK IN.</h1>
+        <div className="pm-checkin-content">
+          <header className="pm-checkin-header">
+            <p className="pm-checkin-date">{headerDate()}</p>
+            <div className="pm-eyebrow hybrid-eyebrow">Check-in · {sectionDateEyebrow()}</div>
+            <h1 className="hybrid-page-title">Check-in.</h1>
             <p className="pm-subtitle">
               Be honest before the open. Your score updates as you go.
             </p>
-          </div>
+          </header>
 
           {weekFocus.length > 0 && (
             <div className="pm-week-focus-reminder" role="note">
@@ -301,42 +312,58 @@ export default function PreMarketCheckIn({ onBack }) {
             </div>
           )}
 
-          <div className="pm-checkin-workspace">
-            <CheckInRail
-              activeIndex={activeSection}
-              onSelect={setActiveSection}
-              composite={scores.composite}
-              dimensions={railDimensions}
-              cautionActive={showProtectiveBanner && !form.standDownAcknowledged}
-            />
+          <CheckInHorizontalStepper activeIndex={activeSection} onSelect={setActiveSection} />
 
-            <div className="pm-checkin-stage">
-              <div className="pm-section-panel">
-            <div className="pm-section-panel-head">
-              <div>
-                <h2 className="pm-section-title hybrid-section-title">{sectionTitle(section.id)}</h2>
-                <p className="pm-section-desc">{sectionDesc(section.id)}</p>
+          <div className="pm-checkin-stage">
+            <div className="pm-section-panel checkin-section-panel">
+              <div className="pm-section-panel-head checkin-section-panel-head">
+                <div>
+                  <h2 className="pm-section-title hybrid-section-title">{sectionTitle(section.id)}</h2>
+                  <p className="pm-section-desc">{sectionDesc(section.id)}</p>
+                </div>
+                <div className="checkin-section-nav" aria-label="Section navigation">
+                  <button
+                    type="button"
+                    className="checkin-section-nav-btn"
+                    onClick={goPrev}
+                    disabled={activeSection === 0}
+                    aria-label="Previous section"
+                  >
+                    ‹
+                  </button>
+                  <span className="checkin-section-nav-count">
+                    {activeSection + 1} of {CHECKIN_RAIL_SECTIONS.length}
+                  </span>
+                  <button
+                    type="button"
+                    className="checkin-section-nav-btn"
+                    onClick={goNext}
+                    disabled={isLastSection}
+                    aria-label="Next section"
+                  >
+                    ›
+                  </button>
+                </div>
               </div>
-              <span className="pm-section-step hybrid-label-sm">
-                {activeSection + 1} of {CHECKIN_RAIL_SECTIONS.length}
-              </span>
-            </div>
 
-            <div className="pm-section-panel-body">
+              <div className="pm-section-panel-body">
               {section.id === "physical" && (
                 <>
                   <div className="pm-sleep-row">
                     <div className="pm-field">
                       <div className="pm-field-label hybrid-label">Sleep (hours)</div>
-                      <input
-                        type="number"
-                        min={0}
-                        max={14}
-                        step={0.5}
-                        value={form.sleepHours}
-                        onChange={(e) => set("sleepHours", e.target.value)}
-                        className="pm-number-input"
-                      />
+                      <div className="checkin-input-suffix-wrap">
+                        <input
+                          type="number"
+                          min={0}
+                          max={14}
+                          step={0.5}
+                          value={form.sleepHours}
+                          onChange={(e) => set("sleepHours", e.target.value)}
+                          className="pm-number-input checkin-input-with-suffix"
+                        />
+                        <span className="checkin-input-suffix">hrs</span>
+                      </div>
                     </div>
                     {usesWearable && (
                       <div className="pm-field">
@@ -515,87 +542,68 @@ export default function PreMarketCheckIn({ onBack }) {
                 </>
               )}
             </div>
-          </div>
+            </div>
 
-          {showProtectiveBanner && (
-            <ProtectiveDayBanner
-              recoveryDay={recoveryDay}
-              acknowledged={form.standDownAcknowledged}
-              onAcknowledge={handleProtectiveAcknowledge}
-            />
-          )}
-
-          <p className="pm-score-weight-hint">
-            Weighted: physical 22% · mental 38% · prep 25% · external 15%. Status: {status.label}.
-          </p>
-
-          <div className="pm-section-nav">
-            <button type="button" className="pm-btn-link" onClick={goPrev} disabled={activeSection === 0}>
-              Previous
-            </button>
-            {activeSection < CHECKIN_RAIL_SECTIONS.length - 1 ? (
-              <button type="button" className="pm-btn-primary-sm" onClick={goNext}>
-                Next — {CHECKIN_RAIL_SECTIONS[activeSection + 1].label}
-              </button>
-            ) : (
-              <button type="button" className="pm-btn-link" onClick={() => setActiveSection(0)}>
-                Back to Physical
-              </button>
-            )}
-          </div>
-
-          <div className="pm-checkin-finish">
-            <div className="pm-checkin-finish-mantra">
-              <label className="pm-checkin-finish-label hybrid-label" htmlFor="pm-mantra-input">
-                Mantra
-              </label>
-              <input
-                id="pm-mantra-input"
-                type="text"
-                value={form.mantra}
-                onChange={(e) => set("mantra", e.target.value)}
-                className="pm-text-input pm-checkin-finish-mantra-input"
-                placeholder="One line for today — e.g. Wait for A+"
+            {showProtectiveBanner && (
+              <ProtectiveDayBanner
+                recoveryDay={recoveryDay}
+                acknowledged={form.standDownAcknowledged}
+                onAcknowledge={handleProtectiveAcknowledge}
               />
-            </div>
+            )}
 
-            <div className="pm-checkin-finish-reminders" aria-label="Check-in reminders">
-              <span className="pm-checkin-finish-label hybrid-label">Desk setup</span>
-              <div className="pm-checkin-reminder-grid">
-                {(profile?.finishChecklist || []).map((item) => (
-                  <ToggleField
-                    key={item.id}
-                    label={item.label}
-                    value={deskCheckValue(form, item.id)}
-                    onChange={(v) => {
-                      setSaved(false);
-                      setForm((f) => setDeskCheck(f, item.id, v));
-                    }}
-                  />
-                ))}
+            <div className="pm-checkin-finish checkin-finish-card">
+              <div className="pm-checkin-finish-reminders" aria-label="Check-in reminders">
+                <span className="pm-checkin-finish-label hybrid-label">Desk setup</span>
+                <div className="pm-checkin-reminder-grid">
+                  {(profile?.finishChecklist || []).map((item) => (
+                    <ToggleField
+                      key={item.id}
+                      label={item.label}
+                      value={deskCheckValue(form, item.id)}
+                      onChange={(v) => {
+                        setSaved(false);
+                        setForm((f) => setDeskCheck(f, item.id, v));
+                      }}
+                    />
+                  ))}
+                </div>
+                <p className="pm-checkin-finish-note">Not scored — quick desk checks before the open.</p>
               </div>
-              <p className="pm-checkin-finish-note">Not scored — quick desk checks before the open.</p>
-            </div>
 
-            <div className="pm-checkin-finish-actions">
-              <button type="button" className="pm-btn-link" onClick={handleReset}>
-                Reset
-              </button>
-              <div className="pm-checkin-finish-actions-right">
-                <button type="button" className="pm-btn-link" onClick={handleSave}>
-                  {saved ? "Updated" : "Save check-in"}
+              <div className="checkin-finish-actions">
+                <button type="button" className="pm-btn-link checkin-finish-reset" onClick={handleReset}>
+                  Reset
                 </button>
-                <button type="button" className="pm-btn-primary-sm" onClick={() => { handleSave(); onBack(); }}>
-                  Return to dashboard
-                </button>
+                <div className="checkin-finish-actions-right">
+                  <button type="button" className="pm-btn-outline" onClick={handleSave}>
+                    {saved ? "Updated" : "Save check-in"}
+                  </button>
+                  {nextSection ? (
+                    <button type="button" className="pm-btn-primary-sm" onClick={goNext}>
+                      Next — {nextSection.label}
+                      <span className="checkin-btn-arrow" aria-hidden="true">→</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="pm-btn-primary-sm"
+                      onClick={() => {
+                        handleSave();
+                        onBack();
+                      }}
+                    >
+                      Return to dashboard
+                      <span className="checkin-btn-arrow" aria-hidden="true">→</span>
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </WorkflowPageLayout>
   );
 }
 

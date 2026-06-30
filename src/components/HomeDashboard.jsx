@@ -15,7 +15,7 @@ import {
   isWeekend,
 } from "../lib/history-data";
 import HomeEventBanner from "./HomeEventBanner";
-import { isNyseTradingDay, getMarketEventsForDate } from "../lib/market-events";
+import { getMarketEventsForDate } from "../lib/market-events";
 import { getCurrentUser } from "../lib/user-storage";
 import { playbookAdherenceLabel } from "../lib/setup-adherence";
 import {
@@ -183,18 +183,14 @@ function StreakMetric({ label, value, target, loading }) {
   );
 }
 
-function HomeMarketContextCard({ dateKey }) {
+function HomeMarketContextFlags({ dateKey, className = "" }) {
   const events = useMemo(() => getMarketEventsForDate(dateKey), [dateKey]);
+  if (!events.length) return null;
 
   return (
-    <section className="home-loop-card home-context-card" aria-label="Market context">
-      <h2 className="home-loop-card-title">Market context</h2>
-      {events.length > 0 ? (
-        <HomeEventBanner dateKey={dateKey} />
-      ) : (
-        <p className="home-loop-card-empty">No scheduled market events today.</p>
-      )}
-    </section>
+    <div className={`home-page-market-flags${className ? ` ${className}` : ""}`} aria-label="Market context">
+      <HomeEventBanner dateKey={dateKey} />
+    </div>
   );
 }
 
@@ -1013,7 +1009,6 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
   const showPlaybookStat =
     today?.playbookAdherence?.total > 0 && todayPlaybookLabel;
 
-  const marketOpen = isNyseTradingDay(dateKey);
   const greeting = formatTimeGreeting();
   const displayName = profile?.preferredName?.trim() || userName;
   const greetingLine = displayName ? `${greeting}, ${displayName}.` : `${greeting}.`;
@@ -1024,15 +1019,14 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
     <div className="premarket-page hybrid-page home-page--loop">
       <div className="home-page-glow" aria-hidden="true" />
 
-      <div className="home-page-inner">
+      <div className={`home-page-inner${allComplete ? "" : " home-page-inner--workflow"}`}>
         <header className="home-page-header">
-          <div>
+          <div className="home-page-header-main">
             <h1 className="home-page-greeting">{greetingLine}</h1>
             <p className="home-page-date">{formatHeaderDateLong(effectiveDate)}</p>
-          </div>
-          <div className={`home-page-market-badge${marketOpen ? " home-page-market-badge--open" : ""}`}>
-            <span className="home-page-market-dot" aria-hidden="true" />
-            {marketOpen ? "Market open" : "Market closed"}
+            {!allComplete && (
+              <HomeMarketContextFlags dateKey={dateKey} className="home-page-market-flags--header" />
+            )}
           </div>
         </header>
 
@@ -1069,17 +1063,19 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
 
         <RecoveryBanner recoveryStatus={recoveryStatus} />
 
-        <div className="home-page-focus-top">
-          <WeekFocusStrip
-            items={weekFocus.items}
-            loading={loadingPanels}
-            showReviewPrompt={showReviewPrompt}
-            onOpenWeeklyReview={onOpenWeeklyReview}
-            allComplete={allComplete}
-          />
-        </div>
+        {allComplete && (
+          <div className="home-page-focus-top">
+            <WeekFocusStrip
+              items={weekFocus.items}
+              loading={loadingPanels}
+              showReviewPrompt={showReviewPrompt}
+              onOpenWeeklyReview={onOpenWeeklyReview}
+              allComplete={allComplete}
+            />
+          </div>
+        )}
 
-        <div className="home-page-dashboard">
+        <div className={`home-page-dashboard${allComplete ? "" : " home-page-dashboard--workflow"}`}>
           <div className="home-page-main">
             <section
               className={`home-loop-card home-hero-card home-page-hero${allComplete ? "" : " home-hero-card--active"}`}
@@ -1094,6 +1090,17 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
                 {hero.sub && <p className="home-hero-lead">{hero.sub}</p>}
                 {!allComplete && today?.playbookAdherence?.total > 0 && todayPlaybookLabel && (
                   <p className="home-hero-lead home-hero-lead--playbook">{todayPlaybookLabel.text}</p>
+                )}
+                {!allComplete && (
+                  <div className="home-hero-week-focus">
+                    <WeekFocusStrip
+                      items={weekFocus.items}
+                      loading={loadingPanels}
+                      showReviewPrompt={showReviewPrompt}
+                      onOpenWeeklyReview={onOpenWeeklyReview}
+                      allComplete={allComplete}
+                    />
+                  </div>
                 )}
                 {allComplete ? (
                   <button
@@ -1124,10 +1131,9 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
               </div>
             </section>
 
-            <HomeHeroQuote />
-
             {allComplete && (
               <>
+                <HomeHeroQuote />
                 <HomeMetricsCard
                   allComplete={allComplete}
                   today={today}
@@ -1155,18 +1161,20 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
             )}
           </div>
 
-          <aside className="home-page-aside">
-            <HomeMarketContextCard dateKey={dateKey} />
-            <HomeWeeklyOverview
-              rows={weeklyOverviewRows}
-              loading={loadingPanels}
-              onOpenWeeklyReview={onOpenWeeklyReview}
-            />
-            <HomeQuickActionTiles
-              onNavigate={onNavigate}
-              onOpenWeeklyReview={onOpenWeeklyReview}
-            />
-          </aside>
+          {allComplete && (
+            <aside className="home-page-aside">
+              <HomeMarketContextFlags dateKey={dateKey} />
+              <HomeWeeklyOverview
+                rows={weeklyOverviewRows}
+                loading={loadingPanels}
+                onOpenWeeklyReview={onOpenWeeklyReview}
+              />
+              <HomeQuickActionTiles
+                onNavigate={onNavigate}
+                onOpenWeeklyReview={onOpenWeeklyReview}
+              />
+            </aside>
+          )}
         </div>
       </div>
     </div>

@@ -3,10 +3,10 @@
 import { readinessScoreColor } from "../lib/premarket-scoring";
 
 const SECTIONS = [
-  { id: "physical", rail: "P", label: "Physical" },
-  { id: "mental", rail: "M", label: "Mental" },
-  { id: "external", rail: "E", label: "External" },
-  { id: "preparation", rail: "Pr", label: "Preparation" },
+  { id: "physical", label: "Physical", stepLabel: "Physical" },
+  { id: "mental", label: "Mental", stepLabel: "Mental" },
+  { id: "external", label: "External", stepLabel: "External" },
+  { id: "preparation", label: "Prep", stepLabel: "Prep" },
 ];
 
 export default function CheckInRail({
@@ -19,37 +19,46 @@ export default function CheckInRail({
   const scoreColor = readinessScoreColor(composite);
 
   return (
-    <nav className="pm-rail" aria-label="Check-in sections">
-      <div className="pm-rail-score-block">
-        <span className="pm-rail-score-label hybrid-label-sm">Score</span>
+    <nav className="checkin-rail" aria-label="Check-in sections">
+      <div className="checkin-rail-score">
+        <span className="checkin-rail-score-label">Score</span>
         <span
-          className={`pm-rail-score-value${cautionActive ? " pm-rail-score-value--caution" : ""}`}
+          className={`checkin-rail-score-value${cautionActive ? " checkin-rail-score-value--caution" : ""}`}
           style={{ color: scoreColor }}
           aria-label={`Readiness ${composite} out of 100`}
         >
           {composite}
         </span>
+        <span className="checkin-rail-score-denom">/100</span>
       </div>
 
-      <div className="pm-rail-divider" aria-hidden="true" />
-
-      <ol className="pm-rail-steps">
+      <ol className="checkin-rail-steps">
         {SECTIONS.map((section, i) => {
           const active = i === activeIndex;
+          const done = i < activeIndex;
           const dimValue = dimensions?.[section.id];
+          const showScore = active || done;
           return (
-            <li key={section.id}>
+            <li
+              key={section.id}
+              className={`checkin-rail-step-item${active ? " checkin-rail-step-item--active" : ""}${done ? " checkin-rail-step-item--done" : ""}`}
+            >
               <button
                 type="button"
-                className={`pm-rail-step${active ? " pm-rail-step--active" : ""}`}
+                className={`checkin-rail-step${active ? " checkin-rail-step--active" : ""}`}
                 onClick={() => onSelect(i)}
                 aria-current={active ? "step" : undefined}
-                aria-label={`${section.label}, ${dimValue} out of 100`}
+                aria-label={`${section.label}${showScore ? `, ${dimValue} out of 100` : ""}`}
               >
-                <span className="pm-rail-dot" aria-hidden="true" />
-                <span className="pm-rail-step-key">{section.rail}</span>
-                <span className="pm-rail-step-score" style={{ color: readinessScoreColor(dimValue) }}>
-                  {dimValue}
+                <span className="checkin-rail-step-num" aria-hidden="true">
+                  {i + 1}
+                </span>
+                <span className="checkin-rail-step-label">{section.label}</span>
+                <span
+                  className={`checkin-rail-step-score${showScore ? "" : " checkin-rail-step-score--pending"}`}
+                  style={showScore ? { color: readinessScoreColor(dimValue) } : undefined}
+                >
+                  {showScore ? dimValue : "--"}
                 </span>
               </button>
             </li>

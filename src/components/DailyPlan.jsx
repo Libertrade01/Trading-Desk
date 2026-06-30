@@ -33,6 +33,7 @@ import {
   parsePlanRailMoney,
 } from "../lib/trader-profile";
 import DailyPlanStepper, { PLAN_STEPS } from "./DailyPlanStepper";
+import WorkflowPageLayout from "./WorkflowPageLayout";
 
 async function loadData(key, fallback) {
   try {
@@ -54,10 +55,10 @@ async function saveData(key, value) {
 function headerDate() {
   return new Date().toLocaleDateString("en-US", {
     weekday: "long",
-    month: "short",
+    month: "long",
     day: "numeric",
     year: "numeric",
-  }).toUpperCase();
+  });
 }
 
 function sectionDate() {
@@ -270,14 +271,14 @@ export default function DailyPlan({ onBack }) {
     set("setups", form.setups.map((s) => (s.id === id ? { ...s, ...patch } : s)));
   const removeSetup = (id) => set("setups", form.setups.filter((s) => s.id !== id));
 
-  if (loading || !profile) return <div className="pm-loading">Loading...</div>;
+  if (loading || !profile) return <div className="pm-loading home-page--loop workflow-page--loop">Loading...</div>;
 
   const playbookSetups = getPlaybookSetupNames(profile);
   const biasItems = getEnabledBiasItems(profile);
   const commitmentList = profile.commitments || [];
 
   return (
-    <div className="premarket-page hybrid-page">
+    <WorkflowPageLayout>
       <div className="pm-topbar">
         <span>{headerDate()}</span>
       </div>
@@ -287,7 +288,7 @@ export default function DailyPlan({ onBack }) {
           <div className="pm-plan-header-row">
             <div className="pm-header">
               <div className="pm-eyebrow hybrid-eyebrow">Session plan · {sectionDate()}</div>
-              <h1 className="hybrid-page-title">THE PLAN.</h1>
+              <h1 className="hybrid-page-title">Session plan.</h1>
               <p className="pm-subtitle">Lock in bias, levels, and risk before the open.</p>
             </div>
             <PlanProgressMetrics form={form} profile={profile} />
@@ -621,6 +622,6 @@ export default function DailyPlan({ onBack }) {
           </div>
         </div>
       </div>
-    </div>
+    </WorkflowPageLayout>
   );
 }
