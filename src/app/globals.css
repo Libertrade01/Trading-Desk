@@ -2171,7 +2171,8 @@ textarea:focus, input:focus, select:focus {
   padding: 32px 20px 48px;
 }
 
-.onboarding-page--welcome {
+.onboarding-page--welcome,
+.onboarding-page--flow {
   align-items: center;
   padding: 40px 28px 56px;
   background: #05070a;
@@ -2179,7 +2180,8 @@ textarea:focus, input:focus, select:focus {
   overflow: hidden;
 }
 
-.premarket-page.onboarding-page--welcome {
+.premarket-page.onboarding-page--welcome,
+.premarket-page.onboarding-page--flow {
   background: #05070a;
 }
 
@@ -2361,6 +2363,200 @@ textarea:focus, input:focus, select:focus {
 .onboarding-welcome-cta:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.onboarding-flow-main {
+  max-width: 520px;
+  min-width: 0;
+}
+
+.onboarding-flow-brand {
+  font-size: clamp(22px, 2.5vw, 26px);
+  margin-bottom: 22px;
+}
+
+.onboarding-step-header {
+  margin-bottom: 22px;
+}
+
+.onboarding-step-title {
+  font-family: 'Outfit', var(--font-poster);
+  font-size: clamp(32px, 3.6vw, 42px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+  color: #fff;
+  margin: 0 0 12px;
+}
+
+.onboarding-page--flow .onboarding-step-lead {
+  margin: 0 0 22px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.62);
+  max-width: 46ch;
+}
+
+.onboarding-page--flow .onboarding-progress {
+  margin-bottom: 22px;
+}
+
+.onboarding-flow-panel {
+  margin: 0 0 18px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.onboarding-page--flow .onboarding-body-copy {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.onboarding-page--flow .onboarding-feature-list {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.onboarding-page--flow .onboarding-feature-list strong {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.onboarding-flow-main .pm-field,
+.onboarding-flow-main .pm-field-grid,
+.onboarding-flow-main .pm-toggle-row {
+  margin-bottom: 18px;
+}
+
+.onboarding-flow-main .pm-field-label,
+.onboarding-flow-main .hybrid-label {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.onboarding-flow-main .pm-field-hint {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.onboarding-flow-main .pm-text-input,
+.onboarding-flow-main .pm-select,
+.onboarding-flow-main .pm-textarea,
+.onboarding-flow-main .pm-number-input,
+.onboarding-flow-main .settings-timezone-select {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.onboarding-flow-main .pm-text-input::placeholder,
+.onboarding-flow-main .pm-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.onboarding-flow-main .pm-text-input:focus,
+.onboarding-flow-main .pm-select:focus,
+.onboarding-flow-main .pm-textarea:focus,
+.onboarding-flow-main .pm-number-input:focus {
+  border-color: rgba(0, 101, 189, 0.45);
+  box-shadow: 0 0 0 1px rgba(0, 101, 189, 0.12);
+}
+
+.onboarding-flow-main .pm-add-btn {
+  color: rgba(140, 190, 255, 0.9);
+  border-color: rgba(0, 101, 189, 0.25);
+  background: rgba(0, 101, 189, 0.08);
+}
+
+.onboarding-flow-main .pm-toggle-field {
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.onboarding-flow-main .settings-list-row + .settings-list-row {
+  margin-top: 10px;
+}
+
+.onboarding-flow-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.onboarding-flow-nav-spacer {
+  flex: 0 0 auto;
+}
+
+.onboarding-flow-back {
+  background: none;
+  border: none;
+  padding: 10px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.onboarding-flow-back:hover:not(:disabled) {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.onboarding-flow-back:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.onboarding-flow-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+}
+
+.onboarding-flow-cta {
+  width: auto;
+  min-width: 168px;
+  margin: 0;
+  padding: 13px 22px;
+}
+
+.onboarding-flow-skip {
+  background: none;
+  border: none;
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.42);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.onboarding-flow-skip:hover:not(:disabled) {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.onboarding-flow-skip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .onboarding-flow-nav {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .onboarding-flow-nav-actions {
+    width: 100%;
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .onboarding-flow-cta {
+    width: 100%;
+  }
 }
 
 .onboarding-welcome-trust {
@@ -2602,7 +2798,8 @@ textarea:focus, input:focus, select:focus {
     gap: 32px;
   }
 
-  .onboarding-welcome-main {
+  .onboarding-welcome-main,
+  .onboarding-flow-main {
     max-width: none;
   }
 

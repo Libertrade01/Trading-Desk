@@ -28,6 +28,12 @@ import { ACCOUNT_TYPE_OPTIONS } from "../lib/trade-import-options";
 import { getCurrentUser } from "../lib/user-storage";
 import OnboardingLoopPreview from "./OnboardingLoopPreview";
 import OnboardingWelcome from "./OnboardingWelcome";
+import OnboardingFlowLayout, {
+  OnboardingSectionProgress,
+  OnboardingStepHeader,
+  OnboardingStepNav,
+} from "./OnboardingFlowLayout";
+import { ONBOARDING_STEP_COPY } from "../lib/onboarding-step-copy";
 
 const STEPS = [
   { id: "welcome", label: "Welcome" },
@@ -59,8 +65,32 @@ function onboardingEyebrow(step) {
   if (step.id === "welcome") return "Set up your loop · about 3 minutes";
   const section = resolveOnboardingSection(step.id);
   if (!section) return "Setup";
-  return `3-minute setup · Step ${section.index + 1} of 4 — ${section.label}`;
+  const within = section.steps.indexOf(step.id);
+  const micro =
+    within >= 0 ? ` · ${within + 1} of ${section.steps.length}` : "";
+  return `3-minute setup · Step ${section.index + 1} of 4 — ${section.label}${micro}`;
 }
+
+const previewProps = ({
+  step,
+  tradingDayTimezone,
+  accountName,
+  setups,
+  defaultMaxDailyLoss,
+  defaultMaxTrades,
+  defaultPositionSize,
+  drawdownRecoveryEnabled,
+}) => ({
+  variant: "hero",
+  stepId: step.id,
+  tradingDayTimezone,
+  accountName,
+  setups,
+  defaultMaxDailyLoss,
+  defaultMaxTrades,
+  defaultPositionSize,
+  drawdownRecoveryEnabled,
+});
 
 function primaryCtaLabel(step, { saving, isLast }) {
   if (saving) return "Saving…";
@@ -261,11 +291,11 @@ export default function OnboardingWizard() {
     setStepIndex((i) => Math.min(STEPS.length - 1, i + 1));
   };
 
-  if (loading) return <div className="pm-loading onboarding-page">Loading...</div>;
+  if (loading) return <div className="pm-loading onboarding-page onboarding-page--flow">Loading...</div>;
 
   if (step.id === "welcome") {
     return (
-      <div className="premarket-page hybrid-page onboarding-page onboarding-page--welcome">
+      <div className="premarket-page hybrid-page onboarding-page onboarding-page--flow">
         <div className="onboarding-welcome-glow" aria-hidden="true" />
         <div className="onboarding-welcome-layout">
           <OnboardingWelcome
@@ -291,30 +321,43 @@ export default function OnboardingWizard() {
     );
   }
 
-  return (
-    <div className="premarket-page hybrid-page onboarding-page">
-      <div className="onboarding-layout">
-        <div className="onboarding-shell onboarding-main">
-          {activeSection && (
-            <div className="onboarding-progress" aria-hidden="true">
-              {ONBOARDING_SECTIONS.map((section, i) => (
-                <span
-                  key={section.id}
-                  className={`onboarding-progress-dot${i <= activeSection.index ? " active" : ""}${i === activeSection.index ? " current" : ""}`}
-                  title={section.label}
-                />
-              ))}
-            </div>
-          )}
+  const stepCopy = ONBOARDING_STEP_COPY[step.id];
+  const loopPreview = (
+    <OnboardingLoopPreview
+      {...previewProps({
+        step,
+        tradingDayTimezone,
+        accountName,
+        setups,
+        defaultMaxDailyLoss,
+        defaultMaxTrades,
+        defaultPositionSize,
+        drawdownRecoveryEnabled,
+      })}
+    />
+  );
 
-          <header className="pm-header onboarding-header">
-            <div className="pm-eyebrow hybrid-eyebrow">{onboardingEyebrow(step)}</div>
-          </header>
+  return (
+    <OnboardingFlowLayout preview={loopPreview}>
+      <div className="onboarding-flow-brand auth-brand">Libertrade Loop</div>
+
+      {activeSection && (
+        <OnboardingSectionProgress
+          sections={ONBOARDING_SECTIONS}
+          activeIndex={activeSection.index}
+        />
+      )}
+
+      {stepCopy && (
+        <OnboardingStepHeader
+          eyebrow={onboardingEyebrow(step)}
+          title={stepCopy.title}
+          lead={stepCopy.lead}
+        />
+      )}
 
         {step.id === "timezone" && (
           <>
-            <h1 className="hybrid-page-title">TRADING DAY.</h1>
-            <p className="onboarding-step-lead">When does your trading day roll over?</p>
             <div className="pm-field">
               <div className="pm-field-label hybrid-label">Calendar timezone</div>
               <select
@@ -334,8 +377,6 @@ export default function OnboardingWizard() {
 
         {step.id === "account" && (
           <>
-            <h1 className="hybrid-page-title">ONE ACCOUNT.</h1>
-            <p className="onboarding-step-lead">You can add more accounts later.</p>
             <div className="pm-field-grid">
               <div>
                 <div className="pm-field-label hybrid-label">Account name</div>
@@ -367,12 +408,7 @@ export default function OnboardingWizard() {
 
         {step.id === "playbook" && (
           <>
-            <h1 className="hybrid-page-title">YOUR PLAYBOOK.</h1>
-            <p className="onboarding-step-lead">
-              Name the setups you trade with a plan. They appear on your session plan and in close loop so you can
-              track whether you followed the book.
-            </p>
-            <div className="onboarding-welcome-card">
+            <div className="onboarding-flow-panel">
               <p className="onboarding-body-copy">
                 Add at least one setup now, or add more anytime later. Improvised and Invalid are included
                 automatically for trades that weren&apos;t a real setup.
@@ -413,8 +449,6 @@ export default function OnboardingWizard() {
 
         {step.id === "commitment" && (
           <>
-            <h1 className="hybrid-page-title">YOUR COMMITMENT.</h1>
-            <p className="onboarding-step-lead">You&apos;ll confirm these each morning before you trade.</p>
             <div className="settings-list">
               {commitments.map((commitment) => (
                 <div key={commitment.id} className="settings-list-row">
@@ -452,10 +486,6 @@ export default function OnboardingWizard() {
 
         {step.id === "plan-rails" && (
           <>
-            <h1 className="hybrid-page-title">YOUR DAILY RISK.</h1>
-            <p className="onboarding-step-lead">
-              Optional defaults for each session plan. Confirm or change them each morning.
-            </p>
             <p className="onboarding-body-copy onboarding-body-copy--compact">
               When recovery mode is active, your max daily loss on the plan adjusts automatically.
             </p>
@@ -497,12 +527,7 @@ export default function OnboardingWizard() {
 
         {step.id === "drawdown-recovery" && (
           <>
-            <h1 className="hybrid-page-title">RECOVERY MODE.</h1>
-            <p className="onboarding-step-lead">
-              A built-in protocol for bad loss days that downshifts you to a lower size until you&apos;ve earned
-              your way back.
-            </p>
-            <div className="onboarding-feature-card">
+            <div className="onboarding-flow-panel">
               <p className="onboarding-body-copy">
                 When a session hits your loss threshold, recovery mode activates. Your next session plan caps at
                 a lower max daily loss until you&apos;ve recovered enough to return to full size.
@@ -524,11 +549,7 @@ export default function OnboardingWizard() {
 
         {step.id === "streaks" && (
           <>
-            <h1 className="hybrid-page-title">PROCESS STREAKS.</h1>
-            <p className="onboarding-step-lead">
-              Track consecutive days you followed your plan — shown on Home and in analytics.
-            </p>
-            <div className="onboarding-welcome-card">
+            <div className="onboarding-flow-panel">
               <ul className="onboarding-feature-list">
                 <li>
                   <strong>Risk streak</strong> — extends when close loop shows you stayed inside your risk limits.
@@ -569,8 +590,6 @@ export default function OnboardingWizard() {
 
         {step.id === "extras" && (
           <>
-            <h1 className="hybrid-page-title">OPTIONAL EXTRAS.</h1>
-            <p className="onboarding-step-lead">Turn on now or skip — you can edit these anytime.</p>
             <ToggleField
               label="Chart annotation checklist"
               hint="Examples: value area marked, nodes/LVNs, weekly profile. Edit the list anytime."
@@ -582,55 +601,28 @@ export default function OnboardingWizard() {
 
         {error && <p className="onboarding-error">{error}</p>}
 
-        <div className="onboarding-nav">
-          {!isFirst && (
-            <button
-              type="button"
-              className="pm-btn-link"
-              onClick={() => {
-                setError("");
-                setStepIndex((i) => Math.max(0, i - 1));
-              }}
-              disabled={saving}
-            >
-              Back
-            </button>
-          )}
-          <div className="onboarding-nav-right">
-            {step.id === "extras" && (
+        <OnboardingStepNav
+          showBack={!isFirst}
+          onBack={() => {
+            setError("");
+            setStepIndex((i) => Math.max(0, i - 1));
+          }}
+          onPrimary={goNext}
+          primaryLabel={ctaLabel}
+          saving={saving}
+          secondaryAction={
+            step.id === "extras" ? (
               <button
                 type="button"
-                className="pm-btn-link"
+                className="onboarding-flow-skip"
                 onClick={handleFinish}
                 disabled={saving}
               >
                 Skip to Home
               </button>
-            )}
-            <button
-              type="button"
-              className="pm-btn-primary-sm"
-              onClick={goNext}
-              disabled={saving}
-            >
-              {ctaLabel}
-            </button>
-          </div>
-        </div>
-        </div>
-
-        <OnboardingLoopPreview
-          variant="compact"
-          stepId={step.id}
-          tradingDayTimezone={tradingDayTimezone}
-          accountName={accountName}
-          setups={setups}
-          defaultMaxDailyLoss={defaultMaxDailyLoss}
-          defaultMaxTrades={defaultMaxTrades}
-          defaultPositionSize={defaultPositionSize}
-          drawdownRecoveryEnabled={drawdownRecoveryEnabled}
+            ) : null
+          }
         />
-      </div>
-    </div>
+    </OnboardingFlowLayout>
   );
 }
