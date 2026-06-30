@@ -10016,16 +10016,34 @@ input.pm-slider::-moz-range-thumb {
   padding: 0;
   max-width: 100%;
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .home-page-market-flags--header .home-ribbons {
-  align-items: flex-start;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, max-content) auto;
+  column-gap: 10px;
+  row-gap: 5px;
+  align-items: baseline;
+  width: max-content;
+  max-width: 100%;
 }
 
 .home-page-market-flags--header .home-ribbon {
-  justify-content: flex-start;
+  display: contents;
+}
+
+.home-page-market-flags--header .home-ribbon-tag {
+  width: auto;
+  min-width: 0;
   text-align: left;
+  justify-self: start;
+}
+
+.home-page-market-flags--header .home-ribbon-text,
+.home-page-market-flags--header .home-ribbon-hint {
+  justify-self: start;
 }
 
 .home-page-market-flags--below-hero {
