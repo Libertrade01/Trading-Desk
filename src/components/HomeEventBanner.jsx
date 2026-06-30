@@ -14,6 +14,8 @@ const KIND_LABELS = {
   opex: "OPEX",
   roll: "ROLL",
   expiry: "EXPIRY",
+  eom: "EOM",
+  eoq: "EOQ",
   holiday: "HOLIDAY",
   halfday: "HALF DAY",
 };

@@ -7,7 +7,12 @@ import {
   formatHolidayDisplayLabel,
   holidayEventsForDate,
   getMarketEventsForDate,
+  getLastNTradingDaysInMonth,
 } from "./market-events.js";
+
+function hasEventKind(events, kind) {
+  return events.some((e) => e.kind === kind && e.source === "computed");
+}
 
 function hasHolidayLabel(events, label) {
   return events.some((e) => e.source === "holiday" && e.label === label);
@@ -69,5 +74,31 @@ describe("NYSE holiday display windows", () => {
     const label = formatHolidayDisplayLabel("2026-02-16", "Presidents' Day");
     const events = getMarketEventsForDate("2026-02-16");
     assert.ok(events.some((e) => e.kind === "holiday" && e.label === label));
+  });
+});
+
+describe("End of month / quarter rebalancing windows", () => {
+  it("January 2026: last two trading days are Thu 29 and Fri 30", () => {
+    assert.deepEqual(getLastNTradingDaysInMonth(2026, 0, 2), ["2026-01-29", "2026-01-30"]);
+  });
+
+  it("shows EOM only on the last two trading days of a non-quarter month", () => {
+    assert.ok(hasEventKind(getMarketEventsForDate("2026-01-29"), "eom"));
+    assert.ok(hasEventKind(getMarketEventsForDate("2026-01-30"), "eom"));
+    assert.ok(!hasEventKind(getMarketEventsForDate("2026-01-28"), "eom"));
+    assert.ok(!hasEventKind(getMarketEventsForDate("2026-01-29"), "eoq"));
+  });
+
+  it("shows EOM and EOQ on the last two trading days of quarter-end months", () => {
+    for (const key of ["2026-03-30", "2026-03-31"]) {
+      const events = getMarketEventsForDate(key);
+      assert.ok(hasEventKind(events, "eom"), key);
+      assert.ok(hasEventKind(events, "eoq"), key);
+    }
+    assert.ok(!hasEventKind(getMarketEventsForDate("2026-03-27"), "eoq"));
+  });
+
+  it("skips full NYSE closures when counting month-end trading days", () => {
+    assert.deepEqual(getLastNTradingDaysInMonth(2026, 11, 2), ["2026-12-30", "2026-12-31"]);
   });
 });

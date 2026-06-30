@@ -29,6 +29,7 @@ export function isOpexFriday(date = new Date()) {
 }
 
 const QUARTERLY_EXPIRY_MONTHS = [2, 5, 8, 11]; // Mar, Jun, Sep, Dec
+const QUARTER_END_MONTHS = QUARTERLY_EXPIRY_MONTHS;
 
 export function getQuarterlyExpiryDate(year, month) {
   if (!QUARTERLY_EXPIRY_MONTHS.includes(month)) return null;
@@ -52,6 +53,76 @@ function staticEventsForYear(year) {
 
 function holidaysForYear(year) {
   return year === "2026" ? marketHolidays2026 : [];
+}
+
+function isNyseFullClosure(dateKey) {
+  return holidaysForYear(dateKey.slice(0, 4)).some(
+    (h) => h.date === dateKey && h.closure === "full",
+  );
+}
+
+/** Weekday and not a full NYSE closure (half-days still count). */
+export function isNyseTradingDay(dateKey) {
+  const dow = parseDateKey(dateKey).getDay();
+  if (dow === 0 || dow === 6) return false;
+  return !isNyseFullClosure(dateKey);
+}
+
+function lastCalendarDayOfMonthKey(year, monthIndex) {
+  return toDateKey(new Date(year, monthIndex + 1, 0, 12, 0, 0));
+}
+
+/** Last N NYSE trading sessions in a calendar month (chronological). */
+export function getLastNTradingDaysInMonth(year, monthIndex, n = 2) {
+  const found = [];
+  let key = lastCalendarDayOfMonthKey(year, monthIndex);
+  let guard = 0;
+
+  while (found.length < n && guard < 20) {
+    const d = parseDateKey(key);
+    if (d.getMonth() !== monthIndex) break;
+    if (isNyseTradingDay(key)) found.push(key);
+    key = addDaysToDateKey(key, -1);
+    guard += 1;
+  }
+
+  return found.sort();
+}
+
+function periodRebalanceEventsForDate(dateKey) {
+  const d = parseDateKey(dateKey);
+  const year = d.getFullYear();
+  const month = d.getMonth();
+  const lastTwo = getLastNTradingDaysInMonth(year, month, 2);
+  if (!lastTwo.includes(dateKey)) return [];
+
+  const events = [
+    {
+      date: dateKey,
+      kind: "eom",
+      label: "End of month",
+      timeET: null,
+      severity: "medium",
+      reminder:
+        "Institutional rebalancing window — expect unusual flows and late-day volatility.",
+      source: "computed",
+    },
+  ];
+
+  if (QUARTER_END_MONTHS.includes(month)) {
+    events.push({
+      date: dateKey,
+      kind: "eoq",
+      label: "End of quarter",
+      timeET: null,
+      severity: "medium",
+      reminder:
+        "Quarter-end window dressing and index rebalances — respect chop, size accordingly.",
+      source: "computed",
+    });
+  }
+
+  return events;
 }
 
 /** First day to show a holiday ribbon (inclusive). */
@@ -176,6 +247,7 @@ function computedEventsForDate(dateKey) {
   }
 
   events.push(...preFomcEventsForDate(dateKey));
+  events.push(...periodRebalanceEventsForDate(dateKey));
 
   return events;
 }
@@ -206,7 +278,7 @@ export function getMarketEventsForDate(date = new Date()) {
   return merged;
 }
 
-/** Sync market events for a date (holidays, FOMC, roll week, OPEX, etc.). */
+/** Sync market events for a date (holidays, FOMC, EOM/EOQ, roll week, OPEX, etc.). */
 export function loadMarketEventsForDate(date = new Date()) {
   return Promise.resolve(getMarketEventsForDate(date));
 }
