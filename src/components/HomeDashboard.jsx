@@ -10,12 +10,13 @@ import {
   countPlaybookStreakAsOf,
   getProcessStreakDisplayForDay,
   formatTimeEyebrow,
-  formatHomeBarDate,
   formatShortHistoryDate,
   formatUsd,
   isWeekend,
 } from "../lib/history-data";
 import HomeEventBanner from "./HomeEventBanner";
+import { isNyseTradingDay, getMarketEventsForDate } from "../lib/market-events";
+import { getCurrentUser } from "../lib/user-storage";
 import { playbookAdherenceLabel } from "../lib/setup-adherence";
 import {
   loadRecoveryState,
@@ -138,6 +139,91 @@ function ReadinessTrend({ sessions, embedded = false }) {
   );
 }
 
+function greetingFromEmail(email) {
+  if (!email) return null;
+  const local = email.split("@")[0] || "";
+  const name = local.split(/[._-]/)[0];
+  if (!name) return null;
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+function formatTimeGreeting(date = new Date()) {
+  const hour = date.getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+function formatHeaderDateLong(date = new Date()) {
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function StreakMetric({ label, value, target, loading }) {
+  const pct = target > 0 ? Math.min(100, (value / target) * 100) : 0;
+  return (
+    <div className="home-metric-streak">
+      <div className="home-metric-streak-head">
+        <span className="home-metric-streak-label">{label}</span>
+        <span className="home-metric-streak-value">
+          {loading ? "—" : value}
+          <span className="home-metric-streak-goal">/{target}</span>
+        </span>
+      </div>
+      <div className="home-metric-streak-track" aria-hidden="true">
+        <div className="home-metric-streak-fill" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function HomeMarketContextCard({ dateKey }) {
+  const events = useMemo(() => getMarketEventsForDate(dateKey), [dateKey]);
+
+  return (
+    <section className="home-loop-card home-context-card" aria-label="Market context">
+      <h2 className="home-loop-card-title">Market context</h2>
+      {events.length > 0 ? (
+        <HomeEventBanner dateKey={dateKey} />
+      ) : (
+        <p className="home-loop-card-empty">No scheduled market events today.</p>
+      )}
+    </section>
+  );
+}
+
+function HomeQuickActions({ onNavigate }) {
+  const actions = [
+    { id: "premarket", label: "Edit check-in" },
+    { id: "dailyplan", label: "Edit session plan" },
+    { id: "postmarket", label: "Edit close loop" },
+  ];
+  return (
+    <section className="home-loop-card home-quick-actions" aria-label="Quick actions">
+      <h2 className="home-loop-card-title">Quick actions</h2>
+      <div className="home-quick-actions-list">
+        {actions.map((action) => (
+          <button
+            key={action.id}
+            type="button"
+            className="home-quick-action"
+            onClick={() => onNavigate(action.id)}
+          >
+            <span>{action.label}</span>
+            <span className="home-quick-action-arrow" aria-hidden="true">
+              →
+            </span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function stepComplete(stepId, preComplete, planComplete, postComplete) {
   if (stepId === "premarket") return preComplete;
   if (stepId === "dailyplan") return planComplete;
@@ -157,34 +243,34 @@ function stepStarted(stepId, today) {
 function WeekFocusStrip({ items, loading, showReviewPrompt, onOpenWeeklyReview, allComplete }) {
   if (loading && items.length === 0 && !allComplete) {
     return (
-      <div className="home-week-focus-strip home-week-focus-strip--loading" aria-hidden="true">
-        <div className="home-week-focus-strip-skeleton" />
+      <div className="home-week-focus home-week-focus--loading" aria-hidden="true">
+        <div className="home-week-focus-skeleton" />
       </div>
     );
   }
 
   if (items.length > 0) {
     return (
-      <div
-        className={`home-week-focus-strip${allComplete ? " home-week-focus-strip--complete" : ""}`}
-        role="note"
+      <section
+        className={`home-week-focus${allComplete ? " home-week-focus--complete" : ""}`}
         aria-label="This week's focus"
       >
-        <div className="pm-week-focus-reminder home-week-focus-reminder">
-          <div className="pm-week-focus-reminder-label hybrid-eyebrow">This week&apos;s focus</div>
-          <ul className="pm-week-focus-reminder-list">
-            {items.map((item, i) => (
-              <li key={i}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
+        <h2 className="home-week-focus-label">This week&apos;s focus</h2>
+        <ul className="home-week-focus-list">
+          {items.map((item, i) => (
+            <li key={i} className="home-week-focus-item">
+              <span className="home-week-focus-bar" aria-hidden="true" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
     );
   }
 
   if (showReviewPrompt && onOpenWeeklyReview) {
     return (
-      <div className={`home-week-focus-strip${allComplete ? " home-week-focus-strip--complete" : ""}`}>
+      <section className={`home-week-focus home-week-focus--prompt${allComplete ? " home-week-focus--complete" : ""}`}>
         <button
           type="button"
           className="home-review-prompt home-review-prompt--focus"
@@ -193,7 +279,7 @@ function WeekFocusStrip({ items, loading, showReviewPrompt, onOpenWeeklyReview, 
           <span className="home-review-prompt-label">Set this week&apos;s focus</span>
           <span className="home-review-prompt-action">Weekly review →</span>
         </button>
-      </div>
+      </section>
     );
   }
 
@@ -289,21 +375,21 @@ function RecentSessionsPanel({
   onOpenHistoryDay,
 }) {
   return (
-    <div className="pm-section-panel home-recent-panel">
-      <div className="pm-section-panel-head">
+    <section className="home-loop-card home-recent-panel" aria-label="Recent sessions">
+      <div className="home-loop-card-head">
         <div>
-          <h2 className="pm-section-title hybrid-section-title">Recent sessions</h2>
-          <p className="pm-section-desc">Readiness trend and your last few days.</p>
+          <h2 className="home-loop-card-title">Recent sessions</h2>
+          <p className="home-loop-card-desc">Readiness trend and your last few days.</p>
         </div>
         <button
           type="button"
-          className="home-hybrid-block-link"
+          className="home-loop-card-link"
           onClick={() => onNavigate("history")}
         >
           History →
         </button>
       </div>
-      <div className="pm-section-panel-body">
+      <div className="home-loop-card-body">
         {loadingPanels ? (
           <p className="home-panel-loading-text">Loading sessions…</p>
         ) : recent.length === 0 ? (
@@ -355,11 +441,11 @@ function RecentSessionsPanel({
           </>
         )}
       </div>
-    </div>
+    </section>
   );
 }
 
-function HomeTodayHero({
+function HomeMetricsCard({
   allComplete,
   completedCount,
   today,
@@ -376,65 +462,54 @@ function HomeTodayHero({
   todayPlaybookLabel,
   pnlTone,
 }) {
-  const processStats = (
-    <>
-      {showRiskStreak && (
-        <div className="prop-economics-hero-stat">
-          <span className="prop-economics-hero-cap">Risk streak</span>
-          <span className="prop-economics-hero-value">
-            {loadingPanels ? "—" : processStreak}
-            <span className="home-today-hero-goal">/{streakTargetDays}</span>
-          </span>
-        </div>
-      )}
-      {showPlaybookStreak && (
-        <div
-          className={`prop-economics-hero-stat${allComplete ? "" : " prop-economics-hero-stat--subtle"}`}
-        >
-          <span className="prop-economics-hero-cap">Playbook streak</span>
-          <span className="prop-economics-hero-value">
-            {loadingPanels ? "—" : playbookStreak}
-            <span className="home-today-hero-goal">/{streakTargetDays}</span>
-          </span>
-        </div>
-      )}
-      {showReadinessStat && today?.readinessScore != null && !(showHeroReadiness && !allComplete) && (
-        <div className="prop-economics-hero-stat">
-          <span className="prop-economics-hero-cap">Ready</span>
-          <span className="prop-economics-hero-value positive">{today.readinessScore}</span>
-        </div>
-      )}
-      {showPlaybookStat && (
-        <div className="prop-economics-hero-stat">
-          <span className="prop-economics-hero-cap">Playbook setups</span>
-          <span
-            className={`prop-economics-hero-value ${
-              todayPlaybookLabel.tone === "green"
-                ? "positive"
-                : todayPlaybookLabel.tone === "amber"
-                  ? "neutral"
-                  : "negative"
-            }`}
-          >
-            {today.playbookAdherence.playbookRate}%
-          </span>
-        </div>
-      )}
-    </>
-  );
-
   if (allComplete) {
     return (
-      <section
-        className="prop-economics-hero home-today-hero home-today-hero--complete"
-        aria-label="Today summary"
-      >
-        <div className="home-today-hero-process">{processStats}</div>
+      <section className="home-loop-card home-metrics-card" aria-label="Process metrics">
+        <div className="home-metrics-grid">
+          {showRiskStreak && (
+            <StreakMetric
+              label="Risk streak"
+              value={processStreak}
+              target={streakTargetDays}
+              loading={loadingPanels}
+            />
+          )}
+          {showPlaybookStreak && (
+            <StreakMetric
+              label="Playbook streak"
+              value={playbookStreak}
+              target={streakTargetDays}
+              loading={loadingPanels}
+            />
+          )}
+          {showReadinessStat && today?.readinessScore != null && (
+            <div className="home-metric-stat">
+              <span className="home-metric-stat-label">Ready</span>
+              <span className="home-metric-stat-value positive">{today.readinessScore}</span>
+            </div>
+          )}
+          {showPlaybookStat && (
+            <div className="home-metric-stat">
+              <span className="home-metric-stat-label">Playbook setups</span>
+              <span
+                className={`home-metric-stat-value ${
+                  todayPlaybookLabel.tone === "green"
+                    ? "positive"
+                    : todayPlaybookLabel.tone === "amber"
+                      ? "neutral"
+                      : "negative"
+                }`}
+              >
+                {today.playbookAdherence.playbookRate}%
+              </span>
+            </div>
+          )}
+        </div>
         {showPnlStat && today?.netPnl != null && (
-          <div className="prop-economics-hero-stat home-today-hero-pnl">
-            <span className="prop-economics-hero-cap">Net P&amp;L</span>
+          <div className="home-metrics-pnl">
+            <span className="home-metric-stat-label">Net P&amp;L</span>
             <span
-              className={`prop-economics-hero-value ${
+              className={`home-metrics-pnl-value ${
                 pnlTone === "positive" ? "positive" : pnlTone === "negative" ? "negative" : "neutral"
               }`}
             >
@@ -458,12 +533,33 @@ function HomeTodayHero({
   }
 
   return (
-    <section className="prop-economics-hero home-today-hero" aria-label="Today summary">
-      <div className="prop-economics-hero-net">
-        <span className="prop-economics-hero-cap">{primaryLabel}</span>
-        <span className={`prop-economics-hero-net-value ${primaryClass}`}>{primaryValue}</span>
+    <section className="home-loop-card home-metrics-card" aria-label="Today summary">
+      <div className="home-metrics-inprogress">
+        <div className="home-metric-stat home-metric-stat--primary">
+          <span className="home-metric-stat-label">{primaryLabel}</span>
+          <span className={`home-metric-stat-value ${primaryClass}`}>{primaryValue}</span>
+        </div>
+        <div className="home-metrics-inline">
+          {showRiskStreak && (
+            <div className="home-metric-stat home-metric-stat--compact">
+              <span className="home-metric-stat-label">Risk streak</span>
+              <span className="home-metric-stat-value">
+                {loadingPanels ? "—" : processStreak}
+                <span className="home-metric-streak-goal">/{streakTargetDays}</span>
+              </span>
+            </div>
+          )}
+          {showPlaybookStreak && (
+            <div className="home-metric-stat home-metric-stat--compact">
+              <span className="home-metric-stat-label">Playbook streak</span>
+              <span className="home-metric-stat-value">
+                {loadingPanels ? "—" : playbookStreak}
+                <span className="home-metric-streak-goal">/{streakTargetDays}</span>
+              </span>
+            </div>
+          )}
+        </div>
       </div>
-      <div className="prop-economics-hero-supporting">{processStats}</div>
     </section>
   );
 }
@@ -477,8 +573,8 @@ function heroCopy(allComplete, completedCount, weekend, timeEyebrow) {
     return {
       eyebrow: "Complete",
       eyebrowMuted: false,
-      title: "Day Done.",
-      sub: null,
+      title: "Day done.",
+      sub: "You executed the plan. Review, refine, repeat.",
       poster: true,
     };
   }
@@ -501,7 +597,7 @@ function heroCopy(allComplete, completedCount, weekend, timeEyebrow) {
   return {
     eyebrow: "0 of 3 complete",
     eyebrowMuted: true,
-    title: "READY WHEN YOU ARE.",
+    title: "Ready when you are.",
     sub: "Check-in, session plan, and close loop still open.",
   };
 }
@@ -528,6 +624,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
   const [showReviewPrompt, setShowReviewPrompt] = useState(false);
   const [profile, setProfile] = useState(null);
   const [showWelcomeHint, setShowWelcomeHint] = useState(false);
+  const [userName, setUserName] = useState(null);
 
   useEffect(() => {
     if (typeof window !== "undefined" && sessionStorage.getItem(WELCOME_HINT_STORAGE_KEY) === "1") {
@@ -538,6 +635,9 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
 
   useEffect(() => {
     loadTraderProfile().then(setProfile).catch(() => {});
+    getCurrentUser()
+      .then((user) => setUserName(greetingFromEmail(user?.email)))
+      .catch(() => {});
     const refreshProfile = () => {
       loadTraderProfile({ force: true }).then(setProfile).catch(() => {});
     };
@@ -674,120 +774,136 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
   const showPlaybookStat =
     today?.playbookAdherence?.total > 0 && todayPlaybookLabel;
 
-  if (loading) return <div className="pm-loading">Loading...</div>;
+  const marketOpen = isNyseTradingDay(dateKey);
+  const greeting = formatTimeGreeting();
+  const greetingLine = userName ? `${greeting}, ${userName}.` : `${greeting}.`;
+
+  if (loading) return <div className="pm-loading home-page home-page--loop">Loading...</div>;
 
   return (
-    <div className="premarket-page hybrid-page">
-      <div className="pm-topbar">
-        <span>{formatHomeBarDate(effectiveDate)}</span>
-      </div>
+    <div className="premarket-page hybrid-page home-page home-page--loop">
+      <div className="home-page-glow" aria-hidden="true" />
 
-      <div className="pm-closeout-layout">
-        <div className="pm-closeout-main">
-          <HomeEventBanner dateKey={dateKey} />
+      <div className="home-page-inner">
+        <header className="home-page-header">
+          <div>
+            <h1 className="home-page-greeting">{greetingLine}</h1>
+            <p className="home-page-date">{formatHeaderDateLong(effectiveDate)}</p>
+          </div>
+          <div className={`home-page-market-badge${marketOpen ? " home-page-market-badge--open" : ""}`}>
+            <span className="home-page-market-dot" aria-hidden="true" />
+            {marketOpen ? "Market open" : "Market closed"}
+          </div>
+        </header>
 
-          {showWelcomeHint && (
-            <div className="home-welcome-hint">
-              <p>
-                You&apos;re set up. Start with check-in, then customize your full process anytime in{" "}
-                <button type="button" className="home-welcome-hint-link" onClick={() => onNavigate("process")}>
-                  My process
-                </button>
-                {" "}or Settings.
-              </p>
-              <button
-                type="button"
-                className="home-welcome-hint-dismiss"
-                onClick={() => setShowWelcomeHint(false)}
-                aria-label="Dismiss"
-              >
-                ×
+        {showWelcomeHint && (
+          <div className="home-welcome-hint">
+            <p>
+              You&apos;re set up. Start with check-in, then customize your full process anytime in{" "}
+              <button type="button" className="home-welcome-hint-link" onClick={() => onNavigate("process")}>
+                My process
               </button>
-            </div>
-          )}
-
-          {showDrSetupHint && (
-            <DrawdownRecoverySetupHint
-              dllSettings={dllSettings}
-              onOpenSettings={() => onNavigate("settings-risk")}
-              onDismiss={() => {
-                dismissDrawdownRecoverySetupHint();
-                setShowDrSetupHint(false);
-              }}
-            />
-          )}
-
-          <div className="pm-header">
-            <div
-              className={`pm-eyebrow hybrid-eyebrow${hero.eyebrowMuted ? " hybrid-eyebrow--muted" : ""}${hero.poster ? " home-today-eyebrow--poster" : ""}`}
+              {" "}or Settings.
+            </p>
+            <button
+              type="button"
+              className="home-welcome-hint-dismiss"
+              onClick={() => setShowWelcomeHint(false)}
+              aria-label="Dismiss"
             >
-              {hero.eyebrow}
+              ×
+            </button>
+          </div>
+        )}
+
+        {showDrSetupHint && (
+          <DrawdownRecoverySetupHint
+            dllSettings={dllSettings}
+            onOpenSettings={() => onNavigate("settings-risk")}
+            onDismiss={() => {
+              dismissDrawdownRecoverySetupHint();
+              setShowDrSetupHint(false);
+            }}
+          />
+        )}
+
+        <RecoveryBanner recoveryStatus={recoveryStatus} />
+
+        <div className="home-page-grid">
+          <section className="home-loop-card home-hero-card home-page-hero">
+            <div className="home-hero-card-inner">
+              <p
+                className={`home-hero-eyebrow${hero.eyebrowMuted ? " home-hero-eyebrow--muted" : ""}`}
+              >
+                {hero.eyebrow}
+              </p>
+              <h2 className="home-hero-title">{hero.title}</h2>
+              {hero.sub && <p className="home-hero-lead">{hero.sub}</p>}
+              {!allComplete && today?.playbookAdherence?.total > 0 && todayPlaybookLabel && (
+                <p className="home-hero-lead home-hero-lead--playbook">{todayPlaybookLabel.text}</p>
+              )}
+              {allComplete && (
+                <button
+                  type="button"
+                  className="home-hero-cta"
+                  onClick={() => onNavigate("postmarket")}
+                >
+                  Review today →
+                </button>
+              )}
             </div>
-            <h1 className="hybrid-page-title home-today-title--poster">{hero.title}</h1>
-            {hero.sub && <p className="pm-subtitle">{hero.sub}</p>}
-            {!allComplete && today?.playbookAdherence?.total > 0 && todayPlaybookLabel && (
-              <p className="pm-subtitle home-hybrid-sub--playbook">{todayPlaybookLabel.text}</p>
-            )}
+          </section>
+
+          <div className="home-page-context">
+            <HomeMarketContextCard dateKey={dateKey} />
           </div>
 
-          <WeekFocusStrip
-            items={weekFocus.items}
-            loading={loadingPanels}
-            showReviewPrompt={showReviewPrompt}
-            onOpenWeeklyReview={onOpenWeeklyReview}
-            allComplete={allComplete}
-          />
-
-          <HomeTodayHero
-            allComplete={allComplete}
-            completedCount={completedCount}
-            today={today}
-            processStreak={processStreak}
-            playbookStreak={playbookStreak}
-            streakTargetDays={profile?.streakTargetDays ?? 21}
-            showRiskStreak={profile?.riskStreakEnabled !== false}
-            showPlaybookStreak={profile?.playbookStreakEnabled !== false}
-            loadingPanels={loadingPanels}
-            showHeroReadiness={showHeroReadiness}
-            showReadinessStat={showReadinessStat}
-            showPnlStat={showPnlStat}
-            showPlaybookStat={showPlaybookStat}
-            todayPlaybookLabel={todayPlaybookLabel}
-            pnlTone={pnlTone}
-          />
-
-          {allComplete && (
-            <div className="home-hybrid-edit">
-              <button type="button" onClick={() => onNavigate("premarket")}>
-                Edit check-in
-              </button>
-              <span className="home-hybrid-edit-sep">·</span>
-              <button type="button" onClick={() => onNavigate("dailyplan")}>
-                Edit session plan
-              </button>
-              <span className="home-hybrid-edit-sep">·</span>
-              <button type="button" onClick={() => onNavigate("postmarket")}>
-                Edit close loop
-              </button>
+          {(weekFocus.items.length > 0 || (showReviewPrompt && onOpenWeeklyReview) || (loadingPanels && !allComplete)) && (
+            <div className="home-page-focus">
+              <WeekFocusStrip
+                items={weekFocus.items}
+                loading={loadingPanels}
+                showReviewPrompt={showReviewPrompt}
+                onOpenWeeklyReview={onOpenWeeklyReview}
+                allComplete={allComplete}
+              />
             </div>
           )}
 
-          <div className="pm-closeout-stage">
-            <RecoveryBanner recoveryStatus={recoveryStatus} />
+          <div className="home-page-metrics">
+            <HomeMetricsCard
+              allComplete={allComplete}
+              completedCount={completedCount}
+              today={today}
+              processStreak={processStreak}
+              playbookStreak={playbookStreak}
+              streakTargetDays={profile?.streakTargetDays ?? 21}
+              showRiskStreak={profile?.riskStreakEnabled !== false}
+              showPlaybookStreak={profile?.playbookStreakEnabled !== false}
+              loadingPanels={loadingPanels}
+              showHeroReadiness={showHeroReadiness}
+              showReadinessStat={showReadinessStat}
+              showPnlStat={showPnlStat}
+              showPlaybookStat={showPlaybookStat}
+              todayPlaybookLabel={todayPlaybookLabel}
+              pnlTone={pnlTone}
+            />
 
-            {!allComplete && (
-              <div className="pm-section-panel home-workflow-panel">
-                <div className="pm-section-panel-head">
+            {allComplete ? (
+              <HomeQuickActions onNavigate={onNavigate} />
+            ) : (
+              <section className="home-loop-card home-workflow-card">
+                <div className="home-loop-card-head">
                   <div>
-                    <h2 className="pm-section-title hybrid-section-title">Today&apos;s workflow</h2>
-                    <p className="pm-section-desc">
+                    <h2 className="home-loop-card-title">Today&apos;s workflow</h2>
+                    <p className="home-loop-card-desc">
                       {completedCount === 0
                         ? "Start with check-in, then session plan and close loop."
                         : `${completedCount} of 3 steps complete.`}
                     </p>
                   </div>
                 </div>
-                <div className="pm-section-panel-body">
+                <div className="home-loop-card-body">
                   <div className="home-workflow-steps" aria-label="Today's workflow">
                     {WORKFLOW_STEPS.map((step) => {
                       const complete = stepComplete(
@@ -802,59 +918,38 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
                       return (
                         <div
                           key={step.id}
-                          className={`home-hybrid-step${complete ? " done" : ""}${isNext ? " next" : ""}${started && !complete ? " partial" : ""}`}
+                          className={`home-workflow-step${complete ? " done" : ""}${isNext ? " next" : ""}${started && !complete ? " partial" : ""}`}
                         >
                           <button
                             type="button"
-                            className="home-hybrid-step-hit"
+                            className="home-workflow-step-hit"
                             onClick={() => onNavigate(step.id)}
                           >
-                            <span className="home-hybrid-step-icon" aria-hidden="true">
-                              {complete ? "✓" : ""}
+                            <span className="home-workflow-step-status" aria-hidden="true">
+                              {complete ? "✓" : isNext ? "→" : "·"}
                             </span>
-                            <span className="home-hybrid-step-label">{step.label}</span>
+                            <span className="home-workflow-step-label">{step.label}</span>
                           </button>
                           {(isNext || showEdit) && (
-                            <span className="home-hybrid-step-action">
-                              {isNext ? (
-                                <button
-                                  type="button"
-                                  className="home-hybrid-step-badge"
-                                  onClick={() => onNavigate(step.id)}
-                                >
-                                  {completedCount === 0 ? "Start" : "Next"}
-                                </button>
-                              ) : (
-                                <button
-                                  type="button"
-                                  className="home-hybrid-step-edit"
-                                  onClick={() => onNavigate(step.id)}
-                                >
-                                  Edit
-                                </button>
-                              )}
-                            </span>
+                            <button
+                              type="button"
+                              className={`home-workflow-step-action${isNext ? " primary" : ""}`}
+                              onClick={() => onNavigate(step.id)}
+                            >
+                              {isNext ? (completedCount === 0 ? "Start" : "Next") : "Edit"}
+                            </button>
                           )}
                         </div>
                       );
                     })}
                   </div>
                 </div>
-              </div>
+              </section>
             )}
+          </div>
 
-            {showReviewPrompt && onOpenWeeklyReview && weekFocus.items.length > 0 && (
-              <button
-                type="button"
-                className="home-review-prompt"
-                onClick={onOpenWeeklyReview}
-              >
-                <span className="home-review-prompt-label">Weekly process review</span>
-                <span className="home-review-prompt-action">Review this week →</span>
-              </button>
-            )}
-
-            {allComplete && (
+          <div className="home-page-recent">
+            {allComplete ? (
               <RecentSessionsPanel
                 sessions={sessions}
                 recent={recent}
@@ -863,6 +958,19 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
                 onNavigate={onNavigate}
                 onOpenHistoryDay={onOpenHistoryDay}
               />
+            ) : (
+              showReviewPrompt &&
+              onOpenWeeklyReview &&
+              weekFocus.items.length > 0 && (
+                <button
+                  type="button"
+                  className="home-review-prompt home-loop-card"
+                  onClick={onOpenWeeklyReview}
+                >
+                  <span className="home-review-prompt-label">Weekly process review</span>
+                  <span className="home-review-prompt-action">Review this week →</span>
+                </button>
+              )
             )}
           </div>
         </div>
