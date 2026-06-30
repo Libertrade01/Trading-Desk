@@ -54,7 +54,7 @@ function buildProgressSubline(preComplete, planComplete, postComplete) {
   return parts.join(" · ") || "All steps open";
 }
 
-function ReadinessTrend({ sessions, embedded = false }) {
+function ReadinessTrend({ sessions, embedded = false, split = false }) {
   const points = useMemo(() => {
     return sessions
       .filter((s) => s.readinessScore != null)
@@ -64,8 +64,8 @@ function ReadinessTrend({ sessions, embedded = false }) {
 
   const chart = useMemo(() => {
     if (points.length < 3) return null;
-    const w = 280;
-    const h = 56;
+    const w = split ? 260 : 280;
+    const h = split ? 120 : 56;
     const padX = 8;
     const padY = 8;
     const scores = points.map((p) => p.readinessScore);
@@ -82,7 +82,7 @@ function ReadinessTrend({ sessions, embedded = false }) {
     });
     const line = coords.map((p) => `${p.x},${p.y}`).join(" ");
     return { w, h, line, coords, yMin: Math.round(yMin), yMax: Math.round(yMax) };
-  }, [points]);
+  }, [points, split]);
 
   if (points.length === 0) {
     if (embedded) return null;
@@ -96,7 +96,9 @@ function ReadinessTrend({ sessions, embedded = false }) {
   if (points.length < 3) {
     const last = points[points.length - 1];
     return (
-      <div className={`home-trend-compact${embedded ? " home-trend-compact--embedded" : ""}`}>
+      <div
+        className={`home-trend-compact${embedded ? " home-trend-compact--embedded" : ""}${split ? " home-trend-compact--split" : ""}`}
+      >
         <div className="home-hybrid-stat-num">{last.readinessScore}</div>
         <p className="home-trend-compact-note">
           {points.length === 1 ? "First scored session" : "One more for trend line"}
@@ -106,7 +108,9 @@ function ReadinessTrend({ sessions, embedded = false }) {
   }
 
   return (
-    <div className={`home-trend-chart-wrap${embedded ? " home-trend-chart-wrap--embedded" : ""}`}>
+    <div
+      className={`home-trend-chart-wrap${embedded ? " home-trend-chart-wrap--embedded" : ""}${split ? " home-trend-chart-wrap--split" : ""}`}
+    >
       <div className="home-trend-chart-range" aria-hidden="true">
         <span>{chart.yMax}</span>
         <span>{chart.yMin}</span>
@@ -375,16 +379,18 @@ function HomeHeroActivePanel({
           </div>
         )}
       </div>
-      <HomeWorkflowSteps
-        today={today}
-        preComplete={preComplete}
-        planComplete={planComplete}
-        postComplete={postComplete}
-        nextStep={nextStep}
-        completedCount={workflowCount}
-        onNavigate={onNavigate}
-        embedded
-      />
+      {!allComplete && (
+        <HomeWorkflowSteps
+          today={today}
+          preComplete={preComplete}
+          planComplete={planComplete}
+          postComplete={postComplete}
+          nextStep={nextStep}
+          completedCount={workflowCount}
+          onNavigate={onNavigate}
+          embedded
+        />
+      )}
     </div>
   );
 }
@@ -688,50 +694,54 @@ function RecentSessionsPanel({
         ) : recent.length === 0 ? (
           <p className="home-panel-empty">No sessions yet.</p>
         ) : (
-          <>
-            <ReadinessTrend sessions={sessions} embedded />
-            <div className="home-hybrid-recent-head" aria-hidden="true">
-              <span className="home-hybrid-recent-date">Date</span>
-              <span className="home-hybrid-recent-col-ready">Ready</span>
-              <span className="home-hybrid-recent-col-risk">Risk</span>
-              <span className="home-hybrid-recent-col-pnl">P&amp;L</span>
+          <div className="home-recent-split">
+            <div className="home-recent-split-chart">
+              <ReadinessTrend sessions={sessions} embedded split />
             </div>
-            {recent.map((s) => {
-              const pnlCls =
-                s.netPnl > 0 ? "positive" : s.netPnl < 0 ? "negative" : "neutral";
-              const readyCls = s.readinessScore != null ? "scored" : "muted";
-              const proc = getProcessStreakDisplayForDay(s, sessions);
-              const procCls =
-                proc.type === "followed"
-                  ? "positive"
-                  : proc.type === "broken"
-                    ? "broken"
-                    : "muted";
-              const isToday = s.date === todayDateKey;
-              return (
-                <button
-                  key={s.date}
-                  type="button"
-                  className={`home-hybrid-recent-row${isToday ? " home-hybrid-recent-row--today" : ""}`}
-                  onClick={() => onOpenHistoryDay(s.date)}
-                >
-                  <span className="home-hybrid-recent-date">
-                    {formatShortHistoryDate(s.date)}
-                    {isToday && <span className="home-hybrid-recent-today-tag">Today</span>}
-                  </span>
-                  <span className={`home-hybrid-recent-ready ${readyCls}`}>
-                    {s.readinessScore != null ? s.readinessScore : "—"}
-                  </span>
-                  <span className={`home-hybrid-recent-proc ${procCls}`}>
-                    {proc.type === "unanswered" ? "—" : proc.streak}
-                  </span>
-                  <span className={`home-hybrid-recent-pnl ${pnlCls}`}>
-                    {s.netPnl != null ? formatUsd(s.netPnl, { signed: true }) : "—"}
-                  </span>
-                </button>
-              );
-            })}
-          </>
+            <div className="home-recent-split-table">
+              <div className="home-hybrid-recent-head" aria-hidden="true">
+                <span className="home-hybrid-recent-date">Date</span>
+                <span className="home-hybrid-recent-col-ready">Ready</span>
+                <span className="home-hybrid-recent-col-risk">Risk</span>
+                <span className="home-hybrid-recent-col-pnl">P&amp;L</span>
+              </div>
+              {recent.map((s) => {
+                const pnlCls =
+                  s.netPnl > 0 ? "positive" : s.netPnl < 0 ? "negative" : "neutral";
+                const readyCls = s.readinessScore != null ? "scored" : "muted";
+                const proc = getProcessStreakDisplayForDay(s, sessions);
+                const procCls =
+                  proc.type === "followed"
+                    ? "positive"
+                    : proc.type === "broken"
+                      ? "broken"
+                      : "muted";
+                const isToday = s.date === todayDateKey;
+                return (
+                  <button
+                    key={s.date}
+                    type="button"
+                    className={`home-hybrid-recent-row${isToday ? " home-hybrid-recent-row--today" : ""}`}
+                    onClick={() => onOpenHistoryDay(s.date)}
+                  >
+                    <span className="home-hybrid-recent-date">
+                      {formatShortHistoryDate(s.date)}
+                      {isToday && <span className="home-hybrid-recent-today-tag">Today</span>}
+                    </span>
+                    <span className={`home-hybrid-recent-ready ${readyCls}`}>
+                      {s.readinessScore != null ? s.readinessScore : "—"}
+                    </span>
+                    <span className={`home-hybrid-recent-proc ${procCls}`}>
+                      {proc.type === "unanswered" ? "—" : proc.streak}
+                    </span>
+                    <span className={`home-hybrid-recent-pnl ${pnlCls}`}>
+                      {s.netPnl != null ? formatUsd(s.netPnl, { signed: true }) : "—"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         )}
       </div>
     </section>

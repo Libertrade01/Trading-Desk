@@ -10394,8 +10394,9 @@ input.pm-slider::-moz-range-thumb {
   letter-spacing: -0.02em;
 }
 
-.home-hero-panel--done .home-workflow-step.done .home-workflow-step-label {
-  color: rgba(255, 255, 255, 0.72);
+.home-hero-panel--done {
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .home-workflow-steps--embedded {
@@ -11103,11 +11104,67 @@ input.pm-slider::-moz-range-thumb {
   padding-top: 4px;
 }
 
+.home-recent-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px 28px;
+  align-items: stretch;
+}
+
+.home-recent-split-chart {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100%;
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.home-recent-split-table {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.home-recent-panel .home-trend-chart-wrap--split,
+.home-recent-panel .home-trend-compact--split {
+  margin: 0;
+  padding: 0;
+  border: none;
+  width: 100%;
+}
+
+.home-recent-panel .home-trend-chart-wrap--split .home-trend-chart {
+  height: 120px;
+  min-height: 120px;
+}
+
+.home-recent-panel .home-trend-compact--split {
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  min-height: 120px;
+}
+
+.home-recent-panel .home-trend-compact--split .home-hybrid-stat-num {
+  font-size: 36px;
+}
+
 .home-recent-panel .home-trend-chart-wrap--embedded,
 .home-recent-panel .home-trend-compact--embedded {
   margin-bottom: 16px;
   padding-bottom: 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.home-recent-panel .home-trend-chart-wrap--embedded.home-trend-chart-wrap--split,
+.home-recent-panel .home-trend-compact--embedded.home-trend-compact--split {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .home-page--loop .home-hybrid-recent-row {
@@ -11156,6 +11213,15 @@ input.pm-slider::-moz-range-thumb {
   .home-hero-metrics {
     grid-template-columns: 1fr;
     gap: 16px;
+  }
+
+  .home-recent-split {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .home-recent-split-chart {
+    min-height: 0;
   }
 
   .home-metrics-grid {
