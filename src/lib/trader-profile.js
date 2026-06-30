@@ -262,6 +262,11 @@ export function validateTraderProfileInput(form) {
 let profileCache = null;
 let profileLoadPromise = null;
 
+export function clearTraderProfileCache() {
+  profileCache = null;
+  profileLoadPromise = null;
+}
+
 function dispatchProfileUpdated() {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent(PROFILE_UPDATED_EVENT));

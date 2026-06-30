@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   loadDllSettings,
@@ -29,6 +29,9 @@ import {
 } from "../lib/dll-recovery";
 import { ACCOUNT_TYPE_OPTIONS } from "../lib/trade-import-options";
 import MyProcessSettings from "./MyProcessSettings";
+import { getCurrentUser } from "../lib/user-storage";
+import { isDevUser } from "../lib/dev-access";
+import { clearTraderProfileCache } from "../lib/trader-profile";
 
 const SECTIONS = [
   {
@@ -61,7 +64,17 @@ const SECTIONS = [
   },
 ];
 
-const VALID_SECTIONS = new Set(SECTIONS.map((s) => s.id));
+const DEV_SECTION = {
+  id: "dev",
+  label: "Dev",
+  hint: "Testing tools",
+  title: "Developer tools",
+  desc: "Internal utilities for replaying onboarding and other dev-only checks.",
+};
+
+function getVisibleSections(showDevTools) {
+  return showDevTools ? [...SECTIONS, DEV_SECTION] : SECTIONS;
+}
 
 function headerDate() {
   return new Date().toLocaleDateString("en-US", {
@@ -250,11 +263,11 @@ function AccountCard({
   );
 }
 
-function SettingsSidebar({ active, onChange }) {
+function SettingsSidebar({ active, onChange, sections }) {
   return (
     <nav className="settings-sidebar" aria-label="Settings sections">
       <div className="settings-sidebar-label hybrid-label-sm">Configure</div>
-      {SECTIONS.map((section) => (
+      {sections.map((section) => (
         <button
           key={section.id}
           type="button"
@@ -274,8 +287,18 @@ function SettingsInner({ initialSection = "desk" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sectionParam = searchParams.get("section");
+  const [showDevTools, setShowDevTools] = useState(false);
+  const [replayLoading, setReplayLoading] = useState(false);
+  const visibleSections = useMemo(
+    () => getVisibleSections(showDevTools),
+    [showDevTools]
+  );
+  const validSections = useMemo(
+    () => new Set(visibleSections.map((s) => s.id)),
+    [visibleSections]
+  );
   const resolvedInitial =
-    sectionParam && VALID_SECTIONS.has(sectionParam) ? sectionParam : initialSection;
+    sectionParam && validSections.has(sectionParam) ? sectionParam : initialSection;
 
   const [activeSection, setActiveSection] = useState(resolvedInitial);
   const [dllForm, setDllForm] = useState({
@@ -312,10 +335,16 @@ function SettingsInner({ initialSection = "desk" }) {
   );
 
   useEffect(() => {
-    if (sectionParam && VALID_SECTIONS.has(sectionParam) && sectionParam !== activeSection) {
+    if (sectionParam && validSections.has(sectionParam) && sectionParam !== activeSection) {
       setActiveSection(sectionParam);
     }
-  }, [sectionParam, activeSection]);
+  }, [sectionParam, activeSection, validSections]);
+
+  useEffect(() => {
+    getCurrentUser()
+      .then((user) => setShowDevTools(isDevUser(user)))
+      .catch(() => setShowDevTools(false));
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -424,11 +453,35 @@ function SettingsInner({ initialSection = "desk" }) {
     }
   };
 
+  const handleReplayOnboarding = async () => {
+    if (
+      !window.confirm(
+        "Open the onboarding wizard again? Your playbook, settings, and history stay as-is."
+      )
+    ) {
+      return;
+    }
+
+    setReplayLoading(true);
+    try {
+      const res = await fetch("/api/dev/replay-onboarding", { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        window.alert(data.error || "Could not reset onboarding");
+        return;
+      }
+      clearTraderProfileCache();
+      router.push("/onboarding");
+    } finally {
+      setReplayLoading(false);
+    }
+  };
+
   if (loading) return <div className="pm-loading">Loading...</div>;
 
   const importAccount = accounts.find((a) => a.forImport) || accounts[0];
-  const meta = SECTIONS.find((s) => s.id === activeSection) || SECTIONS[0];
-  const showDeskSave = activeSection !== "process";
+  const meta = visibleSections.find((s) => s.id === activeSection) || visibleSections[0];
+  const showDeskSave = activeSection !== "process" && activeSection !== "dev";
 
   return (
     <div className="premarket-page hybrid-page settings-page">
@@ -444,7 +497,11 @@ function SettingsInner({ initialSection = "desk" }) {
         </p>
 
         <div className="settings-layout">
-          <SettingsSidebar active={activeSection} onChange={selectSection} />
+          <SettingsSidebar
+            active={activeSection}
+            onChange={selectSection}
+            sections={visibleSections}
+          />
 
           <div className="settings-main">
             <div className="settings-main-head">
@@ -713,6 +770,26 @@ function SettingsInner({ initialSection = "desk" }) {
                 <button type="button" className="pm-add-btn" onClick={addAccount}>
                   + Add account
                 </button>
+              </section>
+            )}
+
+            {activeSection === "dev" && showDevTools && (
+              <section className="pm-card settings-panel settings-panel--dev">
+                <div className="settings-field-block">
+                  <div className="settings-field-block-label hybrid-label-sm">Onboarding</div>
+                  <p className="pm-field-hint settings-field-block-lead">
+                    Clears your onboarding-complete flag and opens the setup wizard. Profile data,
+                    settings, and history are not deleted.
+                  </p>
+                  <button
+                    type="button"
+                    className="pm-btn-save-review"
+                    onClick={handleReplayOnboarding}
+                    disabled={replayLoading}
+                  >
+                    {replayLoading ? "Resetting…" : "Replay onboarding wizard"}
+                  </button>
+                </div>
               </section>
             )}
 
