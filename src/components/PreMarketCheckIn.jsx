@@ -56,12 +56,6 @@ function headerDate() {
   });
 }
 
-function sectionDateEyebrow() {
-  return new Date()
-    .toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
-    .toUpperCase();
-}
-
 function SliderField({ label, hint, minLabel, maxLabel, value, onChange, inverted }) {
   return (
     <div className="pm-field">
@@ -282,11 +276,13 @@ export default function PreMarketCheckIn({ onBack }) {
 
   return (
     <WorkflowPageLayout>
+      <div className="pm-topbar">
+        <span>{headerDate()}</span>
+      </div>
+
       <div className="pm-checkin-layout pm-checkin-layout--loop">
         <div className="pm-checkin-intro">
           <header className="pm-checkin-header">
-            <p className="pm-checkin-date">{headerDate()}</p>
-            <div className="pm-eyebrow hybrid-eyebrow">Check-in · {sectionDateEyebrow()}</div>
             <h1 className="hybrid-page-title">Check-in.</h1>
             <p className="pm-subtitle">
               Be honest before the open. Your score updates as you go.
@@ -306,14 +302,6 @@ export default function PreMarketCheckIn({ onBack }) {
 
           <CheckInHorizontalStepper activeIndex={activeSection} onSelect={setActiveSection} />
         </div>
-
-        <CheckInRail
-          activeIndex={activeSection}
-          onSelect={setActiveSection}
-          composite={scores.composite}
-          dimensions={railDimensions}
-          cautionActive={showProtectiveBanner && !form.standDownAcknowledged}
-        />
 
         <div className="pm-checkin-stage">
             <div className="pm-section-panel checkin-section-panel">
@@ -604,6 +592,14 @@ export default function PreMarketCheckIn({ onBack }) {
             </div>
             )}
         </div>
+
+        <CheckInRail
+          activeIndex={activeSection}
+          onSelect={setActiveSection}
+          composite={scores.composite}
+          dimensions={railDimensions}
+          cautionActive={showProtectiveBanner && !form.standDownAcknowledged}
+        />
       </div>
     </WorkflowPageLayout>
   );

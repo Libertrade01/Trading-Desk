@@ -11516,7 +11516,7 @@ input.pm-slider::-moz-range-thumb {
 /* ── Check-in · mockup layout ── */
 .pm-checkin-layout--loop {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 220px;
   grid-template-rows: auto auto;
   gap: 20px 36px;
   max-width: 1120px;
@@ -11526,7 +11526,7 @@ input.pm-slider::-moz-range-thumb {
 }
 
 .pm-checkin-intro {
-  grid-column: 2;
+  grid-column: 1;
   grid-row: 1;
   min-width: 0;
   display: flex;
@@ -11535,12 +11535,12 @@ input.pm-slider::-moz-range-thumb {
 }
 
 .pm-checkin-layout--loop .checkin-meter-panel {
-  grid-column: 1;
+  grid-column: 2;
   grid-row: 2;
 }
 
 .pm-checkin-layout--loop .pm-checkin-stage {
-  grid-column: 2;
+  grid-column: 1;
   grid-row: 2;
 }
 
@@ -11553,12 +11553,6 @@ input.pm-slider::-moz-range-thumb {
 
 .pm-checkin-header {
   margin: 0;
-}
-
-.pm-checkin-date {
-  margin: 0 0 10px;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.45);
 }
 
 .pm-checkin-header .pm-eyebrow {
@@ -11726,7 +11720,7 @@ input.pm-slider::-moz-range-thumb {
   padding: 11px 10px;
   background: rgba(255, 255, 255, 0.035);
   border-color: rgba(255, 255, 255, 0.07);
-  box-shadow: inset 1px 0 0 rgba(0, 101, 189, 0.28);
+  box-shadow: inset -1px 0 0 rgba(0, 101, 189, 0.28);
 }
 
 .checkin-meter-row-dot {

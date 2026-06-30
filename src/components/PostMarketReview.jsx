@@ -53,14 +53,6 @@ function headerDate() {
   });
 }
 
-function sectionDate() {
-  return new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  }).toUpperCase();
-}
-
 function SliderField({ label, hint, minLabel, maxLabel, value, onChange, inverted }) {
   const tone = sliderValueColor(value, inverted);
   return (
@@ -378,7 +370,6 @@ export default function PostMarketReview({ onBack }) {
         <div className="pm-closeout-main">
           <div className="pm-closeout-header-row">
             <div className="pm-header">
-              <div className="pm-eyebrow hybrid-eyebrow">Close loop · {sectionDate()}</div>
               <h1 className="hybrid-page-title">Close loop.</h1>
               <p className="pm-subtitle">Close the loop. What happened vs what you planned.</p>
             </div>
