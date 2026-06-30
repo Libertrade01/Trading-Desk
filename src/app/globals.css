@@ -10369,6 +10369,35 @@ input.pm-slider::-moz-range-thumb {
   gap: 16px 28px;
 }
 
+.home-hero-metrics--done {
+  grid-template-columns: minmax(120px, 180px) minmax(0, 1fr);
+  align-items: start;
+}
+
+.home-hero-secondary-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.home-hero-done-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px 24px;
+}
+
+.home-hero-done-stats .home-metric-stat-value--pnl {
+  font-family: var(--font-mono);
+  font-size: clamp(22px, 2.4vw, 28px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.home-hero-panel--done .home-workflow-step.done .home-workflow-step-label {
+  color: rgba(255, 255, 255, 0.72);
+}
+
 .home-workflow-steps--embedded {
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -10635,6 +10664,10 @@ input.pm-slider::-moz-range-thumb {
   font-size: 15px;
   line-height: 1.55;
   color: rgba(255, 255, 255, 0.82);
+  border-left: none;
+  padding-left: 0;
+  font-family: inherit;
+  font-weight: inherit;
 }
 
 .home-week-focus-bar {

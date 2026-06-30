@@ -259,6 +259,7 @@ function HomeWorkflowSteps({
 }
 
 function HomeHeroActivePanel({
+  allComplete = false,
   completedCount,
   today,
   processStreak,
@@ -268,17 +269,23 @@ function HomeHeroActivePanel({
   showPlaybookStreak,
   loadingPanels,
   showHeroReadiness,
+  showReadinessStat,
+  showPlaybookStat,
+  showPnlStat,
+  todayPlaybookLabel,
+  pnlTone,
   preComplete,
   planComplete,
   postComplete,
   nextStep,
   onNavigate,
 }) {
+  const workflowCount = allComplete ? 3 : completedCount;
   let primaryLabel = "Today's workflow";
-  let primaryValue = `${completedCount} / 3`;
+  let primaryValue = `${workflowCount} / 3`;
   let primaryClass = "";
 
-  if (showHeroReadiness && today?.readinessScore != null) {
+  if (!allComplete && showHeroReadiness && today?.readinessScore != null) {
     primaryLabel = "Ready";
     primaryValue = String(today.readinessScore);
     primaryClass =
@@ -286,38 +293,84 @@ function HomeHeroActivePanel({
   }
 
   const showStreaks = showRiskStreak || showPlaybookStreak;
+  const showDoneStats =
+    allComplete && (showReadinessStat || showPlaybookStat || showPnlStat);
 
   return (
-    <div className="home-hero-panel">
-      <div className={`home-hero-metrics${showStreaks ? "" : " home-hero-metrics--solo"}`}>
+    <div className={`home-hero-panel${allComplete ? " home-hero-panel--done" : ""}`}>
+      <div
+        className={`home-hero-metrics${showStreaks || showDoneStats ? "" : " home-hero-metrics--solo"}${allComplete ? " home-hero-metrics--done" : ""}`}
+      >
         <div className="home-hero-workflow-progress home-metric-stat home-metric-stat--primary">
           <span className="home-metric-stat-label">{primaryLabel}</span>
           {primaryLabel === "Today's workflow" ? (
             <span className="home-metric-stat-value home-metric-stat-value--split">
-              <span className="home-metric-stat-value-main">{completedCount}</span>
+              <span className="home-metric-stat-value-main">{workflowCount}</span>
               <span className="home-metric-stat-value-denom"> / 3</span>
             </span>
           ) : (
             <span className={`home-metric-stat-value ${primaryClass}`}>{primaryValue}</span>
           )}
         </div>
-        {showStreaks && (
-          <div className="home-hero-streaks">
-            {showRiskStreak && (
-              <StreakMetric
-                label="Risk streak"
-                value={processStreak}
-                target={streakTargetDays}
-                loading={loadingPanels}
-              />
+        {(showStreaks || showDoneStats) && (
+          <div className="home-hero-secondary-metrics">
+            {showStreaks && (
+              <div className="home-hero-streaks">
+                {showRiskStreak && (
+                  <StreakMetric
+                    label="Risk streak"
+                    value={processStreak}
+                    target={streakTargetDays}
+                    loading={loadingPanels}
+                  />
+                )}
+                {showPlaybookStreak && (
+                  <StreakMetric
+                    label="Playbook streak"
+                    value={playbookStreak}
+                    target={streakTargetDays}
+                    loading={loadingPanels}
+                  />
+                )}
+              </div>
             )}
-            {showPlaybookStreak && (
-              <StreakMetric
-                label="Playbook streak"
-                value={playbookStreak}
-                target={streakTargetDays}
-                loading={loadingPanels}
-              />
+            {showDoneStats && (
+              <div className="home-hero-done-stats">
+                {showReadinessStat && today?.readinessScore != null && (
+                  <div className="home-metric-stat">
+                    <span className="home-metric-stat-label">Ready</span>
+                    <span className="home-metric-stat-value positive">{today.readinessScore}</span>
+                  </div>
+                )}
+                {showPlaybookStat && (
+                  <div className="home-metric-stat">
+                    <span className="home-metric-stat-label">Playbook setups</span>
+                    <span
+                      className={`home-metric-stat-value ${
+                        todayPlaybookLabel.tone === "green"
+                          ? "positive"
+                          : todayPlaybookLabel.tone === "amber"
+                            ? "neutral"
+                            : "negative"
+                      }`}
+                    >
+                      {today.playbookAdherence.playbookRate}%
+                    </span>
+                  </div>
+                )}
+                {showPnlStat && today?.netPnl != null && (
+                  <div className="home-metric-stat home-metric-stat--pnl">
+                    <span className="home-metric-stat-label">Net P&amp;L</span>
+                    <span
+                      className={`home-metric-stat-value home-metric-stat-value--pnl ${
+                        pnlTone === "positive" ? "positive" : pnlTone === "negative" ? "negative" : "neutral"
+                      }`}
+                    >
+                      {formatUsd(today.netPnl, { signed: true })}
+                    </span>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -328,7 +381,7 @@ function HomeHeroActivePanel({
         planComplete={planComplete}
         postComplete={postComplete}
         nextStep={nextStep}
-        completedCount={completedCount}
+        completedCount={workflowCount}
         onNavigate={onNavigate}
         embedded
       />
@@ -767,7 +820,7 @@ function dateFromKey(dateKey) {
 function heroCopy(allComplete, completedCount, weekend, timeEyebrow) {
   if (allComplete) {
     return {
-      eyebrow: "Complete",
+      eyebrow: "3 of 3 complete",
       eyebrowMuted: false,
       title: "Day done.",
       sub: "You executed the plan. Review, refine, repeat.",
@@ -1019,14 +1072,12 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
     <div className="premarket-page hybrid-page home-page--loop">
       <div className="home-page-glow" aria-hidden="true" />
 
-      <div className={`home-page-inner${allComplete ? "" : " home-page-inner--workflow"}`}>
+      <div className="home-page-inner home-page-inner--workflow">
         <header className="home-page-header">
           <div className="home-page-header-main">
             <h1 className="home-page-greeting">{greetingLine}</h1>
             <p className="home-page-date">{formatHeaderDateLong(effectiveDate)}</p>
-            {!allComplete && (
-              <HomeMarketContextFlags dateKey={dateKey} className="home-page-market-flags--header" />
-            )}
+            <HomeMarketContextFlags dateKey={dateKey} className="home-page-market-flags--header" />
           </div>
         </header>
 
@@ -1063,23 +1114,9 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
 
         <RecoveryBanner recoveryStatus={recoveryStatus} />
 
-        {allComplete && (
-          <div className="home-page-focus-top">
-            <WeekFocusStrip
-              items={weekFocus.items}
-              loading={loadingPanels}
-              showReviewPrompt={showReviewPrompt}
-              onOpenWeeklyReview={onOpenWeeklyReview}
-              allComplete={allComplete}
-            />
-          </div>
-        )}
-
-        <div className={`home-page-dashboard${allComplete ? "" : " home-page-dashboard--workflow"}`}>
+        <div className="home-page-dashboard home-page-dashboard--workflow">
           <div className="home-page-main">
-            <section
-              className={`home-loop-card home-hero-card home-page-hero${allComplete ? "" : " home-hero-card--active"}`}
-            >
+            <section className="home-loop-card home-hero-card home-page-hero home-hero-card--active">
               <div className="home-hero-card-inner">
                 <p
                   className={`home-hero-eyebrow${hero.eyebrowMuted ? " home-hero-eyebrow--muted" : ""}`}
@@ -1091,51 +1128,18 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
                 {!allComplete && today?.playbookAdherence?.total > 0 && todayPlaybookLabel && (
                   <p className="home-hero-lead home-hero-lead--playbook">{todayPlaybookLabel.text}</p>
                 )}
-                {!allComplete && (
-                  <div className="home-hero-week-focus">
-                    <WeekFocusStrip
-                      items={weekFocus.items}
-                      loading={loadingPanels}
-                      showReviewPrompt={showReviewPrompt}
-                      onOpenWeeklyReview={onOpenWeeklyReview}
-                      allComplete={allComplete}
-                    />
-                  </div>
-                )}
-                {allComplete ? (
-                  <button
-                    type="button"
-                    className="home-hero-cta"
-                    onClick={() => onNavigate("postmarket")}
-                  >
-                    Review today →
-                  </button>
-                ) : (
-                  <HomeHeroActivePanel
-                    completedCount={completedCount}
-                    today={today}
-                    processStreak={processStreak}
-                    playbookStreak={playbookStreak}
-                    streakTargetDays={profile?.streakTargetDays ?? 21}
-                    showRiskStreak={profile?.riskStreakEnabled !== false}
-                    showPlaybookStreak={profile?.playbookStreakEnabled !== false}
-                    loadingPanels={loadingPanels}
-                    showHeroReadiness={showHeroReadiness}
-                    preComplete={preComplete}
-                    planComplete={planComplete}
-                    postComplete={postComplete}
-                    nextStep={nextStep}
-                    onNavigate={onNavigate}
+                <div className="home-hero-week-focus">
+                  <WeekFocusStrip
+                    items={weekFocus.items}
+                    loading={loadingPanels}
+                    showReviewPrompt={showReviewPrompt}
+                    onOpenWeeklyReview={onOpenWeeklyReview}
+                    allComplete={allComplete}
                   />
-                )}
-              </div>
-            </section>
-
-            {allComplete && (
-              <>
-                <HomeHeroQuote />
-                <HomeMetricsCard
+                </div>
+                <HomeHeroActivePanel
                   allComplete={allComplete}
+                  completedCount={completedCount}
                   today={today}
                   processStreak={processStreak}
                   playbookStreak={playbookStreak}
@@ -1143,38 +1147,32 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
                   showRiskStreak={profile?.riskStreakEnabled !== false}
                   showPlaybookStreak={profile?.playbookStreakEnabled !== false}
                   loadingPanels={loadingPanels}
+                  showHeroReadiness={showHeroReadiness}
                   showReadinessStat={showReadinessStat}
-                  showPnlStat={showPnlStat}
                   showPlaybookStat={showPlaybookStat}
+                  showPnlStat={showPnlStat}
                   todayPlaybookLabel={todayPlaybookLabel}
                   pnlTone={pnlTone}
-                />
-                <RecentSessionsPanel
-                  sessions={sessions}
-                  recent={recent}
-                  todayDateKey={dateKey}
-                  loadingPanels={loadingPanels}
+                  preComplete={preComplete}
+                  planComplete={planComplete}
+                  postComplete={postComplete}
+                  nextStep={nextStep}
                   onNavigate={onNavigate}
-                  onOpenHistoryDay={onOpenHistoryDay}
                 />
-              </>
+              </div>
+            </section>
+
+            {allComplete && (
+              <RecentSessionsPanel
+                sessions={sessions}
+                recent={recent}
+                todayDateKey={dateKey}
+                loadingPanels={loadingPanels}
+                onNavigate={onNavigate}
+                onOpenHistoryDay={onOpenHistoryDay}
+              />
             )}
           </div>
-
-          {allComplete && (
-            <aside className="home-page-aside">
-              <HomeMarketContextFlags dateKey={dateKey} />
-              <HomeWeeklyOverview
-                rows={weeklyOverviewRows}
-                loading={loadingPanels}
-                onOpenWeeklyReview={onOpenWeeklyReview}
-              />
-              <HomeQuickActionTiles
-                onNavigate={onNavigate}
-                onOpenWeeklyReview={onOpenWeeklyReview}
-              />
-            </aside>
-          )}
         </div>
       </div>
     </div>
