@@ -1,3 +1,5 @@
+import { easternMinutesFromInstant } from "./trade-time";
+
 const CHART_FONT = { family: "'DM Mono', monospace", size: 9 };
 const GRID_COLOR = "#22242e";
 const TICK_COLOR = "#4a4f5e";
@@ -49,7 +51,7 @@ export function buildCumulativePnlConfig(trades) {
   };
 }
 
-export function buildBasketsConfig(trades, getNYOffsetHours) {
+export function buildBasketsConfig(trades) {
   const baskets = [
     { label: "09:30", start: 9 * 60 + 30, end: 10 * 60 },
     { label: "10:00", start: 10 * 60, end: 10 * 60 + 30 },
@@ -59,11 +61,7 @@ export function buildBasketsConfig(trades, getNYOffsetHours) {
     { label: "12:00+", start: 12 * 60, end: 24 * 60 },
   ];
 
-  const mins = (t) => {
-    const d = new Date(t.entry_time);
-    const off = getNYOffsetHours(d);
-    return (d.getUTCHours() + off) * 60 + d.getUTCMinutes();
-  };
+  const mins = (t) => easternMinutesFromInstant(new Date(t.entry_time));
 
   const bucketData = baskets.map((b) => trades.filter((t) => t.entry_time && mins(t) >= b.start && mins(t) < b.end));
   const avgs = bucketData.map((bt) => (bt.length ? bt.reduce((s, x) => s + (x.net_pnl || 0), 0) / bt.length : null));
@@ -142,32 +140,10 @@ export function buildDayOfWeekConfig(trades) {
   };
 }
 
-/** NY offset helper — rTrader EST + DST correction (mirrors analytics.html). */
-export function getNYOffsetHours(date) {
-  try {
-    const d = date || new Date();
-    const nyStr = new Date(d.getTime()).toLocaleString("en-US", {
-      timeZone: "America/New_York",
-      hour12: false,
-      hour: "2-digit",
-    });
-    let nyHour = parseInt(nyStr, 10);
-    if (nyHour === 24) nyHour = 0;
-    const utcHour = d.getUTCHours();
-    let actualNYOffset = nyHour - utcHour;
-    if (actualNYOffset > 12) actualNYOffset -= 24;
-    if (actualNYOffset < -12) actualNYOffset += 24;
-    return actualNYOffset - -5;
-  } catch {
-    const m = (date || new Date()).getUTCMonth() + 1;
-    return m >= 3 && m <= 11 ? 1 : 0;
-  }
-}
-
 export function getChartConfigs(trades) {
   return {
     pnl: trades.length ? buildCumulativePnlConfig(trades) : null,
-    baskets: trades.length ? buildBasketsConfig(trades, getNYOffsetHours) : null,
+    baskets: trades.length ? buildBasketsConfig(trades) : null,
     dow: trades.length ? buildDayOfWeekConfig(trades) : null,
   };
 }

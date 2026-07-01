@@ -1,11 +1,11 @@
-export const DEFAULT_TRADING_DAY_TIMEZONE = "America/Lima";
+export const DEFAULT_TRADING_DAY_TIMEZONE = "local";
 
 export const TRADING_DAY_TIMEZONE_OPTIONS = [
-  { id: "America/Lima", label: "Lima (UTC−5)" },
+  { id: "local", label: "Browser local time (default)" },
   { id: "America/New_York", label: "New York (US Eastern)" },
   { id: "America/Chicago", label: "Chicago (US Central)" },
+  { id: "America/Lima", label: "Lima (UTC−5)" },
   { id: "Europe/London", label: "London" },
-  { id: "local", label: "Browser local time" },
 ];
 
 const ALLOWED_TIMEZONES = new Set(TRADING_DAY_TIMEZONE_OPTIONS.map((o) => o.id));

@@ -314,9 +314,17 @@ export default function PostMarketReview({ onBack }) {
     try {
       const text = await file.text();
       const account = await loadImportAccount();
-      const { trades, openPosition } = processRTraderCSV(text, account);
+      const { trades, openPosition, sourceTimeZone, timeColumnHeader } = processRTraderCSV(text, account);
       const missingSymbols = getMissingCommissionSymbols(trades, account?.commissions || {});
-      setImportPreview({ trades, openPosition, filename: file.name, account, missingSymbols });
+      setImportPreview({
+        trades,
+        openPosition,
+        filename: file.name,
+        account,
+        missingSymbols,
+        sourceTimeZone,
+        timeColumnHeader,
+      });
       setImportMsg("");
     } catch (err) {
       setImportMsg(`Error: ${err.message}`);
@@ -423,6 +431,8 @@ export default function PostMarketReview({ onBack }) {
             missingSymbols={importPreview?.missingSymbols || []}
             filename={importPreview?.filename || ""}
             account={importPreview?.account}
+            sourceTimeZone={importPreview?.sourceTimeZone}
+            timeColumnHeader={importPreview?.timeColumnHeader}
             onConfirm={handleImportConfirm}
           />
 

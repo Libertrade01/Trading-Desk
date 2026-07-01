@@ -2,6 +2,8 @@ import { supabase } from "./supabase";
 import { getCurrentUserId } from "./user-storage";
 import { withUserTradesQuery } from "./trades-query";
 import { loadTraderSettings, getImportAccount } from "./trader-settings";
+import { parseNaiveInTimezone, sessionDateFromNaive } from "./trade-time";
+import { resolveRtraderTimeColumn } from "./rtrader-timezone";
 
 const DEFAULT_IMPORT_ACCOUNT = {
   name: "Default Account",
@@ -41,14 +43,9 @@ export function parseRTraderCSV(text) {
   const idxQty = headers.indexOf("Qty To Fill");
   const idxSymbol = headers.indexOf("Symbol");
   const idxPrice = headers.indexOf("Avg Fill Price");
-  const idxTime = (() => {
-    for (const name of ["Update Time (SAPST)", "Update Time (ESAST)", "Create Time (SAPST)", "Create Time (ESAST)"]) {
-      const idx = headers.indexOf(name);
-      if (idx >= 0) return idx;
-    }
-    return headers.findIndex((h) => /^Update Time/i.test(h) || /^Create Time/i.test(h));
-  })();
-  if (idxTime < 0) throw new Error("Could not find Update Time or Create Time column in Completed Orders");
+  const timeCol = resolveRtraderTimeColumn(headers);
+  if (!timeCol) throw new Error("Could not find Update Time or Create Time column in Completed Orders");
+  const { idx: idxTime, header: timeColumnHeader, sourceTimeZone } = timeCol;
 
   const orders = [];
   for (let i = completedStart + 1; i < lines.length; i++) {
@@ -67,7 +64,7 @@ export function parseRTraderCSV(text) {
   }
 
   orders.sort((a, b) => a.time.localeCompare(b.time));
-  return orders;
+  return { orders, sourceTimeZone, timeColumnHeader };
 }
 
 export function fifoReconstructTrades(orders) {
@@ -183,13 +180,26 @@ export function getActiveAccount() {
   return DEFAULT_IMPORT_ACCOUNT;
 }
 
+export function normalizeTradeTimestamps(trades, sourceTimeZone = "UTC") {
+  return trades.map((t) => {
+    const entryInstant = parseNaiveInTimezone(t.entry_time, sourceTimeZone);
+    const exitInstant = parseNaiveInTimezone(t.exit_time, sourceTimeZone);
+    return {
+      ...t,
+      entry_time: entryInstant ? entryInstant.toISOString() : t.entry_time,
+      exit_time: exitInstant ? exitInstant.toISOString() : t.exit_time,
+      date: sessionDateFromNaive(t.entry_time, sourceTimeZone),
+    };
+  });
+}
+
 export function processRTraderCSV(text, account = null) {
-  const orders = parseRTraderCSV(text);
+  const { orders, sourceTimeZone, timeColumnHeader } = parseRTraderCSV(text);
   let { trades, openPosition } = fifoReconstructTrades(orders);
   trades = applyPointValues(trades);
   const acct = account || getActiveAccount();
   trades = applyCommissions(trades, acct?.commissions || {});
-  return { trades, openPosition, account: acct };
+  return { trades, openPosition, account: acct, sourceTimeZone, timeColumnHeader };
 }
 
 function round2(n) {
@@ -197,7 +207,7 @@ function round2(n) {
 }
 
 export function tradesForDate(trades, dateKey) {
-  return trades.filter((t) => t.entry_time.substring(0, 10) === dateKey);
+  return trades.filter((t) => (t.date || t.entry_time.substring(0, 10)) === dateKey);
 }
 
 /** Build performance fields from reconstructed/imported trades */
@@ -313,14 +323,22 @@ export async function executeTradesImport(
   const acctType = accountTypeOverride || account?.account_type || "eval";
 
   const rows = trades.map((t) => {
-    const entryUTC = t.entry_time.replace(" ", "T") + "+00:00";
-    const exitUTC = t.exit_time.replace(" ", "T") + "+00:00";
+    const entryInstant =
+      t.entry_time.includes("T") && (t.entry_time.endsWith("Z") || t.entry_time.includes("+"))
+        ? new Date(t.entry_time)
+        : parseNaiveInTimezone(t.entry_time, "UTC");
+    const exitInstant =
+      t.exit_time.includes("T") && (t.exit_time.endsWith("Z") || t.exit_time.includes("+"))
+        ? new Date(t.exit_time)
+        : parseNaiveInTimezone(t.exit_time, "UTC");
+    const entryUTC = entryInstant.toISOString();
+    const exitUTC = exitInstant.toISOString();
     return {
       user_id: userId,
       broker_trade_id: `${entryUTC}_${t.symbol}_${t.direction}_${t.qty}`,
       entry_time: entryUTC,
       exit_time: exitUTC,
-      date: t.entry_time.substring(0, 10),
+      date: t.date || sessionDateFromNaive(t.entry_time, "UTC"),
       instrument: t.symbol,
       direction: t.direction === "LONG" ? "long" : "short",
       quantity: t.qty,

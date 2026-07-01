@@ -31,7 +31,7 @@ import { ACCOUNT_TYPE_OPTIONS } from "../lib/trade-import-options";
 import MyProcessSettings from "./MyProcessSettings";
 import { getCurrentUser } from "../lib/user-storage";
 import { isDevUser } from "../lib/dev-access";
-import { clearTraderProfileCache } from "../lib/trader-profile";
+import { clearTraderProfileCache, loadTraderProfile, saveTraderProfile } from "../lib/trader-profile";
 
 const SECTIONS = [
   {
@@ -46,7 +46,7 @@ const SECTIONS = [
     label: "Desk",
     hint: "Timezone & imports",
     title: "Desk setup",
-    desc: "When your trading day rolls over and how rTrader imports are pre-filled.",
+    desc: "Your name, trading day rollover, and rTrader import defaults.",
   },
   {
     id: "risk",
@@ -312,6 +312,7 @@ function SettingsInner({ initialSection = "desk" }) {
     exitRecoveryAmount: String(DEFAULT_DLL_SETTINGS.exitRecoveryAmount),
   });
   const [defaultRisk, setDefaultRisk] = useState(String(DEFAULT_TRADER_SETTINGS.defaultRisk));
+  const [preferredName, setPreferredName] = useState("");
   const [tradingDayTimezone, setTradingDayTimezone] = useState(DEFAULT_TRADING_DAY_TIMEZONE);
   const [accounts, setAccounts] = useState([]);
   const [expandedAccount, setExpandedAccount] = useState(null);
@@ -361,7 +362,11 @@ function SettingsInner({ initialSection = "desk" }) {
 
   useEffect(() => {
     (async () => {
-      const [dll, trader] = await Promise.all([loadDllSettings(), loadTraderSettings()]);
+      const [dll, trader, profile] = await Promise.all([
+        loadDllSettings(),
+        loadTraderSettings(),
+        loadTraderProfile(),
+      ]);
       setDllForm({
         fullDll: String(dll.fullDll),
         halfDll: String(dll.halfDll),
@@ -373,6 +378,7 @@ function SettingsInner({ initialSection = "desk" }) {
         exitRecoveryAmount: String(dll.exitRecoveryAmount),
       });
       setDefaultRisk(String(trader.defaultRisk));
+      setPreferredName(profile?.preferredName || "");
       setTradingDayTimezone(trader.tradingDayTimezone);
       setAccounts(trader.accounts);
       setExpandedAccount(trader.accounts[0]?.id ?? null);
@@ -442,9 +448,11 @@ function SettingsInner({ initialSection = "desk" }) {
 
     setSaving(true);
     try {
+      const profile = await loadTraderProfile();
       await Promise.all([
         saveDllSettings(dllCheck.settings),
         saveTraderSettings(traderCheck.settings),
+        saveTraderProfile({ ...profile, preferredName: preferredName.trim() }),
       ]);
 
       setDllForm({
@@ -458,6 +466,7 @@ function SettingsInner({ initialSection = "desk" }) {
         exitRecoveryAmount: String(dllCheck.settings.exitRecoveryAmount),
       });
       setDefaultRisk(String(traderCheck.settings.defaultRisk));
+      setPreferredName(preferredName.trim());
       setTradingDayTimezone(traderCheck.settings.tradingDayTimezone);
       setAccounts(traderCheck.settings.accounts);
       setSaved(true);
@@ -531,9 +540,33 @@ function SettingsInner({ initialSection = "desk" }) {
             {activeSection === "desk" && (
               <section className="pm-card settings-panel">
                 <div className="settings-field-block">
+                  <div className="settings-field-block-label hybrid-label-sm">Profile</div>
+                  <div className="pm-field">
+                    <div className="pm-field-label hybrid-label">Display name</div>
+                    <input
+                      type="text"
+                      value={preferredName}
+                      onChange={(e) => {
+                        setPreferredName(e.target.value);
+                        markDirty();
+                      }}
+                      className="pm-text-input"
+                      placeholder="Mike"
+                      autoComplete="nickname"
+                      maxLength={32}
+                    />
+                    <p className="pm-field-hint">
+                      Used in your Home greeting. Leave blank to use the first part of your email.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="settings-field-divider" />
+
+                <div className="settings-field-block">
                   <div className="settings-field-block-label hybrid-label-sm">Trading day</div>
                   <div className="pm-field">
-                    <div className="pm-field-label hybrid-label">Calendar timezone</div>
+                    <div className="pm-field-label hybrid-label">When does your trading day start?</div>
                     <select
                       value={tradingDayTimezone}
                       onChange={(e) => {
@@ -549,7 +582,7 @@ function SettingsInner({ initialSection = "desk" }) {
                       ))}
                     </select>
                     <p className="pm-field-hint">
-                      Defines &ldquo;today&rdquo; for check-in, close loop, history, and analytics. Import CSV dates are unchanged.
+                      Default is your browser&apos;s local time. This only affects when &ldquo;today&rdquo; rolls over for check-in, close loop, and history. Trade times in imports and analytics always display in US Eastern (NYSE).
                     </p>
                   </div>
                 </div>

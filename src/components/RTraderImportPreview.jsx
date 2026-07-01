@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { formatLimaTime } from "../lib/trade-time";
+import { RTRADER_IMPORT_TIMEZONE_OPTIONS } from "../lib/rtrader-timezone";
+import { normalizeTradeTimestamps } from "../lib/rtrader-import";
 import {
   MGMT_OPTIONS,
   POST_EXIT_OPTIONS,
@@ -41,11 +43,14 @@ export default function RTraderImportPreview({
   missingSymbols = [],
   filename = "",
   account,
+  sourceTimeZone = "UTC",
+  timeColumnHeader = "",
   onConfirm,
 }) {
   const [pendingTrades, setPendingTrades] = useState([]);
   const [defaultRisk, setDefaultRisk] = useState("15");
   const [accountType, setAccountType] = useState(account?.account_type || "eval");
+  const [importTimeZone, setImportTimeZone] = useState(sourceTimeZone);
   const [importing, setImporting] = useState(false);
   const [setupOptions, setSetupOptions] = useState(() => buildSetupOptions());
 
@@ -63,12 +68,13 @@ export default function RTraderImportPreview({
       setSetupOptions(buildSetupOptions(getPlaybookSetupNames()));
       setPendingTrades(initTrades(incomingTrades, risk));
       setAccountType(account?.account_type || "eval");
+      setImportTimeZone(sourceTimeZone);
       setImporting(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [open, incomingTrades, account]);
+  }, [open, incomingTrades, account, sourceTimeZone]);
 
   const totals = useMemo(() => {
     const totalRaw = pendingTrades.reduce((s, t) => s + t.raw_pnl, 0);
@@ -102,7 +108,8 @@ export default function RTraderImportPreview({
     }
     setImporting(true);
     try {
-      await onConfirm(pendingTrades, accountType);
+      const finalized = normalizeTradeTimestamps(pendingTrades, importTimeZone);
+      await onConfirm(finalized, accountType);
       onClose();
     } catch (err) {
       alert(`Import failed: ${err.message}`);
@@ -139,6 +146,12 @@ export default function RTraderImportPreview({
             <div className="import-ms-val import-warn">-{formatMoney(totals.totalComm)}</div>
           </div>
           <div className="import-summary-cell">
+            <div className="import-ms-label">CSV Timezone</div>
+            <div className="import-ms-text" title={timeColumnHeader || undefined}>
+              {timeColumnHeader || "Update Time"}
+            </div>
+          </div>
+          <div className="import-summary-cell">
             <div className="import-ms-label">Net P&amp;L</div>
             <div className="import-ms-val" style={{ color: totals.totalNet >= 0 ? "var(--green)" : "var(--red)" }}>
               {formatMoney(totals.totalNet, { signed: true })}
@@ -171,8 +184,8 @@ export default function RTraderImportPreview({
             <thead>
               <tr>
                 <th>#</th>
-                <th>Entry Time</th>
-                <th>Exit Time</th>
+                <th>Entry Time (ET)</th>
+                <th>Exit Time (ET)</th>
                 <th>Symbol</th>
                 <th>Direction</th>
                 <th>Qty</th>
@@ -197,8 +210,8 @@ export default function RTraderImportPreview({
                 return (
                   <tr key={`${t.entry_time}-${t.symbol}-${i}`} className={untagged ? "import-row--untagged" : ""}>
                     <td className="dim">{i + 1}</td>
-                    <td>{formatLimaTime(t.entry_time)}</td>
-                    <td>{formatLimaTime(t.exit_time)}</td>
+                    <td>{formatLimaTime(t.entry_time, { sourceTimeZone: importTimeZone })}</td>
+                    <td>{formatLimaTime(t.exit_time, { sourceTimeZone: importTimeZone })}</td>
                     <td>{t.symbol}</td>
                     <td style={{ color: dirColor }}>{t.direction}</td>
                     <td>{t.qty}</td>
@@ -278,6 +291,19 @@ export default function RTraderImportPreview({
             {pendingTrades.length} trades · {totals.winners} winners · {formatPlaybookBreakdown(totals.setupSummary)}
           </div>
           <div className="import-footer-actions">
+            <div className="import-footer-field">
+              <span className="import-footer-label">CSV timezone</span>
+              <select
+                className="import-footer-select"
+                value={importTimeZone}
+                onChange={(e) => setImportTimeZone(e.target.value)}
+                title="Timezone of timestamps in your rTrader export"
+              >
+                {RTRADER_IMPORT_TIMEZONE_OPTIONS.map((o) => (
+                  <option key={o.id} value={o.id}>{o.label}</option>
+                ))}
+              </select>
+            </div>
             <div className="import-footer-field">
               <span className="import-footer-label">Account Type</span>
               <select
