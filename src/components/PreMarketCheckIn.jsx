@@ -304,6 +304,14 @@ export default function PreMarketCheckIn({ onBack }) {
         </div>
 
         <div className="pm-checkin-stage">
+            {showProtectiveBanner && (
+              <ProtectiveDayBanner
+                recoveryDay={recoveryDay}
+                acknowledged={form.standDownAcknowledged}
+                onAcknowledge={handleProtectiveAcknowledge}
+              />
+            )}
+
             <div className="pm-section-panel checkin-section-panel">
               <div className="pm-section-panel-head checkin-section-panel-head">
                 <div>
@@ -533,12 +541,18 @@ export default function PreMarketCheckIn({ onBack }) {
             </div>
             </div>
 
-            {showProtectiveBanner && (
-              <ProtectiveDayBanner
-                recoveryDay={recoveryDay}
-                acknowledged={form.standDownAcknowledged}
-                onAcknowledge={handleProtectiveAcknowledge}
-              />
+            {section.id !== "preparation" && nextSection && (
+              <div className="checkin-section-actions">
+                <button
+                  type="button"
+                  className="pm-btn-primary-sm"
+                  onClick={goNext}
+                  aria-label={`Go to ${nextSection.label}`}
+                >
+                  {nextSection.label}
+                  <span className="checkin-btn-arrow" aria-hidden="true">→</span>
+                </button>
+              </div>
             )}
 
             {section.id === "preparation" && (
@@ -569,24 +583,17 @@ export default function PreMarketCheckIn({ onBack }) {
                   <button type="button" className="pm-btn-outline" onClick={handleSave}>
                     {saved ? "Updated" : "Save check-in"}
                   </button>
-                  {nextSection ? (
-                    <button type="button" className="pm-btn-primary-sm" onClick={goNext}>
-                      Next — {nextSection.label}
-                      <span className="checkin-btn-arrow" aria-hidden="true">→</span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="pm-btn-primary-sm"
-                      onClick={() => {
-                        handleSave();
-                        onBack();
-                      }}
-                    >
-                      Return to dashboard
-                      <span className="checkin-btn-arrow" aria-hidden="true">→</span>
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className="pm-btn-primary-sm"
+                    onClick={() => {
+                      handleSave();
+                      onBack();
+                    }}
+                  >
+                    Return to dashboard
+                    <span className="checkin-btn-arrow" aria-hidden="true">→</span>
+                  </button>
                 </div>
               </div>
             </div>

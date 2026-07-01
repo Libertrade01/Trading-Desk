@@ -8,6 +8,7 @@ import {
   holidayEventsForDate,
   getMarketEventsForDate,
   getLastNTradingDaysInMonth,
+  isFullClosureHolidayEvent,
 } from "./market-events.js";
 
 function hasEventKind(events, kind) {
@@ -100,5 +101,13 @@ describe("End of month / quarter rebalancing windows", () => {
 
   it("skips full NYSE closures when counting month-end trading days", () => {
     assert.deepEqual(getLastNTradingDaysInMonth(2026, 11, 2), ["2026-12-30", "2026-12-31"]);
+  });
+});
+
+describe("isFullClosureHolidayEvent", () => {
+  it("flags full holidays but not half days", () => {
+    assert.equal(isFullClosureHolidayEvent({ kind: "holiday", closure: "full" }), true);
+    assert.equal(isFullClosureHolidayEvent({ kind: "halfday", closure: "half", source: "holiday" }), false);
+    assert.equal(isFullClosureHolidayEvent({ kind: "fomc", source: "static" }), false);
   });
 });

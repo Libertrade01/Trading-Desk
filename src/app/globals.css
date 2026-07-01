@@ -4346,10 +4346,10 @@ input.pm-slider::-moz-range-thumb {
 
 .pm-market-event-nudge {
   margin-bottom: 16px;
-  padding: 14px 16px;
-  border-radius: 6px;
-  border: 1px solid rgba(220, 120, 80, 0.4);
-  background: rgba(220, 120, 80, 0.07);
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(220, 120, 80, 0.16);
+  background: rgba(220, 120, 80, 0.04);
 }
 
 .pm-market-event-nudge-label {
@@ -4357,14 +4357,14 @@ input.pm-slider::-moz-range-thumb {
   font-size: 9px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #e8a080;
+  color: rgba(232, 168, 128, 0.75);
   margin-bottom: 6px;
 }
 
 .pm-market-event-nudge-title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text);
+  color: rgba(255, 255, 255, 0.88);
   margin: 0 0 6px;
   line-height: 1.35;
 }
@@ -4377,12 +4377,12 @@ input.pm-slider::-moz-range-thumb {
 }
 
 .pm-market-event-nudge--medium {
-  border-color: rgba(232, 168, 56, 0.35);
-  background: rgba(232, 168, 56, 0.06);
+  border-color: rgba(232, 168, 56, 0.14);
+  background: rgba(232, 168, 56, 0.03);
 }
 
 .pm-market-event-nudge--medium .pm-market-event-nudge-label {
-  color: #e8a838;
+  color: rgba(232, 168, 56, 0.7);
 }
 
 .pm-risk-rails {
@@ -11728,12 +11728,12 @@ input.pm-slider::-moz-range-thumb {
   gap: 14px;
   padding: 18px 20px;
   border-radius: 14px;
-  background: rgba(0, 101, 189, 0.08);
-  border: 1px solid rgba(0, 101, 189, 0.22);
+  background: color-mix(in srgb, var(--amber) 14%, rgba(11, 14, 20, 0.92));
+  border: 1px solid color-mix(in srgb, var(--amber) 50%, transparent);
 }
 
 .checkin-protective-card--acknowledged {
-  opacity: 0.85;
+  opacity: 0.88;
   background: rgba(11, 14, 20, 0.72);
   border-color: rgba(255, 255, 255, 0.08);
 }
@@ -11743,7 +11743,7 @@ input.pm-slider::-moz-range-thumb {
   display: flex;
   align-items: flex-start;
   padding-top: 2px;
-  color: rgba(100, 170, 255, 0.9);
+  color: var(--amber);
 }
 
 .checkin-protective-card-eyebrow {
@@ -11754,7 +11754,7 @@ input.pm-slider::-moz-range-thumb {
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(100, 170, 255, 0.92);
+  color: var(--amber);
 }
 
 .checkin-protective-card-text {
@@ -11804,6 +11804,15 @@ input.pm-slider::-moz-range-thumb {
 .checkin-finish-card .pm-checkin-finish-reminders {
   padding-top: 0;
   border-top: none;
+}
+
+.checkin-section-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+  margin-bottom: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .checkin-finish-actions {

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   loadMarketEventsForDate,
   formatEventTimeET,
+  isFullClosureHolidayEvent,
 } from "../lib/market-events";
 import {
   summarizeEconEvents,
@@ -26,7 +27,9 @@ export default function MarketEventNudge({ dateKey = todayKey() }) {
   }, [dateKey]);
 
   const visible = useMemo(
-    () => events.filter((e) => e.severity === "high" || e.severity === "medium"),
+    () => events.filter(
+      (e) => (e.severity === "high" || e.severity === "medium") && !isFullClosureHolidayEvent(e),
+    ),
     [events],
   );
 

@@ -163,6 +163,11 @@ function isDateInHolidayWindow(viewingDateKey, holidayDateKey) {
   return viewingDateKey >= start && viewingDateKey <= end;
 }
 
+/** Full NYSE closure holidays (market closed — not prep catalyst warnings). */
+export function isFullClosureHolidayEvent(event) {
+  return event?.kind === "holiday" || (event?.source === "holiday" && event?.closure === "full");
+}
+
 export function holidayEventsForDate(dateKey) {
   const holidays = holidaysForYear(dateKey.slice(0, 4));
 
