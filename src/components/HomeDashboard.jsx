@@ -630,6 +630,7 @@ function HomeJournalFollowUpNudge({
   todayDateKey,
   onNavigate,
   onOpenHistoryDay,
+  className = "",
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -653,7 +654,7 @@ function HomeJournalFollowUpNudge({
       : `${count} sessions need replay or database checkoffs.`;
 
   return (
-    <div className="home-journal-nudge" aria-live="polite">
+    <div className={`home-journal-nudge${className ? ` ${className}` : ""}`} aria-live="polite">
       <div className="home-journal-nudge-row home-ribbon" role="status">
         <span className="home-ribbon-tag">Review</span>
         <span className="home-ribbon-text">{summary}</span>
@@ -1180,13 +1181,6 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
             <h1 className="home-page-greeting">{greetingLine}</h1>
             <p className="home-page-date">{formatHeaderDateLong(effectiveDate)}</p>
             <div className="home-page-header-notes">
-              <HomeJournalFollowUpNudge
-                today={today}
-                carryover={journalCarryover}
-                todayDateKey={dateKey}
-                onNavigate={onNavigate}
-                onOpenHistoryDay={onOpenHistoryDay}
-              />
               <HomeMarketContextFlags dateKey={dateKey} className="home-page-market-flags--header" />
             </div>
           </div>
@@ -1272,6 +1266,15 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
                 />
               </div>
             </section>
+
+            <HomeJournalFollowUpNudge
+              today={today}
+              carryover={journalCarryover}
+              todayDateKey={dateKey}
+              onNavigate={onNavigate}
+              onOpenHistoryDay={onOpenHistoryDay}
+              className="home-journal-nudge--below-hero"
+            />
 
             {allComplete && (
               <RecentSessionsPanel

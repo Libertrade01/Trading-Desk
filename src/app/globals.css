@@ -3163,6 +3163,11 @@ textarea:focus, input:focus, select:focus {
   width: 100%;
 }
 
+.home-journal-nudge--below-hero {
+  padding-left: 40px;
+  margin-top: -4px;
+}
+
 .home-page-header-notes {
   margin-top: 12px;
   width: 100%;
