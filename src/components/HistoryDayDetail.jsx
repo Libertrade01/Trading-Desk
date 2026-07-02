@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { getRaisedBehavioralFlags } from "../lib/postmarket-defaults";
+import {
+  getRaisedBehavioralFlags,
+  JOURNAL_REVIEW_CHECKLIST,
+  formatJournalReviewPendingSummary,
+  hasJournalReviewPending,
+} from "../lib/postmarket-defaults";
+import { notifySessionSaved } from "../lib/session-events";
 import { parseSleepDebtMinutes } from "../lib/premarket-scoring";
 import {
   loadSessionDay,
@@ -57,6 +63,107 @@ function yesNo(val) {
   if (val === true) return "Yes";
   if (val === false) return "—";
   return val ?? "—";
+}
+
+function HistoryJournalChecklist({ date, post, onPostUpdated }) {
+  const [flags, setFlags] = useState(() => ({
+    replaySequenceReviewed: !!post?.replaySequenceReviewed,
+    setupsScreenshottedSaved: !!post?.setupsScreenshottedSaved,
+  }));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    setFlags({
+      replaySequenceReviewed: !!post?.replaySequenceReviewed,
+      setupsScreenshottedSaved: !!post?.setupsScreenshottedSaved,
+    });
+    setError(null);
+  }, [post, date]);
+
+  const canEdit = hasJournalReviewPending(post);
+  const dirty = JOURNAL_REVIEW_CHECKLIST.some((item) => flags[item.key] !== !!post?.[item.key]);
+
+  const saveFollowUp = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      const payload = { ...post, ...flags, savedAt: post.savedAt };
+      const res = await fetch(`/api/sessions/${date}/post`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to save checklist");
+      }
+      notifySessionSaved();
+      onPostUpdated?.(payload);
+    } catch (err) {
+      setError(err.message || "Failed to save checklist");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="history-journal-checklist">
+      <div className="history-journal-checklist-head">
+        <div className="history-notes-label hybrid-label-sm">Review checklist</div>
+        {formatJournalReviewPendingSummary(canEdit ? flags : post) ? (
+          <span className="history-journal-pending-summary">
+            {formatJournalReviewPendingSummary(canEdit ? flags : post)}
+          </span>
+        ) : (
+          <span className="history-journal-pending-summary history-journal-pending-summary--done">Complete</span>
+        )}
+      </div>
+      {canEdit ? (
+        <>
+          <div className="pm-journal-checklist history-journal-checklist-edit" role="group" aria-label="End-of-day review checklist">
+            {JOURNAL_REVIEW_CHECKLIST.map((item) => {
+              const done = !!flags[item.key];
+              return (
+                <label key={item.key} className={`pm-journal-check${done ? " pm-journal-check--done" : ""}`}>
+                  <input
+                    type="checkbox"
+                    checked={done}
+                    onChange={(e) => setFlags((prev) => ({ ...prev, [item.key]: e.target.checked }))}
+                  />
+                  <span className="pm-journal-check__copy">
+                    <span className="pm-journal-check__label">{item.label}</span>
+                    <span className={`pm-journal-check__status${done ? " done" : " pending"}`}>
+                      {done ? "Done" : "Pending"}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+          {dirty && (
+            <div className="history-journal-checklist-actions">
+              <button type="button" className="history-journal-save-btn" onClick={saveFollowUp} disabled={saving}>
+                {saving ? "Saving…" : "Save checklist"}
+              </button>
+              {error && <p className="history-journal-save-error">{error}</p>}
+            </div>
+          )}
+        </>
+      ) : (
+        <ul>
+          {JOURNAL_REVIEW_CHECKLIST.map((item) => (
+            <li key={item.key} className={post[item.key] ? "done" : "pending"}>
+              <span className="history-journal-item-label">{item.label}</span>
+              <span className="history-journal-item-status">
+                {post[item.key] ? "Done" : `${item.statusLabel} pending`}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 export default function HistoryDayDetail({ date, onBack, onDeleted }) {
@@ -421,6 +528,12 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                 <p>{post.oneLesson || "—"}</p>
               </div>
             </div>
+
+            <HistoryJournalChecklist
+              date={date}
+              post={post}
+              onPostUpdated={(nextPost) => setSession((prev) => (prev ? { ...prev, post: nextPost } : prev))}
+            />
           </>
         )}
       </SectionCard>

@@ -102,6 +102,50 @@ export const DEFAULT_POSTMARKET = {
   wentWell: "",
   wentWrong: "",
   oneLesson: "",
+  replaySequenceReviewed: false,
+  setupsScreenshottedSaved: false,
   lastImportFile: "",
   lastImportAt: null,
 };
+
+/** Optional journal follow-ups — close loop can save with these still pending. */
+export const JOURNAL_REVIEW_CHECKLIST = [
+  {
+    key: "replaySequenceReviewed",
+    statusLabel: "Replay",
+    label: "At least 1 trade sequence watched back on REPLAY mode",
+  },
+  {
+    key: "setupsScreenshottedSaved",
+    statusLabel: "Database",
+    label: "Clean trade setups screenshotted and saved to database (taken and missed opportunities)",
+  },
+];
+
+export function getJournalReviewPendingItems(formOrPost = {}) {
+  return JOURNAL_REVIEW_CHECKLIST.filter((item) => !formOrPost?.[item.key]);
+}
+
+export function hasJournalReviewPending(formOrPost = {}) {
+  return getJournalReviewPendingItems(formOrPost).length > 0;
+}
+
+/** e.g. "Replay pending · Database pending" */
+export function formatJournalReviewPendingSummary(formOrPost = {}, { separator = " · " } = {}) {
+  const pending = getJournalReviewPendingItems(formOrPost);
+  if (!pending.length) return null;
+  return pending.map((item) => `${item.statusLabel} pending`).join(separator);
+}
+
+/** Close loop saved but journal follow-up checkboxes still open. */
+export function isJournalFollowUpSession(session) {
+  return !!(session?.post?.savedAt && hasJournalReviewPending(session.post));
+}
+
+/** Prior trading days (before `beforeDateKey`) with open journal follow-ups, newest first. */
+export function findJournalReviewCarryoverSessions(sessions, beforeDateKey) {
+  if (!beforeDateKey) return [];
+  return (sessions || [])
+    .filter((s) => s.date < beforeDateKey && isJournalFollowUpSession(s))
+    .sort((a, b) => b.date.localeCompare(a.date));
+}

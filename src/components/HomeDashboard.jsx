@@ -37,6 +37,11 @@ import {
 import { loadTraderSettings } from "../lib/trader-settings";
 import { loadTraderProfile, PROFILE_UPDATED_EVENT, WELCOME_HINT_STORAGE_KEY } from "../lib/trader-profile";
 import { SESSION_SAVED_EVENT, TRADES_CHANGED_EVENT } from "../lib/session-events";
+import {
+  findJournalReviewCarryoverSessions,
+  formatJournalReviewPendingSummary,
+  hasJournalReviewPending,
+} from "../lib/postmarket-defaults";
 
 const WORKFLOW_STEPS = [
   { id: "premarket", label: "Check-in" },
@@ -208,6 +213,8 @@ function HomeWorkflowSteps({
   onNavigate,
   embedded = false,
 }) {
+  const journalFollowUp = formatJournalReviewPendingSummary(today?.post);
+
   return (
     <div
       className={`home-workflow-steps${embedded ? " home-workflow-steps--embedded" : ""}`}
@@ -218,11 +225,13 @@ function HomeWorkflowSteps({
         const isNext = nextStep?.id === step.id;
         const started = stepStarted(step.id, today);
         const showEdit = !isNext && started && !complete;
+        const followUp =
+          step.id === "postmarket" && postComplete && journalFollowUp ? journalFollowUp : null;
         const stepNum = index + 1;
         return (
           <div
             key={step.id}
-            className={`home-workflow-step${complete ? " done" : ""}${isNext ? " next" : ""}${started && !complete ? " partial" : ""}`}
+            className={`home-workflow-step${complete ? " done" : ""}${isNext ? " next" : ""}${started && !complete ? " partial" : ""}${followUp ? " follow-up" : ""}`}
           >
             <button
               type="button"
@@ -232,7 +241,12 @@ function HomeWorkflowSteps({
               <span className="home-workflow-step-num" aria-hidden="true">
                 {complete ? "✓" : stepNum}
               </span>
-              <span className="home-workflow-step-label">{step.label}</span>
+              <span className="home-workflow-step-label-wrap">
+                <span className="home-workflow-step-label">{step.label}</span>
+                {followUp ? (
+                  <span className="home-workflow-step-followup">{followUp}</span>
+                ) : null}
+              </span>
             </button>
             {isNext && (
               <button
@@ -607,6 +621,70 @@ function DrawdownRecoverySetupHint({ dllSettings, onOpenSettings, onDismiss }) {
         ×
       </button>
     </div>
+  );
+}
+
+function HomeJournalFollowUpBanner({
+  today,
+  sessions,
+  todayDateKey,
+  onNavigate,
+  onOpenHistoryDay,
+}) {
+  const todayPending =
+    today?.post?.savedAt && hasJournalReviewPending(today.post)
+      ? formatJournalReviewPendingSummary(today.post)
+      : null;
+
+  const carryover = useMemo(
+    () => findJournalReviewCarryoverSessions(sessions, todayDateKey).slice(0, 3),
+    [sessions, todayDateKey]
+  );
+
+  if (!todayPending && !carryover.length) return null;
+
+  return (
+    <section className="home-journal-followup" aria-label="Review follow-up reminders">
+      {todayPending && (
+        <div className="home-journal-followup-card">
+          <div className="home-journal-followup-copy">
+            <span className="home-journal-followup-kicker">Today</span>
+            <p className="home-journal-followup-text">{todayPending}</p>
+          </div>
+          <button
+            type="button"
+            className="home-journal-followup-action"
+            onClick={() => onNavigate("postmarket")}
+          >
+            Finish in close loop
+            <span aria-hidden="true"> →</span>
+          </button>
+        </div>
+      )}
+      {carryover.map((session) => (
+        <div key={session.date} className="home-journal-followup-card home-journal-followup-card--carryover">
+          <div className="home-journal-followup-copy">
+            <span className="home-journal-followup-kicker">
+              Still open · {formatShortHistoryDate(session.date)}
+            </span>
+            <p className="home-journal-followup-text">
+              {formatJournalReviewPendingSummary(session.post)}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="home-journal-followup-action"
+            onClick={() => {
+              if (onOpenHistoryDay) onOpenHistoryDay(session.date);
+              else onNavigate("history");
+            }}
+          >
+            Open session
+            <span aria-hidden="true"> →</span>
+          </button>
+        </div>
+      ))}
+    </section>
   );
 }
 
@@ -1124,6 +1202,14 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
 
         <RecoveryBanner recoveryStatus={recoveryStatus} />
 
+        <HomeJournalFollowUpBanner
+          today={today}
+          sessions={sessionsForStreaks}
+          todayDateKey={dateKey}
+          onNavigate={onNavigate}
+          onOpenHistoryDay={onOpenHistoryDay}
+        />
+
         <div className="home-page-dashboard home-page-dashboard--workflow">
           <div className="home-page-main">
             <section className="home-loop-card home-hero-card home-page-hero home-hero-card--active">
@@ -1135,6 +1221,11 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
                 </p>
                 <h2 className="home-hero-title">{hero.title}</h2>
                 {hero.sub && <p className="home-hero-lead">{hero.sub}</p>}
+                {allComplete && today?.post?.savedAt && formatJournalReviewPendingSummary(today?.post) && (
+                  <p className="home-hero-lead home-hero-lead--followup">
+                    {formatJournalReviewPendingSummary(today.post)}
+                  </p>
+                )}
                 {!allComplete && today?.playbookAdherence?.total > 0 && todayPlaybookLabel && (
                   <p className="home-hero-lead home-hero-lead--playbook">{todayPlaybookLabel.text}</p>
                 )}

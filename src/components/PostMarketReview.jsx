@@ -5,6 +5,9 @@ import {
   countBehavioralFlags,
   DEFAULT_POSTMARKET,
   normalizePostmarketFlags,
+  JOURNAL_REVIEW_CHECKLIST,
+  formatJournalReviewPendingSummary,
+  hasJournalReviewPending,
 } from "../lib/postmarket-defaults";
 import {
   loadTraderProfile,
@@ -116,6 +119,14 @@ function CloseoutMetrics({ form, netPnl, winRate, setupAdherence, adherenceLabel
           </span>
         </div>
       )}
+      {hasJournalReviewPending(form) && (
+        <div className="pm-closeout-metrics-followup">
+          <span className="pm-closeout-metrics-label hybrid-label-sm">Review follow-up</span>
+          <span className="pm-closeout-metrics-value pm-closeout-metrics-value--pending">
+            {formatJournalReviewPendingSummary(form)}
+          </span>
+        </div>
+      )}
     </aside>
   );
 }
@@ -137,6 +148,11 @@ export default function PostMarketReview({ onBack }) {
     setForm((f) => ({ ...f, [key]: value }));
     setSaved(false);
   }, []);
+
+  const journalPendingSummary = useMemo(
+    () => formatJournalReviewPendingSummary(form),
+    [form],
+  );
 
   const netPnl = useMemo(() => {
     const gross = parseFloat(form.grossPnl);
@@ -446,6 +462,13 @@ export default function PostMarketReview({ onBack }) {
 
           <PostMarketStepper activeIndex={activeStep} onSelect={setActiveStep} />
 
+          {journalPendingSummary && (
+            <div className="pm-closeout-context-strip pm-closeout-context-strip--pending" role="status">
+              <span className="hybrid-label-sm">Review follow-up</span>
+              <p>{journalPendingSummary}. You can save now and check these off when done.</p>
+            </div>
+          )}
+
           <div className="pm-closeout-stage">
             <div className="pm-section-panel">
               <div className="pm-section-panel-head">
@@ -559,6 +582,26 @@ export default function PostMarketReview({ onBack }) {
                       <div className="pm-field-label hybrid-label">Main takeaway and Lesson</div>
                       <textarea value={form.oneLesson} onChange={(e) => set("oneLesson", e.target.value)} className="pm-textarea" placeholder="If today taught you one thing, what was it?" rows={3} />
                     </div>
+                    <div className="pm-journal-checklist" role="group" aria-label="End-of-day review checklist">
+                      {JOURNAL_REVIEW_CHECKLIST.map((item) => {
+                        const done = !!form[item.key];
+                        return (
+                          <label key={item.key} className={`pm-journal-check${done ? " pm-journal-check--done" : ""}`}>
+                            <input
+                              type="checkbox"
+                              checked={done}
+                              onChange={(e) => set(item.key, e.target.checked)}
+                            />
+                            <span className="pm-journal-check__copy">
+                              <span className="pm-journal-check__label">{item.label}</span>
+                              <span className={`pm-journal-check__status${done ? " done" : " pending"}`}>
+                                {done ? "Done" : "Pending"}
+                              </span>
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
                   </>
                 )}
               </div>
@@ -588,6 +631,11 @@ export default function PostMarketReview({ onBack }) {
 
             {isLastStep && (
               <div className="pm-closeout-finish">
+                {journalPendingSummary && saved && (
+                  <p className="pm-closeout-finish-note" role="status">
+                    Saved — {journalPendingSummary}. Re-open Journal to check off when complete.
+                  </p>
+                )}
                 <div className="pm-closeout-finish-actions">
                   <button type="button" className="pm-btn-link" onClick={handleReset}>
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2.5 8a5.5 5.5 0 019.3-4M13.5 8a5.5 5.5 0 01-9.3 4" strokeLinecap="round"/><path d="M2.5 3.5V8h4.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
