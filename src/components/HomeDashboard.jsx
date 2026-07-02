@@ -649,16 +649,17 @@ function HomeJournalFollowUpNudge({
   const count = items.length;
   const summary =
     count === 1
-      ? "1 session needs replay or database review."
-      : `${count} sessions need replay or database review.`;
+      ? "1 session needs replay or database checkoffs."
+      : `${count} sessions need replay or database checkoffs.`;
 
   return (
     <div className="home-journal-nudge" aria-live="polite">
-      <div className="home-journal-nudge-line">
-        <p className="home-journal-nudge-summary">{summary}</p>
+      <div className="home-journal-nudge-row home-ribbon" role="status">
+        <span className="home-ribbon-tag">Review</span>
+        <span className="home-ribbon-text">{summary}</span>
         <button
           type="button"
-          className="home-journal-nudge-toggle"
+          className="home-ribbon-hint home-journal-nudge-toggle"
           onClick={() => setExpanded((open) => !open)}
           aria-expanded={expanded}
         >
@@ -1178,14 +1179,16 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
           <div className="home-page-header-main">
             <h1 className="home-page-greeting">{greetingLine}</h1>
             <p className="home-page-date">{formatHeaderDateLong(effectiveDate)}</p>
-            <HomeJournalFollowUpNudge
-              today={today}
-              carryover={journalCarryover}
-              todayDateKey={dateKey}
-              onNavigate={onNavigate}
-              onOpenHistoryDay={onOpenHistoryDay}
-            />
-            <HomeMarketContextFlags dateKey={dateKey} className="home-page-market-flags--header" />
+            <div className="home-page-header-notes">
+              <HomeJournalFollowUpNudge
+                today={today}
+                carryover={journalCarryover}
+                todayDateKey={dateKey}
+                onNavigate={onNavigate}
+                onOpenHistoryDay={onOpenHistoryDay}
+              />
+              <HomeMarketContextFlags dateKey={dateKey} className="home-page-market-flags--header" />
+            </div>
           </div>
         </header>
 

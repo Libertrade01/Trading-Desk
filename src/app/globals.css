@@ -3160,52 +3160,55 @@ textarea:focus, input:focus, select:focus {
 }
 
 .home-journal-nudge {
-  margin: 10px 0 14px;
-  max-width: 520px;
+  width: 100%;
 }
 
-.home-journal-nudge-line {
+.home-page-header-notes {
+  margin-top: 12px;
+  width: 100%;
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px 14px;
-  padding: 8px 12px;
-  border-left: 2px solid var(--amber);
-  border-radius: 0 6px 6px 0;
-  background: rgba(158, 112, 64, 0.06);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
 }
 
-.home-journal-nudge-summary {
+.home-page-header-notes .home-page-market-flags--header {
   margin: 0;
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--text);
+}
+
+.home-page-inner--workflow .home-journal-nudge-row {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, max-content) auto;
+  column-gap: 10px;
+  row-gap: 5px;
+  align-items: baseline;
+  width: max-content;
+  max-width: 100%;
 }
 
 .home-journal-nudge-toggle {
   padding: 0;
   border: none;
   background: none;
-  color: rgba(140, 190, 255, 0.95);
-  font-size: 12px;
-  font-weight: 500;
-  font-family: inherit;
+  font: inherit;
   cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-align: left;
 }
 
 .home-journal-nudge-toggle:hover {
-  color: #fff;
+  color: rgba(255, 255, 255, 0.52);
 }
 
 .home-journal-nudge-list {
   list-style: none;
-  margin: 8px 0 0;
-  padding: 0;
+  margin: 6px 0 0;
+  padding: 6px 0 0 10px;
+  margin-left: 5.5rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
+  max-width: min(100%, 520px);
 }
 
 .home-journal-nudge-item {
@@ -3213,32 +3216,35 @@ textarea:focus, input:focus, select:focus {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.02);
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.home-journal-nudge-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .home-journal-nudge-item-main {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
 .home-journal-nudge-date {
   font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.38);
 }
 
 .home-journal-nudge-pending {
   font-size: 12px;
   line-height: 1.4;
-  color: var(--text);
+  color: rgba(255, 255, 255, 0.48);
 }
 
 .home-journal-nudge-action {
@@ -3246,19 +3252,29 @@ textarea:focus, input:focus, select:focus {
   padding: 0;
   border: none;
   background: none;
-  color: rgba(140, 190, 255, 0.95);
+  color: rgba(255, 255, 255, 0.35);
   font-size: 12px;
-  font-weight: 500;
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
 }
 
 .home-journal-nudge-action:hover {
-  color: #fff;
+  color: rgba(140, 190, 255, 0.9);
 }
 
 @media (max-width: 640px) {
+  .home-page-inner--workflow .home-journal-nudge-row {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .home-journal-nudge-list {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
+  }
+
   .home-journal-nudge-item {
     flex-direction: column;
     align-items: flex-start;
