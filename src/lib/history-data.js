@@ -4,6 +4,7 @@ import { getCurrentUserId } from "./user-storage";
 import { computeReadinessScore, readinessStatus } from "./premarket-scoring";
 import { computePerformanceFromDbTrades, fetchTradesForDate, fetchTradesGroupedByDate, performanceFromDbOrImport } from "./rtrader-import";
 import { summarizeSetupAdherence } from "./setup-adherence";
+import { hasJournalReviewPending } from "./postmarket-defaults";
 import { todayKey, offsetDateKey } from "./today-key";
 
 export { todayKey };
@@ -194,6 +195,23 @@ export async function loadRecentSessions({
     const trades = tradesByDate.get(dateKey) || [];
     return buildSessionRecord(dateKey, pre, plan, post, trades);
   });
+}
+
+/** All prior days with saved close loop + open journal checkoffs (no recent-session limit). */
+export async function loadJournalReviewCarryoverSessions(beforeDateKey) {
+  if (!beforeDateKey) return [];
+
+  const postMap = await loadJsonMapByPrefix(KEYS.post);
+  const carryover = [];
+
+  for (const [key, post] of postMap) {
+    const date = dateFromKey(key, KEYS.post);
+    if (!date || date >= beforeDateKey) continue;
+    if (!post?.savedAt || !hasJournalReviewPending(post)) continue;
+    carryover.push({ date, post });
+  }
+
+  return carryover.sort((a, b) => b.date.localeCompare(a.date));
 }
 
 export async function loadAllSessions({ maxDays = 90 } = {}) {

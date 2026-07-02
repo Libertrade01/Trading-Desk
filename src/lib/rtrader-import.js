@@ -265,7 +265,12 @@ export function performanceFromDbOrImport(savedReview, dbTrades) {
 }
 
 export async function fetchTradesForDate(dateKey) {
-  const userId = await getCurrentUserId();
+  let userId;
+  try {
+    userId = await getCurrentUserId();
+  } catch {
+    return [];
+  }
   const { data, error } = await withUserTradesQuery(
     supabase
       .from("trades")

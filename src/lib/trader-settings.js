@@ -200,14 +200,22 @@ export async function loadTraderSettings({ force = false } = {}) {
           )
         ),
       });
-      await saveTraderSettings(migrated);
+      try {
+        await saveTraderSettings(migrated);
+      } catch {
+        /* API unavailable — keep in-memory defaults */
+      }
       clearLegacyTraderStorage();
       settingsCache = migrated;
       return migrated;
     }
 
     const defaults = normalizeTraderSettings(DEFAULT_TRADER_SETTINGS);
-    await saveTraderSettings(defaults);
+    try {
+      await saveTraderSettings(defaults);
+    } catch {
+      /* API unavailable — keep in-memory defaults */
+    }
     settingsCache = defaults;
     return defaults;
   })();

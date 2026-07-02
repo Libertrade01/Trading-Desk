@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   loadSessionDay,
   loadRecentSessions,
+  loadJournalReviewCarryoverSessions,
   todayKey,
   isStepComplete,
   countProcessStreakAsOf,
@@ -38,7 +39,6 @@ import { loadTraderSettings } from "../lib/trader-settings";
 import { loadTraderProfile, PROFILE_UPDATED_EVENT, WELCOME_HINT_STORAGE_KEY } from "../lib/trader-profile";
 import { SESSION_SAVED_EVENT, TRADES_CHANGED_EVENT } from "../lib/session-events";
 import {
-  findJournalReviewCarryoverSessions,
   formatJournalReviewPendingSummary,
   hasJournalReviewPending,
 } from "../lib/postmarket-defaults";
@@ -624,67 +624,76 @@ function DrawdownRecoverySetupHint({ dllSettings, onOpenSettings, onDismiss }) {
   );
 }
 
-function HomeJournalFollowUpBanner({
+function HomeJournalFollowUpNudge({
   today,
-  sessions,
+  carryover,
   todayDateKey,
   onNavigate,
   onOpenHistoryDay,
 }) {
-  const todayPending =
-    today?.post?.savedAt && hasJournalReviewPending(today.post)
-      ? formatJournalReviewPendingSummary(today.post)
-      : null;
+  const [expanded, setExpanded] = useState(false);
 
-  const carryover = useMemo(
-    () => findJournalReviewCarryoverSessions(sessions, todayDateKey).slice(0, 3),
-    [sessions, todayDateKey]
-  );
+  const items = useMemo(() => {
+    const list = [];
+    if (today?.post?.savedAt && hasJournalReviewPending(today.post)) {
+      list.push({ key: "today", kind: "today", date: todayDateKey, post: today.post });
+    }
+    for (const session of carryover) {
+      list.push({ key: session.date, kind: "session", date: session.date, post: session.post });
+    }
+    return list;
+  }, [today, carryover, todayDateKey]);
 
-  if (!todayPending && !carryover.length) return null;
+  if (!items.length) return null;
+
+  const count = items.length;
+  const summary =
+    count === 1
+      ? "1 session needs replay or database review."
+      : `${count} sessions need replay or database review.`;
 
   return (
-    <section className="home-journal-followup" aria-label="Review follow-up reminders">
-      {todayPending && (
-        <div className="home-journal-followup-card">
-          <div className="home-journal-followup-copy">
-            <span className="home-journal-followup-kicker">Today</span>
-            <p className="home-journal-followup-text">{todayPending}</p>
-          </div>
-          <button
-            type="button"
-            className="home-journal-followup-action"
-            onClick={() => onNavigate("postmarket")}
-          >
-            Finish in close loop
-            <span aria-hidden="true"> →</span>
-          </button>
-        </div>
+    <div className="home-journal-nudge" aria-live="polite">
+      <div className="home-journal-nudge-line">
+        <p className="home-journal-nudge-summary">{summary}</p>
+        <button
+          type="button"
+          className="home-journal-nudge-toggle"
+          onClick={() => setExpanded((open) => !open)}
+          aria-expanded={expanded}
+        >
+          {expanded ? "Hide items" : "Show items"}
+        </button>
+      </div>
+      {expanded && (
+        <ul className="home-journal-nudge-list">
+          {items.map((item) => (
+            <li key={item.key} className="home-journal-nudge-item">
+              <div className="home-journal-nudge-item-main">
+                <span className="home-journal-nudge-date">
+                  {item.kind === "today" ? "Today" : formatShortHistoryDate(item.date)}
+                </span>
+                <span className="home-journal-nudge-pending">
+                  {formatJournalReviewPendingSummary(item.post)}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="home-journal-nudge-action"
+                onClick={() => {
+                  if (item.kind === "today") onNavigate("postmarket");
+                  else if (onOpenHistoryDay) onOpenHistoryDay(item.date);
+                  else onNavigate("history");
+                }}
+              >
+                {item.kind === "today" ? "Finish in close loop" : "Open session"}
+                <span aria-hidden="true"> →</span>
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
-      {carryover.map((session) => (
-        <div key={session.date} className="home-journal-followup-card home-journal-followup-card--carryover">
-          <div className="home-journal-followup-copy">
-            <span className="home-journal-followup-kicker">
-              Still open · {formatShortHistoryDate(session.date)}
-            </span>
-            <p className="home-journal-followup-text">
-              {formatJournalReviewPendingSummary(session.post)}
-            </p>
-          </div>
-          <button
-            type="button"
-            className="home-journal-followup-action"
-            onClick={() => {
-              if (onOpenHistoryDay) onOpenHistoryDay(session.date);
-              else onNavigate("history");
-            }}
-          >
-            Open session
-            <span aria-hidden="true"> →</span>
-          </button>
-        </div>
-      ))}
-    </section>
+    </div>
   );
 }
 
@@ -999,6 +1008,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
   const [profile, setProfile] = useState(null);
   const [showWelcomeHint, setShowWelcomeHint] = useState(false);
   const [userName, setUserName] = useState(null);
+  const [journalCarryover, setJournalCarryover] = useState([]);
 
   useEffect(() => {
     if (typeof window !== "undefined" && sessionStorage.getItem(WELCOME_HINT_STORAGE_KEY) === "1") {
@@ -1022,15 +1032,18 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
   const reloadPanels = useCallback(async (todaySession, key = todayKey()) => {
     setLoadingPanels(true);
     try {
-      const [recent, focus, showPrompt, recoveryState, dllSettings, overviewRows] = await Promise.all([
+      const [recent, focus, showPrompt, recoveryState, dllSettings, overviewRows, carryover] =
+        await Promise.all([
         loadRecentSessions({ asOfDateKey: key, limit: 35, lookbackDays: 90 }),
         loadHomeFocusItems(key),
         shouldShowWeeklyReviewPrompt(key),
         loadRecoveryState(),
         loadDllSettings(),
         loadWeeklyOverviewRows(),
+        loadJournalReviewCarryoverSessions(key),
       ]);
       setSessions(mergeTodaySession(recent, todaySession));
+      setJournalCarryover(carryover);
       setWeekFocus(focus);
       setWeeklyOverviewRows(overviewRows);
       setShowReviewPrompt(showPrompt);
@@ -1165,6 +1178,13 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
           <div className="home-page-header-main">
             <h1 className="home-page-greeting">{greetingLine}</h1>
             <p className="home-page-date">{formatHeaderDateLong(effectiveDate)}</p>
+            <HomeJournalFollowUpNudge
+              today={today}
+              carryover={journalCarryover}
+              todayDateKey={dateKey}
+              onNavigate={onNavigate}
+              onOpenHistoryDay={onOpenHistoryDay}
+            />
             <HomeMarketContextFlags dateKey={dateKey} className="home-page-market-flags--header" />
           </div>
         </header>
@@ -1202,14 +1222,6 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
 
         <RecoveryBanner recoveryStatus={recoveryStatus} />
 
-        <HomeJournalFollowUpBanner
-          today={today}
-          sessions={sessionsForStreaks}
-          todayDateKey={dateKey}
-          onNavigate={onNavigate}
-          onOpenHistoryDay={onOpenHistoryDay}
-        />
-
         <div className="home-page-dashboard home-page-dashboard--workflow">
           <div className="home-page-main">
             <section className="home-loop-card home-hero-card home-page-hero home-hero-card--active">
@@ -1221,11 +1233,6 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
                 </p>
                 <h2 className="home-hero-title">{hero.title}</h2>
                 {hero.sub && <p className="home-hero-lead">{hero.sub}</p>}
-                {allComplete && today?.post?.savedAt && formatJournalReviewPendingSummary(today?.post) && (
-                  <p className="home-hero-lead home-hero-lead--followup">
-                    {formatJournalReviewPendingSummary(today.post)}
-                  </p>
-                )}
                 {!allComplete && today?.playbookAdherence?.total > 0 && todayPlaybookLabel && (
                   <p className="home-hero-lead home-hero-lead--playbook">{todayPlaybookLabel.text}</p>
                 )}

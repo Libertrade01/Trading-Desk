@@ -7,13 +7,13 @@ import {
   normalizePostmarketFlags,
   JOURNAL_REVIEW_CHECKLIST,
   formatJournalReviewPendingSummary,
-  hasJournalReviewPending,
 } from "../lib/postmarket-defaults";
 import {
   loadTraderProfile,
   PROFILE_UPDATED_EVENT,
   getVisibleBehavioralFlagCategories,
   countVisibleBehavioralFlags,
+  createCustomerDefaultProfile,
 } from "../lib/trader-profile";
 import { notifySessionSaved, TRADES_CHANGED_EVENT } from "../lib/session-events";
 import {
@@ -119,14 +119,6 @@ function CloseoutMetrics({ form, netPnl, winRate, setupAdherence, adherenceLabel
           </span>
         </div>
       )}
-      {hasJournalReviewPending(form) && (
-        <div className="pm-closeout-metrics-followup">
-          <span className="pm-closeout-metrics-label hybrid-label-sm">Review follow-up</span>
-          <span className="pm-closeout-metrics-value pm-closeout-metrics-value--pending">
-            {formatJournalReviewPendingSummary(form)}
-          </span>
-        </div>
-      )}
     </aside>
   );
 }
@@ -188,38 +180,44 @@ export default function PostMarketReview({ onBack }) {
   }, []);
 
   const hydrateDay = useCallback(async () => {
-    await loadTraderSettings();
-    const dateKey = todayKey();
-    const [reviewRes, dbTrades, traderProfile] = await Promise.all([
-      fetch(`/api/sessions/${dateKey}/post`).then((r) =>
-        r.ok ? r.json() : { review: null }
-      ),
-      fetchTradesForDate(dateKey),
-      loadTraderProfile(),
-    ]);
-    setProfile(traderProfile);
-    const savedReview = reviewRes?.review ?? null;
+    try {
+      await loadTraderSettings().catch(() => {});
+      const dateKey = todayKey();
+      const [reviewRes, dbTrades, traderProfile] = await Promise.all([
+        fetch(`/api/sessions/${dateKey}/post`).then((r) =>
+          r.ok ? r.json() : { review: null }
+        ),
+        fetchTradesForDate(dateKey).catch(() => []),
+        loadTraderProfile(),
+      ]);
+      setProfile(traderProfile ?? createCustomerDefaultProfile());
+      const savedReview = reviewRes?.review ?? null;
 
-    setDayTrades(dbTrades);
+      setDayTrades(dbTrades);
 
-    let next = { ...DEFAULT_POSTMARKET, ...normalizePostmarketFlags(savedReview || {}) };
-    if (next.riskPlanFollowed == null && next.planProcessFollowed != null) {
-      next.riskPlanFollowed = next.planProcessFollowed;
+      let next = { ...DEFAULT_POSTMARKET, ...normalizePostmarketFlags(savedReview || {}) };
+      if (next.riskPlanFollowed == null && next.planProcessFollowed != null) {
+        next.riskPlanFollowed = next.planProcessFollowed;
+      }
+
+      const perf = performanceFromDbOrImport(savedReview ?? next, dbTrades);
+      if (perf) {
+        next = { ...next, ...perf };
+      }
+
+      setForm(next);
+
+      const [recoveryState, settings] = await Promise.all([
+        loadRecoveryState(),
+        loadDllSettings(),
+      ]);
+      setRecoveryStatus(getRecoveryStatus(recoveryState, settings));
+    } catch (err) {
+      console.error("PostMarketReview hydrateDay:", err);
+      setProfile((prev) => prev ?? createCustomerDefaultProfile());
+    } finally {
+      setLoading(false);
     }
-
-    const perf = performanceFromDbOrImport(savedReview ?? next, dbTrades);
-    if (perf) {
-      next = { ...next, ...perf };
-    }
-
-    setForm(next);
-
-    const [recoveryState, settings] = await Promise.all([
-      loadRecoveryState(),
-      loadDllSettings(),
-    ]);
-    setRecoveryStatus(getRecoveryStatus(recoveryState, settings));
-    setLoading(false);
   }, []);
 
   const refreshRecoveryStatus = useCallback(async () => {
@@ -241,7 +239,7 @@ export default function PostMarketReview({ onBack }) {
 
   useEffect(() => {
     setLoading(true);
-    hydrateDay().catch(() => setLoading(false));
+    hydrateDay();
   }, [hydrateDay]);
 
   useEffect(() => {
@@ -263,7 +261,7 @@ export default function PostMarketReview({ onBack }) {
   }, [hydrateDay]);
 
   const persistReview = useCallback(async (formData) => {
-    await loadTraderSettings();
+    await loadTraderSettings().catch(() => {});
     const dateKey = todayKey();
     const gross = parseFloat(formData.grossPnl);
     const comm = parseFloat(formData.commissionsFees);
@@ -312,15 +310,6 @@ export default function PostMarketReview({ onBack }) {
       window.alert(err.message || "Save failed. Check you are signed in and try again.");
       return false;
     }
-  };
-
-  const handleReset = () => {
-    setForm(DEFAULT_POSTMARKET);
-    setDayTrades([]);
-    setImportPreview(null);
-    setImportMsg("");
-    setSaved(false);
-    setActiveStep(0);
   };
 
   const handleFile = async (e) => {
@@ -382,7 +371,9 @@ export default function PostMarketReview({ onBack }) {
     return () => window.removeEventListener(PROFILE_UPDATED_EVENT, refreshProfile);
   }, []);
 
-  if (loading || !profile) return <div className="pm-loading home-page--loop workflow-page--loop">Loading...</div>;
+  if (loading) return <div className="pm-loading home-page--loop workflow-page--loop">Loading...</div>;
+
+  const activeProfile = profile ?? createCustomerDefaultProfile();
 
   return (
     <WorkflowPageLayout>
@@ -403,7 +394,7 @@ export default function PostMarketReview({ onBack }) {
               winRate={winRate}
               setupAdherence={setupAdherence}
               adherenceLabel={adherenceLabel}
-              profile={profile}
+              profile={activeProfile}
             />
           </div>
 
@@ -516,7 +507,7 @@ export default function PostMarketReview({ onBack }) {
 
                 {step.id === "flags" && (
                   <div className="pm-flags-categories">
-                    {getVisibleBehavioralFlagCategories(profile).map((category) => (
+                    {getVisibleBehavioralFlagCategories(activeProfile).map((category) => (
                       <div key={category.id} className="pm-flags-category">
                         <div className="pm-flags-category-title">{category.label}</div>
                         <div className="pm-flags-grid">
@@ -607,6 +598,12 @@ export default function PostMarketReview({ onBack }) {
               </div>
             </div>
 
+            {isLastStep && journalPendingSummary && saved && (
+              <p className="pm-closeout-finish-note pm-closeout-finish-note--inline" role="status">
+                Saved — {journalPendingSummary}. Re-open Journal to check off when complete.
+              </p>
+            )}
+
             <div className="pm-section-nav">
               <button
                 type="button"
@@ -625,41 +622,30 @@ export default function PostMarketReview({ onBack }) {
                   Next — {CLOSEOUT_STEPS[activeStep + 1].label}
                 </button>
               ) : (
-                <span className="pm-closeout-nav-spacer" aria-hidden="true" />
+                <div className="pm-closeout-finish-actions-right">
+                  <button
+                    type="button"
+                    className={`pm-btn-outline${saved ? " pm-btn-outline--saved" : ""}`}
+                    onClick={handleSave}
+                  >
+                    {saved ? "Saved" : "Save close loop"}
+                  </button>
+                  <button
+                    type="button"
+                    className="pm-btn-primary-sm"
+                    onClick={async () => {
+                      const ok = await handleSave();
+                      if (ok !== false) onBack();
+                    }}
+                  >
+                    Return home
+                    <span className="checkin-btn-arrow" aria-hidden="true">
+                      →
+                    </span>
+                  </button>
+                </div>
               )}
             </div>
-
-            {isLastStep && (
-              <div className="pm-closeout-finish">
-                {journalPendingSummary && saved && (
-                  <p className="pm-closeout-finish-note" role="status">
-                    Saved — {journalPendingSummary}. Re-open Journal to check off when complete.
-                  </p>
-                )}
-                <div className="pm-closeout-finish-actions">
-                  <button type="button" className="pm-btn-link" onClick={handleReset}>
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2.5 8a5.5 5.5 0 019.3-4M13.5 8a5.5 5.5 0 01-9.3 4" strokeLinecap="round"/><path d="M2.5 3.5V8h4.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    Reset
-                  </button>
-                  <div className="pm-closeout-finish-actions-right">
-                    <button type="button" className="pm-btn-save-review" onClick={handleSave}>
-                      {saved ? "Saved" : "Save close loop"}
-                    </button>
-                    <button
-                      type="button"
-                      className="pm-btn-return"
-                      onClick={async () => {
-                        const ok = await handleSave();
-                        if (ok !== false) onBack();
-                      }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8l5 5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      Return to dashboard
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
