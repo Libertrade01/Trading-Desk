@@ -424,13 +424,27 @@ export default function PostMarketReview({ onBack }) {
             onConfirm={handleImportConfirm}
           />
 
-          <label className="pm-closeout-context-strip pm-closeout-no-trade">
-            <input type="checkbox" checked={form.noTradeToday} onChange={(e) => set("noTradeToday", e.target.checked)} />
-            <div>
-              <div className="pm-field-label hybrid-label">No trades today</div>
-              <div className="pm-field-hint">Preservation Mode, took a rest day, or the market was closed.</div>
-            </div>
-          </label>
+          <div className={`pm-closeout-context-strip pm-closeout-no-trade${form.noTradeToday ? " pm-closeout-no-trade--active" : ""}`}>
+            <label className="pm-closeout-no-trade-main">
+              <input type="checkbox" checked={form.noTradeToday} onChange={(e) => set("noTradeToday", e.target.checked)} />
+              <div>
+                <div className="pm-field-label hybrid-label">No trades today</div>
+                <div className="pm-field-hint">Preservation Mode, took a rest day, or the market was closed.</div>
+              </div>
+            </label>
+            {form.noTradeToday && (
+              <button
+                type="button"
+                className="pm-btn-primary-sm pm-closeout-no-trade-save"
+                onClick={async () => {
+                  const ok = await handleSave();
+                  if (ok !== false) onBack();
+                }}
+              >
+                Close the LOOP
+              </button>
+            )}
+          </div>
 
           <PostMarketStepper activeIndex={activeStep} onSelect={setActiveStep} />
 

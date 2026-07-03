@@ -6370,14 +6370,46 @@ input.pm-slider:active::-moz-range-thumb {
 
 .pm-closeout-no-trade {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pm-closeout-no-trade-main {
+  display: flex;
   align-items: flex-start;
   gap: 12px;
+  min-width: 0;
+  flex: 1;
   cursor: pointer;
 }
 
 .pm-closeout-no-trade input[type="checkbox"] {
   margin-top: 3px;
   flex-shrink: 0;
+}
+
+.pm-closeout-no-trade-save {
+  flex-shrink: 0;
+}
+
+.pm-closeout-no-trade--active {
+  border-color: rgba(0, 101, 189, 0.28);
+  background:
+    radial-gradient(circle at top right, rgba(80, 160, 255, 0.06), transparent 42%),
+    linear-gradient(180deg, rgba(16, 27, 42, 0.96), rgba(11, 18, 28, 0.98));
+}
+
+@media (max-width: 720px) {
+  .pm-closeout-no-trade {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pm-closeout-no-trade-save {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 .pm-journal-checklist {
