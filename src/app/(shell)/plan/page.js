@@ -6,5 +6,5 @@ import DailyPlan from "@/components/DailyPlan";
 export default function PlanPage() {
   const router = useRouter();
 
-  return <DailyPlan onBack={() => router.push("/")} />;
+  return <DailyPlan onBack={() => router.push("/home")} />;
 }

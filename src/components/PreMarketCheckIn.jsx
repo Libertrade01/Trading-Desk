@@ -5,7 +5,6 @@ import { storage } from "../lib/supabase";
 import {
   computeReadinessScore,
   readinessStatus,
-  sliderValueColor,
   DEFAULT_PREMARKET_FORM,
   isSleepDebtSevere,
   parseSleepDebtMinutes,
@@ -18,7 +17,8 @@ import MarketEventNudge from "./MarketEventNudge";
 import CheckInRail, { CHECKIN_RAIL_SECTIONS } from "./CheckInRail";
 import CheckInHorizontalStepper from "./CheckInHorizontalStepper";
 import WorkflowPageLayout from "./WorkflowPageLayout";
-import { IconShieldCheck } from "./onboarding-icons";
+import SliderField from "./SliderField";
+import HabitTileField from "./HabitTileField";
 import { todayKey, offsetDateKey } from "../lib/today-key";
 import { loadHomeFocusItems } from "../lib/weekly-process-review";
 import { notifySessionSaved } from "../lib/session-events";
@@ -56,51 +56,6 @@ function headerDate() {
   });
 }
 
-function SliderField({ label, hint, minLabel, maxLabel, value, onChange, inverted }) {
-  return (
-    <div className="pm-field">
-      <div className="pm-field-top">
-        <div>
-          <div className="pm-field-label hybrid-label">{label}</div>
-          {hint && <div className="pm-field-hint">{hint}</div>}
-        </div>
-        <div className="pm-field-value" style={{ color: sliderValueColor(value, inverted) }}>{value}</div>
-      </div>
-      <input
-        type="range"
-        min={1}
-        max={10}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="pm-slider"
-      />
-      <div className="pm-slider-labels">
-        <span>{minLabel}</span>
-        <span>{maxLabel}</span>
-      </div>
-    </div>
-  );
-}
-
-function ToggleField({ label, hint, value, onChange }) {
-  return (
-    <div className="pm-toggle-field">
-      <div>
-        <div className="pm-field-label hybrid-label">{label}</div>
-        {hint && <div className="pm-field-hint">{hint}</div>}
-      </div>
-      <button
-        type="button"
-        className={`pm-toggle${value ? " on" : ""}`}
-        onClick={() => onChange(!value)}
-        aria-pressed={value}
-      >
-        <span className="pm-toggle-knob" />
-      </button>
-    </div>
-  );
-}
-
 function ProtectiveDayBanner({ recoveryDay, acknowledged, onAcknowledge }) {
   const title = recoveryDay ? PROTECTIVE_DAY_COPY.recoveryTitle : PROTECTIVE_DAY_COPY.scoreTitle;
   const body = recoveryDay ? PROTECTIVE_DAY_COPY.recoveryBody : PROTECTIVE_DAY_COPY.scoreBody;
@@ -108,24 +63,19 @@ function ProtectiveDayBanner({ recoveryDay, acknowledged, onAcknowledge }) {
 
   return (
     <div
-      className={`checkin-protective-card${acknowledged ? " checkin-protective-card--acknowledged" : ""}`}
+      className={`checkin-protective-bar${acknowledged ? " checkin-protective-bar--acknowledged" : ""}`}
       role={recoveryDay ? "alert" : "status"}
     >
-      <div className="checkin-protective-card-icon" aria-hidden="true">
-        <IconShieldCheck />
-      </div>
-      <div className="checkin-protective-card-body">
-        <span className="checkin-protective-card-eyebrow">{title}</span>
-        {!acknowledged && <p className="checkin-protective-card-text">{body}</p>}
-        <label className={`checkin-protective-check${acknowledged ? " checkin-protective-check--done" : ""}`}>
-          <input
-            type="checkbox"
-            checked={acknowledged}
-            onChange={(e) => onAcknowledge(e.target.checked)}
-          />
-          <span>{acknowledged ? PROTECTIVE_DAY_COPY.scoreAckDone : ackLabel}</span>
-        </label>
-      </div>
+      <span className="checkin-protective-bar-badge">{title}</span>
+      {!acknowledged && <p className="checkin-protective-bar-text">{body}</p>}
+      <label className={`checkin-protective-bar-ack${acknowledged ? " checkin-protective-bar-ack--done" : ""}`}>
+        <input
+          type="checkbox"
+          checked={acknowledged}
+          onChange={(e) => onAcknowledge(e.target.checked)}
+        />
+        <span>{acknowledged ? PROTECTIVE_DAY_COPY.scoreAckDone : ackLabel}</span>
+      </label>
     </div>
   );
 }
@@ -148,9 +98,8 @@ export default function PreMarketCheckIn({ onBack }) {
   const status = useMemo(() => readinessStatus(scores.composite), [scores.composite]);
 
   const sleepDebtMinutes = parseSleepDebtMinutes(form.sleepDebtMinutes);
-  const sleepDebtSevere = usesWearable && isSleepDebtSevere(sleepDebtMinutes);
-  const recoveryDay = usesWearable
-    && requiresSleepDebtStandDown(sleepDebtMinutes, yesterdaySleepDebtMinutes);
+  const sleepDebtSevere = isSleepDebtSevere(sleepDebtMinutes);
+  const recoveryDay = requiresSleepDebtStandDown(sleepDebtMinutes, yesterdaySleepDebtMinutes);
   const showProtectiveBanner =
     recoveryDay || scores.composite < PROTECTIVE_DAY_THRESHOLD;
 
@@ -185,8 +134,7 @@ export default function PreMarketCheckIn({ onBack }) {
       }
       setWeekFocus(focus.items || []);
       if (
-        traderProfile?.usesWearable
-        && yesterdayData?.sleepDebtMinutes != null
+        yesterdayData?.sleepDebtMinutes != null
         && yesterdayData.sleepDebtMinutes !== ""
       ) {
         setYesterdaySleepDebtMinutes(parseSleepDebtMinutes(yesterdayData.sleepDebtMinutes));
@@ -221,13 +169,13 @@ export default function PreMarketCheckIn({ onBack }) {
     standDownAcknowledgedAt: formData.standDownAcknowledged
       ? (formData.standDownAcknowledgedAt || new Date().toISOString())
       : null,
-    sleepDebtSevere: usesWearable && isSleepDebtSevere(formData.sleepDebtMinutes),
-    sleepDebtStandDownRequired: usesWearable && requiresSleepDebtStandDown(
+    sleepDebtSevere: isSleepDebtSevere(formData.sleepDebtMinutes),
+    sleepDebtStandDownRequired: requiresSleepDebtStandDown(
       formData.sleepDebtMinutes,
       yesterdaySleepDebtMinutes,
     ),
     savedAt: new Date().toISOString(),
-  }), [yesterdaySleepDebtMinutes, usesWearable]);
+  }), [yesterdaySleepDebtMinutes]);
 
   const persistCheckin = useCallback(async (formData, scoreData, statusData) => {
     const payload = buildSavePayload(formData, scoreData, statusData);
@@ -255,12 +203,6 @@ export default function PreMarketCheckIn({ onBack }) {
     setSaved(false);
     await persistCheckin(nextForm, scores, status);
     if (checked) setSaved(true);
-  };
-
-  const handleReset = () => {
-    setForm(DEFAULT_PREMARKET_FORM);
-    setActiveSection(0);
-    setSaved(false);
   };
 
   const goPrev = () => setActiveSection((i) => Math.max(0, i - 1));
@@ -362,43 +304,40 @@ export default function PreMarketCheckIn({ onBack }) {
                         <span className="checkin-input-suffix">hrs</span>
                       </div>
                     </div>
-                    {usesWearable && (
-                      <div className="pm-field">
-                        <div className="pm-field-label hybrid-label">Sleep debt (mins)</div>
-                        <input
-                          type="number"
-                          min={0}
-                          max={600}
-                          step={5}
-                          value={form.sleepDebtMinutes}
-                          onChange={(e) => set("sleepDebtMinutes", e.target.value)}
-                          className={`pm-number-input${sleepDebtSevere ? " pm-number-input--caution" : ""}`}
-                        />
-                      </div>
-                    )}
+                    <div className="pm-field">
+                      <div className="pm-field-label hybrid-label">Sleep debt (mins)</div>
+                      <input
+                        type="number"
+                        min={0}
+                        max={600}
+                        step={5}
+                        value={form.sleepDebtMinutes}
+                        onChange={(e) => set("sleepDebtMinutes", e.target.value)}
+                        className={`pm-number-input${sleepDebtSevere ? " pm-number-input--caution" : ""}`}
+                      />
+                    </div>
                   </div>
-                  {usesWearable && sleepDebtSevere && !recoveryDay && (
+                  {sleepDebtSevere && !recoveryDay && (
                     <div className="pm-sleep-debt-caution" role="status">
                       <strong>Severe caution</strong> — sleep debt is {sleepDebtMinutes} min (≥{" "}
                       {SLEEP_DEBT_SEVERE_CAUTION_MINS}). {PROTECTIVE_DAY_COPY.sleepDebtCaution}
                     </div>
                   )}
-                  {usesWearable && recoveryDay && (
+                  {recoveryDay && (
                     <div className="pm-sleep-debt-caution pm-sleep-debt-caution--recovery" role="alert">
                       <strong>{PROTECTIVE_DAY_COPY.sleepDebtMandatory}</strong> — sleep debt has been ≥{" "}
                       {SLEEP_DEBT_SEVERE_CAUTION_MINS} min for two consecutive days.
                     </div>
                   )}
                   <SliderField
-                    label="Sleep quality"
-                    minLabel="Restless"
-                    maxLabel="Restored"
+                    label="Sleep recovery"
+                    minLabel="Depleted"
+                    maxLabel="Recovered"
                     value={form.sleepQuality}
                     onChange={(v) => set("sleepQuality", v)}
                   />
                   <SliderField
                     label="Energy"
-                    hint="Right now"
                     minLabel="Drained"
                     maxLabel="Sharp"
                     value={form.energy}
@@ -422,9 +361,25 @@ export default function PreMarketCheckIn({ onBack }) {
                       </div>
                     </div>
                   )}
-                  <div className="pm-toggle-row">
-                    <ToggleField label="Hydrated" hint="Water in" value={form.hydrated} onChange={(v) => set("hydrated", v)} />
-                    <ToggleField label="Movement" hint="Walk, stretch, or workout" value={form.movement} onChange={(v) => set("movement", v)} />
+                  <div className="pm-habit-group">
+                    <div className="pm-field-label hybrid-label">Habits</div>
+                    <div className="pm-habit-tile-row pm-habit-tile-row--habits">
+                      <HabitTileField
+                        label="Hydrated"
+                        value={form.hydrated}
+                        onChange={(v) => set("hydrated", v)}
+                      />
+                      <HabitTileField
+                        label="Movement"
+                        value={form.movement}
+                        onChange={(v) => set("movement", v)}
+                      />
+                      <HabitTileField
+                        label="Breathwork"
+                        value={form.meditation}
+                        onChange={(v) => set("meditation", v)}
+                      />
+                    </div>
                   </div>
                 </>
               )}
@@ -432,32 +387,32 @@ export default function PreMarketCheckIn({ onBack }) {
               {section.id === "mental" && (
                 <>
                   <SliderField
-                    label="Mental state"
-                    hint="Calm, centered, prepared (10) → reactive, off-balance (1)"
-                    minLabel="Off"
-                    maxLabel="Centered"
+                    label="Headspace"
+                    minLabel="Scattered"
+                    maxLabel="Steady"
                     value={form.emotionalState}
                     onChange={(v) => set("emotionalState", v)}
                   />
                   <SliderField
-                    label="Confidence"
-                    hint="In your read of conditions today"
-                    minLabel="Shaky"
-                    maxLabel="Confident"
-                    value={form.confidence}
-                    onChange={(v) => set("confidence", v)}
-                  />
-                  <SliderField
-                    label="Patience"
-                    hint="Willingness to wait for A+ setups"
+                    label="Trigger discipline"
+                    hint="Patience to wait for playbook setups"
                     minLabel="Itchy"
-                    maxLabel="Patient"
+                    maxLabel="Disciplined"
                     value={form.patience}
                     onChange={(v) => set("patience", v)}
                   />
                   <SliderField
-                    label="FOMO risk"
-                    hint="How likely to chase moves"
+                    label="Tilt risk"
+                    hint="Built-up revenge"
+                    minLabel="None"
+                    maxLabel="High"
+                    value={form.revengeRisk}
+                    onChange={(v) => set("revengeRisk", v)}
+                    inverted
+                  />
+                  <SliderField
+                    label="Chase risk"
+                    hint="FOMO"
                     minLabel="None"
                     maxLabel="High"
                     value={form.fomoRisk}
@@ -465,13 +420,12 @@ export default function PreMarketCheckIn({ onBack }) {
                     inverted
                   />
                   <SliderField
-                    label="Revenge risk"
-                    hint="Pressure from a recent loss"
-                    minLabel="None"
-                    maxLabel="High"
-                    value={form.revengeRisk}
-                    onChange={(v) => set("revengeRisk", v)}
-                    inverted
+                    label="Conviction"
+                    hint="In today's read of the market"
+                    minLabel="Doubtful"
+                    maxLabel="Convicted"
+                    value={form.confidence}
+                    onChange={(v) => set("confidence", v)}
                   />
                 </>
               )}
@@ -479,30 +433,30 @@ export default function PreMarketCheckIn({ onBack }) {
               {section.id === "external" && (
                 <>
                   <SliderField
-                    label="External distractions"
-                    hint="Calls, family, errands, life noise"
-                    minLabel="None"
-                    maxLabel="Heavy"
+                    label="Attention"
+                    hint="General focus"
+                    minLabel="Drifted"
+                    maxLabel="Locked"
+                    value={form.generalFocusLevel}
+                    onChange={(v) => set("generalFocusLevel", v)}
+                  />
+                  <SliderField
+                    label="Life noise"
+                    hint="External distractions"
+                    minLabel="Quiet"
+                    maxLabel="Loud"
                     value={form.externalDistractions}
                     onChange={(v) => set("externalDistractions", v)}
                     inverted
                   />
                   <SliderField
-                    label="Financial pressure"
-                    hint="How much does today need to work"
+                    label="Need to perform"
+                    hint="Financial pressure"
                     minLabel="None"
-                    maxLabel="Severe"
+                    maxLabel="High"
                     value={form.financialPressure}
                     onChange={(v) => set("financialPressure", v)}
                     inverted
-                  />
-                  <SliderField
-                    label="General focus level"
-                    hint="How sharp and present you feel right now"
-                    minLabel="Scattered"
-                    maxLabel="Locked in"
-                    value={form.generalFocusLevel}
-                    onChange={(v) => set("generalFocusLevel", v)}
                   />
                 </>
               )}
@@ -510,31 +464,10 @@ export default function PreMarketCheckIn({ onBack }) {
               {section.id === "preparation" && (
                 <>
                   <MarketEventNudge />
-                  <div className="pm-prep-grid">
-                    <ToggleField label="Reviewed key levels" value={form.reviewedKeyLevels} onChange={(v) => set("reviewedKeyLevels", v)} />
-                    <ToggleField label="Reviewed news / catalysts" value={form.reviewedNews} onChange={(v) => set("reviewedNews", v)} />
-                    <ToggleField label="Session plan written" value={form.dailyPlanWritten} onChange={(v) => set("dailyPlanWritten", v)} />
-                    <ToggleField label="Followed routine" value={form.followedRoutine} onChange={(v) => set("followedRoutine", v)} />
-                    <ToggleField label="Meditation / breathwork" value={form.meditation} onChange={(v) => set("meditation", v)} />
-                  </div>
-                  <div className="pm-custom-prep">
-                    <label className="pm-custom-check">
-                      <input
-                        type="checkbox"
-                        checked={form.customPrepChecked}
-                        onChange={(e) => set("customPrepChecked", e.target.checked)}
-                      />
-                      <span>Your own prep item (optional)</span>
-                    </label>
-                    {form.customPrepChecked && (
-                      <input
-                        type="text"
-                        value={form.customPrepItem}
-                        onChange={(e) => set("customPrepItem", e.target.value)}
-                        className="pm-text-input"
-                        placeholder="Add your own prep item..."
-                      />
-                    )}
+                  <div className="pm-habit-tile-row pm-habit-tile-row--prep">
+                    <HabitTileField label="Econ Event Calendar/News" value={form.reviewedNews} onChange={(v) => set("reviewedNews", v)} />
+                    <HabitTileField label="Key Levels Marked" value={form.reviewedKeyLevels} onChange={(v) => set("reviewedKeyLevels", v)} />
+                    <HabitTileField label="Session Plan written" value={form.dailyPlanWritten} onChange={(v) => set("dailyPlanWritten", v)} />
                   </div>
                 </>
               )}
@@ -558,10 +491,10 @@ export default function PreMarketCheckIn({ onBack }) {
             {section.id === "preparation" && (
             <div className="pm-checkin-finish checkin-finish-card">
               <div className="pm-checkin-finish-reminders" aria-label="Check-in reminders">
-                <span className="pm-checkin-finish-label hybrid-label">Desk setup</span>
-                <div className="pm-checkin-reminder-grid">
+                <span className="pm-checkin-finish-label hybrid-label">Final checks (not scored)</span>
+                <div className="pm-habit-tile-row pm-habit-tile-row--desk">
                   {(profile?.finishChecklist || []).map((item) => (
-                    <ToggleField
+                    <HabitTileField
                       key={item.id}
                       label={item.label}
                       value={deskCheckValue(form, item.id)}
@@ -572,13 +505,9 @@ export default function PreMarketCheckIn({ onBack }) {
                     />
                   ))}
                 </div>
-                <p className="pm-checkin-finish-note">Not scored — quick desk checks before the open.</p>
               </div>
 
               <div className="checkin-finish-actions">
-                <button type="button" className="pm-btn-link checkin-finish-reset" onClick={handleReset}>
-                  Reset
-                </button>
                 <div className="checkin-finish-actions-right">
                   <button type="button" className="pm-btn-outline" onClick={handleSave}>
                     {saved ? "Updated" : "Save check-in"}
@@ -591,8 +520,7 @@ export default function PreMarketCheckIn({ onBack }) {
                       onBack();
                     }}
                   >
-                    Return to dashboard
-                    <span className="checkin-btn-arrow" aria-hidden="true">→</span>
+                    Return HOME
                   </button>
                 </div>
               </div>
@@ -615,13 +543,13 @@ export default function PreMarketCheckIn({ onBack }) {
 function sectionTitle(id) {
   switch (id) {
     case "physical":
-      return "Physical state";
+      return "Body";
     case "mental":
-      return "Mental state";
+      return "Mind";
     case "external":
       return "External";
     case "preparation":
-      return "Preparation";
+      return "Pre-open Prep";
     default:
       return "";
   }
@@ -630,13 +558,13 @@ function sectionTitle(id) {
 function sectionDesc(id) {
   switch (id) {
     case "physical":
-      return "The body the brain rents.";
+      return "Fuel and recovery for the session.";
     case "mental":
-      return "How you arrive on the desk today.";
+      return "Emotional readiness for the session.";
     case "external":
-      return "What the world is throwing at you.";
+      return "Outside pressure and noise.";
     case "preparation":
-      return "The work you did before market open.";
+      return "News, Levels, Plan.";
     default:
       return "";
   }

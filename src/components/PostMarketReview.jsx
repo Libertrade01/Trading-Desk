@@ -35,6 +35,8 @@ import {
 import RTraderImportPreview from "./RTraderImportPreview";
 import PostMarketStepper, { CLOSEOUT_STEPS } from "./PostMarketStepper";
 import WorkflowPageLayout from "./WorkflowPageLayout";
+import SliderField from "./SliderField";
+import HabitTileField from "./HabitTileField";
 import {
   evaluateDay,
   loadRecoveryState,
@@ -45,7 +47,6 @@ import {
 import { loadDllSettings } from "../lib/dll-recovery-settings";
 import { loadTraderSettings } from "../lib/trader-settings";
 import { todayKey } from "../lib/today-key";
-import { sliderValueColor } from "../lib/premarket-scoring";
 
 function headerDate() {
   return new Date().toLocaleDateString("en-US", {
@@ -54,26 +55,6 @@ function headerDate() {
     day: "numeric",
     year: "numeric",
   });
-}
-
-function SliderField({ label, hint, minLabel, maxLabel, value, onChange, inverted }) {
-  const tone = sliderValueColor(value, inverted);
-  return (
-    <div className="pm-field">
-      <div className="pm-field-top">
-        <div>
-          <div className="pm-field-label hybrid-label">{label}</div>
-          {hint && <div className="pm-field-hint">{hint}</div>}
-        </div>
-        <div className="pm-field-value" style={{ color: tone }}>{value}</div>
-      </div>
-      <input type="range" min={1} max={10} value={value} onChange={(e) => onChange(Number(e.target.value))} className="pm-slider" />
-      <div className="pm-slider-labels">
-        <span>{minLabel}</span>
-        <span>{maxLabel}</span>
-      </div>
-    </div>
-  );
 }
 
 function CloseoutMetrics({ form, netPnl, winRate, setupAdherence, adherenceLabel, profile }) {
@@ -446,19 +427,12 @@ export default function PostMarketReview({ onBack }) {
           <label className="pm-closeout-context-strip pm-closeout-no-trade">
             <input type="checkbox" checked={form.noTradeToday} onChange={(e) => set("noTradeToday", e.target.checked)} />
             <div>
-              <div className="pm-field-label hybrid-label">I didn&apos;t trade today</div>
-              <div className="pm-field-hint">Honoring a low-readiness day or sitting out by choice. Counts as a protective day when paired with low/mid morning readiness.</div>
+              <div className="pm-field-label hybrid-label">No trades today</div>
+              <div className="pm-field-hint">Preservation Mode, took a rest day, or the market was closed.</div>
             </div>
           </label>
 
           <PostMarketStepper activeIndex={activeStep} onSelect={setActiveStep} />
-
-          {journalPendingSummary && (
-            <div className="pm-closeout-context-strip pm-closeout-context-strip--pending" role="status">
-              <span className="hybrid-label-sm">Review follow-up</span>
-              <p>{journalPendingSummary}. You can save now and check these off when done.</p>
-            </div>
-          )}
 
           <div className="pm-closeout-stage">
             <div className="pm-section-panel">
@@ -495,7 +469,7 @@ export default function PostMarketReview({ onBack }) {
                     <SliderField label="Risk discipline" hint="Stops respected, sizing right" minLabel="Loose" maxLabel="Tight" value={form.riskDiscipline} onChange={(v) => set("riskDiscipline", v)} />
                     <SliderField label="Execution quality" hint="Entries, exits, fills" minLabel="Sloppy" maxLabel="Sharp" value={form.executionQuality} onChange={(v) => set("executionQuality", v)} />
                     <div className="pm-risk-block">
-                      <ToggleField
+                      <HabitTileField
                         label="Risk plan followed?"
                         hint="Be brutally honest — this is your risk adherence streak. Yes only if you followed your plan and respected every limit today. Serious traders close the loop clean."
                         value={form.riskPlanFollowed === true}
@@ -510,29 +484,28 @@ export default function PostMarketReview({ onBack }) {
                     {getVisibleBehavioralFlagCategories(activeProfile).map((category) => (
                       <div key={category.id} className="pm-flags-category">
                         <div className="pm-flags-category-title">{category.label}</div>
-                        <div className="pm-flags-grid">
+                        <div className="pm-habit-tile-row pm-habit-tile-row--flags">
                           {category.flags.map((flag) => (
-                            <div key={flag.key} className="pm-flag-item">
-                              <ToggleField
-                                label={flag.label}
-                                hint={flag.hint}
-                                value={
-                                  flag.customId
-                                    ? !!form.customBehavioralFlags?.[flag.customId]
-                                    : !!form[flag.key]
+                            <HabitTileField
+                              key={flag.key}
+                              label={flag.label}
+                              hint={flag.hint}
+                              value={
+                                flag.customId
+                                  ? !!form.customBehavioralFlags?.[flag.customId]
+                                  : !!form[flag.key]
+                              }
+                              onChange={(v) => {
+                                if (flag.customId) {
+                                  set("customBehavioralFlags", {
+                                    ...(form.customBehavioralFlags || {}),
+                                    [flag.customId]: v,
+                                  });
+                                } else {
+                                  set(flag.key, v);
                                 }
-                                onChange={(v) => {
-                                  if (flag.customId) {
-                                    set("customBehavioralFlags", {
-                                      ...(form.customBehavioralFlags || {}),
-                                      [flag.customId]: v,
-                                    });
-                                  } else {
-                                    set(flag.key, v);
-                                  }
-                                }}
-                              />
-                            </div>
+                              }}
+                            />
                           ))}
                         </div>
                       </div>
@@ -573,23 +546,17 @@ export default function PostMarketReview({ onBack }) {
                       <div className="pm-field-label hybrid-label">Main takeaway and Lesson</div>
                       <textarea value={form.oneLesson} onChange={(e) => set("oneLesson", e.target.value)} className="pm-textarea" placeholder="If today taught you one thing, what was it?" rows={3} />
                     </div>
-                    <div className="pm-journal-checklist" role="group" aria-label="End-of-day review checklist">
+                    <div className="pm-habit-tile-row pm-habit-tile-row--prep" role="group" aria-label="End-of-day review checklist">
                       {JOURNAL_REVIEW_CHECKLIST.map((item) => {
                         const done = !!form[item.key];
                         return (
-                          <label key={item.key} className={`pm-journal-check${done ? " pm-journal-check--done" : ""}`}>
-                            <input
-                              type="checkbox"
-                              checked={done}
-                              onChange={(e) => set(item.key, e.target.checked)}
-                            />
-                            <span className="pm-journal-check__copy">
-                              <span className="pm-journal-check__label">{item.label}</span>
-                              <span className={`pm-journal-check__status${done ? " done" : " pending"}`}>
-                                {done ? "Done" : "Pending"}
-                              </span>
-                            </span>
-                          </label>
+                          <HabitTileField
+                            key={item.key}
+                            label={item.label}
+                            hint={done ? "Done" : "Pending"}
+                            value={done}
+                            onChange={(v) => set(item.key, v)}
+                          />
                         );
                       })}
                     </div>
@@ -650,20 +617,6 @@ export default function PostMarketReview({ onBack }) {
         </div>
       </div>
     </WorkflowPageLayout>
-  );
-}
-
-function ToggleField({ label, hint, value, onChange }) {
-  return (
-    <div className="pm-toggle-field">
-      <div>
-        <div className="pm-field-label hybrid-label">{label}</div>
-        {hint && <div className="pm-field-hint">{hint}</div>}
-      </div>
-      <button type="button" className={`pm-toggle${value ? " on" : ""}`} onClick={() => onChange(!value)} aria-pressed={value}>
-        <span className="pm-toggle-knob" />
-      </button>
-    </div>
   );
 }
 

@@ -10,7 +10,7 @@ export default async function WikiPage() {
   } = await supabase.auth.getUser();
 
   if (!canAccessWiki({ isFounder: isFounderUser(user) })) {
-    redirect("/");
+    redirect("/home");
   }
 
   return (

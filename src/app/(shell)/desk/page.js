@@ -11,7 +11,7 @@ export default async function DeskPage() {
   } = await supabase.auth.getUser();
 
   if (!canAccessLegacyDesk({ isFounder: isFounderUser(user) })) {
-    redirect("/");
+    redirect("/home");
   }
 
   return <TradeDeskApp />;

@@ -6,5 +6,5 @@ import PreMarketCheckIn from "@/components/PreMarketCheckIn";
 export default function PreMarketPage() {
   const router = useRouter();
 
-  return <PreMarketCheckIn onBack={() => router.push("/")} />;
+  return <PreMarketCheckIn onBack={() => router.push("/home")} />;
 }

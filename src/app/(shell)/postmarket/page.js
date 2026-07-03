@@ -6,5 +6,5 @@ import PostMarketReview from "@/components/PostMarketReview";
 export default function PostMarketPage() {
   const router = useRouter();
 
-  return <PostMarketReview onBack={() => router.push("/")} />;
+  return <PostMarketReview onBack={() => router.push("/home")} />;
 }

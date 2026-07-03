@@ -276,6 +276,8 @@ function avg(nums) {
 }
 
 function isTradingDay(session) {
+  // Explicit no-trade days (holiday, rest, Preservation Mode) are excluded from weekly denominators.
+  if (session.post?.noTradeToday) return false;
   return (
     session.hasPost ||
     session.trades?.length > 0 ||
@@ -336,6 +338,9 @@ export function buildWeeklyProcessSummary(sessions) {
   };
 
   sessions.forEach((s) => {
+    // No-trade days (holiday, rest, Preservation Mode) are excluded from weekly denominators.
+    if (s.post?.noTradeToday) return;
+
     if (s.post) {
       const post = normalizePostmarketFlags(s.post);
       getRaisedBehavioralFlags(post).forEach((f) => {
@@ -384,7 +389,10 @@ export function buildWeeklyProcessSummary(sessions) {
   }
 
   return {
-    sessionDays: sessions.filter((s) => s.hasPre || s.hasPlan || s.hasPost || isTradingDay(s)).length,
+    sessionDays: sessions.filter((s) => {
+      if (s.post?.noTradeToday) return s.hasPre || s.hasPlan;
+      return s.hasPre || s.hasPlan || s.hasPost || isTradingDay(s);
+    }).length,
     tradingDays: tradingDays.length,
     avgReadiness: avgReadiness != null ? Math.round(avgReadiness) : null,
     lowReadinessDays,

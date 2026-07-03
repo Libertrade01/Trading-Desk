@@ -270,7 +270,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                   { label: "Reviewed news", value: yesNo(pre.reviewedNews) },
                   { label: "Session plan written", value: yesNo(pre.dailyPlanWritten) },
                   { label: "Routine", value: yesNo(pre.followedRoutine) },
-                  { label: "Meditation", value: yesNo(pre.meditation) },
+                  { label: "Breathwork", value: yesNo(pre.meditation) },
                 ]}
               />
               {pre.mantra && (

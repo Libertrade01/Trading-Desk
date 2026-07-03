@@ -32,7 +32,7 @@ export default function SignupPage() {
         return;
       }
       if (data.session) {
-        router.replace("/");
+        router.replace("/home");
         router.refresh();
         return;
       }

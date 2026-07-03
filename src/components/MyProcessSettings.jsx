@@ -269,7 +269,7 @@ export default function MyProcessSettings({ standalone = false }) {
         />
         <ToggleField
           label="I use a wearable"
-          hint="Shows HRV and sleep debt in check-in."
+          hint="Shows HRV in check-in."
           value={profile.usesWearable}
           onChange={(v) => patch({ usesWearable: v })}
         />
@@ -287,8 +287,8 @@ export default function MyProcessSettings({ standalone = false }) {
       )}
 
       <div className="pm-field">
-        <div className="pm-field-label hybrid-label">Check-in desk setup</div>
-        <p className="pm-field-hint">Final checklist before the open — not scored.</p>
+        <div className="pm-field-label hybrid-label">Final checks</div>
+        <p className="pm-field-hint">Not scored — shown at the end of check-in.</p>
         <div className="settings-list">
           {profile.finishChecklist.map((item) => (
             <ListRow
@@ -308,7 +308,7 @@ export default function MyProcessSettings({ standalone = false }) {
                   patch({ finishChecklist });
                 }}
                 className="pm-text-input"
-                placeholder="e.g. Unlock accounts"
+                placeholder="e.g. Account(s) Ready"
               />
             </ListRow>
           ))}
@@ -326,7 +326,7 @@ export default function MyProcessSettings({ standalone = false }) {
               })
             }
           >
-            + Add desk item
+            + Add final check
           </button>
         )}
       </div>

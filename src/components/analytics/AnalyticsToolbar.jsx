@@ -78,7 +78,7 @@ export default function AnalyticsToolbar({
           <option value="cash">Cash</option>
         </select>
         <nav className="analytics-toolbar__nav" aria-label="Workflow">
-          <Link href="/" className="analytics-nav-link">
+          <Link href="/home" className="analytics-nav-link">
             Home
           </Link>
           <Link href="/history" className="analytics-nav-link">

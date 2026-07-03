@@ -48,16 +48,24 @@ export async function middleware(request) {
   const isFounder = isFounderUser(user);
 
   if (!isRouteEnabled(pathname, { isFounder })) {
-    return NextResponse.redirect(new URL("/", request.url));
+    const fallback = user && !AUTH_DISABLED ? "/home" : "/";
+    return NextResponse.redirect(new URL(fallback, request.url));
   }
 
   if (pathname === "/auth/logout") {
     return supabaseResponse;
   }
 
+  if (pathname === "/") {
+    if (user && !AUTH_DISABLED) {
+      return NextResponse.redirect(new URL("/home", request.url));
+    }
+    return supabaseResponse;
+  }
+
   if (isPublicPath(pathname)) {
     if (user && !AUTH_DISABLED && shouldRedirectLoggedInUser(pathname)) {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/home", request.url));
     }
     return supabaseResponse;
   }
@@ -68,9 +76,7 @@ export async function middleware(request) {
 
   if (!AUTH_DISABLED && !user) {
     const loginUrl = new URL("/login", request.url);
-    if (pathname !== "/") {
-      loginUrl.searchParams.set("next", pathname);
-    }
+    loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   }
 

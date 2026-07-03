@@ -3,8 +3,8 @@
 import { readinessScoreColor, readinessStatus } from "../lib/premarket-scoring";
 
 const SECTIONS = [
-  { id: "physical", label: "Physical", stepLabel: "Physical" },
-  { id: "mental", label: "Mental", stepLabel: "Mental" },
+  { id: "physical", label: "Body", stepLabel: "Body" },
+  { id: "mental", label: "Mind", stepLabel: "Mind" },
   { id: "external", label: "External", stepLabel: "External" },
   { id: "preparation", label: "Prep", stepLabel: "Prep" },
 ];
@@ -13,7 +13,7 @@ function readinessPanelCopy(score, cautionActive) {
   if (cautionActive) {
     return {
       headline: "Below 50",
-      advice: "Acknowledge defense day to continue.",
+      advice: "Acknowledge Preservation Mode to continue.",
     };
   }
   if (score >= 70) {

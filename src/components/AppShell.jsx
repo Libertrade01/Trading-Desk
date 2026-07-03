@@ -14,7 +14,7 @@ import { getCurrentUser } from "../lib/user-storage";
 import BrandWordmark from "./BrandWordmark";
 
 const NAV_ITEMS = [
-  { id: "home", href: "/", label: "Home", icon: (
+  { id: "home", href: "/home", label: "Home", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="5" height="5" rx="0.5"/><rect x="9" y="2" width="5" height="5" rx="0.5"/><rect x="2" y="9" width="5" height="5" rx="0.5"/><rect x="9" y="9" width="5" height="5" rx="0.5"/></svg>
   )},
   { type: "label", text: "Daily", className: "sidebar-nav-label--daily" },
@@ -64,7 +64,7 @@ const SETTINGS_NAV_ITEM = {
 };
 
 function isNavActive(pathname, item, settingsSection) {
-  if (item.id === "home") return pathname === "/";
+  if (item.id === "home") return pathname === "/home";
   if (item.id === "history") return pathname === "/history" || pathname.startsWith("/history/");
   if (item.id === "weeklyreview") return pathname === "/weekly-review" || pathname.startsWith("/weekly-review/");
   if (item.id === "process") {
@@ -217,9 +217,7 @@ function AppShellInner({ children }) {
     <div className="app-layout">
       <style>{`
         input[type="range"] { -webkit-appearance: none; appearance: none; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: #fff; cursor: pointer; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
-        input.pm-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #a8adb8; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
-        input.pm-slider::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #a8adb8; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
+        input[type="range"]:not(.pm-slider)::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: #fff; cursor: pointer; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
         input[type="number"] { -moz-appearance: textfield; }
         input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
       `}</style>

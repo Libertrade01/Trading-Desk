@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Defense Day Warning Mockups · Libertrade Loop</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #07090d;
+      --surface: #0f131a;
+      --text: #edf1f7;
+      --muted: rgba(237, 241, 247, 0.48);
+      --muted2: rgba(237, 241, 247, 0.28);
+      --blue: #0065bd;
+      --amber: #bf8b4b;
+      --red: #c45c5c;
+      --green: #259186;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(191, 139, 75, 0.1), transparent 28%),
+        linear-gradient(180deg, #05070b 0%, #0a0d12 100%);
+      color: var(--text);
+      font: 14px/1.5 "DM Sans", sans-serif;
+      padding: 40px 28px 80px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page { max-width: 1100px; margin: 0 auto; }
+
+    .page-head { max-width: 760px; margin-bottom: 40px; }
+
+    .eyebrow {
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font: 800 34px/1.02 "Syne", sans-serif;
+      letter-spacing: -0.045em;
+      margin-bottom: 14px;
+    }
+
+    .lead {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.65;
+      max-width: 68ch;
+    }
+
+    .names {
+      margin: 28px 0 40px;
+      padding: 20px 22px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .names h2 {
+      font: 700 16px/1.2 "Syne", sans-serif;
+      margin-bottom: 12px;
+    }
+
+    .name-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px 18px;
+    }
+
+    .name-item {
+      font-size: 13px;
+      color: rgba(237,241,247,0.72);
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .name-item strong {
+      display: block;
+      color: #fff;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .mock-block {
+      margin-bottom: 36px;
+      padding: 20px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .mock-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .mock-num {
+      font: 600 11px/1 "Outfit", sans-serif;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted2);
+    }
+
+    .mock-name {
+      font: 700 20px/1.1 "Syne", sans-serif;
+      letter-spacing: -0.03em;
+    }
+
+    .mock-copy {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      margin-bottom: 16px;
+      max-width: 62ch;
+    }
+
+    .stage {
+      position: relative;
+      padding: 28px 24px;
+      border-radius: 16px;
+      background:
+        radial-gradient(circle at 70% 10%, rgba(255,255,255,0.03), transparent 30%),
+        #0a0d12;
+      border: 1px solid rgba(255,255,255,0.05);
+      min-height: 180px;
+    }
+
+    .stage-tabs {
+      display: flex;
+      gap: 22px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding-bottom: 10px;
+    }
+
+    .stage-tab {
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .stage-tab.active {
+      color: #fff;
+      box-shadow: inset 0 -2px 0 var(--blue);
+      padding-bottom: 10px;
+      margin-bottom: -11px;
+    }
+
+    .ack {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .ack input { accent-color: var(--amber); }
+
+    /* ── Option 1: Amber glass card (current-ish, refined) ── */
+    .o1 {
+      display: flex;
+      gap: 14px;
+      padding: 18px 20px;
+      border-radius: 14px;
+      border: 1px solid rgba(191, 139, 75, 0.35);
+      background: linear-gradient(180deg, rgba(191,139,75,0.12), rgba(191,139,75,0.05));
+      box-shadow: inset 0 1px 0 rgba(255,220,160,0.06), 0 12px 28px rgba(0,0,0,0.2);
+    }
+    .o1-icon {
+      width: 28px; height: 28px; flex-shrink: 0;
+      border-radius: 50%;
+      border: 1px solid rgba(191,139,75,0.45);
+      display: grid; place-items: center;
+      color: var(--amber);
+      font-size: 14px;
+    }
+    .o1-title {
+      font: 600 11px/1 "Outfit", sans-serif;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 8px;
+    }
+    .o1 p { color: rgba(237,241,247,0.72); line-height: 1.55; margin-bottom: 12px; }
+
+    /* ── Option 2: Full-width status bar ── */
+    .o2 {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 16px;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 999px;
+      background: rgba(196, 92, 92, 0.1);
+      border: 1px solid rgba(196, 92, 92, 0.28);
+    }
+    .o2-badge {
+      font: 700 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #fff;
+      background: var(--red);
+      padding: 8px 10px;
+      border-radius: 999px;
+    }
+    .o2 p { color: rgba(237,241,247,0.78); font-size: 13px; line-height: 1.4; }
+    .o2 .ack { white-space: nowrap; font-size: 12px; color: rgba(237,241,247,0.7); }
+
+    /* ── Option 3: Score callout + action ── */
+    .o3 {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 0;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: #0f131a;
+    }
+    .o3-score {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 20px 12px;
+      background: linear-gradient(180deg, rgba(196,92,92,0.22), rgba(196,92,92,0.08));
+      border-right: 1px solid rgba(255,255,255,0.06);
+    }
+    .o3-score strong {
+      font: 800 42px/0.9 "Syne", sans-serif;
+      letter-spacing: -0.05em;
+      color: #e88a7a;
+    }
+    .o3-score span {
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+    }
+    .o3-body { padding: 18px 20px; }
+    .o3-title {
+      font: 700 18px/1.1 "Syne", sans-serif;
+      margin-bottom: 6px;
+    }
+    .o3 p { color: var(--muted); margin-bottom: 12px; line-height: 1.55; }
+
+    /* ── Option 4: Minimal inline notice ── */
+    .o4 {
+      padding: 0 0 4px;
+      border-left: 2px solid var(--amber);
+      padding-left: 14px;
+    }
+    .o4-title {
+      font: 600 12px/1 "Outfit", sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 6px;
+    }
+    .o4 p {
+      color: rgba(237,241,247,0.62);
+      font-size: 14px;
+      line-height: 1.55;
+      margin-bottom: 10px;
+      max-width: 52ch;
+    }
+    .o4 .ack { color: rgba(237,241,247,0.78); font-size: 13px; }
+
+    /* ── Option 5: Modal-style decision card ── */
+    .o5 {
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 24px 22px 20px;
+      border-radius: 18px;
+      text-align: center;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(191,139,75,0.16), transparent 55%),
+        linear-gradient(180deg, #141922, #0e1218);
+      border: 1px solid rgba(191,139,75,0.28);
+      box-shadow: 0 24px 48px rgba(0,0,0,0.35);
+    }
+    .o5-kicker {
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 10px;
+    }
+    .o5 h3 {
+      font: 800 28px/1 "Syne", sans-serif;
+      letter-spacing: -0.04em;
+      margin-bottom: 10px;
+    }
+    .o5 p {
+      color: var(--muted);
+      line-height: 1.55;
+      margin-bottom: 18px;
+    }
+    .o5-actions {
+      display: grid;
+      gap: 8px;
+    }
+    .o5-btn {
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      color: #fff;
+      font: 500 13px/1 "DM Sans", sans-serif;
+      cursor: pointer;
+    }
+    .o5-btn.primary {
+      background: rgba(191,139,75,0.22);
+      border-color: rgba(191,139,75,0.4);
+    }
+
+    .rec {
+      margin-top: 8px;
+      font-size: 12px;
+      color: rgba(140, 190, 255, 0.85);
+    }
+
+    @media (max-width: 800px) {
+      .name-grid { grid-template-columns: 1fr; }
+      .o2 { grid-template-columns: 1fr; border-radius: 14px; }
+      .o3 { grid-template-columns: 1fr; }
+      .o3-score { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="page-head">
+      <div class="eyebrow">Protective day warning</div>
+      <h1>Five different ways to show Defense Day.</h1>
+      <p class="lead">
+        Same job — warn when readiness is below 50 and require acknowledgement — but five completely different UX patterns.
+        Pick a direction, then we can implement it in check-in.
+      </p>
+    </header>
+
+    <section class="names">
+      <h2>Naming alternatives (instead of Defense Day)</h2>
+      <div class="name-grid">
+        <div class="name-item"><strong>Protective day</strong>Clear, process-oriented, already in your copy system.</div>
+        <div class="name-item"><strong>Capital preservation day</strong>Professional / prop-desk tone.</div>
+        <div class="name-item"><strong>Light day</strong>Short, calm, less dramatic.</div>
+        <div class="name-item"><strong>Reduced risk day</strong>Explicit about what to do.</div>
+        <div class="name-item"><strong>Sit-out day</strong>Direct, no metaphor.</div>
+        <div class="name-item"><strong>Recovery posture</strong>Good if sleep-debt recovery is the trigger.</div>
+        <div class="name-item"><strong>Guardrails on</strong>Action-focused, modern.</div>
+        <div class="name-item"><strong>Minimum size only</strong>Instruction as the title.</div>
+        <div class="name-item"><strong>Not a full-size day</strong>Plain language, hard to misread.</div>
+        <div class="name-item"><strong>Yellow flag</strong>Sports metaphor, quick to scan.</div>
+        <div class="name-item"><strong>Caution session</strong>Neutral warning tone.</div>
+        <div class="name-item"><strong>Preserve mode</strong>Product-y, short for UI.</div>
+      </div>
+    </section>
+
+    <!-- 1 -->
+    <article class="mock-block">
+      <div class="mock-meta">
+        <div class="mock-num">Option 01</div>
+        <div class="mock-name">Amber glass card</div>
+      </div>
+      <p class="mock-copy">Closest to today: a soft warning card with icon, title, body, and checkbox. Premium and calm — not alarming.</p>
+      <div class="stage">
+        <div class="stage-tabs">
+          <div class="stage-tab active">Body</div>
+          <div class="stage-tab">Mind</div>
+          <div class="stage-tab">External</div>
+          <div class="stage-tab">Prep</div>
+        </div>
+        <div class="o1">
+          <div class="o1-icon">✓</div>
+          <div>
+            <div class="o1-title">Defense day</div>
+            <p>Your readiness is below 50. Sitting out counts as a win. If you trade, keep size minimal and rules tight.</p>
+            <label class="ack"><input type="checkbox" /> I'll sit out or trade minimal size today.</label>
+          </div>
+        </div>
+      </div>
+      <p class="rec">Best if you want continuity with the current design language.</p>
+    </article>
+
+    <!-- 2 -->
+    <article class="mock-block">
+      <div class="mock-meta">
+        <div class="mock-num">Option 02</div>
+        <div class="mock-name">Status pill bar</div>
+      </div>
+      <p class="mock-copy">A compact full-width bar. Less vertical space, more “system status” than “message card.” Acknowledgement sits on the right.</p>
+      <div class="stage">
+        <div class="stage-tabs">
+          <div class="stage-tab active">Body</div>
+          <div class="stage-tab">Mind</div>
+          <div class="stage-tab">External</div>
+          <div class="stage-tab">Prep</div>
+        </div>
+        <div class="o2">
+          <div class="o2-badge">Defense day</div>
+          <p>Readiness 48 — sit out or trade minimal size. Sitting out counts as a win.</p>
+          <label class="ack"><input type="checkbox" /> Acknowledged</label>
+        </div>
+      </div>
+      <p class="rec">Best if you want it always visible but never dominant.</p>
+    </article>
+
+    <!-- 3 -->
+    <article class="mock-block">
+      <div class="mock-meta">
+        <div class="mock-num">Option 03</div>
+        <div class="mock-name">Score callout</div>
+      </div>
+      <p class="mock-copy">Leads with the number. Makes the warning feel data-driven: the score is the reason, the copy is the instruction.</p>
+      <div class="stage">
+        <div class="stage-tabs">
+          <div class="stage-tab active">Body</div>
+          <div class="stage-tab">Mind</div>
+          <div class="stage-tab">External</div>
+          <div class="stage-tab">Prep</div>
+        </div>
+        <div class="o3">
+          <div class="o3-score">
+            <strong>48</strong>
+            <span>/ 100</span>
+          </div>
+          <div class="o3-body">
+            <div class="o3-title">Defense day</div>
+            <p>Your readiness is below 50. Sitting out counts as a win. If you trade, keep size minimal and rules tight.</p>
+            <label class="ack"><input type="checkbox" /> I'll sit out or trade minimal size today.</label>
+          </div>
+        </div>
+      </div>
+      <p class="rec">Best if readiness score is the hero of the warning.</p>
+    </article>
+
+    <!-- 4 -->
+    <article class="mock-block">
+      <div class="mock-meta">
+        <div class="mock-num">Option 04</div>
+        <div class="mock-name">Minimal inline notice</div>
+      </div>
+      <p class="mock-copy">No card, no icon block — just a left rule and typography. Quietest option. Feels editorial, not like an alert banner.</p>
+      <div class="stage">
+        <div class="stage-tabs">
+          <div class="stage-tab active">Body</div>
+          <div class="stage-tab">Mind</div>
+          <div class="stage-tab">External</div>
+          <div class="stage-tab">Prep</div>
+        </div>
+        <div class="o4">
+          <div class="o4-title">Defense day</div>
+          <p>Your readiness is below 50. Sitting out counts as a win. If you trade, keep size minimal and rules tight.</p>
+          <label class="ack"><input type="checkbox" /> I'll sit out or trade minimal size today.</label>
+        </div>
+      </div>
+      <p class="rec">Best if you want the warning to feel serious without looking loud.</p>
+    </article>
+
+    <!-- 5 -->
+    <article class="mock-block">
+      <div class="mock-meta">
+        <div class="mock-num">Option 05</div>
+        <div class="mock-name">Decision card</div>
+      </div>
+      <p class="mock-copy">Treats it as a choice, not just a notice. Two explicit actions: sit out / minimal size, or acknowledge and continue. Most “product decision” of the set.</p>
+      <div class="stage">
+        <div class="o5">
+          <div class="o5-kicker">Readiness 48</div>
+          <h3>Defense day</h3>
+          <p>Sitting out counts as a win. If you trade, keep size minimal and rules tight.</p>
+          <div class="o5-actions">
+            <button class="o5-btn primary" type="button">I'll sit out or trade minimal size</button>
+            <button class="o5-btn" type="button">Continue check-in</button>
+          </div>
+        </div>
+      </div>
+      <p class="rec">Best if acknowledgement should feel like a deliberate commitment.</p>
+    </article>
+  </div>
+</body>
+</html>

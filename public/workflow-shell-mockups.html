@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Workflow Shell Mockups · Libertrade Loop</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #07090d;
+      --surface: #0f131a;
+      --surface2: #151b24;
+      --surface3: #1c212b;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-soft: rgba(255, 255, 255, 0.05);
+      --text: #edf1f7;
+      --muted: rgba(237, 241, 247, 0.48);
+      --muted2: rgba(237, 241, 247, 0.28);
+      --blue: #2e8fff;
+      --blue-soft: rgba(46, 143, 255, 0.18);
+      --amber: #bf8b4b;
+      --amber-soft: rgba(191, 139, 75, 0.18);
+      --danger: #db6f60;
+      --panel-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+      --board-shadow: 0 42px 90px rgba(0, 0, 0, 0.52);
+      --grain:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.025) 0, transparent 32%),
+        radial-gradient(circle at 80% 30%, rgba(255,255,255,0.018) 0, transparent 28%),
+        radial-gradient(circle at 30% 80%, rgba(255,255,255,0.015) 0, transparent 26%);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 52% 18%, rgba(46, 143, 255, 0.14), transparent 22%),
+        radial-gradient(circle at 70% 55%, rgba(46, 143, 255, 0.08), transparent 20%),
+        linear-gradient(180deg, #05070b 0%, #0a0d12 100%);
+      color: var(--text);
+      font: 14px/1.5 "DM Sans", sans-serif;
+      padding: 40px 28px 80px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 1700px;
+      margin: 0 auto;
+    }
+
+    .page-head {
+      max-width: 860px;
+      margin-bottom: 40px;
+    }
+
+    .eyebrow {
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font: 800 34px/1.02 "Syne", sans-serif;
+      letter-spacing: -0.045em;
+      margin-bottom: 16px;
+    }
+
+    .lead {
+      color: var(--muted);
+      max-width: 70ch;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    .note {
+      margin-top: 20px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .note strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(480px, 1fr));
+      gap: 26px;
+    }
+
+    .mock-card {
+      border: 1px solid var(--border-soft);
+      border-radius: 18px;
+      padding: 18px;
+      background: rgba(255, 255, 255, 0.02);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.25);
+    }
+
+    .mock-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .mock-num {
+      font: 600 11px/1 "Outfit", sans-serif;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted2);
+    }
+
+    .mock-name {
+      font: 700 20px/1.1 "Syne", sans-serif;
+      letter-spacing: -0.03em;
+    }
+
+    .mock-copy {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      margin-bottom: 16px;
+      max-width: 56ch;
+    }
+
+    .workflow-demo {
+      position: relative;
+      min-height: 670px;
+      border-radius: 22px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 58% 8%, rgba(255,255,255,0.04), transparent 26%),
+        radial-gradient(circle at 86% 55%, rgba(255,255,255,0.035), transparent 22%),
+        linear-gradient(180deg, #0b0f14 0%, #090c11 100%);
+    }
+
+    .workflow-demo-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 670px;
+      padding: 30px 26px 28px 26px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 180px;
+      gap: 22px;
+      z-index: 2;
+    }
+
+    .board {
+      position: relative;
+      min-height: 610px;
+      border-radius: 14px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01)),
+        var(--grain),
+        linear-gradient(180deg, #11161d 0%, #0f141b 100%);
+      border: 1px solid rgba(255,255,255,0.055);
+      box-shadow: var(--board-shadow);
+      overflow: hidden;
+    }
+
+    .board::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+      pointer-events: none;
+    }
+
+    .board-inner {
+      position: relative;
+      z-index: 1;
+      padding: 22px 26px 24px;
+    }
+
+    .sidecol {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .sidebar-card {
+      padding: 16px 16px 14px;
+      border-radius: 14px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01)),
+        linear-gradient(180deg, #0f141b 0%, #0d1218 100%);
+      border: 1px solid rgba(255,255,255,0.055);
+      box-shadow: var(--panel-shadow);
+    }
+
+    .date {
+      font: 500 12px/1 "DM Sans", sans-serif;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .hero-title {
+      font: 700 58px/0.95 "Syne", sans-serif;
+      letter-spacing: -0.055em;
+      margin-bottom: 10px;
+    }
+
+    .hero-sub {
+      color: var(--muted);
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.09);
+    }
+
+    .tab {
+      padding-bottom: 12px;
+      text-align: center;
+      font: 500 13px/1 "DM Sans", sans-serif;
+      color: rgba(237, 241, 247, 0.58);
+      position: relative;
+    }
+
+    .tab.active {
+      color: var(--text);
+    }
+
+    .tab.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -1px;
+      height: 2px;
+      background: var(--blue);
+      box-shadow: 0 0 12px rgba(46, 143, 255, 0.45);
+    }
+
+    .warning {
+      padding: 18px 18px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(191, 139, 75, 0.35);
+      background: linear-gradient(180deg, rgba(191, 139, 75, 0.1), rgba(191, 139, 75, 0.06));
+      margin-bottom: 16px;
+    }
+
+    .warning-label {
+      font: 600 11px/1 "Outfit", sans-serif;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 10px;
+    }
+
+    .warning p {
+      color: rgba(237, 241, 247, 0.76);
+      line-height: 1.55;
+      margin-bottom: 12px;
+    }
+
+    .checkbox-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(237, 241, 247, 0.88);
+    }
+
+    .checkbox {
+      width: 15px;
+      height: 15px;
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 3px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .section-card {
+      padding: 18px 18px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0.008));
+      min-height: 302px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .section-title {
+      font: 600 18px/1.1 "Syne", sans-serif;
+      letter-spacing: -0.03em;
+      margin-bottom: 6px;
+    }
+
+    .section-sub {
+      color: var(--muted);
+    }
+
+    .pager {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted2);
+      font: 500 11px/1 "DM Mono", monospace;
+    }
+
+    .pager-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.025);
+      color: rgba(237, 241, 247, 0.58);
+      display: grid;
+      place-items: center;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .field-label {
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(237, 241, 247, 0.7);
+      margin-bottom: 10px;
+    }
+
+    .fake-input {
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      font-size: 18px;
+    }
+
+    .suffix {
+      color: var(--muted2);
+      font: 500 14px/1 "DM Mono", monospace;
+    }
+
+    .slider-block {
+      margin-bottom: 18px;
+    }
+
+    .slider-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 8px;
+      align-items: baseline;
+    }
+
+    .slider-value {
+      color: #d69a55;
+      font: 600 14px/1 "DM Mono", monospace;
+    }
+
+    .track {
+      height: 4px;
+      border-radius: 999px;
+      background:
+        linear-gradient(90deg, var(--blue) 0 62%, rgba(255,255,255,0.1) 62% 100%);
+      position: relative;
+      margin-bottom: 6px;
+    }
+
+    .track::after {
+      content: "";
+      position: absolute;
+      left: calc(62% - 1px);
+      top: -7px;
+      width: 2px;
+      height: 18px;
+      background: rgba(168, 173, 184, 0.72);
+    }
+
+    .track.energy::after { left: calc(54% - 1px); }
+    .track.energy { background: linear-gradient(90deg, var(--blue) 0 54%, rgba(255,255,255,0.1) 54% 100%); }
+
+    .slider-ends {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted2);
+      font: 500 10px/1 "DM Mono", monospace;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .toggle-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 18px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .toggle-card {
+      border-right: 1px solid rgba(255,255,255,0.06);
+      padding-right: 16px;
+    }
+
+    .toggle-card:last-child {
+      border-right: none;
+      padding-right: 0;
+    }
+
+    .toggle-hint {
+      color: var(--muted);
+      margin: 4px 0 10px;
+      font-size: 12px;
+    }
+
+    .toggle-switch {
+      width: 34px;
+      height: 20px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.1);
+      position: relative;
+    }
+
+    .toggle-switch::after {
+      content: "";
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    }
+
+    .cta {
+      margin-top: 18px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .cta-btn {
+      padding: 11px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(46, 143, 255, 0.35);
+      background: rgba(46, 143, 255, 0.12);
+      color: var(--text);
+      font: 500 13px/1 "DM Sans", sans-serif;
+    }
+
+    .readiness {
+      text-align: left;
+    }
+
+    .readiness-label {
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(237, 241, 247, 0.62);
+      margin-bottom: 12px;
+    }
+
+    .ring-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      height: 132px;
+      margin-bottom: 16px;
+    }
+
+    .ring {
+      width: 104px;
+      height: 104px;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.12);
+      border-top-color: #db6f60;
+      border-left-color: #db6f60;
+      transform: rotate(-45deg);
+      position: relative;
+    }
+
+    .ring::after {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .ring-number {
+      position: absolute;
+      text-align: center;
+    }
+
+    .ring-number strong {
+      display: block;
+      font: 600 58px/0.9 "Syne", sans-serif;
+      letter-spacing: -0.06em;
+    }
+
+    .ring-number span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font: 500 12px/1 "DM Mono", monospace;
+    }
+
+    .readiness-status {
+      color: #db6f60;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .readiness-note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      margin-bottom: 14px;
+    }
+
+    .metric-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 0;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      color: rgba(237,241,247,0.75);
+    }
+
+    .metric-row small {
+      color: var(--muted2);
+      font-size: 12px;
+    }
+
+    .metric-row strong {
+      font: 500 13px/1 "DM Mono", monospace;
+    }
+
+    .quote {
+      margin-top: auto;
+      color: rgba(237,241,247,0.52);
+      line-height: 1.7;
+      font-size: 13px;
+    }
+
+    .quote span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted2);
+      font-size: 12px;
+    }
+
+    .legend {
+      margin-top: 10px;
+      color: var(--muted2);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    /* Variants */
+    .v1 .workflow-demo { background:
+      radial-gradient(circle at 58% 10%, rgba(255,255,255,0.035), transparent 24%),
+      linear-gradient(180deg, #090c12 0%, #070a10 100%);
+    }
+    .v1 .workflow-demo::before {
+      content: "";
+      position: absolute;
+      left: 18px;
+      top: 28px;
+      bottom: 28px;
+      width: 12px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(30,34,42,0.95), rgba(8,9,13,0.98));
+      box-shadow:
+        inset 1px 0 0 rgba(255,255,255,0.04),
+        0 0 0 1px rgba(255,255,255,0.04),
+        0 12px 26px rgba(0,0,0,0.36);
+    }
+
+    .v2 .board {
+      border-radius: 10px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0)),
+        linear-gradient(180deg, #11171f 0%, #0f141b 100%);
+    }
+    .v2 .board::after {
+      content: "";
+      position: absolute;
+      left: -8px;
+      top: 20px;
+      bottom: 20px;
+      width: 8px;
+      border-radius: 8px 0 0 8px;
+      background: linear-gradient(180deg, rgba(110,80,46,0.9), rgba(72,49,28,0.95));
+      box-shadow: inset 1px 0 0 rgba(255,220,180,0.22);
+    }
+    .v2 .workflow-demo::after {
+      content: "";
+      position: absolute;
+      right: 242px;
+      top: 310px;
+      width: 10px;
+      height: 54px;
+      border-radius: 6px;
+      background: linear-gradient(180deg, #7f5a2e, #a97d49 40%, #664728 100%);
+      box-shadow: 0 0 0 1px rgba(255,220,180,0.14), 0 8px 18px rgba(0,0,0,0.35);
+      z-index: 3;
+    }
+
+    .v3 .workflow-demo::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 64px;
+      bottom: 64px;
+      width: 132px;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.18)),
+        linear-gradient(90deg, rgba(35, 28, 24, 0.95), rgba(16, 18, 24, 0));
+      z-index: 1;
+    }
+    .v3 .workflow-demo::after {
+      content: "";
+      position: absolute;
+      left: 34px;
+      top: 118px;
+      width: 22px;
+      height: 432px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #1f1a18, #2b2623 36%, #151515 100%);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.06),
+        0 10px 22px rgba(0,0,0,0.4);
+      z-index: 2;
+    }
+    .v3 .board {
+      margin-left: 40px;
+    }
+
+    .v4 .workflow-demo {
+      background:
+        radial-gradient(circle at 28% 22%, rgba(255,255,255,0.028), transparent 20%),
+        linear-gradient(180deg, #0b1016 0%, #090c11 100%);
+    }
+    .v4 .board {
+      border-radius: 20px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0.006)),
+        linear-gradient(180deg, #11161d 0%, #10151c 100%);
+    }
+    .v4 .board::after {
+      content: "";
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      top: 0;
+      height: 26px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    }
+    .v4 .board-inner {
+      padding-top: 34px;
+    }
+
+    .v5 .workflow-demo::before {
+      content: "";
+      position: absolute;
+      left: 56px;
+      right: 236px;
+      top: 42px;
+      bottom: 42px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.008));
+      border: 1px solid rgba(255,255,255,0.04);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+      z-index: 1;
+    }
+    .v5 .board {
+      margin: 18px 0 18px 18px;
+      border-radius: 14px;
+    }
+    .v5 .workflow-demo::after {
+      content: "";
+      position: absolute;
+      left: 42px;
+      top: 138px;
+      width: 16px;
+      height: 316px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(28,31,38,0.98), rgba(12,14,18,1));
+      box-shadow: inset 1px 0 0 rgba(255,255,255,0.05);
+      z-index: 2;
+    }
+
+    @media (max-width: 1200px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 900px) {
+      body {
+        padding: 24px 16px 60px;
+      }
+
+      .workflow-demo-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .sidecol {
+        display: none;
+      }
+
+      .workflow-demo::before,
+      .workflow-demo::after {
+        display: none;
+      }
+
+      .board,
+      .v3 .board,
+      .v5 .board {
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="page-head">
+      <div class="eyebrow">Workflow shell previews</div>
+      <h1>Ledger-frame mockups for the workflow pages.</h1>
+      <p class="lead">
+        These are desktop-only shell concepts for Check-in / Session plan / Close loop. The internal UI is kept close to your current app,
+        while the outer frame explores different clipboard / ledger feels.
+      </p>
+      <div class="note">
+        <strong>Recommended starting point:</strong> Option 2 or Option 4. They feel premium and tactile without becoming too thematic or interfering with readability.
+      </div>
+    </header>
+
+    <section class="grid">
+      <article class="mock-card v1">
+        <div class="mock-meta">
+          <div class="mock-num">Option 01</div>
+          <div class="mock-name">Ledger Spine</div>
+        </div>
+        <p class="mock-copy">The cleanest abstract clipboard: a dark spine on the left, strong board shadow, no literal leather, minimal hardware.</p>
+        <div class="workflow-demo">
+          <div class="workflow-demo-inner">
+            <div class="board">
+              <div class="board-inner">
+                <div class="date">Friday, July 3, 2026</div>
+                <div class="hero-title">Check-in.</div>
+                <div class="hero-sub">Be honest before the open. Your score updates as you go.</div>
+                <div class="tabs">
+                  <div class="tab active">Physical</div>
+                  <div class="tab">Mental</div>
+                  <div class="tab">External</div>
+                  <div class="tab">Prep</div>
+                </div>
+                <div class="warning">
+                  <div class="warning-label">Defense day</div>
+                  <p>Your readiness is below 50. Sitting out counts as a win. If you trade, keep size minimal and rules tight.</p>
+                  <div class="checkbox-line"><span class="checkbox"></span> I&apos;ll sit out or trade minimal size today.</div>
+                </div>
+                <div class="section-card">
+                  <div class="section-head">
+                    <div>
+                      <div class="section-title">Physical state</div>
+                      <div class="section-sub">The body the brain rents.</div>
+                    </div>
+                    <div class="pager">
+                      <div class="pager-btn">‹</div>
+                      <span>1 of 4</span>
+                      <div class="pager-btn">›</div>
+                    </div>
+                  </div>
+                  <div class="field-row">
+                    <div>
+                      <div class="field-label">Sleep (hours)</div>
+                      <div class="fake-input"><span>6</span><span class="suffix">hrs</span></div>
+                    </div>
+                    <div>
+                      <div class="field-label">Sleep debt (mins)</div>
+                      <div class="fake-input"><span>0</span><span class="suffix">min</span></div>
+                    </div>
+                  </div>
+                  <div class="slider-block">
+                    <div class="slider-top"><div class="field-label">Sleep quality</div><div class="slider-value">6</div></div>
+                    <div class="track"></div>
+                    <div class="slider-ends"><span>Restless</span><span>Restored</span></div>
+                  </div>
+                  <div class="slider-block">
+                    <div class="slider-top"><div><div class="field-label">Energy</div><div class="section-sub">Right now</div></div><div class="slider-value">5</div></div>
+                    <div class="track energy"></div>
+                    <div class="slider-ends"><span>Drained</span><span>Sharp</span></div>
+                  </div>
+                  <div class="toggle-row">
+                    <div class="toggle-card">
+                      <div class="field-label">Hydrated</div>
+                      <div class="toggle-hint">Water in</div>
+                      <div class="toggle-switch"></div>
+                    </div>
+                    <div class="toggle-card">
+                      <div class="field-label">Movement</div>
+                      <div class="toggle-hint">Walk, stretch, or workout</div>
+                      <div class="toggle-switch"></div>
+                    </div>
+                  </div>
+                  <div class="cta"><div class="cta-btn">Continue to Mental →</div></div>
+                </div>
+              </div>
+            </div>
+            <aside class="sidecol">
+              <div class="sidebar-card readiness">
+                <div class="readiness-label">Readiness</div>
+                <div class="ring-wrap">
+                  <div class="ring"></div>
+                  <div class="ring-number"><strong>48</strong><span>/100</span></div>
+                </div>
+                <div class="readiness-status">Below 50</div>
+                <div class="readiness-note">Acknowledge defense day to continue.</div>
+                <div class="metric-row"><small>Physical</small><strong>48</strong></div>
+                <div class="metric-row"><small>Mental</small><strong>—</strong></div>
+                <div class="metric-row"><small>External</small><strong>—</strong></div>
+                <div class="metric-row"><small>Prep</small><strong>—</strong></div>
+              </div>
+              <div class="sidebar-card">
+                <div class="readiness-label">Desk setup</div>
+                <div class="metric-row"><small>Unlock accounts</small><strong>○</strong></div>
+                <div class="legend">Not scored — quick desk checks before the open.</div>
+              </div>
+              <div class="sidebar-card quote">Discipline isn&apos;t feeling ready. It&apos;s choosing to follow your process anyway.<span>— Libertrade Loop</span></div>
+            </aside>
+          </div>
+        </div>
+      </article>
+
+      <article class="mock-card v2">
+        <div class="mock-meta">
+          <div class="mock-num">Option 02</div>
+          <div class="mock-name">Brass Edge</div>
+        </div>
+        <p class="mock-copy">Adds a warmer ledger detail: a subtle brass clip on the side and a wood-toned edge to suggest a physical writing board.</p>
+        <div class="workflow-demo">
+          <div class="workflow-demo-inner">
+            <div class="board">
+              <div class="board-inner">
+                <div class="date">Friday, July 3, 2026</div>
+                <div class="hero-title">Check-in.</div>
+                <div class="hero-sub">Be honest before the open. Your score updates as you go.</div>
+                <div class="tabs">
+                  <div class="tab active">Physical</div>
+                  <div class="tab">Mental</div>
+                  <div class="tab">External</div>
+                  <div class="tab">Prep</div>
+                </div>
+                <div class="warning">
+                  <div class="warning-label">Defense day</div>
+                  <p>Your readiness is below 50. Sitting out counts as a win. If you trade, keep size minimal and rules tight.</p>
+                  <div class="checkbox-line"><span class="checkbox"></span> I&apos;ll sit out or trade minimal size today.</div>
+                </div>
+                <div class="section-card">
+                  <div class="section-head">
+                    <div>
+                      <div class="section-title">Physical state</div>
+                      <div class="section-sub">The body the brain rents.</div>
+                    </div>
+                    <div class="pager">
+                      <div class="pager-btn">‹</div>
+                      <span>1 of 4</span>
+                      <div class="pager-btn">›</div>
+                    </div>
+                  </div>
+                  <div class="field-row">
+                    <div>
+                      <div class="field-label">Sleep (hours)</div>
+                      <div class="fake-input"><span>6</span><span class="suffix">hrs</span></div>
+                    </div>
+                    <div>
+                      <div class="field-label">Sleep debt (mins)</div>
+                      <div class="fake-input"><span>0</span><span class="suffix">min</span></div>
+                    </div>
+                  </div>
+                  <div class="slider-block">
+                    <div class="slider-top"><div class="field-label">Sleep quality</div><div class="slider-value">6</div></div>
+                    <div class="track"></div>
+                    <div class="slider-ends"><span>Restless</span><span>Restored</span></div>
+                  </div>
+                  <div class="slider-block">
+                    <div class="slider-top"><div><div class="field-label">Energy</div><div class="section-sub">Right now</div></div><div class="slider-value">5</div></div>
+                    <div class="track energy"></div>
+                    <div class="slider-ends"><span>Drained</span><span>Sharp</span></div>
+                  </div>
+                  <div class="toggle-row">
+                    <div class="toggle-card">
+                      <div class="field-label">Hydrated</div>
+                      <div class="toggle-hint">Water in</div>
+                      <div class="toggle-switch"></div>
+                    </div>
+                    <div class="toggle-card">
+                      <div class="field-label">Movement</div>
+                      <div class="toggle-hint">Walk, stretch, or workout</div>
+                      <div class="toggle-switch"></div>
+                    </div>
+                  </div>
+                  <div class="cta"><div class="cta-btn">Continue to Mental →</div></div>
+                </div>
+              </div>
+            </div>
+            <aside class="sidecol">
+              <div class="sidebar-card readiness">
+                <div class="readiness-label">Readiness</div>
+                <div class="ring-wrap">
+                  <div class="ring"></div>
+                  <div class="ring-number"><strong>48</strong><span>/100</span></div>
+                </div>
+                <div class="readiness-status">Below 50</div>
+                <div class="readiness-note">Acknowledge defense day to continue.</div>
+                <div class="metric-row"><small>Physical</small><strong>48</strong></div>
+                <div class="metric-row"><small>Mental</small><strong>—</strong></div>
+                <div class="metric-row"><small>External</small><strong>—</strong></div>
+                <div class="metric-row"><small>Prep</small><strong>—</strong></div>
+              </div>
+              <div class="sidebar-card">
+                <div class="readiness-label">Desk setup</div>
+                <div class="metric-row"><small>Unlock accounts</small><strong>○</strong></div>
+                <div class="legend">Best if you want a subtle physical cue without a literal prop.</div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </article>
+
+      <article class="mock-card v3">
+        <div class="mock-meta">
+          <div class="mock-num">Option 03</div>
+          <div class="mock-name">Folio Rail</div>
+        </div>
+        <p class="mock-copy">A darker folio-like left treatment. Feels expensive and tactile, but is more stylized than the others.</p>
+        <div class="workflow-demo">
+          <div class="workflow-demo-inner">
+            <div class="board">
+              <div class="board-inner">
+                <div class="date">Friday, July 3, 2026</div>
+                <div class="hero-title">Check-in.</div>
+                <div class="hero-sub">Be honest before the open. Your score updates as you go.</div>
+                <div class="tabs">
+                  <div class="tab active">Physical</div>
+                  <div class="tab">Mental</div>
+                  <div class="tab">External</div>
+                  <div class="tab">Prep</div>
+                </div>
+                <div class="warning">
+                  <div class="warning-label">Defense day</div>
+                  <p>Your readiness is below 50. Sitting out counts as a win. If you trade, keep size minimal and rules tight.</p>
+                  <div class="checkbox-line"><span class="checkbox"></span> I&apos;ll sit out or trade minimal size today.</div>
+                </div>
+                <div class="section-card">
+                  <div class="section-head">
+                    <div>
+                      <div class="section-title">Physical state</div>
+                      <div class="section-sub">The body the brain rents.</div>
+                    </div>
+                    <div class="pager">
+                      <div class="pager-btn">‹</div>
+                      <span>1 of 4</span>
+                      <div class="pager-btn">›</div>
+                    </div>
+                  </div>
+                  <div class="field-row">
+                    <div>
+                      <div class="field-label">Sleep (hours)</div>
+                      <div class="fake-input"><span>6</span><span class="suffix">hrs</span></div>
+                    </div>
+                    <div>
+                      <div class="field-label">Sleep debt (mins)</div>
+                      <div class="fake-input"><span>0</span><span class="suffix">min</span></div>
+                    </div>
+                  </div>
+                  <div class="slider-block">
+                    <div class="slider-top"><div class="field-label">Sleep quality</div><div class="slider-value">6</div></div>
+                    <div class="track"></div>
+                    <div class="slider-ends"><span>Restless</span><span>Restored</span></div>
+                  </div>
+                  <div class="slider-block">
+                    <div class="slider-top"><div><div class="field-label">Energy</div><div class="section-sub">Right now</div></div><div class="slider-value">5</div></div>
+                    <div class="track energy"></div>
+                    <div class="slider-ends"><span>Drained</span><span>Sharp</span></div>
+                  </div>
+                  <div class="toggle-row">
+                    <div class="toggle-card">
+                      <div class="field-label">Hydrated</div>
+                      <div class="toggle-hint">Water in</div>
+                      <div class="toggle-switch"></div>
+                    </div>
+                    <div class="toggle-card">
+                      <div class="field-label">Movement</div>
+                      <div class="toggle-hint">Walk, stretch, or workout</div>
+                      <div class="toggle-switch"></div>
+                    </div>
+                  </div>
+                  <div class="cta"><div class="cta-btn">Continue to Mental →</div></div>
+                </div>
+              </div>
+            </div>
+            <aside class="sidecol">
+              <div class="sidebar-card readiness">
+                <div class="readiness-label">Readiness</div>
+                <div class="ring-wrap">
+                  <div class="ring"></div>
+                  <div class="ring-number"><strong>48</strong><span>/100</span></div>
+                </div>
+                <div class="readiness-status">Below 50</div>
+                <div class="readiness-note">Acknowledge defense day to continue.</div>
+                <div class="metric-row"><small>Physical</small><strong>48</strong></div>
+                <div class="metric-row"><small>Mental</small><strong>—</strong></div>
+                <div class="metric-row"><small>External</small><strong>—</strong></div>
+                <div class="metric-row"><small>Prep</small><strong>—</strong></div>
+              </div>
+              <div class="sidebar-card quote">The most stylized option. Strongest personality, but the highest chance of feeling “designed” instead of invisible.<span>— Shell note</span></div>
+            </aside>
+          </div>
+        </div>
+      </article>
+
+      <article class="mock-card v4">
+        <div class="mock-meta">
+          <div class="mock-num">Option 04</div>
+          <div class="mock-name">Ledger Frame</div>
+        </div>
+        <p class="mock-copy">The most balanced version. Keeps the shell clean and architectural, with a framed writing surface and stronger top margin rhythm.</p>
+        <div class="workflow-demo">
+          <div class="workflow-demo-inner">
+            <div class="board">
+              <div class="board-inner">
+                <div class="date">Friday, July 3, 2026</div>
+                <div class="hero-title">Check-in.</div>
+                <div class="hero-sub">Be honest before the open. Your score updates as you go.</div>
+                <div class="tabs">
+                  <div class="tab active">Physical</div>
+                  <div class="tab">Mental</div>
+                  <div class="tab">External</div>
+                  <div class="tab">Prep</div>
+                </div>
+                <div class="warning">
+                  <div class="warning-label">Defense day</div>
+                  <p>Your readiness is below 50. Sitting out counts as a win. If you trade, keep size minimal and rules tight.</p>
+                  <div class="checkbox-line"><span class="checkbox"></span> I&apos;ll sit out or trade minimal size today.</div>
+                </div>
+                <div class="section-card">
+                  <div class="section-head">
+                    <div>
+                      <div class="section-title">Physical state</div>
+                      <div class="section-sub">The body the brain rents.</div>
+                    </div>
+                    <div class="pager">
+                      <div class="pager-btn">‹</div>
+                      <span>1 of 4</span>
+                      <div class="pager-btn">›</div>
+                    </div>
+                  </div>
+                  <div class="field-row">
+                    <div>
+                      <div class="field-label">Sleep (hours)</div>
+                      <div class="fake-input"><span>6</span><span class="suffix">hrs</span></div>
+                    </div>
+                    <div>
+                      <div class="field-label">Sleep debt (mins)</div>
+                      <div class="fake-input"><span>0</span><span class="suffix">min</span></div>
+                    </div>
+                  </div>
+                  <div class="slider-block">
+                    <div class="slider-top"><div class="field-label">Sleep quality</div><div class="slider-value">6</div></div>
+                    <div class="track"></div>
+                    <div class="slider-ends"><span>Restless</span><span>Restored</span></div>
+                  </div>
+                  <div class="slider-block">
+                    <div class="slider-top"><div><div class="field-label">Energy</div><div class="section-sub">Right now</div></div><div class="slider-value">5</div></div>
+                    <div class="track energy"></div>
+                    <div class="slider-ends"><span>Drained</span><span>Sharp</span></div>
+                  </div>
+                  <div class="toggle-row">
+                    <div class="toggle-card">
+                      <div class="field-label">Hydrated</div>
+                      <div class="toggle-hint">Water in</div>
+                      <div class="toggle-switch"></div>
+                    </div>
+                    <div class="toggle-card">
+                      <div class="field-label">Movement</div>
+                      <div class="toggle-hint">Walk, stretch, or workout</div>
+                      <div class="toggle-switch"></div>
+                    </div>
+                  </div>
+                  <div class="cta"><div class="cta-btn">Continue to Mental →</div></div>
+                </div>
+              </div>
+            </div>
+            <aside class="sidecol">
+              <div class="sidebar-card readiness">
+                <div class="readiness-label">Readiness</div>
+                <div class="ring-wrap">
+                  <div class="ring"></div>
+                  <div class="ring-number"><strong>48</strong><span>/100</span></div>
+                </div>
+                <div class="readiness-status">Below 50</div>
+                <div class="readiness-note">Acknowledge defense day to continue.</div>
+                <div class="metric-row"><small>Physical</small><strong>48</strong></div>
+                <div class="metric-row"><small>Mental</small><strong>—</strong></div>
+                <div class="metric-row"><small>External</small><strong>—</strong></div>
+                <div class="metric-row"><small>Prep</small><strong>—</strong></div>
+              </div>
+              <div class="sidebar-card">
+                <div class="readiness-label">Why it works</div>
+                <div class="legend">This is the safest premium direction: the shell feels intentional, but the content still reads like software first.</div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </article>
+
+      <article class="mock-card v5">
+        <div class="mock-meta">
+          <div class="mock-num">Option 05</div>
+          <div class="mock-name">Tray Mount</div>
+        </div>
+        <p class="mock-copy">A nested board inside a larger tray. Creates more separation from the app chrome and makes the workflow feel like a focused workspace.</p>
+        <div class="workflow-demo">
+          <div class="workflow-demo-inner">
+            <div class="board">
+              <div class="board-inner">
+                <div class="date">Friday, July 3, 2026</div>
+                <div class="hero-title">Check-in.</div>
+                <div class="hero-sub">Be honest before the open. Your score updates as you go.</div>
+                <div class="tabs">
+                  <div class="tab active">Physical</div>
+                  <div class="tab">Mental</div>
+                  <div class="tab">External</div>
+                  <div class="tab">Prep</div>
+                </div>
+                <div class="warning">
+                  <div class="warning-label">Defense day</div>
+                  <p>Your readiness is below 50. Sitting out counts as a win. If you trade, keep size minimal and rules tight.</p>
+                  <div class="checkbox-line"><span class="checkbox"></span> I&apos;ll sit out or trade minimal size today.</div>
+                </div>
+                <div class="section-card">
+                  <div class="section-head">
+                    <div>
+                      <div class="section-title">Physical state</div>
+                      <div class="section-sub">The body the brain rents.</div>
+                    </div>
+                    <div class="pager">
+                      <div class="pager-btn">‹</div>
+                      <span>1 of 4</span>
+                      <div class="pager-btn">›</div>
+                    </div>
+                  </div>
+                  <div class="field-row">
+                    <div>
+                      <div class="field-label">Sleep (hours)</div>
+                      <div class="fake-input"><span>6</span><span class="suffix">hrs</span></div>
+                    </div>
+                    <div>
+                      <div class="field-label">Sleep debt (mins)</div>
+                      <div class="fake-input"><span>0</span><span class="suffix">min</span></div>
+                    </div>
+                  </div>
+                  <div class="slider-block">
+                    <div class="slider-top"><div class="field-label">Sleep quality</div><div class="slider-value">6</div></div>
+                    <div class="track"></div>
+                    <div class="slider-ends"><span>Restless</span><span>Restored</span></div>
+                  </div>
+                  <div class="slider-block">
+                    <div class="slider-top"><div><div class="field-label">Energy</div><div class="section-sub">Right now</div></div><div class="slider-value">5</div></div>
+                    <div class="track energy"></div>
+                    <div class="slider-ends"><span>Drained</span><span>Sharp</span></div>
+                  </div>
+                  <div class="toggle-row">
+                    <div class="toggle-card">
+                      <div class="field-label">Hydrated</div>
+                      <div class="toggle-hint">Water in</div>
+                      <div class="toggle-switch"></div>
+                    </div>
+                    <div class="toggle-card">
+                      <div class="field-label">Movement</div>
+                      <div class="toggle-hint">Walk, stretch, or workout</div>
+                      <div class="toggle-switch"></div>
+                    </div>
+                  </div>
+                  <div class="cta"><div class="cta-btn">Continue to Mental →</div></div>
+                </div>
+              </div>
+            </div>
+            <aside class="sidecol">
+              <div class="sidebar-card readiness">
+                <div class="readiness-label">Readiness</div>
+                <div class="ring-wrap">
+                  <div class="ring"></div>
+                  <div class="ring-number"><strong>48</strong><span>/100</span></div>
+                </div>
+                <div class="readiness-status">Below 50</div>
+                <div class="readiness-note">Acknowledge defense day to continue.</div>
+                <div class="metric-row"><small>Physical</small><strong>48</strong></div>
+                <div class="metric-row"><small>Mental</small><strong>—</strong></div>
+                <div class="metric-row"><small>External</small><strong>—</strong></div>
+                <div class="metric-row"><small>Prep</small><strong>—</strong></div>
+              </div>
+              <div class="sidebar-card quote">Best if you want the workflow pages to feel more like a dedicated tool within the app, less like a raw screen.<span>— Shell note</span></div>
+            </aside>
+          </div>
+        </div>
+      </article>
+    </section>
+  </div>
+</body>
+</html>

@@ -34,6 +34,7 @@ import {
 } from "../lib/trader-profile";
 import DailyPlanStepper, { PLAN_STEPS } from "./DailyPlanStepper";
 import WorkflowPageLayout from "./WorkflowPageLayout";
+import HabitTileField from "./HabitTileField";
 
 async function loadData(key, fallback) {
   try {
@@ -68,25 +69,6 @@ function TrashButton({ onClick }) {
         <path d="M3 4h10M5.5 4V3a1 1 0 011-1h3a1 1 0 011 1v1M6 7v4M10 7v4M4 4l.5 9a1 1 0 001 1h5a1 1 0 001-1L12 4" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </button>
-  );
-}
-
-function ToggleField({ label, hint, value, onChange }) {
-  return (
-    <div className="pm-toggle-field">
-      <div>
-        <div className="pm-field-label hybrid-label">{label}</div>
-        {hint && <div className="pm-field-hint">{hint}</div>}
-      </div>
-      <button
-        type="button"
-        className={`pm-toggle${value ? " on" : ""}`}
-        onClick={() => onChange(!value)}
-        aria-pressed={value}
-      >
-        <span className="pm-toggle-knob" />
-      </button>
-    </div>
   );
 }
 
@@ -247,12 +229,6 @@ export default function DailyPlan({ onBack }) {
     if (ok) onBack();
   };
 
-  const handleReset = () => {
-    setForm(DEFAULT_DAILY_PLAN);
-    setSaved(false);
-    setActiveStep(0);
-  };
-
   const addLevel = () => set("keyLevels", [...form.keyLevels, newKeyLevel()]);
   const updateLevel = (id, patch) =>
     set("keyLevels", form.keyLevels.map((l) => (l.id === id ? { ...l, ...patch } : l)));
@@ -318,16 +294,14 @@ export default function DailyPlan({ onBack }) {
                       <div className="pm-field">
                         <div className="pm-field-label hybrid-label">Profiles</div>
                         <p className="pm-field-hint pm-bias-guidance">{BIAS_GUIDANCE}</p>
-                        <div className="pm-bias-checklist">
+                        <div className="pm-habit-tile-row pm-habit-tile-row--prep">
                           {biasItems.map((item) => (
-                            <label key={item.id} className="pm-commitment-check">
-                              <input
-                                type="checkbox"
-                                checked={!!form[item.fieldKey]}
-                                onChange={(e) => set(item.fieldKey, e.target.checked)}
-                              />
-                              <span className="pm-commitment-text">{item.label}</span>
-                            </label>
+                            <HabitTileField
+                              key={item.id}
+                              label={item.label}
+                              value={!!form[item.fieldKey]}
+                              onChange={(v) => set(item.fieldKey, v)}
+                            />
                           ))}
                         </div>
                         <p className="pm-commitment-hint">All items required to save today&apos;s plan.</p>
@@ -503,18 +477,22 @@ export default function DailyPlan({ onBack }) {
                       </div>
                     </div>
                     <div className="pm-risk-rails">
-                      <ToggleField
-                        label="Max Daily Loss Set in Broker"
-                        value={form.maxDailyLossSetInBroker}
-                        onChange={(v) => set("maxDailyLossSetInBroker", v)}
-                      />
-                      {profile.showColdTurkeyBlocker && (
-                        <ToggleField
-                          label="Cold Turkey Blocker Set"
-                          value={form.coldTurkeyBlockerSet}
-                          onChange={(v) => set("coldTurkeyBlockerSet", v)}
+                      <div className="pm-field-label hybrid-label">Risk rails</div>
+                      <p className="pm-field-hint">Confirm these are set before you trade.</p>
+                      <div className="pm-habit-tile-row pm-habit-tile-row--risk">
+                        <HabitTileField
+                          label="Max Daily Loss Set in Broker"
+                          value={form.maxDailyLossSetInBroker}
+                          onChange={(v) => set("maxDailyLossSetInBroker", v)}
                         />
-                      )}
+                        {profile.showColdTurkeyBlocker && (
+                          <HabitTileField
+                            label="Cold Turkey Blocker Set"
+                            value={form.coldTurkeyBlockerSet}
+                            onChange={(v) => set("coldTurkeyBlockerSet", v)}
+                          />
+                        )}
+                      </div>
                     </div>
                   </>
                 )}
@@ -522,7 +500,7 @@ export default function DailyPlan({ onBack }) {
                 {step.id === "focus" && (
                   <>
                     <div className="pm-field">
-                      <div className="pm-field-label hybrid-label">Session rules</div>
+                      <div className="pm-field-label hybrid-label">Session Focus</div>
                       <textarea
                         value={form.sessionRules}
                         onChange={(e) => set("sessionRules", e.target.value)}
@@ -593,18 +571,13 @@ export default function DailyPlan({ onBack }) {
 
             {isLastStep && (
               <div className="pm-closeout-finish">
-                <div className="pm-closeout-finish-actions">
-                  <button type="button" className="pm-btn-link" onClick={handleReset}>
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2.5 8a5.5 5.5 0 019.3-4M13.5 8a5.5 5.5 0 01-9.3 4" strokeLinecap="round"/><path d="M2.5 3.5V8h4.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    Reset
-                  </button>
-                  <div className="pm-closeout-finish-actions-right">
-                    <button type="button" className="pm-btn-link" onClick={handleSave}>
-                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 2.5h10v11H3z"/><path d="M5 2.5V6h6V2.5"/></svg>
-                      {saved ? "Updated" : "Update plan"}
+                <div className="checkin-finish-actions">
+                  <div className="checkin-finish-actions-right">
+                    <button type="button" className="pm-btn-outline" onClick={handleSave}>
+                      {saved ? "Updated" : "Save plan"}
                     </button>
-                    <button type="button" className="pm-btn-save-review" onClick={handleReturn}>
-                      Save &amp; return
+                    <button type="button" className="pm-btn-primary-sm" onClick={handleReturn}>
+                      Return HOME
                     </button>
                   </div>
                 </div>

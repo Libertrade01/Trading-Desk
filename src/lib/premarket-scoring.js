@@ -32,13 +32,14 @@ export const EMOTIONAL_FIELD_WEIGHTS = {
 };
 
 export const PHYSICAL_FIELD_WEIGHTS = {
-  sleepHours: 0.14,
-  sleepQuality: 0.22,
+  sleepHours: 0.13,
+  sleepQuality: 0.20,
   sleepDebt: 0.10,
-  energy: 0.14,
+  energy: 0.13,
   hydrated: 0.08,
-  hrvScore: 0.24,
+  hrvScore: 0.22,
   movement: 0.08,
+  meditation: 0.06,
 };
 
 export const SLEEP_DEBT_SEVERE_CAUTION_MINS = 60;
@@ -76,11 +77,9 @@ export const EXTERNAL_FIELD_WEIGHTS = {
 };
 
 export const PREPARATION_FIELD_WEIGHTS = {
-  reviewedKeyLevels: 0.24,
-  reviewedNews: 0.14,
-  dailyPlanWritten: 0.28,
-  followedRoutine: 0.22,
-  meditation: 0.12,
+  reviewedNews: 0.30,
+  reviewedKeyLevels: 0.35,
+  dailyPlanWritten: 0.35,
 };
 
 /** Positive slider 1–10 → 10–100 */
@@ -149,7 +148,7 @@ function normalizePhysicalWeights(usesWearable) {
   let weights = { ...PHYSICAL_FIELD_WEIGHTS };
   if (!usesWearable) {
     const filtered = Object.fromEntries(
-      Object.entries(weights).filter(([key]) => key !== "hrvScore" && key !== "sleepDebt")
+      Object.entries(weights).filter(([key]) => key !== "hrvScore")
     );
     const sum = Object.values(filtered).reduce((acc, w) => acc + w, 0);
     weights = Object.fromEntries(
@@ -168,6 +167,7 @@ export function scorePhysical(fields, { usesWearable = true } = {}) {
     hydrated: toggleToScore(fields.hydrated),
     hrvScore: hrvScoreToScore(fields.hrvScore),
     movement: toggleToScore(fields.movement),
+    meditation: toggleToScore(fields.meditation),
   };
   return {
     score: weightedSum(scores, normalizePhysicalWeights(usesWearable)),
@@ -186,11 +186,9 @@ export function scoreExternal(fields) {
 
 export function scorePreparation(fields) {
   const scores = {
-    reviewedKeyLevels: prepToggleToScore(fields.reviewedKeyLevels),
     reviewedNews: prepToggleToScore(fields.reviewedNews),
+    reviewedKeyLevels: prepToggleToScore(fields.reviewedKeyLevels),
     dailyPlanWritten: prepToggleToScore(fields.dailyPlanWritten),
-    followedRoutine: prepToggleToScore(fields.followedRoutine),
-    meditation: prepToggleToScore(fields.meditation),
   };
   return { score: weightedSum(scores, PREPARATION_FIELD_WEIGHTS), fields: scores };
 }
@@ -233,15 +231,15 @@ export function readinessStatus(score) {
 
 /** User-facing copy for low-readiness / protective days (not "stand down"). */
 export const PROTECTIVE_DAY_COPY = {
-  scoreTitle: "Defense day",
+  scoreTitle: "Preservation Mode",
   scoreBody:
-    "Your readiness is below 50. Sitting out counts as a win. If you trade, keep size minimal and rules tight.",
-  scoreAckLabel: "I'll sit out or trade minimal size today.",
-  scoreAckDone: "Protective day noted — honor your limit.",
-  recoveryTitle: "Recovery day",
+    "Readiness is below 50. Sit on the sideline or trade minimal size. Taking a step back is a process win. Recovery is the priority from here.",
+  scoreAckLabel: "Acknowledged",
+  scoreAckDone: "Preservation mode noted",
+  recoveryTitle: "Preservation Mode",
   recoveryBody:
     "Sleep debt has been severe two days running. Recovery before P&L — no full-size session today.",
-  recoveryAckLabel: "I acknowledge today is a recovery day.",
+  recoveryAckLabel: "Acknowledged",
   sleepDebtCaution:
     "Another day at this level triggers a mandatory recovery day.",
   sleepDebtMandatory: "Mandatory recovery day",

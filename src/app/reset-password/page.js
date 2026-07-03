@@ -111,7 +111,7 @@ export default function ResetPasswordPage() {
         setError(updateError.message);
         return;
       }
-      router.replace("/");
+      router.replace("/home");
       router.refresh();
     } catch {
       setError("Could not update password. Please try again.");

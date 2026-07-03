@@ -143,7 +143,7 @@ export default function OnboardingWizard() {
         }
         const profile = await loadTraderProfile();
         if (profile?.onboardingCompletedAt) {
-          router.replace("/");
+          router.replace("/home");
           return;
         }
       } catch {
@@ -176,7 +176,7 @@ export default function OnboardingWizard() {
       const settings = await loadTraderSettings();
       await saveTraderSettings(settings);
 
-      router.replace("/");
+      router.replace("/home");
       router.refresh();
     } catch (err) {
       setError(err.message || "Could not apply template");
@@ -244,7 +244,7 @@ export default function OnboardingWizard() {
         ...(fullSizeDll ? { fullDll: fullSizeDll } : {}),
       });
 
-      router.replace("/");
+      router.replace("/home");
       router.refresh();
     } catch (err) {
       setError(err.message || "Could not finish onboarding");

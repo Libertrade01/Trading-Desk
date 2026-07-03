@@ -271,6 +271,8 @@ export function getRiskPlanFollowed(post) {
 export function getProcessStreakDayStatus(session) {
   const post = session?.post;
   if (!post?.savedAt) return "unanswered";
+  // No-trade days (holiday, rest, Preservation Mode) neither extend nor break streaks.
+  if (post.noTradeToday) return "skip";
   const riskPlan = getRiskPlanFollowed(post);
   if (riskPlan === true) return "followed";
   if (riskPlan === false) return "broken";
@@ -304,7 +306,7 @@ export function countProcessStreakAsOf(sessions, asOfDateKey) {
       key = offsetDateKey(key, -1);
     } else if (status === "broken") {
       break;
-    } else if (status === "unknown") {
+    } else if (status === "unknown" || status === "skip") {
       key = offsetDateKey(key, -1);
     } else if (isAnchor) {
       key = offsetDateKey(key, -1);
@@ -381,7 +383,7 @@ export function countPlaybookStreak(sessions) {
  */
 export function getProcessStreakDisplayForDay(session, sessions) {
   const status = getProcessStreakDayStatus(session);
-  if (status === "unanswered" || status === "unknown") {
+  if (status === "unanswered" || status === "unknown" || status === "skip") {
     return { type: "unanswered", streak: 0 };
   }
   if (status === "broken") {

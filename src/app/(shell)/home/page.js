@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import HomeDashboard from "@/components/HomeDashboard";
 
 const SECTION_ROUTES = {
-  home: "/",
+  home: "/home",
   premarket: "/premarket",
   dailyplan: "/plan",
   postmarket: "/postmarket",
@@ -19,7 +19,7 @@ export default function HomePage() {
 
   return (
     <HomeDashboard
-      onNavigate={(id) => router.push(SECTION_ROUTES[id] || "/")}
+      onNavigate={(id) => router.push(SECTION_ROUTES[id] || "/home")}
       onOpenHistoryDay={(date) => router.push(`/history/${date}`)}
       onOpenWeeklyReview={() => router.push("/weekly-review")}
     />

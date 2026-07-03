@@ -21,11 +21,17 @@ const DEFAULT_BIAS_ITEMS = [
   { label: "Weekly profile marked", fieldKey: "biasMarkedWeeklyProfile" },
 ];
 
-const FOUNDER_FINISH_CHECKLIST = [
-  "Unlock accounts",
-  "Check CPU",
-  "Select Risk Bracket Order",
+const DEFAULT_FINISH_CHECKLIST = [
+  "Account(s) Ready",
+  "CPU OK",
+  "Risk Bracket Set",
 ];
+
+const LEGACY_FINISH_CHECKLIST_LABELS = new Set([
+  "unlock accounts",
+  "check cpu",
+  "select risk bracket order",
+]);
 
 function newId() {
   return crypto.randomUUID();
@@ -51,8 +57,31 @@ function defaultCommitments(texts) {
   return texts.map((text) => ({ id: newId(), text }));
 }
 
-function defaultFinishChecklist(labels) {
+function defaultFinishChecklist(labels = DEFAULT_FINISH_CHECKLIST) {
   return labels.map((label) => ({ id: newId(), label }));
+}
+
+function migrateFinishChecklist(items) {
+  if (!Array.isArray(items) || !items.length) {
+    return defaultFinishChecklist();
+  }
+
+  const labels = items.map((item) => String(item?.label ?? "").trim().toLowerCase());
+  const isLegacyDefault =
+    labels.every((label) => LEGACY_FINISH_CHECKLIST_LABELS.has(label))
+    && labels.some((label) => label === "unlock accounts");
+
+  if (isLegacyDefault) {
+    return defaultFinishChecklist();
+  }
+
+  return items.map((item, i) => {
+    const next = normalizeChecklistItem(item, i, "Desk item");
+    if (next.label.trim().toLowerCase() === "cpu ok") {
+      return { ...next, label: "CPU OK" };
+    }
+    return next;
+  });
 }
 
 function normalizePreferredName(value) {
@@ -111,7 +140,7 @@ export function createCustomerDefaultProfile() {
     playbookStreakEnabled: true,
     usesWearable: false,
     showColdTurkeyBlocker: false,
-    finishChecklist: defaultFinishChecklist(["Unlock accounts"]),
+    finishChecklist: defaultFinishChecklist(),
     behavioralFlags: defaultBehavioralFlags(),
     ...normalizePlanRails({}),
   });
@@ -130,7 +159,7 @@ export function createFounderDefaultProfile() {
     playbookStreakEnabled: true,
     usesWearable: true,
     showColdTurkeyBlocker: true,
-    finishChecklist: defaultFinishChecklist(FOUNDER_FINISH_CHECKLIST),
+    finishChecklist: defaultFinishChecklist(),
     behavioralFlags: defaultBehavioralFlags(),
     ...normalizePlanRails({}),
   });
@@ -189,9 +218,9 @@ export function normalizeTraderProfile(raw = {}) {
   if (!biasChecklistItems.length) biasChecklistItems = defaultBiasItems();
 
   let finishChecklist = Array.isArray(raw.finishChecklist)
-    ? raw.finishChecklist.map((item, i) => normalizeChecklistItem(item, i, "Desk item"))
-    : defaultFinishChecklist(["Unlock accounts"]);
-  if (!finishChecklist.length) finishChecklist = defaultFinishChecklist(["Unlock accounts"]);
+    ? migrateFinishChecklist(raw.finishChecklist)
+    : defaultFinishChecklist();
+  if (!finishChecklist.length) finishChecklist = defaultFinishChecklist();
 
   const streakTargetDays = Number(raw.streakTargetDays);
   const profileKind = raw.profileKind === "founder" ? "founder" : "customer";
@@ -422,7 +451,7 @@ export function migratePlanCommitments(form, profile) {
 }
 
 const LEGACY_DESK_MAP = [
-  { legacyKey: "unlockAccounts", match: /unlock/i },
+  { legacyKey: "unlockAccounts", match: /unlock|account/i },
   { legacyKey: "checkCpu", match: /cpu/i },
   { legacyKey: "selectRiskBracketOrder", match: /risk bracket/i },
 ];
