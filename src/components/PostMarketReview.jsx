@@ -378,7 +378,7 @@ export default function PostMarketReview({ onBack }) {
         <div className="pm-closeout-main">
           <div className="pm-closeout-header-row">
             <div className="pm-header">
-              <h1 className="hybrid-page-title">Close loop.</h1>
+              <h1 className="hybrid-page-title">Close loop<span className="hybrid-page-title-stop" aria-hidden="true" /></h1>
               <p className="pm-subtitle">Close the loop. What happened vs what you planned.</p>
             </div>
             <CloseoutMetrics

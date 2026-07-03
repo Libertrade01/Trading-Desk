@@ -311,7 +311,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
               </div>
               {plan.whyBias && (
                 <div className="history-text-block">
-                  <div className="history-notes-label hybrid-label-sm">Why this bias</div>
+                  <div className="history-notes-label hybrid-label-sm">Thesis</div>
                   <p>{plan.whyBias}</p>
                 </div>
               )}
@@ -345,7 +345,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                       {setup.conditions && <p className="history-setup-desc">{setup.conditions}</p>}
                       <div className="history-setup-meta">
                         {setup.target && <span><em>Target</em> {setup.target}</span>}
-                        {setup.stop && <span><em>Stop</em> {setup.stop}</span>}
+                        {setup.stop && <span><em>Stop placement</em> {setup.stop}</span>}
                       </div>
                     </div>
                   ))}

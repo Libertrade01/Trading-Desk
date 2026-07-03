@@ -19,6 +19,7 @@ import {
   completeOnboarding,
   createFounderDefaultProfile,
   createCustomerDefaultProfile,
+  DEFAULT_COMMITMENT,
   WELCOME_HINT_STORAGE_KEY,
   parsePlanRailMoney,
 } from "../lib/trader-profile";
@@ -120,7 +121,7 @@ export default function OnboardingWizard() {
   const [accountType, setAccountType] = useState("funded");
   const [setups, setSetups] = useState([{ id: crypto.randomUUID(), name: "" }]);
   const [commitments, setCommitments] = useState([
-    { id: crypto.randomUUID(), text: "I respect myself enough to fully follow my plan today" },
+    { id: crypto.randomUUID(), text: DEFAULT_COMMITMENT },
   ]);
   const [riskStreakEnabled, setRiskStreakEnabled] = useState(true);
   const [playbookStreakEnabled, setPlaybookStreakEnabled] = useState(true);

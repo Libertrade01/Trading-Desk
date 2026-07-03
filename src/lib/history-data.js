@@ -517,14 +517,15 @@ export function formatUsd(n, { signed = false } = {}) {
 
 export function biasTag(bias) {
   if (!bias) return null;
-  if (bias.includes("Long")) return "LONG";
-  if (bias.includes("Short")) return "SHORT";
-  if (bias.includes("Neutral")) return "NEUTRAL";
-  if (bias.includes("Wait")) return "WAIT";
-  return bias.split(" ")[0].toUpperCase();
+  if (bias.includes("Bullish") || bias.includes("Long")) return "BULLISH";
+  if (bias.includes("Bearish") || bias.includes("Short")) return "BEARISH";
+  if (bias.includes("Balanced") || bias.includes("Rotational") || bias.includes("Neutral")) return "BALANCED";
+  if (bias.includes("Unsure") || bias.includes("Wait")) return "UNSURE";
+  return bias.split(/[\s/]/)[0].toUpperCase();
 }
 
 export function volTag(vol) {
   if (!vol) return null;
-  return vol === "Normal" ? "NORMAL VOL" : `${vol.toUpperCase()} VOL`;
+  const label = /^high$/i.test(vol) ? "Elevated" : vol;
+  return label === "Normal" ? "NORMAL VOL" : `${label.toUpperCase()} VOL`;
 }

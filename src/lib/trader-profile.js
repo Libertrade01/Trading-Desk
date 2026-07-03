@@ -1,5 +1,6 @@
 import { BEHAVIORAL_FLAG_CATEGORIES } from "./postmarket-defaults";
 import { VALID_SETUPS } from "./setup-options";
+import { normalizeKeyLevelQuickAdds } from "./daily-plan-defaults";
 import { storage } from "./supabase";
 
 export const TRADER_PROFILE_KEY = "trader-profile";
@@ -7,8 +8,8 @@ export const PROFILE_UPDATED_EVENT = "trader-profile-updated";
 
 export const WELCOME_HINT_STORAGE_KEY = "libertrade-show-welcome-hint";
 
-const DEFAULT_COMMITMENT =
-  "I respect myself enough to fully agree to follow my plan today.";
+export const DEFAULT_COMMITMENT =
+  "I agree to fully follow my plan and commit to process over P&L.";
 
 const FOUNDER_COMMITMENTS = [
   "I believe in myself and I respect myself enough to follow my plan. Following my plans allows me and my family to live our dream.",
@@ -246,6 +247,7 @@ export function normalizeTraderProfile(raw = {}) {
     showColdTurkeyBlocker:
       profileKind === "founder" ? !!raw.showColdTurkeyBlocker : false,
     finishChecklist,
+    keyLevelQuickAdds: normalizeKeyLevelQuickAdds(raw.keyLevelQuickAdds),
     behavioralFlags: normalizeBehavioralFlags(raw.behavioralFlags),
     ...normalizePlanRails(raw),
     updatedAt: raw.updatedAt ?? null,
@@ -291,6 +293,7 @@ export function validateTraderProfileInput(form) {
       setups: namedSetups,
       commitments: namedCommitments.slice(0, 3),
       finishChecklist: finishItems.slice(0, 6),
+      keyLevelQuickAdds: normalizeKeyLevelQuickAdds(profile.keyLevelQuickAdds),
     },
   };
 }

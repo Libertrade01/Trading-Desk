@@ -225,9 +225,9 @@ export default function PreMarketCheckIn({ onBack }) {
       <div className="pm-checkin-layout pm-checkin-layout--loop">
         <div className="pm-checkin-intro">
           <header className="pm-checkin-header">
-            <h1 className="hybrid-page-title">Check-in.</h1>
+            <h1 className="hybrid-page-title">Check-in<span className="hybrid-page-title-stop" aria-hidden="true" /></h1>
             <p className="pm-subtitle">
-              Be honest before the open. Your score updates as you go.
+              Rate your readiness before you risk your capital.
             </p>
           </header>
 

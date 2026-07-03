@@ -4,32 +4,32 @@ export const PLAN_STEPS = [
   {
     id: "bias",
     short: "Bias",
-    label: "Bias & context",
-    desc: "What you think the market is likely to do today, and how confident you are.",
+    label: "Today's lean",
+    desc: "Your lean for the session and the reasons behind it.",
   },
   {
     id: "levels",
     short: "Levels",
     label: "Key levels",
-    desc: "The prices that matter today. Mark them now so you don't have to remember in the heat of the moment.",
+    desc: "Overnight highs/lows, value edges, and decision points.",
   },
   {
     id: "setups",
     short: "Setups",
     label: "Setups",
-    desc: "The specific patterns you'll trade. If a setup isn't here, you don't take it.",
+    desc: "Playbook setups we're hunting today. If it isn't here, we don't force a different trade.",
   },
   {
     id: "risk",
     short: "Risk",
-    label: "Risk parameters",
-    desc: "Pre-committing to limits before you're emotional about them.",
+    label: "Risk Plan",
+    desc: "Size, loss limit, and stop rules for today.",
   },
   {
     id: "focus",
     short: "Focus",
-    label: "Session rules & focus",
-    desc: "The intent for today, in your own words.",
+    label: "Today's intent",
+    desc: "Rules, guardrail, and the commitment to follow them.",
   },
 ];
 
