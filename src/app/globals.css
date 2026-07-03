@@ -11694,7 +11694,7 @@ input.pm-slider:active::-moz-range-thumb {
 .home-hero-week-focus .home-week-focus-label {
   margin: 0;
   white-space: nowrap;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .home-hero-week-focus .home-week-focus-list {
@@ -11705,7 +11705,7 @@ input.pm-slider:active::-moz-range-thumb {
 
 .home-hero-week-focus .home-week-focus-item {
   align-items: center;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .home-hero-week-focus .home-week-focus-item--placeholder {
@@ -11721,7 +11721,7 @@ input.pm-slider:active::-moz-range-thumb {
 }
 
 .home-hero-week-focus .home-week-focus-placeholder {
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.45;
   color: rgba(255, 255, 255, 0.38);
 }
