@@ -6,7 +6,7 @@ import {
   loadRecentSessions,
   loadJournalReviewCarryoverSessions,
   todayKey,
-  isStepComplete,
+  isWorkflowStepComplete,
   countProcessStreakAsOf,
   countPlaybookStreakAsOf,
   getProcessStreakDisplayForDay,
@@ -1112,9 +1112,9 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
     };
   }, [loadDashboard]);
 
-  const preComplete = isStepComplete(today?.pre);
-  const planComplete = isStepComplete(today?.plan);
-  const postComplete = isStepComplete(today?.post);
+  const preComplete = isWorkflowStepComplete("premarket", today);
+  const planComplete = isWorkflowStepComplete("dailyplan", today);
+  const postComplete = isWorkflowStepComplete("postmarket", today);
   const allComplete = preComplete && planComplete && postComplete;
   const completedCount = [preComplete, planComplete, postComplete].filter(Boolean).length;
   const weekend = isWeekend(effectiveDate);

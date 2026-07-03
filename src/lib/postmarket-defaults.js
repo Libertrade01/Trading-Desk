@@ -123,11 +123,19 @@ export const JOURNAL_REVIEW_CHECKLIST = [
 ];
 
 export function getJournalReviewPendingItems(formOrPost = {}) {
+  // No-trade days (holiday, rest, Preservation Mode) do not require replay/database follow-up.
+  if (formOrPost?.noTradeToday) return [];
   return JOURNAL_REVIEW_CHECKLIST.filter((item) => !formOrPost?.[item.key]);
 }
 
 export function hasJournalReviewPending(formOrPost = {}) {
   return getJournalReviewPendingItems(formOrPost).length > 0;
+}
+
+/** True when close loop was saved as an explicit no-trade day. */
+export function isNoTradeDay(sessionOrPost = {}) {
+  const post = sessionOrPost?.post ?? sessionOrPost;
+  return !!(post?.noTradeToday && post?.savedAt);
 }
 
 /** e.g. "Replay pending · Database pending" */

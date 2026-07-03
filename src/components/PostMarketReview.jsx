@@ -254,11 +254,23 @@ export default function PostMarketReview({ onBack }) {
     const payload = {
       date: dateKey,
       ...formData,
-      netPnl: computedNet,
-      winRate,
-      behavioralFlagsRaised: countVisibleBehavioralFlags(formData, profile),
-      playbookAdherence: adherence,
-      playbookProcessPass: adherence.total > 0 ? adherence.processPass : null,
+      netPnl: formData.noTradeToday ? null : computedNet,
+      winRate: formData.noTradeToday ? null : winRate,
+      behavioralFlagsRaised: formData.noTradeToday
+        ? 0
+        : countVisibleBehavioralFlags(formData, profile),
+      playbookAdherence: formData.noTradeToday
+        ? { total: 0, playbook: 0, improvised: 0, invalid: 0, untagged: 0, playbookRate: null, processPass: null }
+        : adherence,
+      playbookProcessPass: formData.noTradeToday
+        ? null
+        : adherence.total > 0
+          ? adherence.processPass
+          : null,
+      // No-trade days never require replay/database follow-up.
+      replaySequenceReviewed: formData.noTradeToday ? true : !!formData.replaySequenceReviewed,
+      setupsScreenshottedSaved: formData.noTradeToday ? true : !!formData.setupsScreenshottedSaved,
+      riskPlanFollowed: formData.noTradeToday ? null : formData.riskPlanFollowed,
       savedAt: new Date().toISOString(),
     };
 
@@ -426,7 +438,21 @@ export default function PostMarketReview({ onBack }) {
 
           <div className={`pm-closeout-context-strip pm-closeout-no-trade${form.noTradeToday ? " pm-closeout-no-trade--active" : ""}`}>
             <label className="pm-closeout-no-trade-main">
-              <input type="checkbox" checked={form.noTradeToday} onChange={(e) => set("noTradeToday", e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={form.noTradeToday}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setForm((f) => ({
+                    ...f,
+                    noTradeToday: checked,
+                    // Auto-clear journal follow-ups — nothing to replay/database on a no-trade day.
+                    replaySequenceReviewed: checked ? true : false,
+                    setupsScreenshottedSaved: checked ? true : false,
+                  }));
+                  setSaved(false);
+                }}
+              />
               <div>
                 <div className="pm-field-label hybrid-label">No trades today</div>
                 <div className="pm-field-hint">Preservation Mode, took a rest day, or the market was closed.</div>

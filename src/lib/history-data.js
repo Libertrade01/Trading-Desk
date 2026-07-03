@@ -249,6 +249,20 @@ export function isStepComplete(data) {
   return !!(data?.savedAt);
 }
 
+/**
+ * Workflow step completion for the home dashboard.
+ * No-trade days only require a saved close loop — check-in and session plan are not required.
+ */
+export function isWorkflowStepComplete(stepId, session) {
+  if (session?.post?.noTradeToday && session?.post?.savedAt) {
+    return true;
+  }
+  if (stepId === "premarket") return isStepComplete(session?.pre);
+  if (stepId === "dailyplan") return isStepComplete(session?.plan);
+  if (stepId === "postmarket") return isStepComplete(session?.post);
+  return false;
+}
+
 /** Risk plan followed from post-market (riskPlanFollowed with legacy planProcessFollowed fallback). */
 export function getRiskPlanFollowed(post) {
   if (!post) return null;
