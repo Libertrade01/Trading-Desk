@@ -15,12 +15,6 @@ const nextConfig = {
     return [
       {
         source: '/analytics.html',
-        has: [{ type: 'query', key: 'view', value: 'reports' }],
-        destination: '/analytics?view=reports',
-        permanent: true,
-      },
-      {
-        source: '/analytics.html',
         destination: '/analytics',
         permanent: true,
       },

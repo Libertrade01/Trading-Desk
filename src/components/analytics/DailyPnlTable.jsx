@@ -12,7 +12,7 @@ export default function DailyPnlTable({ trades, limit = 8, onRowClick }) {
     return sliced.map((date) => {
         const { pnl, count, seqIds, soloCount } = byDate[date];
         const seq = (seqIds?.size || 0) + (soloCount || 0);
-        const tone = pnl > 0 ? "var(--green)" : pnl < 0 ? "var(--red)" : "var(--muted)";
+        const tone = pnl > 0 ? "#50a0ff" : pnl < 0 ? "#f07167" : "var(--muted)";
         return {
           id: date,
           dateKey: date,

@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Analytics · Libertrade Loop</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Syne:wght@600;700;800&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #05070b;
+      --bg-elevated: #0a0d12;
+      --text: #edf1f7;
+      --text-soft: rgba(237, 241, 247, 0.72);
+      --muted: rgba(237, 241, 247, 0.48);
+      --muted2: rgba(237, 241, 247, 0.28);
+      --brand: #0065bd;
+      --brand-soft: rgba(0, 101, 189, 0.18);
+      --brand-glow: rgba(80, 160, 255, 0.08);
+      --brand-link: rgba(140, 190, 255, 0.9);
+      --pos: #50a0ff;
+      --pos-deep: #0065bd;
+      --pos-soft: rgba(80, 160, 255, 0.14);
+      --neg: #f07167;
+      --neg-soft: rgba(240, 113, 103, 0.14);
+      --amber: #f0a35e;
+      --amber-soft: rgba(240, 163, 94, 0.16);
+      --grey: #6b7280;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-soft: rgba(255, 255, 255, 0.05);
+      --shadow: 0 20px 48px rgba(0, 0, 0, 0.32);
+      --radius: 14px;
+      --radius-sm: 12px;
+      --font-num: "DM Sans", sans-serif;
+      --glass-bg:
+        radial-gradient(circle at top right, rgba(80, 160, 255, 0.08), transparent 42%),
+        linear-gradient(180deg, rgba(16, 27, 42, 0.96), rgba(11, 18, 28, 0.98));
+      --glass-bg-soft:
+        radial-gradient(circle at top right, rgba(80, 160, 255, 0.05), transparent 46%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)),
+        rgba(11, 14, 20, 0.88);
+      --input-bg:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0.008)),
+        linear-gradient(180deg, rgba(15, 19, 26, 0.96), rgba(11, 15, 21, 0.98));
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(0, 101, 189, 0.12), transparent 28%),
+        radial-gradient(ellipse at 82% 8%, rgba(80, 160, 255, 0.06), transparent 32%),
+        linear-gradient(180deg, #05070b 0%, #0a0d12 100%);
+      color: var(--text);
+      font: 14px/1.5 "DM Sans", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      padding: 28px 32px 48px;
+    }
+
+    .page {
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+
+    .header-copy h1 {
+      font-family: "Outfit", sans-serif;
+      font-size: clamp(32px, 4vw, 44px);
+      font-weight: 700;
+      letter-spacing: -0.035em;
+      line-height: 1.05;
+      text-transform: none;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .title-stop {
+      display: inline-block;
+      width: 0.16em;
+      height: 0.16em;
+      margin-left: 0.08em;
+      background: var(--brand);
+      vertical-align: 0.06em;
+    }
+
+    .header-copy p {
+      font-family: "DM Sans", sans-serif;
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    /* Range control — premium glass, workflow-input language */
+    .range-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      height: 44px;
+      padding: 0 12px 0 14px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--glass-bg-soft);
+      box-shadow:
+        0 0 0 1px rgba(0, 101, 189, 0.04),
+        0 12px 28px rgba(0, 0, 0, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      white-space: nowrap;
+    }
+
+    .range-label {
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.48);
+    }
+
+    .range-preset {
+      appearance: none;
+      -webkit-appearance: none;
+      color-scheme: dark;
+      height: 30px;
+      padding: 0 30px 0 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      background-image:
+        linear-gradient(45deg, transparent 50%, rgba(255, 255, 255, 0.42) 50%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.42) 50%, transparent 50%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0.008)),
+        linear-gradient(180deg, rgba(15, 19, 26, 0.96), rgba(11, 15, 21, 0.98));
+      background-position:
+        calc(100% - 14px) calc(50% - 2px),
+        calc(100% - 8px) calc(50% - 2px),
+        0 0,
+        0 0;
+      background-size:
+        5px 5px,
+        5px 5px,
+        100% 100%,
+        100% 100%;
+      background-repeat: no-repeat;
+      color: rgba(255, 255, 255, 0.92);
+      font: 600 13px/1 var(--font-num);
+      font-variant-numeric: tabular-nums;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.035),
+        0 6px 14px rgba(0, 0, 0, 0.12);
+      cursor: default;
+      min-width: 88px;
+    }
+
+    .range-preset option {
+      background-color: #11161d;
+      color: #e8e9ed;
+    }
+
+    .range-preset:focus {
+      outline: none;
+      border-color: rgba(0, 101, 189, 0.34);
+      background-image:
+        linear-gradient(45deg, transparent 50%, rgba(140, 190, 255, 0.7) 50%),
+        linear-gradient(135deg, rgba(140, 190, 255, 0.7) 50%, transparent 50%),
+        radial-gradient(circle at top right, rgba(80, 160, 255, 0.06), transparent 42%),
+        linear-gradient(180deg, rgba(16, 27, 42, 0.96), rgba(11, 18, 28, 0.98));
+      box-shadow:
+        inset 0 1px 0 rgba(120, 180, 255, 0.06),
+        0 0 0 1px rgba(0, 101, 189, 0.1),
+        0 0 20px rgba(0, 101, 189, 0.06);
+    }
+
+    .range-sep {
+      width: 1px;
+      height: 18px;
+      background: rgba(255, 255, 255, 0.1);
+      flex-shrink: 0;
+    }
+
+    .range-date {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: var(--input-bg);
+      color: rgba(255, 255, 255, 0.92);
+      font: 500 13px/1 var(--font-num);
+      font-variant-numeric: tabular-nums;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.035),
+        0 6px 14px rgba(0, 0, 0, 0.12);
+    }
+
+    .range-date svg {
+      width: 14px;
+      height: 14px;
+      opacity: 0.5;
+      flex-shrink: 0;
+      color: var(--text-soft);
+    }
+
+    .range-arrow {
+      color: var(--muted);
+      font: 500 14px/1 var(--font-num);
+      opacity: 0.7;
+    }
+
+    .btn-import {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 40px;
+      padding: 0 18px;
+      border: none;
+      border-radius: 10px;
+      background: var(--brand);
+      color: #fff;
+      font: 600 11px/1 "Outfit", sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      box-shadow:
+        0 0 0 1px rgba(0, 101, 189, 0.35),
+        0 10px 24px rgba(0, 101, 189, 0.28);
+      cursor: default;
+    }
+
+    .btn-import svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .left-col,
+    .main-col {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* ── Cards — premium brand-blue glass ── */
+    .card {
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--glass-bg);
+      box-shadow:
+        0 0 0 1px rgba(0, 101, 189, 0.04),
+        var(--shadow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      overflow: hidden;
+    }
+
+    .card-pad {
+      padding: 20px;
+    }
+
+    .card-title {
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.48);
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .card-head .card-title { margin-bottom: 0; }
+
+    .mini-select {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: var(--input-bg);
+      color: var(--text-soft);
+      font: 500 12px/1 "DM Sans", sans-serif;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+    }
+
+    .mini-select svg {
+      width: 12px;
+      height: 12px;
+      opacity: 0.5;
+    }
+
+    .link-all {
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--brand-link);
+      text-decoration: none;
+    }
+
+    .link-all:hover {
+      color: #fff;
+    }
+
+    /* ── Performance Score ── */
+    .score-card {
+      text-align: center;
+      padding: 24px 20px 22px;
+    }
+
+    .score-card .card-title {
+      margin-bottom: 18px;
+      text-align: left;
+    }
+
+    .gauge-wrap {
+      position: relative;
+      width: 210px;
+      height: 128px;
+      margin: 0 auto 8px;
+    }
+
+    .gauge-wrap svg {
+      width: 210px;
+      height: 128px;
+      display: block;
+    }
+
+    .gauge-center {
+      position: absolute;
+      left: 50%;
+      bottom: 4px;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+
+    .gauge-score {
+      font: 800 34px/1 var(--font-num);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      color: #fff;
+    }
+
+    .gauge-score span {
+      font-size: 18px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--amber-soft);
+      border: 1px solid rgba(240, 163, 94, 0.18);
+      color: var(--amber);
+      font: 600 11px/1 "Outfit", sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .status-pill::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .score-desc {
+      margin: 14px auto 18px;
+      max-width: 24ch;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 38px;
+      padding: 0 18px;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 101, 189, 0.32);
+      background: rgba(0, 101, 189, 0.12);
+      color: rgba(255, 255, 255, 0.88);
+      font: 600 11px/1 "Outfit", sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: default;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .btn-outline:hover {
+      background: rgba(0, 101, 189, 0.22);
+      border-color: rgba(100, 160, 255, 0.45);
+      color: #fff;
+    }
+
+    /* ── Outcomes ── */
+    .outcomes-card {
+      padding: 20px;
+    }
+
+    .outcomes-card .card-title {
+      margin-bottom: 18px;
+    }
+
+    .donut-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .donut-wrap {
+      position: relative;
+      width: 124px;
+      height: 124px;
+      flex-shrink: 0;
+    }
+
+    .donut-wrap::before {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 38% 32%, rgba(80, 160, 255, 0.1), transparent 55%),
+        radial-gradient(circle at 50% 50%, rgba(16, 27, 42, 0.55), rgba(8, 12, 18, 0.72));
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        inset 0 -8px 16px rgba(0, 0, 0, 0.22);
+      pointer-events: none;
+    }
+
+    .donut-wrap svg {
+      position: relative;
+      z-index: 1;
+      width: 124px;
+      height: 124px;
+      transform: rotate(-90deg);
+      filter: drop-shadow(0 0 10px rgba(80, 160, 255, 0.14));
+    }
+
+    .donut-center {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .donut-center strong {
+      display: block;
+      font: 700 26px/1 var(--font-num);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      color: #fff;
+      text-shadow: 0 0 18px rgba(80, 160, 255, 0.18);
+    }
+
+    .donut-center span {
+      display: block;
+      margin-top: 5px;
+      font: 600 9px/1 "Outfit", sans-serif;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.46);
+    }
+
+    .legend {
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .legend-item {
+      display: grid;
+      grid-template-columns: 10px 1fr auto;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.04);
+    }
+
+    .legend-dot.winners {
+      background: radial-gradient(circle at 35% 30%, #8ec4ff, #50a0ff 55%, #2f7fd4);
+      box-shadow:
+        0 0 0 2px rgba(80, 160, 255, 0.1),
+        0 0 8px rgba(80, 160, 255, 0.42);
+    }
+
+    .legend-dot.breakeven {
+      background: radial-gradient(circle at 35% 30%, #9ca3af, #6b7280 55%, #4b5563);
+      box-shadow:
+        0 0 0 2px rgba(107, 114, 128, 0.12),
+        0 0 7px rgba(107, 114, 128, 0.38);
+    }
+
+    .legend-dot.losers {
+      background: radial-gradient(circle at 35% 30%, #f5a39c, #f07167 55%, #c85a52);
+      box-shadow:
+        0 0 0 2px rgba(240, 113, 103, 0.1),
+        0 0 8px rgba(240, 113, 103, 0.38);
+    }
+
+    .legend-label {
+      color: var(--text-soft);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .legend-value {
+      color: #fff;
+      font: 600 13px/1 var(--font-num);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .legend-value em {
+      font-style: normal;
+      color: var(--muted);
+      font-weight: 500;
+      margin-left: 4px;
+    }
+
+    /* ── Metric cards ── */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .metric-card {
+      padding: 18px 18px 16px;
+    }
+
+    .metric-label {
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.48);
+      margin-bottom: 12px;
+    }
+
+    .metric-value {
+      font: 800 28px/1 var(--font-num);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .metric-value.neg { color: var(--neg); }
+    .metric-value.pos { color: var(--pos); }
+
+    .metric-delta {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font: 600 12px/1 var(--font-num);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric-delta.neg { color: var(--neg); }
+    .metric-delta.pos { color: var(--pos); }
+    .metric-delta.muted { color: var(--muted); font-weight: 500; }
+
+    .metric-delta svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    /* ── Equity curve ── */
+    .equity-card {
+      padding: 20px 20px 12px;
+    }
+
+    .chart-frame {
+      position: relative;
+      height: 280px;
+      margin-top: 4px;
+    }
+
+    .chart-frame svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+
+    .axis-label {
+      font: 500 11px/1 var(--font-num);
+      font-variant-numeric: tabular-nums;
+      fill: var(--muted2);
+    }
+
+    /* ── Bottom row ── */
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 18px;
+    }
+
+    .daily-card,
+    .time-card,
+    .trades-card {
+      padding: 20px;
+      min-height: 280px;
+    }
+
+    .time-legend {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font: 500 11px/1 "DM Sans", sans-serif;
+      color: var(--muted);
+    }
+
+    .time-legend-swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      background: linear-gradient(180deg, rgba(80, 160, 255, 0.55), rgba(240, 113, 103, 0.55));
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .time-chart {
+      height: 200px;
+      margin-top: 8px;
+    }
+
+    .time-chart svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+
+    .bar-chart {
+      height: 200px;
+      margin-top: 8px;
+    }
+
+    .bar-chart svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+
+    /* ── Trades table ── */
+    .trades-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 4px;
+    }
+
+    .trades-table th {
+      text-align: left;
+      padding: 0 8px 12px 0;
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .trades-table th:last-child,
+    .trades-table td:last-child {
+      text-align: right;
+      padding-right: 0;
+    }
+
+    .trades-table td {
+      padding: 12px 8px 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 13px;
+      color: var(--text-soft);
+      white-space: nowrap;
+    }
+
+    .trades-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .trades-table .time {
+      color: var(--muted);
+      font: 500 12px/1 var(--font-num);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .trades-table .symbol {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .dir {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 52px;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 6px;
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .dir.long {
+      background: var(--pos-soft);
+      color: var(--pos);
+    }
+
+    .dir.short {
+      background: var(--neg-soft);
+      color: var(--neg);
+    }
+
+    .pnl.neg,
+    .pnl.pos {
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+
+    .pnl.neg { color: var(--neg); }
+    .pnl.pos { color: var(--pos); }
+
+    .qty {
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1280px) {
+      .bottom-row { grid-template-columns: 1fr 1fr; }
+      .time-card { grid-column: 1 / -1; }
+    }
+
+    @media (max-width: 1180px) {
+      .layout { grid-template-columns: 280px minmax(0, 1fr); }
+      .metrics-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 900px) {
+      body { padding: 20px 16px 40px; }
+      .layout { grid-template-columns: 1fr; }
+      .header { flex-direction: column; align-items: stretch; }
+      .header-controls { justify-content: flex-start; }
+      .range-control { flex-wrap: wrap; height: auto; padding: 10px 12px; gap: 8px; }
+      .metrics-row { grid-template-columns: 1fr 1fr; }
+      .bottom-row { grid-template-columns: 1fr; }
+      .time-card { grid-column: auto; }
+    }
+
+    @media (max-width: 560px) {
+      .metrics-row { grid-template-columns: 1fr; }
+      .header-copy h1 { font-size: 30px; }
+      .metric-value { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-copy">
+        <h1>Analytics<span class="title-stop" aria-hidden="true"></span></h1>
+        <p>Everything you need to measure and improve.</p>
+      </div>
+      <div class="header-controls">
+        <div class="range-control" aria-label="Date range">
+          <span class="range-label">Range</span>
+          <select class="range-preset" aria-label="Range preset">
+            <option>This Week</option>
+            <option>Last Week</option>
+            <option>This Month</option>
+            <option>5D</option>
+            <option selected>10D</option>
+            <option>20D</option>
+            <option>All Time</option>
+            <option>Custom</option>
+          </select>
+          <span class="range-sep" aria-hidden="true"></span>
+          <div class="range-date" aria-label="Start date">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <span>24/06/2026</span>
+          </div>
+          <span class="range-arrow" aria-hidden="true">→</span>
+          <div class="range-date" aria-label="End date">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <span>03/07/2026</span>
+          </div>
+        </div>
+        <button class="btn-import" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+          Import
+        </button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- Left column -->
+      <aside class="left-col">
+        <!-- Performance Score -->
+        <section class="card score-card">
+          <div class="card-title">Performance Score</div>
+          <div class="gauge-wrap">
+            <!-- Semi-circular gauge: score 42/100 → 42% of 180° arc -->
+            <svg viewBox="0 0 210 128" aria-hidden="true">
+              <defs>
+                <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#0065bd"/>
+                  <stop offset="100%" stop-color="#50a0ff"/>
+                </linearGradient>
+              </defs>
+              <!-- Track -->
+              <path
+                d="M 25 110 A 80 80 0 0 1 185 110"
+                fill="none"
+                stroke="rgba(255,255,255,0.08)"
+                stroke-width="14"
+                stroke-linecap="round"
+              />
+              <!-- Progress: 42% of semicircle. Path length ≈ π*80 ≈ 251.3; dash = 0.42*251.3 ≈ 105.5 -->
+              <path
+                d="M 25 110 A 80 80 0 0 1 185 110"
+                fill="none"
+                stroke="url(#gaugeGrad)"
+                stroke-width="14"
+                stroke-linecap="round"
+                stroke-dasharray="105.5 251.3"
+              />
+            </svg>
+            <div class="gauge-center">
+              <div class="gauge-score">42 <span>/ 100</span></div>
+            </div>
+          </div>
+          <div class="status-pill">Needs Work</div>
+          <p class="score-desc">Focus on consistency, risk management and trade selection.</p>
+          <button class="btn-outline" type="button">View Insights</button>
+        </section>
+
+        <!-- Outcomes Breakdown -->
+        <section class="card outcomes-card">
+          <div class="card-title">Outcomes Breakdown</div>
+          <div class="donut-row">
+            <div class="donut-wrap">
+              <!--
+                Donut: Winners 18% / Breakeven 58% / Losers 24%
+                r=46, C=2πr≈289.03; gap=9 between segments; usable≈262.03
+                W=47.17, BE=152.0, L=62.89
+                Offsets: W=0, BE=-(47.17+9)=-56.17, L=-(56.17+152+9)=-217.17
+              -->
+              <svg viewBox="0 0 124 124" aria-hidden="true">
+                <defs>
+                  <linearGradient id="donutWinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#7ab8ff"/>
+                    <stop offset="55%" stop-color="#50a0ff"/>
+                    <stop offset="100%" stop-color="#2f7fd4"/>
+                  </linearGradient>
+                  <linearGradient id="donutBeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#8b929c"/>
+                    <stop offset="55%" stop-color="#6b7280"/>
+                    <stop offset="100%" stop-color="#4b5563"/>
+                  </linearGradient>
+                  <linearGradient id="donutLoseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#f5a39c"/>
+                    <stop offset="55%" stop-color="#f07167"/>
+                    <stop offset="100%" stop-color="#c85a52"/>
+                  </linearGradient>
+                  <filter id="donutSegGlow" x="-40%" y="-40%" width="180%" height="180%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="1.6" result="blur"/>
+                    <feMerge>
+                      <feMergeNode in="blur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+
+                <!-- Faint outer track -->
+                <circle cx="62" cy="62" r="46" fill="none"
+                  stroke="rgba(255,255,255,0.055)" stroke-width="12"/>
+
+                <!-- Soft brand-blue ring glow (low opacity) -->
+                <circle cx="62" cy="62" r="46" fill="none"
+                  stroke="rgba(80,160,255,0.16)" stroke-width="14"
+                  opacity="0.55"/>
+
+                <!-- Inner depth ring -->
+                <circle cx="62" cy="62" r="39.5" fill="none"
+                  stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+
+                <!-- Active segments: thinner ring, rounded caps, gaps -->
+                <g filter="url(#donutSegGlow)">
+                  <!-- Winners 18% -->
+                  <circle cx="62" cy="62" r="46" fill="none"
+                    stroke="url(#donutWinGrad)" stroke-width="9.5"
+                    stroke-linecap="round"
+                    stroke-dasharray="47.17 241.86" stroke-dashoffset="0"/>
+                  <!-- Breakeven 58% -->
+                  <circle cx="62" cy="62" r="46" fill="none"
+                    stroke="url(#donutBeGrad)" stroke-width="9.5"
+                    stroke-linecap="round"
+                    stroke-dasharray="152 137.03" stroke-dashoffset="-56.17"/>
+                  <!-- Losers 24% -->
+                  <circle cx="62" cy="62" r="46" fill="none"
+                    stroke="url(#donutLoseGrad)" stroke-width="9.5"
+                    stroke-linecap="round"
+                    stroke-dasharray="62.89 226.14" stroke-dashoffset="-217.17"/>
+                </g>
+
+                <!-- Outer highlight hairline for glass depth -->
+                <circle cx="62" cy="62" r="51.5" fill="none"
+                  stroke="rgba(255,255,255,0.045)" stroke-width="1"/>
+              </svg>
+              <div class="donut-center">
+                <div>
+                  <strong>50</strong>
+                  <span>Trades</span>
+                </div>
+              </div>
+            </div>
+            <div class="legend">
+              <div class="legend-item">
+                <span class="legend-dot winners"></span>
+                <span class="legend-label">Winners</span>
+                <span class="legend-value">9 <em>(18%)</em></span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-dot breakeven"></span>
+                <span class="legend-label">Breakeven</span>
+                <span class="legend-value">29 <em>(58%)</em></span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-dot losers"></span>
+                <span class="legend-label">Losers</span>
+                <span class="legend-value">12 <em>(24%)</em></span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <!-- Main column -->
+      <main class="main-col">
+        <!-- Top metrics -->
+        <div class="metrics-row">
+          <article class="card metric-card">
+            <div class="metric-label">Net P&amp;L</div>
+            <div class="metric-value neg">-$216.01</div>
+            <div class="metric-delta neg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              -2.16%
+            </div>
+          </article>
+          <article class="card metric-card">
+            <div class="metric-label">Win Rate</div>
+            <div class="metric-value">18.0%</div>
+            <div class="metric-delta neg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              -6.2%
+            </div>
+          </article>
+          <article class="card metric-card">
+            <div class="metric-label">Expectancy</div>
+            <div class="metric-value neg">-$70.22</div>
+            <div class="metric-delta muted">Per Trade</div>
+          </article>
+          <article class="card metric-card">
+            <div class="metric-label">Profit Factor</div>
+            <div class="metric-value">0.86</div>
+            <div class="metric-delta neg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              -0.12
+            </div>
+          </article>
+        </div>
+
+        <!-- Equity Curve -->
+        <section class="card equity-card">
+          <div class="card-head">
+            <div class="card-title">Equity Curve</div>
+            <div class="mini-select">
+              Cumulative P&amp;L
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+          </div>
+          <div class="chart-frame">
+            <!--
+              Chart area: x 48–980, y 16–240 (zero line at y=128)
+              Y: +600 at y=16, 0 at y=128, -600 at y=240  (scale: 112/600 = 0.1867 px per $)
+              Sample cumulative P&L path that goes above then below zero.
+              Dates: 6/24, 6/25, 6/26, 6/27, 6/28, 6/29, 6/30, 7/1, 7/2, 7/3
+            -->
+            <svg viewBox="0 0 1000 280" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="eqPosFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#0065bd" stop-opacity="0.35"/>
+                  <stop offset="100%" stop-color="#0065bd" stop-opacity="0.02"/>
+                </linearGradient>
+                <linearGradient id="eqNegFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#f07167" stop-opacity="0.02"/>
+                  <stop offset="100%" stop-color="#f07167" stop-opacity="0.32"/>
+                </linearGradient>
+                <clipPath id="clipPos">
+                  <rect x="48" y="16" width="932" height="112"/>
+                </clipPath>
+                <clipPath id="clipNeg">
+                  <rect x="48" y="128" width="932" height="112"/>
+                </clipPath>
+              </defs>
+
+              <!-- Grid lines -->
+              <g stroke="rgba(255,255,255,0.05)" stroke-width="1">
+                <line x1="48" y1="16" x2="980" y2="16"/>
+                <line x1="48" y1="72" x2="980" y2="72"/>
+                <line x1="48" y1="128" x2="980" y2="128" stroke="rgba(255,255,255,0.12)" stroke-dasharray="4 4"/>
+                <line x1="48" y1="184" x2="980" y2="184"/>
+                <line x1="48" y1="240" x2="980" y2="240"/>
+              </g>
+
+              <!-- Y labels -->
+              <g class="axis-label" text-anchor="end">
+                <text x="40" y="20">$600</text>
+                <text x="40" y="76">$300</text>
+                <text x="40" y="132">$0</text>
+                <text x="40" y="188">-$300</text>
+                <text x="40" y="244">-$600</text>
+              </g>
+
+              <!--
+                Points (x, cumulative $):
+                6/24: 0 → y=128
+                6/25: +180 → y=94.4
+                6/26: +420 → y=49.6
+                6/27: +280 → y=75.7
+                6/28: +90 → y=111.2
+                6/29: -80 → y=142.9
+                6/30: -260 → y=176.5
+                7/1: -410 → y=204.5
+                7/2: -180 → y=161.6
+                7/3: -216 → y=168.3
+                x steps: 48 + i * (932/9)
+              -->
+              <!-- Positive fill (clipped above zero) -->
+              <path
+                clip-path="url(#clipPos)"
+                d="M48,128 L151.6,94.4 L255.1,49.6 L358.7,75.7 L462.2,111.2 L565.8,142.9 L669.3,176.5 L772.9,204.5 L876.4,161.6 L980,168.3 L980,128 L48,128 Z"
+                fill="url(#eqPosFill)"
+              />
+              <!-- Negative fill (clipped below zero) -->
+              <path
+                clip-path="url(#clipNeg)"
+                d="M48,128 L151.6,94.4 L255.1,49.6 L358.7,75.7 L462.2,111.2 L565.8,142.9 L669.3,176.5 L772.9,204.5 L876.4,161.6 L980,168.3 L980,128 L48,128 Z"
+                fill="url(#eqNegFill)"
+              />
+              <!-- Line: brand blue above zero, muted red below — drawn as two segments via stroke on full path with gradient -->
+              <defs>
+                <linearGradient id="eqLineGrad" gradientUnits="userSpaceOnUse" x1="48" y1="16" x2="48" y2="240">
+                  <stop offset="0%" stop-color="#50a0ff"/>
+                  <stop offset="0.466" stop-color="#50a0ff"/>
+                  <stop offset="0.466" stop-color="#f07167"/>
+                  <stop offset="100%" stop-color="#f07167"/>
+                </linearGradient>
+              </defs>
+              <path
+                d="M48,128 L151.6,94.4 L255.1,49.6 L358.7,75.7 L462.2,111.2 L565.8,142.9 L669.3,176.5 L772.9,204.5 L876.4,161.6 L980,168.3"
+                fill="none"
+                stroke="url(#eqLineGrad)"
+                stroke-width="2.5"
+                stroke-linejoin="round"
+                stroke-linecap="round"
+              />
+
+              <!-- End point -->
+              <circle cx="980" cy="168.3" r="4.5" fill="#f07167" stroke="#0a0d12" stroke-width="2"/>
+
+              <!-- X labels -->
+              <g class="axis-label" text-anchor="middle">
+                <text x="48" y="268">6/24</text>
+                <text x="255" y="268">6/26</text>
+                <text x="462" y="268">6/28</text>
+                <text x="669" y="268">6/30</text>
+                <text x="876" y="268">7/2</text>
+                <text x="980" y="268">7/3</text>
+              </g>
+            </svg>
+          </div>
+        </section>
+
+        <!-- Bottom row -->
+        <div class="bottom-row">
+          <!-- Daily P&L -->
+          <section class="card daily-card">
+            <div class="card-title">Daily P&amp;L</div>
+            <div class="bar-chart">
+              <!--
+                Daily values (approx):
+                6/24: +40, 6/25: +180, 6/26: +240, 6/27: -140, 6/28: -190,
+                6/29: -170, 6/30: -180, 7/1: -150, 7/2: +230, 7/3: -36
+                Zero at y=100, scale: 100/240 ≈ 0.417 px per $
+              -->
+              <svg viewBox="0 0 520 200" preserveAspectRatio="none" aria-hidden="true">
+                <g stroke="rgba(255,255,255,0.05)" stroke-width="1">
+                  <line x1="36" y1="12" x2="510" y2="12"/>
+                  <line x1="36" y1="100" x2="510" y2="100" stroke="rgba(255,255,255,0.12)" stroke-dasharray="4 4"/>
+                  <line x1="36" y1="188" x2="510" y2="188"/>
+                </g>
+                <g class="axis-label" text-anchor="end">
+                  <text x="30" y="16">$240</text>
+                  <text x="30" y="104">$0</text>
+                  <text x="30" y="192">-$240</text>
+                </g>
+
+                <!-- Bars: muted palette matching Performance by Time (pos=brand blue, neg=soft red) -->
+                <g>
+                  <!-- 6/24 +40 -->
+                  <rect x="48" y="83.3" width="28" height="16.7" rx="4" fill="rgba(80,160,255,0.38)" stroke="rgba(80,160,255,0.72)" stroke-width="1"/>
+                  <!-- 6/25 +180 -->
+                  <rect x="94" y="25" width="28" height="75" rx="4" fill="rgba(80,160,255,0.38)" stroke="rgba(80,160,255,0.72)" stroke-width="1"/>
+                  <!-- 6/26 +240 -->
+                  <rect x="140" y="0" width="28" height="100" rx="4" fill="rgba(80,160,255,0.38)" stroke="rgba(80,160,255,0.72)" stroke-width="1"/>
+                  <!-- 6/27 -140 -->
+                  <rect x="186" y="100" width="28" height="58.3" rx="4" fill="rgba(240,113,103,0.38)" stroke="rgba(240,113,103,0.72)" stroke-width="1"/>
+                  <!-- 6/28 -190 -->
+                  <rect x="232" y="100" width="28" height="79.2" rx="4" fill="rgba(240,113,103,0.38)" stroke="rgba(240,113,103,0.72)" stroke-width="1"/>
+                  <!-- 6/29 -170 -->
+                  <rect x="278" y="100" width="28" height="70.8" rx="4" fill="rgba(240,113,103,0.38)" stroke="rgba(240,113,103,0.72)" stroke-width="1"/>
+                  <!-- 6/30 -180 -->
+                  <rect x="324" y="100" width="28" height="75" rx="4" fill="rgba(240,113,103,0.38)" stroke="rgba(240,113,103,0.72)" stroke-width="1"/>
+                  <!-- 7/1 -150 -->
+                  <rect x="370" y="100" width="28" height="62.5" rx="4" fill="rgba(240,113,103,0.38)" stroke="rgba(240,113,103,0.72)" stroke-width="1"/>
+                  <!-- 7/2 +230 -->
+                  <rect x="416" y="4.2" width="28" height="95.8" rx="4" fill="rgba(80,160,255,0.38)" stroke="rgba(80,160,255,0.72)" stroke-width="1"/>
+                  <!-- 7/3 -36 -->
+                  <rect x="462" y="100" width="28" height="15" rx="4" fill="rgba(240,113,103,0.38)" stroke="rgba(240,113,103,0.72)" stroke-width="1"/>
+                </g>
+
+                <g class="axis-label" text-anchor="middle">
+                  <text x="62" y="198">6/24</text>
+                  <text x="154" y="198">6/26</text>
+                  <text x="246" y="198">6/28</text>
+                  <text x="338" y="198">6/30</text>
+                  <text x="430" y="198">7/2</text>
+                  <text x="476" y="198">7/3</text>
+                </g>
+              </svg>
+            </div>
+          </section>
+
+          <!-- Performance by Time · NY (mirrors old analytics session baskets) -->
+          <section class="card time-card">
+            <div class="card-head">
+              <div class="card-title">Performance by Time · NY</div>
+              <div class="time-legend">
+                <span class="time-legend-swatch" aria-hidden="true"></span>
+                Avg P&amp;L
+              </div>
+            </div>
+            <div class="time-chart">
+              <!--
+                NY session half-hour baskets (avg P&L per trade):
+                09:30 +42, 10:00 +18, 10:30 -35, 11:00 -52, 11:30 -28, 12:00+ -12
+                Zero at y=100, scale: 100/60 ≈ 1.667 px per $
+              -->
+              <svg viewBox="0 0 520 200" preserveAspectRatio="none" aria-hidden="true">
+                <g stroke="rgba(255,255,255,0.05)" stroke-width="1">
+                  <line x1="40" y1="12" x2="510" y2="12"/>
+                  <line x1="40" y1="100" x2="510" y2="100" stroke="rgba(255,255,255,0.12)" stroke-dasharray="4 4"/>
+                  <line x1="40" y1="188" x2="510" y2="188"/>
+                </g>
+                <g class="axis-label" text-anchor="end">
+                  <text x="34" y="16">$60</text>
+                  <text x="34" y="104">$0</text>
+                  <text x="34" y="192">-$60</text>
+                </g>
+
+                <!-- Bars: x starts 56, width 48, step 74 -->
+                <g>
+                  <!-- 09:30 +42 → h=70 -->
+                  <rect x="56" y="30" width="48" height="70" rx="6" fill="rgba(80,160,255,0.38)" stroke="rgba(80,160,255,0.72)" stroke-width="1"/>
+                  <!-- 10:00 +18 → h=30 -->
+                  <rect x="130" y="70" width="48" height="30" rx="6" fill="rgba(80,160,255,0.38)" stroke="rgba(80,160,255,0.72)" stroke-width="1"/>
+                  <!-- 10:30 -35 → h=58.3 -->
+                  <rect x="204" y="100" width="48" height="58.3" rx="6" fill="rgba(240,113,103,0.38)" stroke="rgba(240,113,103,0.72)" stroke-width="1"/>
+                  <!-- 11:00 -52 → h=86.7 -->
+                  <rect x="278" y="100" width="48" height="86.7" rx="6" fill="rgba(240,113,103,0.38)" stroke="rgba(240,113,103,0.72)" stroke-width="1"/>
+                  <!-- 11:30 -28 → h=46.7 -->
+                  <rect x="352" y="100" width="48" height="46.7" rx="6" fill="rgba(240,113,103,0.38)" stroke="rgba(240,113,103,0.72)" stroke-width="1"/>
+                  <!-- 12:00+ -12 → h=20 -->
+                  <rect x="426" y="100" width="48" height="20" rx="6" fill="rgba(240,113,103,0.38)" stroke="rgba(240,113,103,0.72)" stroke-width="1"/>
+                </g>
+
+                <g class="axis-label" text-anchor="middle">
+                  <text x="80" y="198">09:30</text>
+                  <text x="154" y="198">10:00</text>
+                  <text x="228" y="198">10:30</text>
+                  <text x="302" y="198">11:00</text>
+                  <text x="376" y="198">11:30</text>
+                  <text x="450" y="198">12:00+</text>
+                </g>
+              </svg>
+            </div>
+          </section>
+
+          <!-- Recent Trades -->
+          <section class="card trades-card">
+            <div class="card-head">
+              <div class="card-title">Recent Trades</div>
+              <a class="link-all" href="#">View All</a>
+            </div>
+            <table class="trades-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Symbol</th>
+                  <th>Dir</th>
+                  <th>Qty</th>
+                  <th>Net P&amp;L</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="time">14:32</td>
+                  <td class="symbol">MNQ</td>
+                  <td><span class="dir long">Long</span></td>
+                  <td class="qty">2</td>
+                  <td class="pnl neg">-$48.50</td>
+                </tr>
+                <tr>
+                  <td class="time">13:18</td>
+                  <td class="symbol">MNQ</td>
+                  <td><span class="dir short">Short</span></td>
+                  <td class="qty">1</td>
+                  <td class="pnl neg">-$22.00</td>
+                </tr>
+                <tr>
+                  <td class="time">11:45</td>
+                  <td class="symbol">MNQ</td>
+                  <td><span class="dir long">Long</span></td>
+                  <td class="qty">3</td>
+                  <td class="pnl pos">+$86.25</td>
+                </tr>
+                <tr>
+                  <td class="time">10:07</td>
+                  <td class="symbol">MNQ</td>
+                  <td><span class="dir short">Short</span></td>
+                  <td class="qty">2</td>
+                  <td class="pnl neg">-$61.00</td>
+                </tr>
+                <tr>
+                  <td class="time">09:41</td>
+                  <td class="symbol">MNQ</td>
+                  <td><span class="dir long">Long</span></td>
+                  <td class="qty">1</td>
+                  <td class="pnl neg">-$34.75</td>
+                </tr>
+                <tr>
+                  <td class="time">09:12</td>
+                  <td class="symbol">MNQ</td>
+                  <td><span class="dir short">Short</span></td>
+                  <td class="qty">2</td>
+                  <td class="pnl pos">+$41.50</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

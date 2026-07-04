@@ -3,6 +3,41 @@
 import Link from "next/link";
 import { RANGE_PRESETS } from "../../lib/analytics-date-range";
 
+function CalendarIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M16 2v4M8 2v4M3 10h18" />
+    </svg>
+  );
+}
+
+function ImportIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 3v12" />
+      <path d="M7 10l5 5 5-5" />
+      <path d="M5 21h14" />
+    </svg>
+  );
+}
+
 export default function AnalyticsToolbar({
   activePreset,
   dateFrom,
@@ -15,88 +50,100 @@ export default function AnalyticsToolbar({
   onToggleAccount,
   onOpenTradeLog,
 }) {
-  const showChips = accounts.length > 1 || (accounts.length === 1 && accounts[0].id !== "default");
+  const showChips =
+    accounts.length > 1 || (accounts.length === 1 && accounts[0].id !== "default");
 
   return (
-    <div className="analytics-toolbar">
-      <div className="analytics-toolbar__ranges">
-        <span className="analytics-toolbar__label">Range</span>
-        <select
-          className="analytics-date-input analytics-range-select"
-          value={activePreset || "custom"}
-          onChange={(e) => {
-            const value = e.target.value;
-            if (value !== "custom") onPresetChange(value);
-          }}
-        >
-          {RANGE_PRESETS.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.label}
-            </option>
-          ))}
-          <option value="custom">Custom</option>
-        </select>
-        <span className="analytics-toolbar__sep">|</span>
-        <input
-          type="date"
-          className="analytics-date-input"
-          value={dateFrom || ""}
-          onChange={(e) => onCustomRangeChange(e.target.value || null, dateTo)}
-        />
-        <span className="analytics-toolbar__arrow">→</span>
-        <input
-          type="date"
-          className="analytics-date-input"
-          value={dateTo || ""}
-          onChange={(e) => onCustomRangeChange(dateFrom, e.target.value || null)}
-        />
+    <header className="an-header">
+      <div className="an-header-copy">
+        <h1 className="an-page-title">
+          Analytics
+          <span className="an-title-stop" aria-hidden="true" />
+        </h1>
+        <p>Everything you need to measure and improve.</p>
       </div>
 
-      <div className="analytics-toolbar__filters">
-        {showChips && (
-          <div className="analytics-account-chips">
+      <div className="an-header-controls">
+        <div className="an-range-control" aria-label="Date range">
+          <span className="an-range-label">Range</span>
+          <select
+            className="an-range-preset"
+            aria-label="Range preset"
+            value={activePreset || "custom"}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value !== "custom") onPresetChange(value);
+            }}
+          >
+            {RANGE_PRESETS.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
+            ))}
+            <option value="custom">Custom</option>
+          </select>
+          <span className="an-range-sep" aria-hidden="true" />
+          <label className="an-range-date">
+            <CalendarIcon />
+            <input
+              type="date"
+              value={dateFrom || ""}
+              onChange={(e) => onCustomRangeChange(e.target.value || null, dateTo)}
+              aria-label="Start date"
+            />
+          </label>
+          <span className="an-range-arrow" aria-hidden="true">
+            →
+          </span>
+          <label className="an-range-date">
+            <CalendarIcon />
+            <input
+              type="date"
+              value={dateTo || ""}
+              onChange={(e) => onCustomRangeChange(dateFrom, e.target.value || null)}
+              aria-label="End date"
+            />
+          </label>
+        </div>
+
+        {showChips ? (
+          <div className="an-account-chips">
             {accounts.map((a) => (
               <button
                 key={a.id}
                 type="button"
-                className={`analytics-account-chip${a.active !== false ? " active" : ""}`}
+                className={`an-account-chip${a.active !== false ? " active" : ""}`}
                 onClick={() => onToggleAccount(a.id)}
               >
                 {a.name}
               </button>
             ))}
           </div>
-        )}
+        ) : null}
+
         <select
-          className="analytics-date-input"
+          className="an-account-type"
           value={accountType}
           onChange={(e) => onAccountTypeChange(e.target.value)}
+          aria-label="Account type"
         >
           <option value="all">All</option>
           <option value="eval">Eval</option>
           <option value="funded">Funded</option>
           <option value="cash">Cash</option>
         </select>
-        <nav className="analytics-toolbar__nav" aria-label="Workflow">
-          <Link href="/home" className="analytics-nav-link">
-            Home
-          </Link>
-          <Link href="/history" className="analytics-nav-link">
-            History
-          </Link>
-        </nav>
+
         {onOpenTradeLog ? (
-          <button type="button" className="analytics-link-btn" onClick={onOpenTradeLog}>
+          <button type="button" className="an-link-all" onClick={onOpenTradeLog}>
             Trade log
           </button>
         ) : null}
-        <Link href="/postmarket" className="desk-nav-link">
+
+        <Link href="/postmarket" className="an-btn-import">
+          <ImportIcon />
           Import
         </Link>
-        <Link href="/settings" className="analytics-settings-link" title="Settings">
-          ⚙
-        </Link>
       </div>
-    </div>
+    </header>
   );
 }

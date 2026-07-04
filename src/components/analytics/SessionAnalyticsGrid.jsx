@@ -2,27 +2,58 @@
 
 import { useMemo } from "react";
 import { getChartConfigs } from "../../lib/analytics-charts";
-import AnalyticsCard from "./AnalyticsCard";
 import AnalyticsChart from "./AnalyticsChart";
 
-export default function SessionAnalyticsGrid({ trades }) {
+function TimeChartCard({ charts, className = "an-card an-time-card" }) {
+  return (
+    <section className={className}>
+      <div className="an-card-head">
+        <div className="an-card-title">Performance by Time · NY</div>
+        <div className="an-time-legend">
+          <span className="an-time-legend-swatch" aria-hidden="true" />
+          Avg P&amp;L
+        </div>
+      </div>
+      <div className="an-time-chart">
+        {charts.baskets ? (
+          <AnalyticsChart config={charts.baskets} height={200} />
+        ) : (
+          <div className="analytics-empty">No data</div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function DayChartCard({ charts }) {
+  return (
+    <section className="an-card an-session-card">
+      <div className="an-card-title">Performance by Day</div>
+      {charts.dow ? (
+        <AnalyticsChart config={charts.dow} height={200} />
+      ) : (
+        <div className="analytics-empty">No data</div>
+      )}
+    </section>
+  );
+}
+
+/** Performance-by-time / day cards for the analytics layout. */
+export default function SessionAnalyticsGrid({ trades, variant = "full" }) {
   const charts = useMemo(() => getChartConfigs(trades), [trades]);
+
+  if (variant === "time-only") {
+    return <TimeChartCard charts={charts} />;
+  }
+
+  if (variant === "day-only") {
+    return <DayChartCard charts={charts} />;
+  }
 
   return (
     <div className="an-session-grid">
-      <AnalyticsCard title="Performance by Time · NY" className="an-session-card">
-        <div className="an-chart-legend">
-          <div className="an-chart-legend-item">
-            <div className="an-chart-legend-swatch an-chart-legend-swatch--pnl" />
-            P&L
-          </div>
-        </div>
-        {charts.baskets ? <AnalyticsChart config={charts.baskets} /> : <div className="analytics-empty">No data</div>}
-      </AnalyticsCard>
-
-      <AnalyticsCard title="Performance by Day" className="an-session-card">
-        {charts.dow ? <AnalyticsChart config={charts.dow} /> : <div className="analytics-empty">No data</div>}
-      </AnalyticsCard>
+      <TimeChartCard charts={charts} className="an-card an-session-card" />
+      <DayChartCard charts={charts} />
     </div>
   );
 }
