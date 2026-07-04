@@ -11,6 +11,64 @@ const NEG_FILL = "rgba(240,113,103,0.38)";
 const NEG_STROKE = "rgba(240,113,103,0.72)";
 const POS_LINE = "#50a0ff";
 const NEG_LINE = "#f07167";
+const EQUITY_POS_FILL = "rgba(80,160,255,0.2)";
+const EQUITY_NEG_FILL = "rgba(240,113,103,0.2)";
+
+/** Fill area between the equity line and y=0, blue above / red below. */
+const equityZeroFillPlugin = {
+  id: "equityZeroFill",
+  beforeDatasetsDraw(chart) {
+    const datasetIndex = chart.data.datasets.findIndex((d) => d._equityFill);
+    if (datasetIndex < 0) return;
+
+    const meta = chart.getDatasetMeta(datasetIndex);
+    const points = meta.data?.filter((p) => p && !p.skip);
+    if (!points?.length || meta.hidden) return;
+
+    const { ctx, chartArea, scales } = chart;
+    const yScale = scales.y;
+    if (!yScale || !chartArea) return;
+
+    const zeroY = yScale.getPixelForValue(0);
+
+    const traceFillPath = () => {
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) {
+        const prev = points[i - 1];
+        const curr = points[i];
+        const cpNext = prev._controlPoints?.next;
+        const cpPrev = curr._controlPoints?.previous;
+        if (cpNext && cpPrev) {
+          ctx.bezierCurveTo(cpNext.x, cpNext.y, cpPrev.x, cpPrev.y, curr.x, curr.y);
+        } else {
+          ctx.lineTo(curr.x, curr.y);
+        }
+      }
+      const last = points[points.length - 1];
+      ctx.lineTo(last.x, zeroY);
+      ctx.lineTo(points[0].x, zeroY);
+      ctx.closePath();
+    };
+
+    const fillClipped = (clipTop, clipBottom, color) => {
+      const height = clipBottom - clipTop;
+      if (height <= 0) return;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(chartArea.left, clipTop, chartArea.right - chartArea.left, height);
+      ctx.clip();
+      traceFillPath();
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.restore();
+    };
+
+    // Blue above the zero baseline, red below (works across multiple crossings).
+    fillClipped(chartArea.top, Math.min(zeroY, chartArea.bottom), EQUITY_POS_FILL);
+    fillClipped(Math.max(zeroY, chartArea.top), chartArea.bottom, EQUITY_NEG_FILL);
+  },
+};
 
 function barColors(values) {
   return {
@@ -62,8 +120,6 @@ export function buildCumulativePnlConfig(trades) {
     data.push(+cum.toFixed(2));
   });
 
-  const end = data[data.length - 1] ?? 0;
-
   return {
     type: "line",
     data: {
@@ -71,17 +127,18 @@ export function buildCumulativePnlConfig(trades) {
       datasets: [
         {
           data,
-          borderColor: end >= 0 ? POS_LINE : NEG_LINE,
+          borderColor: POS_LINE,
           segment: {
             borderColor: (ctx) => (ctx.p1.parsed.y >= 0 ? POS_LINE : NEG_LINE),
           },
-          backgroundColor: end >= 0 ? "rgba(80,160,255,0.12)" : "rgba(240,113,103,0.12)",
           borderWidth: 2.5,
           pointRadius: 0,
           pointHoverRadius: 4,
-          pointBackgroundColor: end >= 0 ? POS_LINE : NEG_LINE,
-          fill: true,
+          pointBackgroundColor: POS_LINE,
+          pointHoverBackgroundColor: POS_LINE,
+          fill: false,
           tension: 0.25,
+          _equityFill: true,
         },
       ],
     },
@@ -108,6 +165,7 @@ export function buildCumulativePnlConfig(trades) {
         },
       },
     },
+    plugins: [equityZeroFillPlugin],
   };
 }
 
