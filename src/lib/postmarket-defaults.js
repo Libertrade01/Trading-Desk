@@ -112,7 +112,7 @@ export const DEFAULT_POSTMARKET = {
 export const JOURNAL_REVIEW_CHECKLIST = [
   {
     key: "setupsScreenshottedSaved",
-    statusLabel: "Database",
+    statusLabel: "Setups",
     label: "Today's A+ setup screenshots saved (taken or missed)",
   },
   {
@@ -138,7 +138,7 @@ export function isNoTradeDay(sessionOrPost = {}) {
   return !!(post?.noTradeToday && post?.savedAt);
 }
 
-/** e.g. "Replay pending · Database pending" */
+/** e.g. "Replay pending · Setups pending" */
 export function formatJournalReviewPendingSummary(formOrPost = {}, { separator = " · " } = {}) {
   const pending = getJournalReviewPendingItems(formOrPost);
   if (!pending.length) return null;

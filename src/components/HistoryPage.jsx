@@ -171,19 +171,18 @@ export default function HistoryPage({ onSelectDay }) {
                           {session.recoveryLabel && (
                             <span className="history-row-recovery-badge">{session.recoveryLabel}</span>
                           )}
-                          <div className="history-split-row__meta">
-                            <HistoryStagePipeline session={session} compact />
-                            <HistoryJournalIndicators session={session} />
-                          </div>
+                          <HistoryJournalIndicators session={session} />
                         </div>
 
-                        <span className={`history-split-row__ready history-split-row__ready--${readinessTone}`}>
-                          {session.readinessScore != null ? session.readinessScore : "—"}
-                        </span>
-
-                        <span className={`history-split-row__pnl ${pnlTone}`}>
-                          {session.netPnl != null ? formatUsd(session.netPnl, { signed: true }) : "—"}
-                        </span>
+                        <div className="history-split-row__metrics">
+                          <HistoryStagePipeline session={session} compact />
+                          <span className={`history-split-row__ready history-split-row__ready--${readinessTone}`}>
+                            {session.readinessScore != null ? session.readinessScore : "—"}
+                          </span>
+                          <span className={`history-split-row__pnl ${pnlTone}`}>
+                            {session.netPnl != null ? formatUsd(session.netPnl, { signed: true }) : "—"}
+                          </span>
+                        </div>
                       </button>
                     );
                   })}

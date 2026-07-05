@@ -111,7 +111,7 @@ export default function HistoryCalendar({
               onClick={() => onSelectDate(cell.dateKey)}
               aria-label={
                 cell.session
-                  ? `${cell.day}, session ${cell.tone === "pos" ? "green" : cell.tone === "neg" ? "red" : "logged"}`
+                  ? `${cell.day}, session ${cell.tone === "pos" ? "win" : cell.tone === "neg" ? "loss" : "logged"}`
                   : `${cell.day}`
               }
               aria-pressed={cell.selected}
@@ -123,8 +123,8 @@ export default function HistoryCalendar({
       </div>
 
       <p className="history-cal__legend">
-        <span className="history-cal__legend-dot pos" aria-hidden="true" /> Green day
-        <span className="history-cal__legend-dot neg" aria-hidden="true" /> Red day
+        <span className="history-cal__legend-dot pos" aria-hidden="true" /> Win day
+        <span className="history-cal__legend-dot neg" aria-hidden="true" /> Loss day
       </p>
     </aside>
   );

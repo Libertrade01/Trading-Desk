@@ -2,7 +2,7 @@
 
 import { JOURNAL_REVIEW_CHECKLIST } from "../../lib/postmarket-defaults";
 
-/** Subtle REPLAY / Database status pills for history list rows. */
+/** Subtle REPLAY / Setups status pills for history list rows. */
 export default function HistoryJournalIndicators({ session }) {
   const post = session?.post;
   if (!session?.hasPost || post?.noTradeToday) return null;
@@ -20,8 +20,8 @@ export default function HistoryJournalIndicators({ session }) {
             {done && (
               <svg
                 className="history-journal-micro__check"
-                width="8"
-                height="8"
+                width="6"
+                height="6"
                 viewBox="0 0 8 8"
                 fill="none"
                 aria-hidden="true"

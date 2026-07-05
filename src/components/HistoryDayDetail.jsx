@@ -456,7 +456,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
         ) : (
           <>
             <div className="history-post-metrics">
-              <div className="history-post-metric">
+              <div className="history-post-metric history-post-metric--pnl">
                 <span>Net P&amp;L</span>
                 <strong className={pnlTone}>{session.netPnl != null ? formatUsd(session.netPnl, { signed: true }) : "—"}</strong>
               </div>
