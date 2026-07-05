@@ -4344,7 +4344,6 @@ textarea:focus, input:focus, select:focus {
 }
 
 .hybrid-page .hybrid-page-title,
-.hybrid-page .history-title,
 .hybrid-page .history-detail-title,
 .hybrid-page .hybrid-title {
   font-family: 'Syne', var(--font-display);
@@ -7720,6 +7719,20 @@ input.pm-slider:active::-moz-range-thumb {
   padding-top: 0;
 }
 
+.history-page.workflow-page--loop .history-content {
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 64px;
+}
+
+.history-page.workflow-page--loop .pm-header {
+  margin-bottom: 28px;
+}
+
+.history-page.workflow-page--loop .pm-header .pm-subtitle {
+  margin-bottom: 0;
+}
+
 .history-eyebrow {
   font-family: var(--font-poster);
   font-size: 10px;
@@ -7730,7 +7743,6 @@ input.pm-slider:active::-moz-range-thumb {
   margin-bottom: 12px;
 }
 
-.history-title,
 .history-detail-title {
   font-family: var(--font-display);
   font-size: clamp(28px, 5vw, 36px);
@@ -7739,14 +7751,6 @@ input.pm-slider:active::-moz-range-thumb {
   letter-spacing: -0.04em;
   line-height: 0.98;
   margin-bottom: 8px;
-}
-
-.history-subtitle {
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.6;
-  margin-bottom: 28px;
-  max-width: 420px;
 }
 
 .history-empty {
@@ -7898,13 +7902,9 @@ input.pm-slider:active::-moz-range-thumb {
 
 .history-cal__legend {
   margin-top: 14px;
-  font-size: 11px;
-  color: var(--muted);
-  line-height: 1.5;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 6px 12px;
+  gap: 8px;
 }
 
 .history-cal__legend-dot {
@@ -7912,8 +7912,6 @@ input.pm-slider:active::-moz-range-thumb {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  margin-right: 2px;
-  vertical-align: middle;
 }
 
 .history-cal__legend-dot.pos {
@@ -8190,9 +8188,9 @@ input.pm-slider:active::-moz-range-thumb {
 }
 
 .history-stage-pipeline__dot.active {
-  background: var(--an-pos);
-  border-color: rgba(80, 160, 255, 0.6);
-  box-shadow: 0 0 0 3px rgba(80, 160, 255, 0.12);
+  background: color-mix(in srgb, var(--brand) 55%, transparent);
+  border-color: color-mix(in srgb, var(--brand) 45%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 8%, transparent);
 }
 
 .history-stage-pipeline__label {

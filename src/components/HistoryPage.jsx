@@ -18,14 +18,12 @@ import HistoryCalendar, {
 } from "./history/HistoryCalendar";
 
 function headerDate() {
-  return new Date()
-    .toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    })
-    .toUpperCase();
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function parseViewMonth(dateKey) {
@@ -110,23 +108,29 @@ export default function HistoryPage({ onSelectDay }) {
     });
   };
 
-  if (loading) return <div className="pm-loading">Loading...</div>;
+  if (loading) return <div className="pm-loading workflow-page--loop">Loading...</div>;
 
   const completeCount = sessions.filter((s) => s.hasPre && s.hasPlan && s.hasPost).length;
 
   return (
-    <div className="history-page history-page--split hybrid-page">
-      <div className="pm-topbar">
-        <span>{headerDate()}</span>
-      </div>
-
-      <div className="history-content history-content--split">
-        <div className="history-eyebrow hybrid-eyebrow">
-          {sessions.length} session{sessions.length === 1 ? "" : "s"}
-          {sessions.length > 0 && completeCount > 0 ? ` · ${completeCount} full loop` : ""}
+    <div className="history-page history-page--split hybrid-page workflow-page--loop">
+      <div className="workflow-page-inner">
+        <div className="pm-topbar">
+          <span>{headerDate()}</span>
         </div>
-        <h1 className="history-title hybrid-title">History</h1>
-        <p className="history-subtitle">Walk back through your sessions. Pattern recognition compounds.</p>
+
+        <div className="history-content history-content--split">
+          <header className="pm-header">
+            <div className="history-eyebrow hybrid-eyebrow">
+              {sessions.length} session{sessions.length === 1 ? "" : "s"}
+              {sessions.length > 0 && completeCount > 0 ? ` · ${completeCount} full loop` : ""}
+            </div>
+            <h1 className="hybrid-page-title">
+              History
+              <span className="hybrid-page-title-stop" aria-hidden="true" />
+            </h1>
+            <p className="pm-subtitle">Walk back through your sessions. Pattern recognition compounds.</p>
+          </header>
 
         {sessions.length === 0 ? (
           <div className="history-empty">
@@ -191,6 +195,7 @@ export default function HistoryPage({ onSelectDay }) {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
