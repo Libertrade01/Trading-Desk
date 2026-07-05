@@ -467,7 +467,7 @@ export default function PreMarketCheckIn({ onBack }) {
                   <div className="pm-habit-tile-row pm-habit-tile-row--prep">
                     <HabitTileField label="Econ Event Calendar/News" value={form.reviewedNews} onChange={(v) => set("reviewedNews", v)} />
                     <HabitTileField label="Key Levels Marked" value={form.reviewedKeyLevels} onChange={(v) => set("reviewedKeyLevels", v)} />
-                    <HabitTileField label="Session Plan written" value={form.dailyPlanWritten} onChange={(v) => set("dailyPlanWritten", v)} />
+                    <HabitTileField label="Session Plan Outlined" value={form.dailyPlanWritten} onChange={(v) => set("dailyPlanWritten", v)} />
                   </div>
                 </>
               )}

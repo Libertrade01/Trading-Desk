@@ -16,6 +16,7 @@ import {
   formatUsd,
   biasTag,
   volTag,
+  sessionOpenVsValueTag,
   getRiskPlanFollowed,
 } from "../lib/history-data";
 import { playbookAdherenceLabel } from "../lib/setup-adherence";
@@ -268,7 +269,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                 items={[
                   { label: "Reviewed levels", value: yesNo(pre.reviewedKeyLevels) },
                   { label: "Reviewed news", value: yesNo(pre.reviewedNews) },
-                  { label: "Session plan written", value: yesNo(pre.dailyPlanWritten) },
+                  { label: "Session Plan Outlined", value: yesNo(pre.dailyPlanWritten) },
                   { label: "Routine", value: yesNo(pre.followedRoutine) },
                   { label: "Breathwork", value: yesNo(pre.meditation) },
                 ]}
@@ -304,6 +305,9 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                 )}
                 {volTag(plan.expectedVolatility) && (
                   <span className="history-plan-tag">{volTag(plan.expectedVolatility)}</span>
+                )}
+                {sessionOpenVsValueTag(plan.sessionOpenVsValue) && (
+                  <span className="history-plan-tag">{sessionOpenVsValueTag(plan.sessionOpenVsValue)}</span>
                 )}
                 {plan.positionSize && (
                   <span className="history-plan-tag">{plan.positionSize.toUpperCase()}</span>

@@ -18,6 +18,19 @@ export function normalizeDirectionalBias(value) {
   return "Balanced/Rotational";
 }
 
+export const SESSION_OPEN_VS_VALUE_OPTIONS = [
+  "Inside Value (expect rotational)",
+  "Outside of Value (potential for imbalance)",
+  "Outside of yesterday range (high probability imbalance)",
+];
+
+/** Map stored session-open vs value labels onto the current option set. */
+export function normalizeSessionOpenVsValue(value) {
+  const v = String(value ?? "").trim();
+  if (SESSION_OPEN_VS_VALUE_OPTIONS.includes(v)) return v;
+  return "";
+}
+
 export const VOLATILITY_OPTIONS = ["Low", "Normal", "Elevated", "Extreme"];
 
 /** Map older volatility labels onto the current option set. */
@@ -86,6 +99,7 @@ export const DEFAULT_DAILY_PLAN = {
   biasMarkedValueArea: false,
   biasMarkedNodesLvns: false,
   biasMarkedWeeklyProfile: false,
+  sessionOpenVsValue: "",
   keyLevels: [],
   setups: [],
   ddFromHighWaterMark: "",

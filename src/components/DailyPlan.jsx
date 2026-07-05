@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { storage } from "../lib/supabase";
 import {
   BIAS_OPTIONS,
+  SESSION_OPEN_VS_VALUE_OPTIONS,
   VOLATILITY_OPTIONS,
   LEVEL_TYPE_OPTIONS,
   DEFAULT_DAILY_PLAN,
@@ -11,6 +12,7 @@ import {
   newKeyLevel,
   newSetup,
   normalizeDirectionalBias,
+  normalizeSessionOpenVsValue,
   normalizeExpectedVolatility,
   normalizeKeyLevelQuickAdds,
   normalizeLevelType,
@@ -172,6 +174,7 @@ export default function DailyPlan({ onBack }) {
       next = {
         ...next,
         directionalBias: normalizeDirectionalBias(next.directionalBias),
+        sessionOpenVsValue: normalizeSessionOpenVsValue(next.sessionOpenVsValue),
         expectedVolatility: normalizeExpectedVolatility(next.expectedVolatility),
         keyLevels: (next.keyLevels || []).map((level) => ({
           ...level,
@@ -343,6 +346,7 @@ export default function DailyPlan({ onBack }) {
 
   const playbookSetups = getPlaybookSetupNames(profile);
   const biasItems = getEnabledBiasItems(profile);
+  const isFounder = profile.profileKind === "founder";
   const commitmentList = profile.commitments || [];
 
   return (
@@ -405,6 +409,38 @@ export default function DailyPlan({ onBack }) {
                           ))}
                         </div>
                         <p className="pm-commitment-hint">All items required to save today&apos;s plan.</p>
+                      </div>
+                    )}
+                    {isFounder && (
+                      <div className="pm-field">
+                        <div className="pm-field-label hybrid-label">Value</div>
+                        <p className="pm-field-hint">Where will the session open in relation to previous day value?</p>
+                        <div
+                          className="pm-habit-tile-row pm-habit-tile-row--bias"
+                          role="radiogroup"
+                          aria-label="Session open vs previous day value"
+                        >
+                          {SESSION_OPEN_VS_VALUE_OPTIONS.map((option) => {
+                            const selected = form.sessionOpenVsValue === option;
+                            return (
+                              <button
+                                key={option}
+                                type="button"
+                                role="radio"
+                                aria-checked={selected}
+                                className={`pm-habit-tile${selected ? " on" : ""}`}
+                                onClick={() => set("sessionOpenVsValue", option)}
+                              >
+                                <span className="pm-habit-tile-mark" aria-hidden="true">
+                                  {selected ? "✓" : ""}
+                                </span>
+                                <span className="pm-habit-tile-copy">
+                                  <span className="pm-habit-tile-title">{option}</span>
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                     <div className="pm-field">

@@ -529,3 +529,11 @@ export function volTag(vol) {
   const label = /^high$/i.test(vol) ? "Elevated" : vol;
   return label === "Normal" ? "NORMAL VOL" : `${label.toUpperCase()} VOL`;
 }
+
+export function sessionOpenVsValueTag(value) {
+  if (!value) return null;
+  if (value.startsWith("Inside Value")) return "INSIDE VALUE";
+  if (value.startsWith("Outside of Value")) return "OUTSIDE VALUE";
+  if (value.startsWith("Outside of yesterday")) return "OUTSIDE RANGE";
+  return null;
+}
