@@ -110,8 +110,6 @@ export default function HistoryPage({ onSelectDay }) {
 
   if (loading) return <div className="pm-loading workflow-page--loop">Loading...</div>;
 
-  const completeCount = sessions.filter((s) => s.hasPre && s.hasPlan && s.hasPost).length;
-
   return (
     <div className="history-page history-page--split hybrid-page workflow-page--loop">
       <div className="workflow-page-inner">
@@ -121,10 +119,6 @@ export default function HistoryPage({ onSelectDay }) {
 
         <div className="history-content history-content--split">
           <header className="pm-header">
-            <div className="history-eyebrow hybrid-eyebrow">
-              {sessions.length} session{sessions.length === 1 ? "" : "s"}
-              {sessions.length > 0 && completeCount > 0 ? ` · ${completeCount} full loop` : ""}
-            </div>
             <h1 className="hybrid-page-title">
               History
               <span className="hybrid-page-title-stop" aria-hidden="true" />

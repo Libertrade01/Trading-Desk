@@ -121,11 +121,6 @@ export default function HistoryCalendar({
           );
         })}
       </div>
-
-      <p className="history-cal__legend" aria-label="Win day, loss day">
-        <span className="history-cal__legend-dot pos" aria-hidden="true" />
-        <span className="history-cal__legend-dot neg" aria-hidden="true" />
-      </p>
     </aside>
   );
 }

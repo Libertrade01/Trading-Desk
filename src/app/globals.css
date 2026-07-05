@@ -4332,7 +4332,6 @@ textarea:focus, input:focus, select:focus {
 
 /* Poster typography on workflow pages */
 .hybrid-page .pm-eyebrow,
-.hybrid-page .history-eyebrow,
 .hybrid-page .pm-commitment-eyebrow,
 .hybrid-page .pm-reminders-eyebrow {
   font-family: 'Outfit', var(--font-poster);
@@ -7733,16 +7732,6 @@ input.pm-slider:active::-moz-range-thumb {
   margin-bottom: 0;
 }
 
-.history-eyebrow {
-  font-family: var(--font-poster);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--brand);
-  margin-bottom: 12px;
-}
-
 .history-detail-title {
   font-family: var(--font-display);
   font-size: clamp(28px, 5vw, 36px);
@@ -7772,10 +7761,14 @@ input.pm-slider:active::-moz-range-thumb {
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
+  min-height: 320px;
 }
 
 .history-cal {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   padding: 16px;
   border-radius: var(--radius, 14px);
   border: 1px solid var(--border);
@@ -7830,6 +7823,8 @@ input.pm-slider:active::-moz-range-thumb {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
+  flex: 1;
+  align-content: start;
   font-size: 11px;
 }
 
@@ -7900,29 +7895,10 @@ input.pm-slider:active::-moz-range-thumb {
   background: rgba(0, 101, 189, 0.1);
 }
 
-.history-cal__legend {
-  margin-top: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.history-cal__legend-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-}
-
-.history-cal__legend-dot.pos {
-  background: var(--an-pos);
-}
-
-.history-cal__legend-dot.neg {
-  background: var(--an-neg);
-}
-
 .history-split-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   border-radius: var(--radius, 14px);
   border: 1px solid var(--border);
   background:
@@ -8255,9 +8231,7 @@ input.pm-slider:active::-moz-range-thumb {
 
 .history-day-summary__score {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
   flex-shrink: 0;
 }
 
