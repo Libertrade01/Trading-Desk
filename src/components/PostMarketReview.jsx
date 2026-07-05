@@ -115,7 +115,9 @@ export default function PostMarketReview({ onBack }) {
   const [dayTrades, setDayTrades] = useState([]);
   const [recoveryStatus, setRecoveryStatus] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
+  const [dragActive, setDragActive] = useState(false);
   const fileRef = useRef(null);
+  const dragCounter = useRef(0);
 
   const set = useCallback((key, value) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -305,10 +307,8 @@ export default function PostMarketReview({ onBack }) {
     }
   };
 
-  const handleFile = async (e) => {
-    const file = e.target.files?.[0];
+  const processImportFile = async (file) => {
     if (!file) return;
-    e.target.value = "";
     try {
       const text = await file.text();
       const account = await loadImportAccount();
@@ -329,6 +329,42 @@ export default function PostMarketReview({ onBack }) {
       setImportPreview(null);
     }
   };
+
+  const handleFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    await processImportFile(file);
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    dragCounter.current += 1;
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    dragCounter.current -= 1;
+    if (dragCounter.current <= 0) {
+      dragCounter.current = 0;
+      setDragActive(false);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    dragCounter.current = 0;
+    setDragActive(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) await processImportFile(file);
+  };
+
+  const openFilePicker = () => fileRef.current?.click();
 
   const handleImportConfirm = async (trades, accountType) => {
     const check = validateImportSetupTags(trades);
@@ -379,7 +415,7 @@ export default function PostMarketReview({ onBack }) {
           <div className="pm-closeout-header-row">
             <div className="pm-header">
               <h1 className="hybrid-page-title">Close loop<span className="hybrid-page-title-stop" aria-hidden="true" /></h1>
-              <p className="pm-subtitle">Close the loop. What happened vs what you planned.</p>
+              <p className="pm-subtitle">Close the loop. Reality vs plan.</p>
             </div>
             <CloseoutMetrics
               form={form}
@@ -403,10 +439,52 @@ export default function PostMarketReview({ onBack }) {
             </div>
           )}
 
-          <div className="pm-closeout-context-strip pm-closeout-import-strip">
-            <div className="pm-closeout-import-body">
-              <div className="pm-closeout-import-title">Import from rTrader</div>
-              <div className="pm-closeout-import-desc">Performance Summary or Trades export — auto-detects.</div>
+          <div className="pm-import-card">
+            <div className="pm-import-card-head pm-import-card-head--today">
+              <span className="pm-import-card-head-title">Session import</span>
+              <span className="pm-import-broker-pill">rTrader</span>
+            </div>
+            <div
+              className={`pm-import-drop${dragActive ? " pm-import-drop--active" : ""}`}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onClick={openFilePicker}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  openFilePicker();
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="Drop CSV here or click to browse"
+            >
+              <div className="pm-import-drop-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+              </div>
+              <div className="pm-import-drop-title">Drop CSV here or click to browse</div>
+              <div className="pm-import-drop-hint">
+                Import fills Performance below automatically, or enter all fields manually.
+              </div>
+              <button
+                type="button"
+                className="pm-closeout-upload-btn pm-import-drop-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openFilePicker();
+                }}
+              >
+                Import
+              </button>
+              {importMsg && <p className="pm-import-msg">{importMsg}</p>}
+            </div>
+            <div className="pm-import-foot">
               <button type="button" className="pm-import-help" onClick={() => setShowHelp((s) => !s)}>
                 How do I get this file from rTrader?
               </button>
@@ -415,11 +493,7 @@ export default function PostMarketReview({ onBack }) {
                   In rTrader, export your session as a CSV (Performance Summary or Trades). Upload here — trades import to Analytics and today&apos;s performance fields fill automatically.
                 </p>
               )}
-              {importMsg && <p className="pm-import-msg">{importMsg}</p>}
             </div>
-            <button type="button" className="pm-closeout-upload-btn" onClick={() => fileRef.current?.click()}>
-              Import
-            </button>
             <input ref={fileRef} type="file" accept=".csv" hidden onChange={handleFile} />
           </div>
 
@@ -489,16 +563,92 @@ export default function PostMarketReview({ onBack }) {
               <div className="pm-section-panel-body">
                 {step.id === "performance" && (
                   <>
-                    <div className="pm-perf-grid">
-                      <div><div className="pm-field-label hybrid-label">Trades</div><input type="text" value={form.trades} onChange={(e) => set("trades", e.target.value)} className="pm-text-input" disabled={form.noTradeToday} /></div>
-                      <div><div className="pm-field-label hybrid-label">Wins</div><input type="text" value={form.wins} onChange={(e) => set("wins", e.target.value)} className="pm-text-input" disabled={form.noTradeToday} /></div>
-                      <div><div className="pm-field-label hybrid-label">Losses</div><input type="text" value={form.losses} onChange={(e) => set("losses", e.target.value)} className="pm-text-input" disabled={form.noTradeToday} /></div>
-                      <div><div className="pm-field-label hybrid-label">Gross P&amp;L</div><input type="text" value={form.grossPnl} onChange={(e) => set("grossPnl", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
-                      <div><div className="pm-field-label hybrid-label">Best winner</div><input type="text" value={form.bestWinner} onChange={(e) => set("bestWinner", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
-                      <div><div className="pm-field-label hybrid-label">Worst loss</div><input type="text" value={form.worstLoss} onChange={(e) => set("worstLoss", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
-                      <div className="pm-perf-full"><div className="pm-field-label hybrid-label">Commissions &amp; fees</div><input type="text" value={form.commissionsFees} onChange={(e) => set("commissionsFees", e.target.value)} className="pm-text-input" placeholder="$" disabled={form.noTradeToday} /></div>
+                    <div className="pm-perf-split">
+                      <div className="pm-perf-col">
+                        <div className="pm-perf-col-head">Session Stats</div>
+                        <div className="pm-perf-rows">
+                          <div className="pm-perf-row">
+                            <div className="pm-field-label hybrid-label">Trades</div>
+                            <input
+                              type="text"
+                              value={form.trades}
+                              onChange={(e) => set("trades", e.target.value)}
+                              className="pm-text-input pm-perf-row-input"
+                              disabled={form.noTradeToday}
+                            />
+                          </div>
+                          <div className="pm-perf-row">
+                            <div className="pm-field-label hybrid-label">Wins</div>
+                            <input
+                              type="text"
+                              value={form.wins}
+                              onChange={(e) => set("wins", e.target.value)}
+                              className="pm-text-input pm-perf-row-input"
+                              disabled={form.noTradeToday}
+                            />
+                          </div>
+                          <div className="pm-perf-row">
+                            <div className="pm-field-label hybrid-label">Losses</div>
+                            <input
+                              type="text"
+                              value={form.losses}
+                              onChange={(e) => set("losses", e.target.value)}
+                              className="pm-text-input pm-perf-row-input"
+                              disabled={form.noTradeToday}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="pm-perf-col">
+                        <div className="pm-perf-col-head">Performance</div>
+                        <div className="pm-perf-rows">
+                          <div className="pm-perf-row">
+                            <div className="pm-field-label hybrid-label">Gross P&amp;L</div>
+                            <input
+                              type="text"
+                              value={form.grossPnl}
+                              onChange={(e) => set("grossPnl", e.target.value)}
+                              className={`pm-text-input pm-perf-row-input pm-perf-row-input--wide ${dollarInputTone(form.grossPnl)}`}
+                              placeholder="$"
+                              disabled={form.noTradeToday}
+                            />
+                          </div>
+                          <div className="pm-perf-row">
+                            <div className="pm-field-label hybrid-label">Commissions</div>
+                            <input
+                              type="text"
+                              value={form.commissionsFees}
+                              onChange={(e) => set("commissionsFees", e.target.value)}
+                              className="pm-text-input pm-perf-row-input pm-perf-row-input--wide"
+                              placeholder="$"
+                              disabled={form.noTradeToday}
+                            />
+                          </div>
+                          <div className="pm-perf-row">
+                            <div className="pm-field-label hybrid-label">Best winner</div>
+                            <input
+                              type="text"
+                              value={form.bestWinner}
+                              onChange={(e) => set("bestWinner", e.target.value)}
+                              className={`pm-text-input pm-perf-row-input pm-perf-row-input--wide ${dollarInputTone(form.bestWinner, "pos")}`}
+                              placeholder="$"
+                              disabled={form.noTradeToday}
+                            />
+                          </div>
+                          <div className="pm-perf-row">
+                            <div className="pm-field-label hybrid-label">Worst loss</div>
+                            <input
+                              type="text"
+                              value={form.worstLoss}
+                              onChange={(e) => set("worstLoss", e.target.value)}
+                              className={`pm-text-input pm-perf-row-input pm-perf-row-input--wide ${dollarInputTone(form.worstLoss, "neg")}`}
+                              placeholder="$"
+                              disabled={form.noTradeToday}
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <p className="pm-perf-note">Enter your gross P&amp;L above and your total commissions &amp; fees here; your net is calculated automatically. On imported days this is filled from your CSV.</p>
                   </>
                 )}
 
@@ -511,7 +661,7 @@ export default function PostMarketReview({ onBack }) {
                     <div className="pm-risk-block">
                       <HabitTileField
                         label="Risk plan followed?"
-                        hint="Be brutally honest — this is your risk adherence streak. Yes only if you followed your plan and respected every limit today. Serious traders close the loop clean."
+                        hint="This is your Risk Adherence streak, check box ONLY if you followed your plan and respected your limits."
                         value={form.riskPlanFollowed === true}
                         onChange={(on) => set("riskPlanFollowed", on)}
                       />
@@ -564,41 +714,55 @@ export default function PostMarketReview({ onBack }) {
                 {step.id === "journal" && (
                   <>
                     <div className="pm-field">
-                      <div className="pm-field-label hybrid-label">Read vs reality</div>
-                      <div className="pm-field-hint">Your morning bias vs how the session actually played out.</div>
+                      <div className="pm-field-label hybrid-label">Plan vs Reality</div>
                       <textarea
                         value={form.readVsReality}
                         onChange={(e) => set("readVsReality", e.target.value)}
                         className="pm-textarea"
-                        placeholder="What you expected going in — what happened instead — and whether your levels and setup read held up."
+                        placeholder="Your session lean and plan vs how the session actually played out."
                         rows={3}
                       />
                     </div>
                     <div className="pm-field">
                       <div className="pm-field-label hybrid-label">What i did well</div>
-                      <textarea value={form.wentWell} onChange={(e) => set("wentWell", e.target.value)} className="pm-textarea" rows={3} />
+                      <textarea
+                        value={form.wentWell}
+                        onChange={(e) => set("wentWell", e.target.value)}
+                        className="pm-textarea"
+                        placeholder="One or two things you did well today, even on losing trades."
+                        rows={3}
+                      />
                     </div>
                     <div className="pm-field">
                       <div className="pm-field-label hybrid-label">what i can improve</div>
-                      <textarea value={form.wentWrong} onChange={(e) => set("wentWrong", e.target.value)} className="pm-textarea" rows={3} />
+                      <textarea
+                        value={form.wentWrong}
+                        onChange={(e) => set("wentWrong", e.target.value)}
+                        className="pm-textarea"
+                        placeholder="One or two things that can be improved from today's session."
+                        rows={3}
+                      />
                     </div>
                     <div className="pm-field">
-                      <div className="pm-field-label hybrid-label">Main takeaway and Lesson</div>
-                      <textarea value={form.oneLesson} onChange={(e) => set("oneLesson", e.target.value)} className="pm-textarea" placeholder="If today taught you one thing, what was it?" rows={3} />
+                      <div className="pm-field-label hybrid-label">One lesson</div>
+                      <textarea value={form.oneLesson} onChange={(e) => set("oneLesson", e.target.value)} className="pm-textarea" placeholder="What from today will you carry forward." rows={3} />
                     </div>
-                    <div className="pm-habit-tile-row pm-habit-tile-row--prep" role="group" aria-label="End-of-day review checklist">
-                      {JOURNAL_REVIEW_CHECKLIST.map((item) => {
-                        const done = !!form[item.key];
-                        return (
-                          <HabitTileField
-                            key={item.key}
-                            label={item.label}
-                            hint={done ? "Done" : "Pending"}
-                            value={done}
-                            onChange={(v) => set(item.key, v)}
-                          />
-                        );
-                      })}
+                    <div className="pm-habit-group">
+                      <div className="pm-flags-category-title">Close-out habits</div>
+                      <div className="pm-habit-tile-row pm-habit-tile-row--prep" role="group" aria-label="End-of-day review checklist">
+                        {JOURNAL_REVIEW_CHECKLIST.map((item) => {
+                          const done = !!form[item.key];
+                          return (
+                            <HabitTileField
+                              key={item.key}
+                              label={item.label}
+                              hint={done ? "Done" : "Pending"}
+                              value={done}
+                              onChange={(v) => set(item.key, v)}
+                            />
+                          );
+                        })}
+                      </div>
                     </div>
                   </>
                 )}
@@ -626,7 +790,7 @@ export default function PostMarketReview({ onBack }) {
                   className="pm-btn-primary-sm"
                   onClick={() => setActiveStep((i) => Math.min(CLOSEOUT_STEPS.length - 1, i + 1))}
                 >
-                  Next — {CLOSEOUT_STEPS[activeStep + 1].label}
+                  Next
                 </button>
               ) : (
                 <div className="pm-closeout-finish-actions-right">
@@ -635,7 +799,7 @@ export default function PostMarketReview({ onBack }) {
                     className={`pm-btn-outline${saved ? " pm-btn-outline--saved" : ""}`}
                     onClick={handleSave}
                   >
-                    {saved ? "Saved" : "Save close loop"}
+                    {saved ? "Saved" : "Save & Close Loop"}
                   </button>
                   <button
                     type="button"
@@ -667,4 +831,10 @@ function round2(n) {
 function formatUsd(n) {
   const abs = Math.abs(n).toFixed(2);
   return n >= 0 ? `$${abs}` : `-$${abs}`;
+}
+
+function dollarInputTone(value, fallback = "") {
+  const n = parseFloat(String(value).replace(/[$,]/g, ""));
+  if (Number.isNaN(n) || n === 0) return fallback;
+  return n > 0 ? "pos" : "neg";
 }

@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Close Loop · Import Mockups · Libertrade Loop</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #07090d;
+      --text: #edf1f7;
+      --muted: rgba(237, 241, 247, 0.48);
+      --muted2: rgba(237, 241, 247, 0.28);
+      --blue: #0065bd;
+      --blue-soft: rgba(0, 101, 189, 0.14);
+      --blue-border: rgba(0, 101, 189, 0.32);
+      --brand-link: rgba(140, 190, 255, 0.9);
+      --glass:
+        radial-gradient(circle at top right, rgba(80, 160, 255, 0.06), transparent 42%),
+        linear-gradient(180deg, rgba(16, 27, 42, 0.96), rgba(11, 18, 28, 0.98));
+      --glass-soft: rgba(11, 14, 20, 0.88);
+      --border: rgba(255, 255, 255, 0.08);
+      --shadow: 0 20px 48px rgba(0, 0, 0, 0.32);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(0, 101, 189, 0.12), transparent 28%),
+        linear-gradient(180deg, #05070b 0%, #0a0d12 100%);
+      color: var(--text);
+      font: 14px/1.5 "DM Sans", sans-serif;
+      padding: 40px 28px 80px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page { max-width: 980px; margin: 0 auto; }
+    .page-head { max-width: 720px; margin-bottom: 36px; }
+
+    .eyebrow {
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font: 800 34px/1.02 "Syne", sans-serif;
+      letter-spacing: -0.045em;
+      margin-bottom: 14px;
+    }
+
+    .lead {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.65;
+      max-width: 68ch;
+    }
+
+    .names {
+      margin: 0 0 36px;
+      padding: 20px 22px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .names h2 {
+      font: 700 16px/1.2 "Syne", sans-serif;
+      margin: 0 0 14px;
+    }
+
+    .names h2 + h2 { margin-top: 22px; }
+
+    .name-item {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 14px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .name-item:last-child { border-bottom: none; }
+    .name-item strong { color: #fff; font-size: 13px; }
+    .name-item span { color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+    .mock-block {
+      margin-bottom: 34px;
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .mock-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mock-num {
+      font: 600 11px/1 "Outfit", sans-serif;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted2);
+    }
+
+    .mock-name {
+      font: 700 20px/1.1 "Syne", sans-serif;
+      letter-spacing: -0.03em;
+    }
+
+    .mock-tag {
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(0, 101, 189, 0.12);
+      color: rgba(140, 190, 255, 0.95);
+    }
+
+    .mock-tag--amber {
+      background: rgba(191, 139, 75, 0.14);
+      color: rgba(240, 163, 94, 0.95);
+    }
+
+    .mock-copy {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      margin-bottom: 16px;
+      max-width: 72ch;
+    }
+
+    .stage {
+      padding: 22px;
+      border-radius: 16px;
+      background:
+        radial-gradient(circle at 70% 10%, rgba(255,255,255,0.03), transparent 30%),
+        #0a0d12;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .rec {
+      margin-top: 14px;
+      font-size: 12px;
+      color: rgba(140, 190, 255, 0.85);
+      line-height: 1.5;
+    }
+
+    /* ── Close loop context shell ── */
+    .loop-shell {
+      max-width: 880px;
+      margin: 0 auto;
+    }
+
+    .loop-topbar {
+      font: 500 14px/1 "Outfit", sans-serif;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 22px;
+    }
+
+    .loop-header-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 16px;
+    }
+
+    .loop-title {
+      font: 700 clamp(28px, 4vw, 40px)/1.05 "Outfit", sans-serif;
+      letter-spacing: -0.035em;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .loop-title-stop {
+      display: inline-block;
+      width: 0.16em;
+      height: 0.16em;
+      margin-left: 0.08em;
+      background: var(--blue);
+      vertical-align: 0.06em;
+    }
+
+    .loop-subtitle {
+      font-size: 15px;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.6;
+    }
+
+    .loop-metrics {
+      flex-shrink: 0;
+      min-width: 140px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: rgba(11, 14, 20, 0.72);
+      border: 1px solid var(--border);
+      text-align: right;
+    }
+
+    .loop-metrics-label {
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .loop-metrics-pnl {
+      font: 700 22px/1.1 "DM Mono", monospace;
+      color: #50a0ff;
+      margin-bottom: 8px;
+    }
+
+    .loop-metrics-row {
+      display: flex;
+      gap: 14px;
+      justify-content: flex-end;
+    }
+
+    .loop-metrics-stat {
+      font: 600 13px/1 "DM Mono", monospace;
+    }
+
+    .loop-metrics-stat span {
+      display: block;
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .state-label {
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin: 0 0 10px;
+    }
+
+    .state-label + .state-label { margin-top: 18px; }
+
+    .state-compare {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* ── Shared import tokens ── */
+    .help-link {
+      background: none;
+      border: none;
+      padding: 0;
+      font: 500 11px/1 "DM Sans", sans-serif;
+      color: var(--brand-link);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      cursor: pointer;
+    }
+
+    .btn-import {
+      flex-shrink: 0;
+      padding: 8px 16px;
+      border: 1px solid var(--blue-border);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(255, 255, 255, 0.88);
+      font: 500 13px/1 "Outfit", sans-serif;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-import:hover { background: var(--blue-soft); }
+
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 8px;
+      border: 1px solid var(--blue-border);
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(255, 255, 255, 0.88);
+      cursor: pointer;
+    }
+
+    .broker-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(140, 190, 255, 0.95);
+    }
+
+    .broker-pill svg { opacity: 0.7; }
+
+    .broker-select {
+      appearance: none;
+      padding: 6px 28px 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)),
+        rgba(11, 14, 20, 0.9);
+      color: #fff;
+      font: 500 12px/1 "Outfit", sans-serif;
+      cursor: pointer;
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.45)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+    }
+
+    .seg-control {
+      display: inline-flex;
+      padding: 3px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      gap: 2px;
+    }
+
+    .seg-btn {
+      padding: 5px 12px;
+      border: none;
+      border-radius: 7px;
+      background: transparent;
+      font: 500 11px/1 "Outfit", sans-serif;
+      color: var(--muted);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .seg-btn.active {
+      background: rgba(0, 101, 189, 0.22);
+      color: #fff;
+      box-shadow: 0 0 0 1px rgba(0, 101, 189, 0.25);
+    }
+
+    .seg-btn.muted-future {
+      opacity: 0.45;
+      font-size: 10px;
+    }
+
+    /* ── Design 01: Refined strip ── */
+    .d1-strip {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px 22px;
+      border-radius: 14px;
+      background: var(--glass-soft);
+      border: 1px solid var(--border);
+      box-shadow: 0 0 0 1px rgba(0, 101, 189, 0.04), var(--shadow);
+    }
+
+    .d1-body { flex: 1; min-width: 0; }
+
+    .d1-title-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 3px;
+      flex-wrap: wrap;
+    }
+
+    .d1-title {
+      font: 700 14px/1.2 "Outfit", sans-serif;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .d1-desc {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .d1-future .d1-title-row { margin-bottom: 6px; }
+
+    .d1-future .broker-select { min-width: 108px; }
+
+    /* ── Design 02: Compact chip ── */
+    .d2-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: var(--glass-soft);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .d2-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .d2-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 101, 189, 0.28);
+      background: rgba(0, 101, 189, 0.1);
+      flex-shrink: 0;
+    }
+
+    .d2-chip-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: rgba(0, 101, 189, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(140, 190, 255, 0.95);
+    }
+
+    .d2-chip-text {
+      font: 600 11px/1 "Outfit", sans-serif;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .d2-meta {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .d2-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .d2-future .d2-left { flex-wrap: wrap; }
+    .d2-future .seg-control { flex-shrink: 0; }
+
+    /* ── Design 03: Drop zone card ── */
+    .d3-card {
+      padding: 0;
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--glass-soft);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .d3-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .d3-head-title {
+      font: 600 13px/1 "Outfit", sans-serif;
+      letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.85);
+    }
+
+    .d3-drop {
+      margin: 14px 18px 16px;
+      padding: 22px 18px;
+      border-radius: 12px;
+      border: 1px dashed rgba(0, 101, 189, 0.35);
+      background:
+        radial-gradient(circle at 50% 0%, rgba(0, 101, 189, 0.08), transparent 55%),
+        rgba(255,255,255,0.02);
+      text-align: center;
+    }
+
+    .d3-drop-icon {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 10px;
+      border-radius: 10px;
+      background: rgba(0, 101, 189, 0.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(140, 190, 255, 0.95);
+    }
+
+    .d3-drop-title {
+      font: 600 14px/1.3 "Outfit", sans-serif;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .d3-drop-desc {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .d3-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0 18px 14px;
+    }
+
+    .d3-today .d3-head { justify-content: flex-start; gap: 10px; }
+
+    /* ── Design 04: Split row ── */
+    .d4-split {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0;
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--glass-soft);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .d4-source {
+      padding: 16px 18px;
+      border-right: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .d4-source-label {
+      font: 600 10px/1 "Outfit", sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .d4-source-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .d4-source-name {
+      font: 700 16px/1.1 "Outfit", sans-serif;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .d4-source-hint {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .d4-action {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 18px;
+      min-width: 148px;
+      background:
+        radial-gradient(circle at top right, rgba(0, 101, 189, 0.1), transparent 50%),
+        rgba(255,255,255,0.02);
+    }
+
+    .d4-action .btn-import {
+      width: 100%;
+      text-align: center;
+      padding: 10px 16px;
+    }
+
+    .d4-today .d4-source-name::after {
+      content: " only";
+      font-weight: 500;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* ── Design 05: Footer bar / collapsible ── */
+    .d5-wrap {
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--glass-soft);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .d5-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .d5-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .d5-chevron {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      flex-shrink: 0;
+      transform: rotate(90deg);
+    }
+
+    .d5-bar-title {
+      font: 600 13px/1.2 "Outfit", sans-serif;
+      color: rgba(255,255,255,0.88);
+    }
+
+    .d5-bar-sub {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .d5-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .d5-panel {
+      padding: 14px 16px 16px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .d5-panel-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .d5-panel-copy { flex: 1; min-width: 180px; }
+
+    .d5-panel-desc {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 6px 0 8px;
+    }
+
+    .d5-collapsed .d5-panel { display: none; }
+    .d5-collapsed .d5-chevron { transform: rotate(0deg); }
+
+    .d5-future .d5-bar-sub { display: none; }
+
+    @media (max-width: 800px) {
+      .name-item { grid-template-columns: 1fr; gap: 4px; }
+      .loop-header-row { flex-direction: column; }
+      .loop-metrics { text-align: left; width: 100%; }
+      .loop-metrics-row { justify-content: flex-start; }
+      .d4-split { grid-template-columns: 1fr; }
+      .d4-source { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
+      .d2-meta { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="page-head">
+      <div class="eyebrow">Close loop · Import</div>
+      <h1>Import section design directions.</h1>
+      <p class="lead">
+        Five ways to present the rTrader CSV import strip at the top of Close loop.
+        Each mock shows the section in page context. Today only rTrader is supported — but several layouts reserve space for a future broker/source picker without a redesign.
+      </p>
+    </header>
+
+    <section class="names">
+      <h2>Multi-broker readiness</h2>
+      <div class="name-item">
+        <strong>Today</strong>
+        <span>Single source: rTrader. Copy says “Import from rTrader” or shows an rTrader chip/pill as the implicit default.</span>
+      </div>
+      <div class="name-item">
+        <strong>Future</strong>
+        <span>Broker selector (dropdown or segmented control) switches import parser + help text. Performance Summary / Trades auto-detect stays the same per source.</span>
+      </div>
+      <div class="name-item">
+        <strong>Best for scale</strong>
+        <span><strong>Design 04</strong> (split row) and <strong>Design 03</strong> (card header) — source is a first-class control. <strong>Design 02</strong> segmented chips scale to 3–4 brokers. <strong>Design 01</strong> and <strong>05</strong> work today but need title/copy changes when brokers multiply.</span>
+      </div>
+    </section>
+
+    <!-- Design 01 -->
+    <article class="mock-block">
+      <div class="mock-meta">
+        <div class="mock-num">Design 01</div>
+        <div class="mock-name">Refined context strip</div>
+        <div class="mock-tag">Baseline polish</div>
+      </div>
+      <p class="mock-copy">
+        Closest to production: glass context strip with title, subtext, help link, and Import CTA.
+        Today the title names rTrader; future state swaps the title to “Import session data” and adds a compact broker dropdown beside it — same row, no layout break.
+      </p>
+      <div class="stage">
+        <div class="loop-shell">
+          <div class="loop-topbar">Sunday, Jul 5 · Close loop</div>
+          <div class="loop-header-row">
+            <div>
+              <div class="loop-title">Close loop<span class="loop-title-stop" aria-hidden="true"></span></div>
+              <p class="loop-subtitle">Close the loop. What happened vs what you planned.</p>
+            </div>
+            <div class="loop-metrics">
+              <div class="loop-metrics-label">Net P&amp;L</div>
+              <div class="loop-metrics-pnl">+$842</div>
+              <div class="loop-metrics-row">
+                <div class="loop-metrics-stat"><span>Win rate</span>67%</div>
+                <div class="loop-metrics-stat"><span>Trades</span>3</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="state-compare">
+            <div class="state-label">Today · rTrader only</div>
+            <div class="d1-strip">
+              <div class="d1-body">
+                <div class="d1-title-row">
+                  <div class="d1-title">Import from rTrader</div>
+                  <span class="broker-pill">rTrader</span>
+                </div>
+                <div class="d1-desc">Performance Summary or Trades export — auto-detects.</div>
+                <button type="button" class="help-link">How do I get this file from rTrader?</button>
+              </div>
+              <button type="button" class="btn-import">Import</button>
+            </div>
+
+            <div class="state-label">Future · broker dropdown</div>
+            <div class="d1-strip d1-future">
+              <div class="d1-body">
+                <div class="d1-title-row">
+                  <div class="d1-title">Import session data</div>
+                  <select class="broker-select" aria-label="Broker source">
+                    <option selected>rTrader</option>
+                    <option>Tradovate</option>
+                    <option>Other…</option>
+                  </select>
+                </div>
+                <div class="d1-desc">Performance Summary or Trades export — auto-detects format.</div>
+                <button type="button" class="help-link">How do I get this file from rTrader?</button>
+              </div>
+              <button type="button" class="btn-import">Import</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="rec">Multi-broker: moderate. Dropdown slots in cleanly; help link and title need to become source-aware. Lowest migration cost from current UI.</p>
+    </article>
+
+    <!-- Design 02 -->
+    <article class="mock-block">
+      <div class="mock-meta">
+        <div class="mock-num">Design 02</div>
+        <div class="mock-name">Compact chip bar</div>
+        <div class="mock-tag">Space-efficient</div>
+      </div>
+      <p class="mock-copy">
+        Horizontal bar: broker chip + one-line hint + icon Import button. Minimal vertical footprint.
+        Future state replaces the static chip with a segmented control (rTrader | Tradovate | …) — still one row on desktop.
+      </p>
+      <div class="stage">
+        <div class="loop-shell">
+          <div class="loop-topbar">Sunday, Jul 5 · Close loop</div>
+          <div class="loop-header-row">
+            <div>
+              <div class="loop-title">Close loop<span class="loop-title-stop" aria-hidden="true"></span></div>
+              <p class="loop-subtitle">Close the loop. What happened vs what you planned.</p>
+            </div>
+            <div class="loop-metrics">
+              <div class="loop-metrics-label">Net P&amp;L</div>
+              <div class="loop-metrics-pnl">+$842</div>
+            </div>
+          </div>
+
+          <div class="state-compare">
+            <div class="state-label">Today · single chip</div>
+            <div class="d2-bar">
+              <div class="d2-left">
+                <div class="d2-chip">
+                  <div class="d2-chip-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  </div>
+                  <span class="d2-chip-text">rTrader</span>
+                </div>
+                <span class="d2-meta">Performance Summary or Trades CSV</span>
+              </div>
+              <div class="d2-right">
+                <button type="button" class="help-link" style="font-size:11px">Help</button>
+                <button type="button" class="btn-icon" title="Import CSV">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="state-label">Future · segmented sources</div>
+            <div class="d2-bar d2-future">
+              <div class="d2-left">
+                <div class="seg-control" role="tablist" aria-label="Import source">
+                  <button type="button" class="seg-btn active">rTrader</button>
+                  <button type="button" class="seg-btn">Tradovate</button>
+                  <button type="button" class="seg-btn muted-future">+2</button>
+                </div>
+                <span class="d2-meta">Auto-detects export format</span>
+              </div>
+              <div class="d2-right">
+                <button type="button" class="help-link" style="font-size:11px">Help</button>
+                <button type="button" class="btn-icon" title="Import CSV">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="rec">Multi-broker: good for 2–4 sources. Segmented control is scannable; overflow “+N” or dropdown fallback when list grows. Best when import stays a lightweight action.</p>
+    </article>
+
+    <!-- Design 03 -->
+    <article class="mock-block">
+      <div class="mock-meta">
+        <div class="mock-num">Design 03</div>
+        <div class="mock-name">Glass card · drop zone</div>
+        <div class="mock-tag mock-tag--amber">Future-ready header</div>
+      </div>
+      <p class="mock-copy">
+        Elevated card with dashed drop zone — invites drag-and-drop. Card header holds the broker control so the drop area copy stays generic (“Drop CSV here”).
+        Today: rTrader pill in header. Future: dropdown in the same header slot.
+      </p>
+      <div class="stage">
+        <div class="loop-shell">
+          <div class="loop-topbar">Sunday, Jul 5 · Close loop</div>
+          <div class="loop-header-row">
+            <div>
+              <div class="loop-title">Close loop<span class="loop-title-stop" aria-hidden="true"></span></div>
+              <p class="loop-subtitle">Close the loop. What happened vs what you planned.</p>
+            </div>
+          </div>
+
+          <div class="state-compare">
+            <div class="state-label">Today · rTrader in header</div>
+            <div class="d3-card d3-today">
+              <div class="d3-head">
+                <span class="d3-head-title">Session import</span>
+                <span class="broker-pill">rTrader</span>
+              </div>
+              <div class="d3-drop">
+                <div class="d3-drop-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+                <div class="d3-drop-title">Drop CSV here or click to browse</div>
+                <div class="d3-drop-desc">Performance Summary or Trades export — auto-detects.</div>
+                <button type="button" class="btn-import">Choose file</button>
+              </div>
+              <div class="d3-foot">
+                <button type="button" class="help-link">How do I get this file from rTrader?</button>
+              </div>
+            </div>
+
+            <div class="state-label">Future · source in header</div>
+            <div class="d3-card">
+              <div class="d3-head">
+                <span class="d3-head-title">Session import</span>
+                <select class="broker-select" aria-label="Broker source">
+                  <option selected>rTrader</option>
+                  <option>Tradovate</option>
+                  <option>Other…</option>
+                </select>
+              </div>
+              <div class="d3-drop">
+                <div class="d3-drop-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+                <div class="d3-drop-title">Drop CSV here or click to browse</div>
+                <div class="d3-drop-desc">Format auto-detects based on selected source.</div>
+                <button type="button" class="btn-import">Choose file</button>
+              </div>
+              <div class="d3-foot">
+                <button type="button" class="help-link">Export instructions for rTrader</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="rec">Multi-broker: strong. Header broker control is isolated from drop-zone UX; help text swaps per source without touching the card body. Slightly taller than a strip.</p>
+    </article>
+
+    <!-- Design 04 -->
+    <article class="mock-block">
+      <div class="mock-meta">
+        <div class="mock-num">Design 04</div>
+        <div class="mock-name">Split row · source + CTA</div>
+        <div class="mock-tag">Best for multi-broker</div>
+      </div>
+      <p class="mock-copy">
+        Explicit two-column layout: left = source selection + format hint + help; right = Import action.
+        Designed from the start for broker choice — today the left column simply shows rTrader as the only option (no selector chrome).
+      </p>
+      <div class="stage">
+        <div class="loop-shell">
+          <div class="loop-topbar">Sunday, Jul 5 · Close loop</div>
+          <div class="loop-header-row">
+            <div>
+              <div class="loop-title">Close loop<span class="loop-title-stop" aria-hidden="true"></span></div>
+              <p class="loop-subtitle">Close the loop. What happened vs what you planned.</p>
+            </div>
+            <div class="loop-metrics">
+              <div class="loop-metrics-label">Net P&amp;L</div>
+              <div class="loop-metrics-pnl">+$842</div>
+            </div>
+          </div>
+
+          <div class="state-compare">
+            <div class="state-label">Today · single source column</div>
+            <div class="d4-split d4-today">
+              <div class="d4-source">
+                <div class="d4-source-label">Import source</div>
+                <div class="d4-source-row">
+                  <div class="d4-source-name">rTrader</div>
+                </div>
+                <div class="d4-source-hint">Performance Summary or Trades export — auto-detects.</div>
+                <button type="button" class="help-link">How do I get this file from rTrader?</button>
+              </div>
+              <div class="d4-action">
+                <button type="button" class="btn-import">Import CSV</button>
+              </div>
+            </div>
+
+            <div class="state-label">Future · selector in source column</div>
+            <div class="d4-split">
+              <div class="d4-source">
+                <div class="d4-source-label">Import source</div>
+                <div class="d4-source-row">
+                  <select class="broker-select" aria-label="Broker source" style="min-width:140px;font-size:13px;padding:8px 32px 8px 12px">
+                    <option selected>rTrader</option>
+                    <option>Tradovate</option>
+                    <option>NinjaTrader</option>
+                    <option>Other…</option>
+                  </select>
+                </div>
+                <div class="d4-source-hint">Performance Summary or Trades export — auto-detects.</div>
+                <button type="button" class="help-link">Export instructions for rTrader</button>
+              </div>
+              <div class="d4-action">
+                <button type="button" class="btn-import">Import CSV</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="rec">Multi-broker: best overall. Source is a dedicated column — adding brokers is a dropdown swap, not a layout refactor. Slightly wider minimum width; stacks cleanly on mobile.</p>
+    </article>
+
+    <!-- Design 05 -->
+    <article class="mock-block">
+      <div class="mock-meta">
+        <div class="mock-num">Design 05</div>
+        <div class="mock-name">Collapsible footer bar</div>
+        <div class="mock-tag">Minimal default</div>
+      </div>
+      <p class="mock-copy">
+        Import tucked into a slim collapsible bar — collapsed by default shows source + quick Import.
+        Expanded panel reveals format details and help. Future: collapsed bar shows active broker chip; expanded panel hosts full segmented control or dropdown.
+      </p>
+      <div class="stage">
+        <div class="loop-shell">
+          <div class="loop-topbar">Sunday, Jul 5 · Close loop</div>
+          <div class="loop-header-row">
+            <div>
+              <div class="loop-title">Close loop<span class="loop-title-stop" aria-hidden="true"></span></div>
+              <p class="loop-subtitle">Close the loop. What happened vs what you planned.</p>
+            </div>
+          </div>
+
+          <!-- placeholder content to show bar placement -->
+          <div style="padding:18px 20px;border-radius:14px;border:1px solid rgba(255,255,255,0.06);background:rgba(11,14,20,0.5);margin-bottom:14px;color:rgba(255,255,255,0.35);font-size:13px">
+            Review sections · Performance · Journal follow-ups …
+          </div>
+
+          <div class="state-compare">
+            <div class="state-label">Today · collapsed</div>
+            <div class="d5-wrap d5-collapsed">
+              <div class="d5-bar">
+                <div class="d5-bar-left">
+                  <div class="d5-chevron">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                  <div>
+                    <div class="d5-bar-title">Import from rTrader</div>
+                    <div class="d5-bar-sub">Performance Summary or Trades CSV</div>
+                  </div>
+                </div>
+                <div class="d5-bar-right">
+                  <span class="broker-pill">rTrader</span>
+                  <button type="button" class="btn-import">Import</button>
+                </div>
+              </div>
+              <div class="d5-panel">
+                <div class="d5-panel-row">
+                  <div class="d5-panel-copy">
+                    <div class="d5-panel-desc">Upload your session export — trades sync to Analytics and today’s fields fill automatically.</div>
+                    <button type="button" class="help-link">How do I get this file from rTrader?</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="state-label">Future · expanded with source picker</div>
+            <div class="d5-wrap d5-future">
+              <div class="d5-bar">
+                <div class="d5-bar-left">
+                  <div class="d5-chevron">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                  <div>
+                    <div class="d5-bar-title">Import session data</div>
+                  </div>
+                </div>
+                <div class="d5-bar-right">
+                  <button type="button" class="btn-import">Import</button>
+                </div>
+              </div>
+              <div class="d5-panel">
+                <div class="d5-panel-row">
+                  <div class="d5-panel-copy">
+                    <div class="d4-source-label" style="margin-bottom:8px">Source</div>
+                    <div class="seg-control" style="margin-bottom:12px">
+                      <button type="button" class="seg-btn active">rTrader</button>
+                      <button type="button" class="seg-btn">Tradovate</button>
+                      <button type="button" class="seg-btn">Other…</button>
+                    </div>
+                    <div class="d5-panel-desc">Performance Summary or Trades export — auto-detects format for the selected broker.</div>
+                    <button type="button" class="help-link">Export instructions for rTrader</button>
+                  </div>
+                  <button type="button" class="btn-import">Choose CSV</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="rec">Multi-broker: good for power users who import rarely. Collapsed state stays minimal; expanded panel absorbs selector complexity. Less discoverable than 03/04 if left collapsed.</p>
+    </article>
+
+    <section class="names" style="margin-top:8px">
+      <h2>Recommendation summary</h2>
+      <div class="name-item">
+        <strong>Ship today</strong>
+        <span>Design 01 — minimal diff from current strip; add broker dropdown in title row when ready.</span>
+      </div>
+      <div class="name-item">
+        <strong>Plan for 2+ brokers</strong>
+        <span>Design 04 first, Design 03 second — source control is structural, not bolted on.</span>
+      </div>
+      <div class="name-item">
+        <strong>Keep it tiny</strong>
+        <span>Design 02 — segmented chips in one row; use overflow menu beyond 4 brokers.</span>
+      </div>
+      <div class="name-item">
+        <strong>De-emphasize import</strong>
+        <span>Design 05 — collapsible bar; broker picker lives in expanded state only.</span>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

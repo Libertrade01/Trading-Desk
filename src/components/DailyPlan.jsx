@@ -869,7 +869,7 @@ export default function DailyPlan({ onBack }) {
                   className="pm-btn-primary-sm"
                   onClick={() => setActiveStep((i) => Math.min(PLAN_STEPS.length - 1, i + 1))}
                 >
-                  Next — {PLAN_STEPS[activeStep + 1].label}
+                  Next
                 </button>
               ) : (
                 <div className="pm-closeout-finish-actions-right">

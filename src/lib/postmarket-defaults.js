@@ -111,14 +111,14 @@ export const DEFAULT_POSTMARKET = {
 /** Optional journal follow-ups — close loop can save with these still pending. */
 export const JOURNAL_REVIEW_CHECKLIST = [
   {
-    key: "replaySequenceReviewed",
-    statusLabel: "Replay",
-    label: "At least 1 trade sequence watched back on REPLAY mode",
-  },
-  {
     key: "setupsScreenshottedSaved",
     statusLabel: "Database",
-    label: "Clean trade setups screenshotted and saved to database (taken and missed opportunities)",
+    label: "Today's A+ setup screenshots saved (taken or missed)",
+  },
+  {
+    key: "replaySequenceReviewed",
+    statusLabel: "Replay",
+    label: "One trade sequence reviewed in REPLAY.",
   },
 ];
 

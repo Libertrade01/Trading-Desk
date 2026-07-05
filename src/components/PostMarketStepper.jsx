@@ -10,20 +10,20 @@ export const CLOSEOUT_STEPS = [
   {
     id: "process",
     short: "Process",
-    label: "Process adherence",
+    label: "Process",
     desc: "How well you executed your plan.",
   },
   {
     id: "flags",
-    short: "Flags",
-    label: "Behavioral flags",
-    desc: "Honest answers help. Pattern recognition over time only works if you're truthful.",
+    short: "Accountability",
+    label: "Accountability",
+    desc: "Call yourself out and hold yourself accountable.",
   },
   {
     id: "close",
     short: "Close",
-    label: "After the close",
-    desc: "How you feel right now.",
+    label: "Post session",
+    desc: "How you feel after the session — process, not P&L.",
   },
   {
     id: "journal",
