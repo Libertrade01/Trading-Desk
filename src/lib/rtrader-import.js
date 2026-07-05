@@ -288,7 +288,12 @@ export async function fetchTradesForDate(dateKey) {
 /** One query for many session days — used by home/history list loads. */
 export async function fetchTradesGroupedByDate(dateKeys) {
   if (!dateKeys?.length) return new Map();
-  const userId = await getCurrentUserId();
+  let userId;
+  try {
+    userId = await getCurrentUserId();
+  } catch {
+    return new Map();
+  }
   const min = dateKeys.reduce((a, b) => (a < b ? a : b));
   const max = dateKeys.reduce((a, b) => (a > b ? a : b));
   const allowed = new Set(dateKeys);

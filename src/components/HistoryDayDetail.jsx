@@ -174,18 +174,31 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+
     (async () => {
       setLoading(true);
-      const [loadedSession, recoveryState, settings] = await Promise.all([
-        loadSessionDay(date),
-        loadRecoveryState(),
-        loadDllSettings(),
-      ]);
-      const annotations = buildRecoveryDayAnnotations(recoveryState.days, settings);
-      setSession(loadedSession);
-      setRecoveryLabel(getRecoveryDayLabel(annotations[date]));
-      setLoading(false);
+      try {
+        const [loadedSession, recoveryState, settings] = await Promise.all([
+          loadSessionDay(date),
+          loadRecoveryState(),
+          loadDllSettings(),
+        ]);
+        if (cancelled) return;
+        const annotations = buildRecoveryDayAnnotations(recoveryState.days, settings);
+        setSession(loadedSession);
+        setRecoveryLabel(getRecoveryDayLabel(annotations[date]));
+      } catch (err) {
+        console.error("HistoryDayDetail load:", err);
+        if (!cancelled) setSession(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [date]);
 
   const raisedFlags = useMemo(() => {
@@ -205,7 +218,19 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
     }
   };
 
-  if (loading || !session) return <div className="pm-loading">Loading...</div>;
+  if (loading) return <div className="pm-loading">Loading...</div>;
+
+  if (!session) {
+    return (
+      <div className="history-detail-page hybrid-page">
+        <div className="history-detail-top">
+          <button type="button" className="pm-back" onClick={onBack}>← Back to history</button>
+          <h1 className="history-detail-title hybrid-title">{formatDetailTitle(date)}</h1>
+          <p className="history-missing">Could not load this session. Sign in and try again.</p>
+        </div>
+      </div>
+    );
+  }
 
   const { pre, plan, post } = session;
   const pnlTone = session.netPnl > 0 ? "pos" : session.netPnl < 0 ? "neg" : "dim";
@@ -506,7 +531,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
             </div>
 
             <div className="history-process-row">
-              <div className="history-process-title hybrid-label-sm">After the close</div>
+              <div className="history-process-title hybrid-label-sm">Post session</div>
               <div className="history-process-grid">
                 <div><span>Emotional</span><strong>{post.emotionalState}</strong></div>
                 <div><span>Satisfaction</span><strong>{post.satisfaction}</strong></div>
@@ -516,7 +541,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
 
             <div className="history-journal-grid">
               <div className="history-journal-card history-journal-card--wide">
-                <div className="history-notes-label hybrid-label-sm">Read vs reality</div>
+                <div className="history-notes-label hybrid-label-sm">Plan vs Reality</div>
                 <p>{post.readVsReality || "—"}</p>
               </div>
               <div className="history-journal-card">

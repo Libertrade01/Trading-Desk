@@ -192,8 +192,12 @@ export async function loadDllSettings() {
 
   const legacy = readLegacyLocalStorage();
   if (legacy) {
-    await saveDllSettings(legacy);
-    clearLegacyLocalStorage();
+    try {
+      await saveDllSettings(legacy);
+      clearLegacyLocalStorage();
+    } catch {
+      /* unauthenticated — keep legacy values for this session */
+    }
     return legacy;
   }
 

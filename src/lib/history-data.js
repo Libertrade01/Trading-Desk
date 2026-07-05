@@ -38,7 +38,12 @@ function parseStorageValue(raw) {
 
 /** One query per prefix — replaces list + N individual gets for home/history loads. */
 async function loadJsonMapByPrefix(prefix) {
-  const userId = await getCurrentUserId();
+  let userId;
+  try {
+    userId = await getCurrentUserId();
+  } catch {
+    return new Map();
+  }
   const { data, error } = await getSupabaseBrowserClient()
     .from("app_data")
     .select("key, value")

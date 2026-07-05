@@ -24,21 +24,34 @@ export default function HistoryPage({ onSelectDay }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     (async () => {
-      const [rows, recoveryState, settings] = await Promise.all([
-        loadAllSessions(),
-        loadRecoveryState(),
-        loadDllSettings(),
-      ]);
-      const annotations = buildRecoveryDayAnnotations(recoveryState.days, settings);
-      setSessions(
-        rows.map((session) => ({
-          ...session,
-          recoveryLabel: getRecoveryDayLabel(annotations[session.date]),
-        }))
-      );
-      setLoading(false);
+      try {
+        const [rows, recoveryState, settings] = await Promise.all([
+          loadAllSessions(),
+          loadRecoveryState(),
+          loadDllSettings(),
+        ]);
+        if (cancelled) return;
+        const annotations = buildRecoveryDayAnnotations(recoveryState.days, settings);
+        setSessions(
+          rows.map((session) => ({
+            ...session,
+            recoveryLabel: getRecoveryDayLabel(annotations[session.date]),
+          }))
+        );
+      } catch (err) {
+        console.error("HistoryPage load:", err);
+        if (!cancelled) setSessions([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (loading) return <div className="pm-loading">Loading...</div>;
