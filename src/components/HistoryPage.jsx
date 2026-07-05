@@ -123,7 +123,7 @@ export default function HistoryPage({ onSelectDay }) {
               History
               <span className="hybrid-page-title-stop" aria-hidden="true" />
             </h1>
-            <p className="pm-subtitle">Walk back through your sessions. Pattern recognition compounds.</p>
+            <p className="pm-subtitle">Past sessions by date. Select any day to open the full record.</p>
           </header>
 
         {sessions.length === 0 ? (
