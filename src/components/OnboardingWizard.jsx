@@ -525,7 +525,7 @@ export default function OnboardingWizard() {
                   <strong>Risk streak</strong> — extends when close loop shows you stayed inside your risk limits.
                 </li>
                 <li>
-                  <strong>Playbook streak</strong> — extends when every trade is tagged to a real setup.
+                  <strong>Playbook setup streak</strong> — extends when every trade is tagged to a real setup.
                 </li>
               </ul>
             </div>
@@ -539,7 +539,7 @@ export default function OnboardingWizard() {
                 onChange={setRiskStreakEnabled}
               />
               <ToggleField
-                label="Playbook streak"
+                label="Playbook setup streak"
                 value={playbookStreakEnabled}
                 onChange={setPlaybookStreakEnabled}
               />

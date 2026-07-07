@@ -17,7 +17,7 @@ export const ACTIVATION_MODE_OPTIONS = [
   {
     value: ACTIVATION_MODES.FULL_DLL,
     label: "Full daily loss (DLL)",
-    hint: "Enter recovery when a single day hits your full-size max loss.",
+    hint: "Enter Recovery Mode when a single day hits your full-size max loss.",
   },
   {
     value: ACTIVATION_MODES.DRAWDOWN_AMOUNT,
@@ -30,7 +30,7 @@ export const EXIT_MODE_OPTIONS = [
   {
     value: EXIT_MODES.PERCENT,
     label: "Percent of drawdown",
-    hint: "Exit after recovering a percentage of cumulative drawdown.",
+    hint: "After recovering a percentage of cumulative drawdown.",
   },
   {
     value: EXIT_MODES.FIXED_AMOUNT,

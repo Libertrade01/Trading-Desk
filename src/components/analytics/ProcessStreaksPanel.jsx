@@ -13,7 +13,7 @@ export default function ProcessStreaksPanel({ riskStreak, playbookStreak }) {
         </div>
       </div>
       <div className="analytics-streak analytics-streak--divider">
-        <div className="analytics-streak__label">Playbook streak</div>
+        <div className="analytics-streak__label">Playbook setup streak</div>
         <div className="analytics-streak__value analytics-streak__value--playbook">
           {playbookStreak}
           <span className="analytics-streak__goal">/{GOAL}</span>

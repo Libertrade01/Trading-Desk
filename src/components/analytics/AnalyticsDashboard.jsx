@@ -1,25 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchAnalyticsTrades, filterTradesByAccounts } from "../../lib/analytics-data";
-import { aggregateProcessMetrics, loadPostReviewsInRange } from "../../lib/analytics-process";
-import { countPlaybookStreak, countProcessStreak, loadAllSessions } from "../../lib/history-data";
 import {
   resolveDateRangePreset,
   loadPlaybookTrackingStartDate,
   filterTradesForPlaybookAdherence,
-  resetPlaybookTrackingStartDate,
 } from "../../lib/analytics-date-range";
 import { getChartConfigs } from "../../lib/analytics-charts";
 import { calcStats } from "../../lib/analytics-stats";
-import {
-  summarizeSetupAdherence,
-  summarizeSetupByTag,
-  countUntaggedTrades,
-} from "../../lib/setup-adherence";
+import { countUntaggedTrades } from "../../lib/setup-adherence";
 import { loadTraderSettings, saveTraderSettings } from "../../lib/trader-settings";
-import AnalyticsCard from "./AnalyticsCard";
 import AnalyticsChart from "./AnalyticsChart";
 import AnalyticsSlidePanel from "./AnalyticsSlidePanel";
 import AnalyticsToolbar from "./AnalyticsToolbar";
@@ -30,16 +22,12 @@ import DailyPnlTable from "./DailyPnlTable";
 import MetricCards from "./MetricCards";
 import OutcomesDonut from "./OutcomesDonut";
 import PerformanceScoreCard from "./PerformanceScoreCard";
-import PlaybookAdherencePanel from "./PlaybookAdherencePanel";
-import ProcessOverviewPanel from "./ProcessOverviewPanel";
-import ProcessStreaksPanel from "./ProcessStreaksPanel";
 import RecentTradesTable from "./RecentTradesTable";
 import SessionAnalyticsGrid from "./SessionAnalyticsGrid";
 import TradeDetailPanel from "./TradeDetailPanel";
 
 export default function AnalyticsDashboard() {
   const router = useRouter();
-  const insightsRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [trades, setTrades] = useState([]);
@@ -47,20 +35,17 @@ export default function AnalyticsDashboard() {
   const [activePreset, setActivePreset] = useState("10d");
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
-  const [accountType, setAccountType] = useState("all");
   const [playbookTrackingStart, setPlaybookTrackingStart] = useState(null);
   const [listPanel, setListPanel] = useState(null);
   const [selectedTradeId, setSelectedTradeId] = useState(null);
-  const [sessions, setSessions] = useState([]);
-  const [processMetrics, setProcessMetrics] = useState(null);
 
-  const load = useCallback(async (from, to, type) => {
+  const load = useCallback(async (from, to) => {
     setLoading(true);
     setError(null);
     try {
       const [traderSettings, rawTrades] = await Promise.all([
         loadTraderSettings(),
-        fetchAnalyticsTrades({ dateFrom: from, dateTo: to, accountType: type }),
+        fetchAnalyticsTrades({ dateFrom: from, dateTo: to }),
       ]);
       setSettings(traderSettings);
       setTrades(filterTradesByAccounts(rawTrades, traderSettings.accounts));
@@ -86,32 +71,10 @@ export default function AnalyticsDashboard() {
   }, []);
 
   useEffect(() => {
-    loadAllSessions().then(setSessions).catch(() => setSessions([]));
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const reviews = await loadPostReviewsInRange(dateFrom, dateTo);
-        if (cancelled) return;
-        setProcessMetrics(aggregateProcessMetrics(reviews));
-      } catch {
-        if (!cancelled) {
-          setProcessMetrics(null);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [dateFrom, dateTo]);
-
-  useEffect(() => {
     const { dateFrom: from, dateTo: to } = resolveDateRangePreset("10d");
     setDateFrom(from);
     setDateTo(to);
-    load(from, to, "all");
+    load(from, to);
   }, [load]);
 
   const applyPreset = (preset) => {
@@ -119,14 +82,14 @@ export default function AnalyticsDashboard() {
     const range = resolveDateRangePreset(preset);
     setDateFrom(range.dateFrom);
     setDateTo(range.dateTo);
-    load(range.dateFrom, range.dateTo, accountType);
+    load(range.dateFrom, range.dateTo);
   };
 
   const applyCustomRange = (from, to) => {
     setActivePreset("");
     setDateFrom(from);
     setDateTo(to);
-    load(from, to, accountType);
+    load(from, to);
   };
 
   const toggleAccount = async (id) => {
@@ -136,19 +99,7 @@ export default function AnalyticsDashboard() {
     );
     await saveTraderSettings({ ...settings, accounts });
     setSettings({ ...settings, accounts });
-    load(dateFrom, dateTo, accountType);
-  };
-
-  const handleTrackingReset = async () => {
-    if (
-      !window.confirm(
-        "Reset playbook tracking to today? Trades before the new date will be excluded from playbook adherence."
-      )
-    ) {
-      return;
-    }
-    const start = await resetPlaybookTrackingStartDate();
-    setPlaybookTrackingStart(start);
+    load(dateFrom, dateTo);
   };
 
   const stats = useMemo(() => calcStats(trades, settings), [trades, settings]);
@@ -156,11 +107,7 @@ export default function AnalyticsDashboard() {
     () => filterTradesForPlaybookAdherence(trades, playbookTrackingStart),
     [trades, playbookTrackingStart]
   );
-  const playbook = useMemo(() => summarizeSetupAdherence(playbookTrades), [playbookTrades]);
-  const setupBreakdown = useMemo(() => summarizeSetupByTag(playbookTrades), [playbookTrades]);
   const untaggedCount = useMemo(() => countUntaggedTrades(playbookTrades), [playbookTrades]);
-  const riskStreak = useMemo(() => countProcessStreak(sessions), [sessions]);
-  const playbookStreak = useMemo(() => countPlaybookStreak(sessions), [sessions]);
   const charts = useMemo(() => getChartConfigs(trades), [trades]);
   const selectedTrade = useMemo(
     () => trades.find((t) => t.id === selectedTradeId) || null,
@@ -190,10 +137,6 @@ export default function AnalyticsDashboard() {
     if (untagged) setSelectedTradeId(untagged.id);
   }, [playbookTrades]);
 
-  const scrollToInsights = useCallback(() => {
-    insightsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
-
   if (loading && !trades.length) {
     return <div className="analytics-loading">Loading analytics…</div>;
   }
@@ -205,7 +148,7 @@ export default function AnalyticsDashboard() {
         <button
           type="button"
           className="an-btn-outline"
-          onClick={() => load(dateFrom, dateTo, accountType)}
+          onClick={() => load(dateFrom, dateTo)}
         >
           Retry
         </button>
@@ -219,14 +162,9 @@ export default function AnalyticsDashboard() {
         activePreset={activePreset}
         dateFrom={dateFrom}
         dateTo={dateTo}
-        accountType={accountType}
         accounts={settings?.accounts || []}
         onPresetChange={applyPreset}
         onCustomRangeChange={applyCustomRange}
-        onAccountTypeChange={(type) => {
-          setAccountType(type);
-          load(dateFrom, dateTo, type);
-        }}
         onToggleAccount={toggleAccount}
         onOpenTradeLog={() => setListPanel("trade-log")}
       />
@@ -236,98 +174,77 @@ export default function AnalyticsDashboard() {
         <AnalyticsUntaggedBanner untaggedCount={untaggedCount} onTagTrade={openUntaggedTrade} />
 
         <div className="an-layout">
-          <aside className="an-left-col">
-            <PerformanceScoreCard stats={stats} onViewInsights={scrollToInsights} />
-            <OutcomesDonut
-              winners={outcomes.winners}
-              breakeven={outcomes.breakeven}
-              losers={outcomes.losers}
-            />
-          </aside>
+          <MetricCards
+            stats={stats}
+            trailing={
+              <OutcomesDonut
+                compact
+                winners={outcomes.winners}
+                breakeven={outcomes.breakeven}
+                losers={outcomes.losers}
+              />
+            }
+          />
 
-          <main className="an-main-col">
-            <MetricCards stats={stats} />
-
-            <section className="an-card an-equity-card">
+          <div className="an-hero-row">
+            <PerformanceScoreCard stats={stats} />
+            <section className="an-card an-equity-card an-hero-equity">
               <div className="an-card-head">
                 <div className="an-card-title">Equity Curve</div>
                 <div className="an-mini-select">Cumulative P&amp;L</div>
               </div>
-              <div className="an-chart-frame">
+              <div className="an-chart-frame an-chart-frame--hero">
                 {charts.pnl ? (
-                  <AnalyticsChart config={charts.pnl} height={280} />
+                  <AnalyticsChart config={charts.pnl} height={240} />
+                ) : (
+                  <div className="analytics-empty">No data</div>
+                )}
+              </div>
+            </section>
+          </div>
+
+          <div className="an-charts-row">
+            <section className="an-card an-daily-card">
+              <div className="an-card-head">
+                <div className="an-card-title">Daily P&amp;L</div>
+                <button
+                  type="button"
+                  className="an-link-all"
+                  onClick={() => setListPanel("daily-pnl")}
+                >
+                  View All
+                </button>
+              </div>
+              <div className="an-bar-chart">
+                {charts.daily ? (
+                  <AnalyticsChart config={charts.daily} height={200} />
                 ) : (
                   <div className="analytics-empty">No data</div>
                 )}
               </div>
             </section>
 
-            <div className="an-bottom-row">
-              <section className="an-card an-daily-card">
-                <div className="an-card-head">
-                  <div className="an-card-title">Daily P&amp;L</div>
-                  <button
-                    type="button"
-                    className="an-link-all"
-                    onClick={() => setListPanel("daily-pnl")}
-                  >
-                    View All
-                  </button>
-                </div>
-                <div className="an-bar-chart">
-                  {charts.daily ? (
-                    <AnalyticsChart config={charts.daily} height={200} />
-                  ) : (
-                    <div className="analytics-empty">No data</div>
-                  )}
-                </div>
-              </section>
-
-              <SessionAnalyticsGrid trades={trades} variant="time-only" />
-
-              <section className="an-card an-trades-card">
-                <div className="an-card-head">
-                  <div className="an-card-title">Recent Trades</div>
-                  <button
-                    type="button"
-                    className="an-link-all"
-                    onClick={() => setListPanel("recent-trades")}
-                  >
-                    View All
-                  </button>
-                </div>
-                <RecentTradesTable
-                  trades={trades}
-                  limit={6}
-                  compact
-                  onTradeSelect={(t) => setSelectedTradeId(t.id)}
-                />
-              </section>
-            </div>
-          </main>
-        </div>
-
-        <div className="an-insights" id="analytics-insights" ref={insightsRef}>
-          <div className="an-dual-grid">
-            <AnalyticsCard title="Process Streaks">
-              <ProcessStreaksPanel riskStreak={riskStreak} playbookStreak={playbookStreak} />
-            </AnalyticsCard>
-
-            <AnalyticsCard title="Playbook Adherence">
-              <PlaybookAdherencePanel
-                summary={playbook}
-                trackingStart={playbookTrackingStart}
-                setupBreakdown={setupBreakdown}
-                onTrackingReset={handleTrackingReset}
-              />
-            </AnalyticsCard>
+            <SessionAnalyticsGrid trades={trades} variant="time-only" />
           </div>
 
-          <AnalyticsCard title="Process Overview">
-            <ProcessOverviewPanel metrics={processMetrics} />
-          </AnalyticsCard>
-
-          <SessionAnalyticsGrid trades={trades} variant="day-only" />
+          <section className="an-card an-trades-card an-trades-card--wide">
+            <div className="an-card-head">
+              <div className="an-card-title">Recent Trades</div>
+              <button
+                type="button"
+                className="an-link-all"
+                onClick={() => setListPanel("recent-trades")}
+              >
+                View All
+              </button>
+            </div>
+            <RecentTradesTable
+              trades={trades}
+              limit={8}
+              compact
+              onTradeSelect={(t) => setSelectedTradeId(t.id)}
+            />
+          </section>
         </div>
       </div>
 

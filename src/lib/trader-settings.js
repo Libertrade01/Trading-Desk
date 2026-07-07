@@ -28,6 +28,7 @@ export const COMMISSION_SYMBOLS = Object.keys(DEFAULT_COMMISSIONS);
 
 export const DEFAULT_TRADER_SETTINGS = {
   defaultRisk: 15,
+  beThreshold: 30,
   tradingDayTimezone: DEFAULT_TRADING_DAY_TIMEZONE,
   accounts: [],
 };
@@ -45,6 +46,7 @@ export function createDefaultAccount(overrides = {}) {
     account_type: "eval",
     active: true,
     forImport: true,
+    commissions_enabled: true,
     commissions: { ...DEFAULT_COMMISSIONS },
     ...overrides,
   };
@@ -102,6 +104,7 @@ export function normalizeAccount(raw, index = 0) {
       : "eval",
     active: raw?.active !== false,
     forImport: !!raw?.forImport,
+    commissions_enabled: raw?.commissions_enabled !== false,
     commissions: normalizeCommissions(raw?.commissions),
   };
 }
@@ -136,11 +139,22 @@ export function normalizeTraderSettings(raw = {}) {
   const tradingDayTimezone = isValidTradingDayTimezone(raw.tradingDayTimezone)
     ? raw.tradingDayTimezone
     : DEFAULT_TRADER_SETTINGS.tradingDayTimezone;
+
+  let beThreshold = Number(raw.beThreshold);
+  if (!Number.isFinite(beThreshold) || beThreshold < 0) {
+    const importAcct =
+      accounts.find((a) => a.forImport) ||
+      accounts.find((a) => a.active) ||
+      accounts[0];
+    beThreshold = importAcct?.be_threshold ?? DEFAULT_TRADER_SETTINGS.beThreshold;
+  }
+
   return {
     defaultRisk:
       Number.isFinite(defaultRisk) && defaultRisk > 0
         ? Math.round(defaultRisk * 100) / 100
         : DEFAULT_TRADER_SETTINGS.defaultRisk,
+    beThreshold: Math.round(beThreshold * 100) / 100,
     tradingDayTimezone,
     accounts,
   };
@@ -249,6 +263,11 @@ export function validateTraderSettingsInput(form) {
     return { ok: false, message: "Default risk must be a positive number (stop points)." };
   }
 
+  const beThreshold = Number(String(form.beThreshold ?? "").replace(/[^\d.]/g, ""));
+  if (!Number.isFinite(beThreshold) || beThreshold < 0) {
+    return { ok: false, message: "Breakeven threshold must be zero or a positive dollar amount." };
+  }
+
   const tradingDayTimezone = isValidTradingDayTimezone(form.tradingDayTimezone)
     ? form.tradingDayTimezone
     : DEFAULT_TRADER_SETTINGS.tradingDayTimezone;
@@ -272,6 +291,7 @@ export function validateTraderSettingsInput(form) {
     ok: true,
     settings: normalizeTraderSettings({
       defaultRisk,
+      beThreshold,
       tradingDayTimezone,
       accounts,
     }),

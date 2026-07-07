@@ -10,11 +10,12 @@ function toneFromSigned(n, threshold = 0) {
   return "neutral";
 }
 
-export default function PerformanceOverview({ stats, trades, beThreshold = 30 }) {
+export default function PerformanceOverview({ stats, trades }) {
   if (!stats) {
     return <div className="analytics-empty">No trades in selected range</div>;
   }
 
+  const beThreshold = stats.beThreshold ?? 30;
   const winners = trades.filter((t) => t.net_pnl > beThreshold).length;
   const losers = trades.filter((t) => t.net_pnl < -beThreshold).length;
   const bes = stats.beCount;

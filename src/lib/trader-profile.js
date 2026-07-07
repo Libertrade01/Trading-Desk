@@ -128,6 +128,13 @@ export function parsePlanRailMoney(raw) {
   return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
 }
 
+function normalizeStreakTargetDays(raw) {
+  if (raw === null || raw === undefined || raw === "") return null;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 1) return null;
+  return Math.min(365, Math.round(n));
+}
+
 export function createCustomerDefaultProfile() {
   return normalizeTraderProfile({
     profileKind: "customer",
@@ -223,7 +230,7 @@ export function normalizeTraderProfile(raw = {}) {
     : defaultFinishChecklist();
   if (!finishChecklist.length) finishChecklist = defaultFinishChecklist();
 
-  const streakTargetDays = Number(raw.streakTargetDays);
+  const streakTargetDays = normalizeStreakTargetDays(raw.streakTargetDays);
   const profileKind = raw.profileKind === "founder" ? "founder" : "customer";
 
   return {
@@ -237,10 +244,7 @@ export function normalizeTraderProfile(raw = {}) {
     commitments,
     biasChecklistEnabled: !!raw.biasChecklistEnabled,
     biasChecklistItems,
-    streakTargetDays:
-      Number.isFinite(streakTargetDays) && streakTargetDays >= 1
-        ? Math.min(365, Math.round(streakTargetDays))
-        : 21,
+    streakTargetDays,
     riskStreakEnabled: raw.riskStreakEnabled !== false,
     playbookStreakEnabled: raw.playbookStreakEnabled !== false,
     usesWearable: !!raw.usesWearable,
@@ -277,7 +281,10 @@ export function validateTraderProfileInput(form) {
   if (profile.biasChecklistEnabled) {
     const items = profile.biasChecklistItems.filter((item) => item.label.trim());
     if (!items.length) {
-      return { ok: false, message: "Add at least one chart annotation checklist item or disable the checklist." };
+      return { ok: false, message: "Add at least one charting checklist item or disable the checklist." };
+    }
+    if (profile.biasChecklistItems.length > 8) {
+      return { ok: false, message: "Maximum 8 charting checklist items." };
     }
   }
 
@@ -292,6 +299,9 @@ export function validateTraderProfileInput(form) {
       ...profile,
       setups: namedSetups,
       commitments: namedCommitments.slice(0, 3),
+      biasChecklistItems: profile.biasChecklistEnabled
+        ? profile.biasChecklistItems.filter((item) => item.label.trim()).slice(0, 8)
+        : profile.biasChecklistItems,
       finishChecklist: finishItems.slice(0, 6),
       keyLevelQuickAdds: normalizeKeyLevelQuickAdds(profile.keyLevelQuickAdds),
     },

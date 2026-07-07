@@ -98,8 +98,9 @@ export default function PreMarketCheckIn({ onBack }) {
   const status = useMemo(() => readinessStatus(scores.composite), [scores.composite]);
 
   const sleepDebtMinutes = parseSleepDebtMinutes(form.sleepDebtMinutes);
-  const sleepDebtSevere = isSleepDebtSevere(sleepDebtMinutes);
-  const recoveryDay = requiresSleepDebtStandDown(sleepDebtMinutes, yesterdaySleepDebtMinutes);
+  const sleepDebtSevere = usesWearable && isSleepDebtSevere(sleepDebtMinutes);
+  const recoveryDay =
+    usesWearable && requiresSleepDebtStandDown(sleepDebtMinutes, yesterdaySleepDebtMinutes);
   const showProtectiveBanner =
     recoveryDay || scores.composite < PROTECTIVE_DAY_THRESHOLD;
 
@@ -169,13 +170,12 @@ export default function PreMarketCheckIn({ onBack }) {
     standDownAcknowledgedAt: formData.standDownAcknowledged
       ? (formData.standDownAcknowledgedAt || new Date().toISOString())
       : null,
-    sleepDebtSevere: isSleepDebtSevere(formData.sleepDebtMinutes),
-    sleepDebtStandDownRequired: requiresSleepDebtStandDown(
-      formData.sleepDebtMinutes,
-      yesterdaySleepDebtMinutes,
-    ),
+    sleepDebtSevere: usesWearable && isSleepDebtSevere(formData.sleepDebtMinutes),
+    sleepDebtStandDownRequired:
+      usesWearable
+      && requiresSleepDebtStandDown(formData.sleepDebtMinutes, yesterdaySleepDebtMinutes),
     savedAt: new Date().toISOString(),
-  }), [yesterdaySleepDebtMinutes]);
+  }), [usesWearable, yesterdaySleepDebtMinutes]);
 
   const persistCheckin = useCallback(async (formData, scoreData, statusData) => {
     const payload = buildSavePayload(formData, scoreData, statusData);
@@ -288,7 +288,7 @@ export default function PreMarketCheckIn({ onBack }) {
               <div className="pm-section-panel-body">
               {section.id === "physical" && (
                 <>
-                  <div className="pm-sleep-row">
+                  <div className={`pm-sleep-row${usesWearable ? "" : " pm-sleep-row--solo"}`}>
                     <div className="pm-field">
                       <div className="pm-field-label hybrid-label">Sleep (hours)</div>
                       <div className="checkin-input-suffix-wrap">
@@ -304,26 +304,28 @@ export default function PreMarketCheckIn({ onBack }) {
                         <span className="checkin-input-suffix">hrs</span>
                       </div>
                     </div>
-                    <div className="pm-field">
-                      <div className="pm-field-label hybrid-label">Sleep debt (mins)</div>
-                      <input
-                        type="number"
-                        min={0}
-                        max={600}
-                        step={5}
-                        value={form.sleepDebtMinutes}
-                        onChange={(e) => set("sleepDebtMinutes", e.target.value)}
-                        className={`pm-number-input${sleepDebtSevere ? " pm-number-input--caution" : ""}`}
-                      />
-                    </div>
+                    {usesWearable && (
+                      <div className="pm-field">
+                        <div className="pm-field-label hybrid-label">Sleep debt (mins)</div>
+                        <input
+                          type="number"
+                          min={0}
+                          max={600}
+                          step={5}
+                          value={form.sleepDebtMinutes}
+                          onChange={(e) => set("sleepDebtMinutes", e.target.value)}
+                          className={`pm-number-input${sleepDebtSevere ? " pm-number-input--caution" : ""}`}
+                        />
+                      </div>
+                    )}
                   </div>
-                  {sleepDebtSevere && !recoveryDay && (
+                  {usesWearable && sleepDebtSevere && !recoveryDay && (
                     <div className="pm-sleep-debt-caution" role="status">
                       <strong>Severe caution</strong> — sleep debt is {sleepDebtMinutes} min (≥{" "}
                       {SLEEP_DEBT_SEVERE_CAUTION_MINS}). {PROTECTIVE_DAY_COPY.sleepDebtCaution}
                     </div>
                   )}
-                  {recoveryDay && (
+                  {usesWearable && recoveryDay && (
                     <div className="pm-sleep-debt-caution pm-sleep-debt-caution--recovery" role="alert">
                       <strong>{PROTECTIVE_DAY_COPY.sleepDebtMandatory}</strong> — sleep debt has been ≥{" "}
                       {SLEEP_DEBT_SEVERE_CAUTION_MINS} min for two consecutive days.
@@ -345,8 +347,8 @@ export default function PreMarketCheckIn({ onBack }) {
                   />
                   {usesWearable && (
                     <div className="pm-field">
-                      <div className="pm-field-label hybrid-label">HRV</div>
-                      <div className="pm-field-hint">Recovery score from your wearable (0–100%)</div>
+                      <div className="pm-field-label hybrid-label">Recovery (HRV)</div>
+                      <div className="pm-field-hint">Wearable recovery score (0–100%)</div>
                       <div className="pm-hrv-input-row">
                         <input
                           type="number"

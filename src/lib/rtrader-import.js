@@ -7,7 +7,7 @@ import { resolveRtraderTimeColumn } from "./rtrader-timezone";
 
 const DEFAULT_IMPORT_ACCOUNT = {
   name: "Default Account",
-  account_type: "eval",
+  commissions_enabled: true,
   commissions: { MNQ: "0.50", NQ: "1.75", MES: "0.50", ES: "1.75", GC: "2.30", MGC: "0.80" },
 };
 
@@ -153,13 +153,24 @@ export function applyPointValues(trades) {
   });
 }
 
-export function applyCommissions(trades, commissions) {
+export function applyCommissions(trades, commissions, enabled = true) {
+  if (!enabled) {
+    return trades.map((t) => ({
+      ...t,
+      commission: 0,
+      net_pnl: t.raw_pnl,
+    }));
+  }
   return trades.map((t) => {
     const rate = parseFloat(commissions[t.symbol]) || 0;
     const comm = Math.round(t.qty * rate * 2 * 100) / 100;
     const net = Math.round((t.raw_pnl - comm) * 100) / 100;
     return { ...t, commission: comm, net_pnl: net };
   });
+}
+
+export function accountCommissionsEnabled(account) {
+  return account?.commissions_enabled !== false;
 }
 
 export function getMissingCommissionSymbols(trades, commissions = {}) {
@@ -198,7 +209,11 @@ export function processRTraderCSV(text, account = null) {
   let { trades, openPosition } = fifoReconstructTrades(orders);
   trades = applyPointValues(trades);
   const acct = account || getActiveAccount();
-  trades = applyCommissions(trades, acct?.commissions || {});
+  trades = applyCommissions(
+    trades,
+    acct?.commissions || {},
+    accountCommissionsEnabled(acct)
+  );
   return { trades, openPosition, account: acct, sourceTimeZone, timeColumnHeader };
 }
 
@@ -326,11 +341,9 @@ export async function executeTradesImport(
   supabaseClient,
   userId,
   trades,
-  account,
-  accountTypeOverride
+  account
 ) {
   const accountName = account?.name || "Default";
-  const acctType = accountTypeOverride || account?.account_type || "eval";
 
   const rows = trades.map((t) => {
     const entryInstant =
@@ -359,7 +372,6 @@ export async function executeTradesImport(
       net_pnl: t.net_pnl,
       platform: "rTrader",
       account_name: accountName,
-      account_type: acctType,
       stop_loss_points: t.stop_loss_points != null ? t.stop_loss_points : null,
       setup: t.setup || null,
       management: t.management || null,
@@ -388,11 +400,11 @@ export async function executeTradesImport(
   return rows.length;
 }
 
-export async function importTradesToSupabase(trades, account, accountTypeOverride) {
+export async function importTradesToSupabase(trades, account) {
   const res = await fetch("/api/trades/import", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ trades, account, accountTypeOverride }),
+    body: JSON.stringify({ trades, account }),
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));

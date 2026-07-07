@@ -12,6 +12,7 @@ import {
   formatPriorWeekDelta,
 } from "../../lib/weekly-process-review";
 import { BEHAVIORAL_FLAG_CATEGORIES } from "../../lib/postmarket-defaults";
+import WorkflowPageLayout from "../WorkflowPageLayout";
 
 function headerDate() {
   return new Date().toLocaleDateString("en-US", {
@@ -104,7 +105,7 @@ function WeekComparisonTable({ summary, priorSummary }) {
                 <td>{row.current}</td>
                 <td>{row.prior}</td>
                 <td className={`wpr-compare-delta wpr-compare-delta--${deltaTone(row.delta, row.invertGood) || "neutral"}`}>
-                  {row.delta || "—"}
+                  {row.delta || "-"}
                 </td>
               </tr>
             ))}
@@ -128,10 +129,13 @@ function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving }) {
   const riskDelta = formatPriorWeekDelta(summary.riskPlanFollowed, priorSummary?.riskPlanFollowed, { suffix: " days" });
 
   return (
-    <div className="wpr-main">
-      <div className="wpr-main-head">
+    <div className="wpr-main wpr-glass-shell">
+      <div className="wpr-main-head pm-checkin-header">
         <div className="wpr-main-eyebrow hybrid-eyebrow">{data.weekLabel}</div>
-        <h1 className="wpr-main-title hybrid-title">Weekly Process Review</h1>
+        <h1 className="hybrid-page-title">
+          Weekly Review
+          <span className="hybrid-page-title-stop" aria-hidden="true" />
+        </h1>
         <div className={`wpr-status-badge wpr-status-badge--${complete ? "complete" : "draft"}`}>
           {complete ? "Complete" : "Draft"}
         </div>
@@ -155,7 +159,7 @@ function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving }) {
         <div className="wpr-score-hero">
           <WprScoreStat
             label="Avg readiness"
-            value={summary.avgReadiness ?? "—"}
+            value={summary.avgReadiness ?? "-"}
             delta={
               readinessDelta != null
                 ? `${readinessDelta > 0 ? "+" : ""}${readinessDelta} vs prior week`
@@ -173,7 +177,7 @@ function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving }) {
           />
           <WprScoreStat
             label="Playbook"
-            value={summary.avgPlaybookPct != null ? `${summary.avgPlaybookPct}%` : "—"}
+            value={summary.avgPlaybookPct != null ? `${summary.avgPlaybookPct}%` : "-"}
             delta={playbookDelta}
             tone={
               summary.avgPlaybookPct != null && summary.avgPlaybookPct < 80
@@ -188,7 +192,7 @@ function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving }) {
             value={
               summary.riskPlanAnswered > 0
                 ? `${summary.riskPlanFollowed}/${summary.riskPlanAnswered}`
-                : "—"
+                : "-"
             }
             delta={riskDelta}
             tone={
@@ -204,7 +208,7 @@ function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving }) {
       </section>
 
       <section className="wpr-section">
-        <h2 className="wpr-section-title">Behavioral breakdown</h2>
+        <h2 className="wpr-section-title">Accountability breakdown</h2>
         <div className="wpr-behavior-grid">
           {BEHAVIORAL_FLAG_CATEGORIES.map((cat) => (
             <div key={cat.id} className="wpr-behavior-card">
@@ -248,11 +252,11 @@ function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving }) {
               {days.map((row) => (
                 <tr key={row.date} className={row.hasActivity ? "" : "wpr-day-table__empty"}>
                   <td className="wpr-day-table__day">{row.dateLabel}</td>
-                  <td>{row.readiness ?? "—"}</td>
+                  <td>{row.readiness ?? "-"}</td>
                   <td className="wpr-day-table__flags">
-                    {row.flagLabels.length ? row.flagLabels.join(", ") : "—"}
+                    {row.flagLabels.length ? row.flagLabels.join(", ") : "-"}
                   </td>
-                  <td>{row.playbookPct != null ? `${row.playbookPct}%` : "—"}</td>
+                  <td>{row.playbookPct != null ? `${row.playbookPct}%` : "-"}</td>
                   <td>{row.riskPlan}</td>
                 </tr>
               ))}
@@ -261,58 +265,94 @@ function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving }) {
         </div>
       </section>
 
-      {priorSummary && <WeekComparisonTable summary={summary} priorSummary={priorSummary} />}
-
-      {priorFocusItems.length > 0 && (
-        <section className="wpr-section">
-          <h2 className="wpr-section-title">Last week&apos;s focus — did you honor it?</h2>
+      <section className="wpr-section wpr-section--focus-retro">
+        <h2 className="wpr-section-title">Focus follow up</h2>
+        <p className="wpr-section-hint">
+          From last week&apos;s review. If N, say what got in the way.
+        </p>
+        {priorFocusItems.length > 0 ? (
           <div className="wpr-retro-list">
-            {priorFocusItems.map((item, i) => (
-              <div key={i} className="wpr-retro-row">
-                <span className="wpr-retro-text">{item}</span>
-                <div className="wpr-retro-btns">
-                  <button
-                    type="button"
-                    className={`wpr-retro-btn${manual.focusRetrospective[item] === true ? " active yes" : ""}`}
-                    onClick={() =>
-                      onManualChange({
-                        ...manual,
-                        focusRetrospective: { ...manual.focusRetrospective, [item]: true },
-                      })
-                    }
-                  >
-                    Y
-                  </button>
-                  <button
-                    type="button"
-                    className={`wpr-retro-btn${manual.focusRetrospective[item] === false ? " active no" : ""}`}
-                    onClick={() =>
-                      onManualChange({
-                        ...manual,
-                        focusRetrospective: { ...manual.focusRetrospective, [item]: false },
-                      })
-                    }
-                  >
-                    N
-                  </button>
+            {priorFocusItems.map((item, i) => {
+              const honored = manual.focusRetrospective?.[item];
+              const note = manual.focusRetrospectiveNotes?.[item] || "";
+
+              return (
+                <div key={i} className="wpr-retro-item">
+                  <div className="wpr-retro-row">
+                    <span className="wpr-retro-text">{item}</span>
+                    <div className="wpr-retro-btns">
+                      <button
+                        type="button"
+                        className={`wpr-retro-btn${honored === true ? " active yes" : ""}`}
+                        onClick={() =>
+                          onManualChange({
+                            ...manual,
+                            focusRetrospective: { ...manual.focusRetrospective, [item]: true },
+                          })
+                        }
+                      >
+                        Y
+                      </button>
+                      <button
+                        type="button"
+                        className={`wpr-retro-btn${honored === false ? " active no" : ""}`}
+                        onClick={() =>
+                          onManualChange({
+                            ...manual,
+                            focusRetrospective: { ...manual.focusRetrospective, [item]: false },
+                          })
+                        }
+                      >
+                        N
+                      </button>
+                    </div>
+                  </div>
+                  {honored === false && (
+                    <div className="wpr-retro-note">
+                      <label className="wpr-field-label hybrid-label" htmlFor={`wpr-retro-note-${i}`}>
+                        What got in the way?
+                      </label>
+                      <textarea
+                        id={`wpr-retro-note-${i}`}
+                        className="wpr-textarea wpr-textarea--retro-note"
+                        rows={2}
+                        placeholder="e.g. broke it on Wednesday after a red open"
+                        value={note}
+                        onChange={(e) =>
+                          onManualChange({
+                            ...manual,
+                            focusRetrospectiveNotes: {
+                              ...manual.focusRetrospectiveNotes,
+                              [item]: e.target.value,
+                            },
+                          })
+                        }
+                      />
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        </section>
-      )}
+        ) : (
+          <p className="wpr-retro-empty">No focus items were set last week. Set two for next week below.</p>
+        )}
+      </section>
+
+      {priorSummary && <WeekComparisonTable summary={summary} priorSummary={priorSummary} />}
 
       <section className="wpr-section">
         <h2 className="wpr-section-title">Reflection</h2>
         <div className="wpr-reflections">
           <div className="wpr-field">
             <label className="wpr-field-label hybrid-label" htmlFor="wpr-pattern">
-              What pattern showed up more than once?
+              What showed up more than once in your behavior, not the market?
             </label>
             <textarea
               id="wpr-pattern"
               className="wpr-textarea"
               rows={3}
+              placeholder="e.g. getting chopped up at the open before price settles, sizing up after a loss or taking trade setups outwith playbook"
               value={manual.reflections.pattern}
               onChange={(e) =>
                 onManualChange({
@@ -324,12 +364,13 @@ function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving }) {
           </div>
           <div className="wpr-field">
             <label className="wpr-field-label hybrid-label" htmlFor="wpr-broken">
-              Which day broke the week, and what triggered it?
+              Which day was the turning point (best or worst), and what was different about you that day?
             </label>
             <textarea
               id="wpr-broken"
               className="wpr-textarea"
               rows={3}
+              placeholder="e.g. Tuesday, traded with a poor readiness score and external distractions. Couldn't focus and took trades outwith plan"
               value={manual.reflections.brokenDay}
               onChange={(e) =>
                 onManualChange({
@@ -341,12 +382,13 @@ function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving }) {
           </div>
           <div className="wpr-field">
             <label className="wpr-field-label hybrid-label" htmlFor="wpr-diff">
-              What will you do differently before the first trade next week?
+              What&apos;s the earliest sign you&apos;re slipping next week, and what will you do when you see it?
             </label>
             <textarea
               id="wpr-diff"
               className="wpr-textarea"
               rows={3}
+              placeholder="e.g. 5 min walk or stretch"
               value={manual.reflections.differently}
               onChange={(e) =>
                 onManualChange({
@@ -361,7 +403,7 @@ function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving }) {
 
       <section className="wpr-section">
         <h2 className="wpr-section-title">Focus next week</h2>
-        <p className="wpr-section-hint">Exactly two focus items for the coming week.</p>
+        <p className="wpr-section-hint">Two focus items for next week that you&apos;ll be reminded of each day before the session.</p>
         <div className="wpr-focus-fields">
           <input
             type="text"
@@ -463,19 +505,19 @@ export default function WeeklyReviewPage() {
 
   if (!data || !manual) {
     return (
-      <div className="wpr-page hybrid-page">
+      <WorkflowPageLayout>
         <div className="pm-topbar">
           <span>{headerDate()}</span>
         </div>
-        <div className="wpr-main">
+        <div className="wpr-main wpr-glass-shell">
           <p className="wpr-section-hint">Could not load this week. Check your connection and try again.</p>
         </div>
-      </div>
+      </WorkflowPageLayout>
     );
   }
 
   return (
-    <div className="wpr-page hybrid-page">
+    <WorkflowPageLayout>
       <div className="pm-topbar">
         <span>{headerDate()}</span>
       </div>
@@ -532,6 +574,6 @@ export default function WeeklyReviewPage() {
           saving={saving}
         />
       </div>
-    </div>
+    </WorkflowPageLayout>
   );
 }

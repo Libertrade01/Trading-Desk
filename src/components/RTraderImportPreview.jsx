@@ -7,7 +7,6 @@ import { normalizeTradeTimestamps } from "../lib/rtrader-import";
 import {
   MGMT_OPTIONS,
   POST_EXIT_OPTIONS,
-  ACCOUNT_TYPE_OPTIONS,
 } from "../lib/trade-import-options";
 import { buildSetupOptions } from "../lib/setup-options";
 import { loadTraderProfile, getPlaybookSetupNames } from "../lib/trader-profile";
@@ -49,7 +48,6 @@ export default function RTraderImportPreview({
 }) {
   const [pendingTrades, setPendingTrades] = useState([]);
   const [defaultRisk, setDefaultRisk] = useState("15");
-  const [accountType, setAccountType] = useState(account?.account_type || "eval");
   const [importTimeZone, setImportTimeZone] = useState(sourceTimeZone);
   const [importing, setImporting] = useState(false);
   const [setupOptions, setSetupOptions] = useState(() => buildSetupOptions());
@@ -67,7 +65,6 @@ export default function RTraderImportPreview({
       setDefaultRisk(String(risk));
       setSetupOptions(buildSetupOptions(getPlaybookSetupNames()));
       setPendingTrades(initTrades(incomingTrades, risk));
-      setAccountType(account?.account_type || "eval");
       setImportTimeZone(sourceTimeZone);
       setImporting(false);
     })();
@@ -109,7 +106,7 @@ export default function RTraderImportPreview({
     setImporting(true);
     try {
       const finalized = normalizeTradeTimestamps(pendingTrades, importTimeZone);
-      await onConfirm(finalized, accountType);
+      await onConfirm(finalized);
       onClose();
     } catch (err) {
       alert(`Import failed: ${err.message}`);
@@ -301,18 +298,6 @@ export default function RTraderImportPreview({
               >
                 {RTRADER_IMPORT_TIMEZONE_OPTIONS.map((o) => (
                   <option key={o.id} value={o.id}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="import-footer-field">
-              <span className="import-footer-label">Account Type</span>
-              <select
-                className="import-footer-select"
-                value={accountType}
-                onChange={(e) => setAccountType(e.target.value)}
-              >
-                {ACCOUNT_TYPE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
             </div>

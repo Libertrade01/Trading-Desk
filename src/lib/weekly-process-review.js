@@ -228,6 +228,7 @@ export const EMPTY_MANUAL_REVIEW = {
   },
   focusItems: ["", ""],
   focusRetrospective: {},
+  focusRetrospectiveNotes: {},
   savedAt: null,
   status: "draft",
 };
@@ -249,6 +250,7 @@ export async function loadSavedReview(weekEnd) {
       data.focusItems?.[0] || "",
       data.focusItems?.[1] || "",
     ];
+    data.focusRetrospectiveNotes = data.focusRetrospectiveNotes || {};
     data.status = isReviewComplete(data) ? "complete" : "draft";
     return data;
   } catch {

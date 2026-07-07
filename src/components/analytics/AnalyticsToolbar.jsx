@@ -42,11 +42,9 @@ export default function AnalyticsToolbar({
   activePreset,
   dateFrom,
   dateTo,
-  accountType,
   accounts,
   onPresetChange,
   onCustomRangeChange,
-  onAccountTypeChange,
   onToggleAccount,
   onOpenTradeLog,
 }) {
@@ -57,10 +55,10 @@ export default function AnalyticsToolbar({
     <header className="an-header">
       <div className="an-header-copy">
         <h1 className="an-page-title">
-          Analytics
+          Stats
           <span className="an-title-stop" aria-hidden="true" />
         </h1>
-        <p>Everything you need to measure and improve.</p>
+        <p>P&amp;L, win rate, equity curve, and trade history.</p>
       </div>
 
       <div className="an-header-controls">
@@ -120,18 +118,6 @@ export default function AnalyticsToolbar({
             ))}
           </div>
         ) : null}
-
-        <select
-          className="an-account-type"
-          value={accountType}
-          onChange={(e) => onAccountTypeChange(e.target.value)}
-          aria-label="Account type"
-        >
-          <option value="all">All</option>
-          <option value="eval">Eval</option>
-          <option value="funded">Funded</option>
-          <option value="cash">Cash</option>
-        </select>
 
         {onOpenTradeLog ? (
           <button type="button" className="an-link-all" onClick={onOpenTradeLog}>

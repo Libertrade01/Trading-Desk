@@ -148,7 +148,7 @@ function normalizePhysicalWeights(usesWearable) {
   let weights = { ...PHYSICAL_FIELD_WEIGHTS };
   if (!usesWearable) {
     const filtered = Object.fromEntries(
-      Object.entries(weights).filter(([key]) => key !== "hrvScore")
+      Object.entries(weights).filter(([key]) => key !== "hrvScore" && key !== "sleepDebt")
     );
     const sum = Object.values(filtered).reduce((acc, w) => acc + w, 0);
     weights = Object.fromEntries(

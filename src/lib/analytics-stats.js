@@ -1,4 +1,4 @@
-import { getImportAccount } from "./trader-settings";
+import { normalizeTraderSettings } from "./trader-settings";
 
 const POINT_VALUES_R = { NQ: 20, MNQ: 2, ES: 50, MES: 5, GC: 10, MGC: 1 };
 
@@ -20,8 +20,7 @@ export function calcStats(trades, settings) {
   if (!trades?.length) return null;
 
   const pnls = trades.map((t) => t.net_pnl || 0);
-  const activeAcct = getImportAccount(settings || {});
-  const beThreshold = activeAcct ? (activeAcct.be_threshold ?? 30) : 30;
+  const beThreshold = normalizeTraderSettings(settings || {}).beThreshold;
 
   const bes = trades.filter((t) => Math.abs(t.net_pnl) <= beThreshold);
   const nonBe = trades.filter((t) => Math.abs(t.net_pnl) > beThreshold);

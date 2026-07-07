@@ -20,7 +20,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { trades, account, accountTypeOverride } = body;
+  const { trades, account } = body;
   if (!Array.isArray(trades)) {
     return NextResponse.json({ error: "trades must be an array" }, { status: 400 });
   }
@@ -30,8 +30,7 @@ export async function POST(request) {
       supabase,
       user.id,
       trades,
-      account,
-      accountTypeOverride
+      account
     );
     return NextResponse.json({ count });
   } catch (err) {

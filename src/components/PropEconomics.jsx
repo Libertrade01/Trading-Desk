@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { storage } from "../lib/supabase";
 import { formatUsd } from "../lib/history-data";
 import { todayKey } from "../lib/today-key";
+import WorkflowPageLayout from "./WorkflowPageLayout";
 
 const STORAGE_KEY = "prop-ledger";
 const DEFAULT_FIRMS = ["Lucid", "Tradeify"];
@@ -167,21 +168,21 @@ function PropEconomicsMetrics({ totalPayouts, totalSpend, net }) {
   const netClass = net > 0 ? "positive" : net < 0 ? "negative" : "neutral";
 
   return (
-    <section className="prop-economics-hero" aria-label="Prop economics summary">
-      <div className="prop-economics-hero-net">
+    <section className="prop-glass-hero" aria-label="Prop economics summary">
+      <div className="prop-glass-net-card">
         <span className="prop-economics-hero-cap">Net</span>
         <span className={`prop-economics-hero-net-value ${netClass}`}>
           {formatUsd(net, { signed: true })}
         </span>
       </div>
-      <div className="prop-economics-hero-supporting">
-        <div className="prop-economics-hero-stat">
+      <div className="prop-glass-stats">
+        <div className="prop-glass-stat">
           <span className="prop-economics-hero-cap">Total payouts</span>
           <span className={`prop-economics-hero-value${totalPayouts > 0 ? " positive" : ""}`}>
             {formatAmount(totalPayouts)}
           </span>
         </div>
-        <div className="prop-economics-hero-stat prop-economics-hero-stat--subtle">
+        <div className="prop-glass-stat prop-glass-stat--subtle">
           <span className="prop-economics-hero-cap">Total spend</span>
           <span className="prop-economics-hero-value">{formatAmount(totalSpend)}</span>
         </div>
@@ -320,231 +321,236 @@ export default function PropEconomics() {
     if (editingId === id) closeForm();
   };
 
-  if (loading) return <div className="pm-loading">Loading...</div>;
+  if (loading) return <div className="pm-loading home-page--loop workflow-page--loop">Loading...</div>;
 
   return (
-    <div className="premarket-page hybrid-page">
-      <div className="pm-topbar">
-        <span>{headerDate()}</span>
-      </div>
+    <WorkflowPageLayout>
+      <div className="prop-economics-page">
+        <div className="pm-topbar">
+          <span>{headerDate()}</span>
+        </div>
 
-      <div className="pm-closeout-layout">
-        <div className="pm-closeout-main">
-          <div className="pm-header">
-            <div className="pm-eyebrow hybrid-eyebrow">Prop economics · all time</div>
-            <h1 className="hybrid-page-title">THE BOTTOM LINE.</h1>
-            <p className="pm-subtitle">
-              Track what you paid prop firms versus what you withdrew. Know your true edge.
-            </p>
-          </div>
+        <div className="pm-closeout-layout">
+          <div className="pm-closeout-main prop-economics-main">
+            <header className="pm-header prop-economics-header">
+              <h1 className="hybrid-page-title">
+                Prop Profits<span className="hybrid-page-title-stop" aria-hidden="true" />
+              </h1>
+              <p className="pm-subtitle">
+                Track what you paid prop firms versus what you withdrew.
+              </p>
+            </header>
 
-          <PropEconomicsMetrics
-            totalPayouts={totalPayouts}
-            totalSpend={totalSpend}
-            net={net}
-          />
+          <div className="prop-glass-shell">
+            <PropEconomicsMetrics
+              totalPayouts={totalPayouts}
+              totalSpend={totalSpend}
+              net={net}
+            />
 
-          <div className="pm-closeout-stage">
-            <div className="pm-section-panel">
-              <div className="pm-section-panel-head">
-                <div>
-                  <h2 className="pm-section-title hybrid-section-title">Cumulative trend</h2>
-                  <p className="pm-section-desc">Payouts vs spend over time.</p>
-                </div>
-                <div className="prop-panel-actions">
-                  <button type="button" className="pm-add-btn" onClick={() => openForm("spend")}>
-                    + Log spend
-                  </button>
-                  <button type="button" className="pm-add-btn prop-add-payout" onClick={() => openForm("payout")}>
-                    + Log payout
-                  </button>
-                </div>
-              </div>
-              <div className="pm-section-panel-body">
-                <CumulativeChart entries={ledger.entries} />
-              </div>
-            </div>
-
-            {formMode && (
-              <div className="pm-section-panel">
-                <div className="pm-section-panel-head">
+            <div className="prop-glass-stack">
+              <div className="prop-glass-panel">
+                <div className="prop-glass-panel-head">
                   <div>
-                    <h2 className="pm-section-title hybrid-section-title">
-                      {editingId ? "Edit" : "Log"} {formMode === "spend" ? "spend" : "payout"}
-                    </h2>
-                    <p className="pm-section-desc">Add or update a ledger entry.</p>
+                    <h2 className="prop-glass-panel-title">Cumulative trend</h2>
+                    <p className="prop-glass-panel-desc">Payouts vs spend over time.</p>
+                  </div>
+                  <div className="prop-panel-actions">
+                    <button type="button" className="pm-add-btn" onClick={() => openForm("spend")}>
+                      + Log spend
+                    </button>
+                    <button type="button" className="pm-add-btn prop-add-payout" onClick={() => openForm("payout")}>
+                      + Log payout
+                    </button>
                   </div>
                 </div>
-                <div className="pm-section-panel-body">
-                  <form onSubmit={handleSubmit}>
-                    <div className="pm-field-grid">
-                      <div className="pm-field">
-                        <div className="pm-field-label hybrid-label">Date</div>
-                        <input
-                          type="date"
-                          className="pm-text-input"
-                          value={form.date}
-                          onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-                          required
-                        />
-                      </div>
-                      <div className="pm-field">
-                        <div className="pm-field-label hybrid-label">Firm</div>
-                        {!addingFirm ? (
-                          <select
-                            className="pm-select"
-                            value={form.firm}
-                            onChange={(e) => handleFirmSelect(e.target.value)}
-                          >
-                            {ledger.firms.map((f) => (
-                              <option key={f} value={f}>{f}</option>
-                            ))}
-                            <option value={ADD_FIRM_VALUE}>Add firm...</option>
-                          </select>
-                        ) : (
-                          <div className="prop-add-firm-row">
-                            <input
-                              type="text"
-                              className="pm-text-input"
-                              placeholder="Firm name"
-                              value={newFirmName}
-                              onChange={(e) => setNewFirmName(e.target.value)}
-                              autoFocus
-                            />
-                            <button type="button" className="pm-add-btn" onClick={confirmAddFirm}>Add</button>
-                            <button type="button" className="pm-btn-link" onClick={() => setAddingFirm(false)}>Cancel</button>
+                <div className="prop-glass-panel-body">
+                  <CumulativeChart entries={ledger.entries} />
+                </div>
+              </div>
+
+              {formMode && (
+                <div className="prop-glass-panel">
+                  <div className="prop-glass-panel-head">
+                    <div>
+                      <h2 className="prop-glass-panel-title">
+                        {editingId ? "Edit" : "Log"} {formMode === "spend" ? "spend" : "payout"}
+                      </h2>
+                      <p className="prop-glass-panel-desc">Add or update a ledger entry.</p>
+                    </div>
+                  </div>
+                  <div className="prop-glass-panel-body">
+                    <form onSubmit={handleSubmit}>
+                      <div className="pm-field-grid">
+                        <div className="pm-field">
+                          <div className="pm-field-label hybrid-label">Date</div>
+                          <input
+                            type="date"
+                            className="pm-text-input"
+                            value={form.date}
+                            onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+                            required
+                          />
+                        </div>
+                        <div className="pm-field">
+                          <div className="pm-field-label hybrid-label">Firm</div>
+                          {!addingFirm ? (
+                            <select
+                              className="pm-select"
+                              value={form.firm}
+                              onChange={(e) => handleFirmSelect(e.target.value)}
+                            >
+                              {ledger.firms.map((f) => (
+                                <option key={f} value={f}>{f}</option>
+                              ))}
+                              <option value={ADD_FIRM_VALUE}>Add firm...</option>
+                            </select>
+                          ) : (
+                            <div className="prop-add-firm-row">
+                              <input
+                                type="text"
+                                className="pm-text-input"
+                                placeholder="Firm name"
+                                value={newFirmName}
+                                onChange={(e) => setNewFirmName(e.target.value)}
+                                autoFocus
+                              />
+                              <button type="button" className="pm-add-btn" onClick={confirmAddFirm}>Add</button>
+                              <button type="button" className="pm-btn-link" onClick={() => setAddingFirm(false)}>Cancel</button>
+                            </div>
+                          )}
+                        </div>
+                        <div className="pm-field">
+                          <div className="pm-field-label hybrid-label">Amount ($)</div>
+                          <input
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            className="pm-number-input"
+                            style={{ maxWidth: "100%" }}
+                            value={form.amount}
+                            onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+                            required
+                          />
+                        </div>
+                        {formMode === "spend" && (
+                          <div className="pm-field">
+                            <div className="pm-field-label hybrid-label">Category</div>
+                            <select
+                              className="pm-select"
+                              value={form.category}
+                              onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                            >
+                              {SPEND_CATEGORIES.map((c) => (
+                                <option key={c} value={c}>{c}</option>
+                              ))}
+                            </select>
                           </div>
                         )}
                       </div>
                       <div className="pm-field">
-                        <div className="pm-field-label hybrid-label">Amount ($)</div>
-                        <input
-                          type="number"
-                          min="0.01"
-                          step="0.01"
-                          className="pm-number-input"
-                          style={{ maxWidth: "100%" }}
-                          value={form.amount}
-                          onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
-                          required
+                        <div className="pm-field-label hybrid-label">Note</div>
+                        <textarea
+                          className="pm-textarea"
+                          rows={2}
+                          placeholder="Optional"
+                          value={form.note}
+                          onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
                         />
                       </div>
-                      {formMode === "spend" && (
-                        <div className="pm-field">
-                          <div className="pm-field-label hybrid-label">Category</div>
-                          <select
-                            className="pm-select"
-                            value={form.category}
-                            onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                          >
-                            {SPEND_CATEGORIES.map((c) => (
-                              <option key={c} value={c}>{c}</option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-                    </div>
-                    <div className="pm-field">
-                      <div className="pm-field-label hybrid-label">Note</div>
-                      <textarea
-                        className="pm-textarea"
-                        rows={2}
-                        placeholder="Optional"
-                        value={form.note}
-                        onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
-                      />
-                    </div>
-                    <div className="prop-form-actions">
-                      <button type="submit" className="pm-btn-return">
-                        {editingId ? "Save changes" : "Add entry"}
-                      </button>
-                      <button type="button" className="pm-btn-link" onClick={closeForm}>Cancel</button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            )}
-
-            <div className="pm-section-panel">
-              <div className="pm-section-panel-head">
-                <div>
-                  <h2 className="pm-section-title hybrid-section-title">Ledger</h2>
-                  <p className="pm-section-desc">All spend and payout entries.</p>
-                </div>
-                <div className="prop-ledger-head-meta">
-                  <div className="prop-ledger-filter">
-                    <label htmlFor="prop-firm-filter" className="hybrid-label-sm prop-ledger-filter-label">
-                      Firm
-                    </label>
-                    <select
-                      id="prop-firm-filter"
-                      className="pm-select prop-ledger-filter-select"
-                      value={firmFilter}
-                      onChange={(e) => setFirmFilter(e.target.value)}
-                    >
-                      <option value="all">All firms</option>
-                      {filterFirms.map((firm) => (
-                        <option key={firm} value={firm}>{firm}</option>
-                      ))}
-                    </select>
+                      <div className="prop-form-actions">
+                        <button type="submit" className="pm-btn-return">
+                          {editingId ? "Save changes" : "Add entry"}
+                        </button>
+                        <button type="button" className="pm-btn-link" onClick={closeForm}>Cancel</button>
+                      </div>
+                    </form>
                   </div>
-                  <span className="pm-section-step hybrid-label-sm">{filteredEntries.length} entries</span>
                 </div>
-              </div>
+              )}
 
-              <div className="pm-section-panel-body">
-                {filteredEntries.length === 0 ? (
-                  <p className="prop-ledger-empty">
-                    {firmFilter === "all"
-                      ? "No entries yet. Log your first spend or payout above."
-                      : `No entries for ${firmFilter}.`}
-                  </p>
-                ) : (
-                  <div className="prop-ledger-table-wrap">
-                    <table className="prop-ledger-table">
-                      <thead>
-                        <tr>
-                          <th>Date</th>
-                          <th>Type</th>
-                          <th>Firm</th>
-                          <th>Amount</th>
-                          <th>Category</th>
-                          <th>Note</th>
-                          <th aria-label="Actions" />
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredEntries.map((entry) => (
-                          <tr key={entry.id}>
-                            <td>{formatRowDate(entry.date)}</td>
-                            <td>
-                              <span className={`prop-type-tag ${entry.type}`}>
-                                {entry.type}
-                              </span>
-                            </td>
-                            <td>{entry.firm}</td>
-                            <td className={entry.type === "payout" ? "pos" : "dim"}>
-                              {entry.type === "payout" ? "+" : "−"}{formatAmount(entry.amount)}
-                            </td>
-                            <td>{entry.type === "spend" ? entry.category : "—"}</td>
-                            <td className="prop-ledger-note">{entry.note || "—"}</td>
-                            <td>
-                              <div className="prop-ledger-actions">
-                                <button type="button" className="pm-btn-link" onClick={() => openEdit(entry)}>Edit</button>
-                                <TrashButton onClick={() => handleDelete(entry.id)} />
-                              </div>
-                            </td>
-                          </tr>
+              <div className="prop-glass-panel">
+                <div className="prop-glass-panel-head">
+                  <div>
+                    <h2 className="prop-glass-panel-title">Ledger</h2>
+                    <p className="prop-glass-panel-desc">All spend and payout entries.</p>
+                  </div>
+                  <div className="prop-ledger-head-meta">
+                    <div className="prop-ledger-filter">
+                      <label htmlFor="prop-firm-filter" className="hybrid-label-sm prop-ledger-filter-label">
+                        Firm
+                      </label>
+                      <select
+                        id="prop-firm-filter"
+                        className="pm-select prop-ledger-filter-select"
+                        value={firmFilter}
+                        onChange={(e) => setFirmFilter(e.target.value)}
+                      >
+                        <option value="all">All firms</option>
+                        {filterFirms.map((firm) => (
+                          <option key={firm} value={firm}>{firm}</option>
                         ))}
-                      </tbody>
-                    </table>
+                      </select>
+                    </div>
+                    <span className="prop-glass-panel-meta hybrid-label-sm">{filteredEntries.length} entries</span>
                   </div>
-                )}
+                </div>
+
+                <div className="prop-glass-panel-body">
+                  {filteredEntries.length === 0 ? (
+                    <p className="prop-ledger-empty">
+                      {firmFilter === "all"
+                        ? "No entries yet. Log your first spend or payout above."
+                        : `No entries for ${firmFilter}.`}
+                    </p>
+                  ) : (
+                    <div className="prop-ledger-table-wrap">
+                      <table className="prop-ledger-table">
+                        <thead>
+                          <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Firm</th>
+                            <th>Amount</th>
+                            <th>Category</th>
+                            <th>Note</th>
+                            <th aria-label="Actions" />
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredEntries.map((entry) => (
+                            <tr key={entry.id}>
+                              <td>{formatRowDate(entry.date)}</td>
+                              <td>
+                                <span className={`prop-type-tag ${entry.type}`}>
+                                  {entry.type}
+                                </span>
+                              </td>
+                              <td>{entry.firm}</td>
+                              <td className={entry.type === "payout" ? "pos" : "dim"}>
+                                {entry.type === "payout" ? "+" : "−"}{formatAmount(entry.amount)}
+                              </td>
+                              <td>{entry.type === "spend" ? entry.category : "—"}</td>
+                              <td className="prop-ledger-note">{entry.note || "—"}</td>
+                              <td>
+                                <div className="prop-ledger-actions">
+                                  <button type="button" className="pm-btn-link" onClick={() => openEdit(entry)}>Edit</button>
+                                  <TrashButton onClick={() => handleDelete(entry.id)} />
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </WorkflowPageLayout>
   );
 }

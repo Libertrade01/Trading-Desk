@@ -313,7 +313,10 @@ export default function PostMarketReview({ onBack }) {
       const text = await file.text();
       const account = await loadImportAccount();
       const { trades, openPosition, sourceTimeZone, timeColumnHeader } = processRTraderCSV(text, account);
-      const missingSymbols = getMissingCommissionSymbols(trades, account?.commissions || {});
+      const missingSymbols =
+        account?.commissions_enabled !== false
+          ? getMissingCommissionSymbols(trades, account?.commissions || {})
+          : [];
       setImportPreview({
         trades,
         openPosition,
@@ -366,13 +369,13 @@ export default function PostMarketReview({ onBack }) {
 
   const openFilePicker = () => fileRef.current?.click();
 
-  const handleImportConfirm = async (trades, accountType) => {
+  const handleImportConfirm = async (trades) => {
     const check = validateImportSetupTags(trades);
     if (!check.ok) {
       throw new Error(check.message);
     }
 
-    const count = await importTradesToSupabase(trades, importPreview?.account, accountType);
+    const count = await importTradesToSupabase(trades, importPreview?.account);
     const todayTrades = tradesForDate(trades, todayKey());
     const perf = computePerformanceFromTrades(todayTrades);
     await reloadDayTrades();

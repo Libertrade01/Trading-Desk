@@ -27,22 +27,28 @@ const NAV_ITEMS = [
   { id: "postmarket", href: "/postmarket", label: "Close the LOOP", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 12h12M4 9l3-3 2 2 4-4" strokeLinecap="round" strokeLinejoin="round"/></svg>
   )},
-  { id: "history", href: "/history", label: "History", className: "sidebar-nav-item--daily-gap", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5v4l2.5 1.5" strokeLinecap="round"/></svg>
+  { id: "analytics", href: "/analytics", label: "Stats", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="9" width="3" height="5" rx="0.5"/><rect x="6.5" y="5" width="3" height="9" rx="0.5"/><rect x="11" y="2" width="3" height="12" rx="0.5"/></svg>
   )},
-  { type: "label", text: "Reference" },
-  { id: "process", href: "/settings?section=process", label: "My process", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 3.5h10v9H3z"/><path d="M5.5 6.5h5M5.5 9h3.5" strokeLinecap="round"/></svg>
+  { type: "label", text: "Review", className: "sidebar-nav-label--section-gap" },
+  { id: "history", href: "/history", label: "Past sessions", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5v4l2.5 1.5" strokeLinecap="round"/></svg>
   )},
   { id: "weeklyreview", href: "/weekly-review", label: "Weekly Review", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3" strokeLinecap="round"/></svg>
   )},
-  { id: "propeconomics", href: "/prop-economics", label: "Prop Economics", icon: (
+  { id: "propeconomics", href: "/prop-economics", label: "Prop Profit Tracker", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 12V6l6-3 6 3v6l-6 3-6-3z"/><path d="M8 3v10M2 6l6 3 6-3" strokeLinecap="round" strokeLinejoin="round"/></svg>
   )},
-  { id: "analytics", href: "/analytics", label: "Analytics", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="9" width="3" height="5" rx="0.5"/><rect x="6.5" y="5" width="3" height="9" rx="0.5"/><rect x="11" y="2" width="3" height="12" rx="0.5"/></svg>
-  )},
+  {
+    id: "settings",
+    href: "/settings",
+    label: "Settings",
+    className: "sidebar-nav-item--section-gap",
+    icon: (
+      <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>
+    ),
+  },
 ];
 
 const FOUNDER_NAV_ITEMS = [
@@ -54,24 +60,12 @@ const FOUNDER_NAV_ITEMS = [
   )},
 ];
 
-const SETTINGS_NAV_ITEM = {
-  id: "settings",
-  href: "/settings",
-  label: "Settings",
-  icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>
-  ),
-};
-
 function isNavActive(pathname, item, settingsSection) {
   if (item.id === "home") return pathname === "/home";
   if (item.id === "history") return pathname === "/history" || pathname.startsWith("/history/");
   if (item.id === "weeklyreview") return pathname === "/weekly-review" || pathname.startsWith("/weekly-review/");
-  if (item.id === "process") {
-    return pathname === "/settings" && settingsSection === "process";
-  }
   if (item.id === "settings") {
-    return pathname === "/settings" && settingsSection !== "process";
+    return pathname === "/settings";
   }
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
@@ -111,17 +105,14 @@ function Sidebar({ pathname, settingsSection, open, onClose, userEmail, mainItem
               )
             )}
           </div>
-          <div className="sidebar-nav-bottom">
-            <NavLink item={SETTINGS_NAV_ITEM} pathname={pathname} settingsSection={settingsSection} onClose={onClose} />
-            {showFounderSection && (
-              <>
-                <NavLabel text="Founder" className="sidebar-nav-label--founder" />
-                {founderItems.map((item) => (
-                  <NavLink key={item.id} item={item} pathname={pathname} settingsSection={settingsSection} onClose={onClose} />
-                ))}
-              </>
-            )}
-          </div>
+          {showFounderSection && (
+            <div className="sidebar-nav-bottom">
+              <NavLabel text="Founder" className="sidebar-nav-label--founder" />
+              {founderItems.map((item) => (
+                <NavLink key={item.id} item={item} pathname={pathname} settingsSection={settingsSection} onClose={onClose} />
+              ))}
+            </div>
+          )}
         </nav>
         <div className="sidebar-footer">
           {userEmail && (

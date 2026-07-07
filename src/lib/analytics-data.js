@@ -1,23 +1,31 @@
-import { supabase } from "./supabase";
 import { getCurrentUserId } from "./user-storage";
-import { withUserTradesQuery } from "./trades-query";
+import { getSupabaseBrowserClient } from "./supabase/client";
 
-export async function fetchAnalyticsTrades({ dateFrom, dateTo, accountType } = {}) {
-  const userId = await getCurrentUserId();
-  let query = withUserTradesQuery(supabase.from("trades").select("*"), userId);
-  if (dateFrom) query = query.gte("date", dateFrom);
-  if (dateTo) query = query.lte("date", dateTo);
-  if (accountType && accountType !== "all") {
-    query = query.eq("account_type", accountType);
+export async function fetchAnalyticsTrades({ dateFrom, dateTo } = {}) {
+  const params = new URLSearchParams();
+  if (dateFrom) params.set("dateFrom", dateFrom);
+  if (dateTo) params.set("dateTo", dateTo);
+  const qs = params.toString();
+  const res = await fetch(`/api/trades${qs ? `?${qs}` : ""}`);
+  if (res.status === 401) {
+    return [];
   }
-  const { data, error } = await query.order("entry_time", { ascending: false });
-  if (error) throw error;
-  return data || [];
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to load trades");
+  }
+  const data = await res.json();
+  return data.trades || [];
 }
 
 export async function fetchTradingDays({ dateFrom, dateTo } = {}) {
-  const userId = await getCurrentUserId();
-  let query = supabase.from("trading_days").select("*").eq("user_id", userId);
+  let userId;
+  try {
+    userId = await getCurrentUserId();
+  } catch {
+    return [];
+  }
+  let query = getSupabaseBrowserClient().from("trading_days").select("*").eq("user_id", userId);
   if (dateFrom) query = query.gte("date", dateFrom);
   if (dateTo) query = query.lte("date", dateTo);
   const { data, error } = await query;

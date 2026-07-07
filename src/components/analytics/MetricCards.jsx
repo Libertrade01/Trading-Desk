@@ -9,10 +9,10 @@ function toneClass(n, threshold = 0) {
   return "";
 }
 
-export default function MetricCards({ stats }) {
+export default function MetricCards({ stats, trailing = null }) {
   if (!stats) {
     return (
-      <div className="an-metrics-row">
+      <div className={`an-metrics-row${trailing ? " an-metrics-row--five" : ""}`}>
         {["Net P&L", "Win Rate", "Expectancy", "Profit Factor"].map((label) => (
           <article key={label} className="an-card an-metric-card">
             <div className="an-metric-label">{label}</div>
@@ -20,6 +20,7 @@ export default function MetricCards({ stats }) {
             <div className="an-metric-delta muted">No data</div>
           </article>
         ))}
+        {trailing}
       </div>
     );
   }
@@ -57,7 +58,7 @@ export default function MetricCards({ stats }) {
   ];
 
   return (
-    <div className="an-metrics-row">
+    <div className={`an-metrics-row${trailing ? " an-metrics-row--five" : ""}`}>
       {cards.map((card) => (
         <article key={card.label} className="an-card an-metric-card">
           <div className="an-metric-label">{card.label}</div>
@@ -65,6 +66,7 @@ export default function MetricCards({ stats }) {
           <div className={`an-metric-delta ${card.deltaTone}`.trim()}>{card.delta}</div>
         </article>
       ))}
+      {trailing}
     </div>
   );
 }

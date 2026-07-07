@@ -16,10 +16,11 @@ export default function AnalyticsWorkflowNotice() {
 
   return (
     <div className="analytics-desk-notice analytics-desk-notice--compact">
-      <span className="hybrid-eyebrow">Workflow</span>
       <p>
-        Import in <Link href="/postmarket">Close loop</Link> · tag every setup · accounts in{" "}
-        <Link href="/settings">Settings</Link>.
+        <span className="hybrid-eyebrow analytics-desk-notice__eyebrow">Workflow ·</span>{" "}
+        Import broker CSV or add manually each session in{" "}
+        <Link href="/postmarket">Close the LOOP</Link> and tag playbook setups. Configure{" "}
+        <Link href="/settings?section=process">My Process</Link> in Settings.
       </p>
       <button
         type="button"

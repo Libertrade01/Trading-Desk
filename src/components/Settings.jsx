@@ -20,15 +20,9 @@ import {
   DEFAULT_TRADER_SETTINGS,
   TRADING_DAY_TIMEZONE_OPTIONS,
   DEFAULT_TRADING_DAY_TIMEZONE,
-  COMMISSION_SYMBOLS,
 } from "../lib/trader-settings";
-import {
-  formatRecoveryUsd,
-  formatActivationRule,
-  formatExitRule,
-} from "../lib/dll-recovery";
-import { ACCOUNT_TYPE_OPTIONS } from "../lib/trade-import-options";
 import MyProcessSettings from "./MyProcessSettings";
+import WorkflowPageLayout from "./WorkflowPageLayout";
 import { getCurrentUser } from "../lib/user-storage";
 import { isDevUser } from "../lib/dev-access";
 import { clearTraderProfileCache, loadTraderProfile, saveTraderProfile } from "../lib/trader-profile";
@@ -37,30 +31,22 @@ const SECTIONS = [
   {
     id: "process",
     label: "Process",
-    hint: "Playbook & flags",
-    title: "Your playbook",
-    desc: "Setups, commitments, desk checks, streaks, and close loop flags.",
-  },
-  {
-    id: "desk",
-    label: "Desk",
-    hint: "Timezone & imports",
-    title: "Desk setup",
-    desc: "Your name, trading day rollover, and rTrader import defaults.",
+    hint: "Playbook & Accountability",
   },
   {
     id: "risk",
     label: "Risk",
     hint: "Drawdown Recovery",
-    title: "Drawdown Recovery",
-    desc: "Automatic half-size mode after a loss day. Set when it activates, when you exit, and your daily loss caps.",
+  },
+  {
+    id: "desk",
+    label: "General",
+    hint: "Timezone & imports",
   },
   {
     id: "accounts",
     label: "Accounts",
     hint: "Commissions & types",
-    title: "Trading accounts",
-    desc: "Commission rates, account types, and which account rTrader imports attach to.",
   },
 ];
 
@@ -68,8 +54,6 @@ const DEV_SECTION = {
   id: "dev",
   label: "Dev",
   hint: "Testing tools",
-  title: "Developer tools",
-  desc: "Internal utilities for replaying onboarding and other dev-only checks.",
 };
 
 function getVisibleSections(showDevTools) {
@@ -146,7 +130,7 @@ function AccountCard({
       <button type="button" className="settings-account-head" onClick={onToggle}>
         <span className="settings-account-name">{account.name || "Untitled account"}</span>
         <span className="settings-account-meta">
-          {account.forImport ? "Import default" : account.account_type}
+          {account.forImport ? "Import default" : null}
         </span>
         <span className="settings-account-chevron" aria-hidden="true">
           {expanded ? "−" : "+"}
@@ -162,7 +146,7 @@ function AccountCard({
               checked={!!account.forImport}
               onChange={() => onSetImport(index)}
             />
-            <span>Use for rTrader imports (commissions &amp; account type)</span>
+            <span>Use for rTrader imports (commissions)</span>
           </label>
 
           <div className="pm-field-grid">
@@ -177,20 +161,6 @@ function AccountCard({
               />
             </div>
             <div>
-              <div className="pm-field-label hybrid-label">Account type</div>
-              <select
-                value={account.account_type}
-                onChange={(e) => setField("account_type", e.target.value)}
-                className="pm-select"
-              >
-                {ACCOUNT_TYPE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
               <div className="pm-field-label hybrid-label">Starting balance ($)</div>
               <input
                 type="text"
@@ -200,56 +170,58 @@ function AccountCard({
                 placeholder="50000"
               />
             </div>
-            <div>
-              <div className="pm-field-label hybrid-label">Breakeven threshold ($)</div>
-              <input
-                type="text"
-                value={account.be_threshold}
-                onChange={(e) => setField("be_threshold", e.target.value)}
-                className="pm-text-input"
-                placeholder="30"
-              />
-              <p className="pm-field-hint">Trades within ±this amount count as breakeven in Analytics.</p>
-            </div>
           </div>
 
           <div className="settings-comm-block">
-            <div className="pm-field-label hybrid-label">Commission rates ($ per contract, per side)</div>
-            <div className="settings-comm-rows">
-              {Object.entries(account.commissions || {}).map(([sym, rate]) => (
-                <div key={sym} className="settings-comm-row">
-                  <input
-                    type="text"
-                    value={sym}
-                    onChange={(e) => renameSymbol(sym, e.target.value)}
-                    className="pm-text-input settings-comm-sym"
-                    placeholder="MNQ"
-                  />
-                  <span className="settings-comm-sep">$</span>
-                  <input
-                    type="text"
-                    value={rate}
-                    onChange={(e) => setCommission(sym, e.target.value)}
-                    className="pm-text-input settings-comm-rate"
-                    placeholder="0.50"
-                  />
-                  <button
-                    type="button"
-                    className="settings-comm-remove"
-                    onClick={() => removeSymbol(sym)}
-                    aria-label={`Remove ${sym}`}
-                  >
-                    ✕
-                  </button>
+            <ToggleField
+              label="Apply commission rates"
+              hint="Enable and add rates per symbol if your broker CSV does not include fees. When off, import uses gross P&L only."
+              value={account.commissions_enabled !== false}
+              onChange={(enabled) => setField("commissions_enabled", enabled)}
+            />
+
+            {account.commissions_enabled !== false && (
+              <>
+                <div className="pm-field-label hybrid-label settings-comm-rates-label">
+                  Commission rates ($ per contract, per side)
                 </div>
-              ))}
-            </div>
-            <button type="button" className="pm-add-btn settings-comm-add" onClick={addSymbol}>
-              + Add symbol
-            </button>
-            <p className="pm-field-hint">
-              Common: {COMMISSION_SYMBOLS.join(", ")}. Missing symbols import with $0 commission.
-            </p>
+                <div className="settings-comm-rows">
+                  {Object.entries(account.commissions || {}).map(([sym, rate]) => (
+                    <div key={sym} className="settings-comm-row">
+                      <input
+                        type="text"
+                        value={sym}
+                        onChange={(e) => renameSymbol(sym, e.target.value)}
+                        className="pm-text-input settings-comm-sym"
+                        placeholder="MNQ"
+                      />
+                      <span className="settings-comm-sep">$</span>
+                      <input
+                        type="text"
+                        value={rate}
+                        onChange={(e) => setCommission(sym, e.target.value)}
+                        className="pm-text-input settings-comm-rate"
+                        placeholder="0.50"
+                      />
+                      <button
+                        type="button"
+                        className="settings-comm-remove"
+                        onClick={() => removeSymbol(sym)}
+                        aria-label={`Remove ${sym}`}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button type="button" className="pm-add-btn settings-comm-add" onClick={addSymbol}>
+                  + Add symbol
+                </button>
+                <p className="pm-field-hint">
+                  Missing symbols import with $0 commissions.
+                </p>
+              </>
+            )}
           </div>
 
           {canDelete && (
@@ -266,7 +238,6 @@ function AccountCard({
 function SettingsSidebar({ active, onChange, sections }) {
   return (
     <nav className="settings-sidebar" aria-label="Settings sections">
-      <div className="settings-sidebar-label hybrid-label-sm">Configure</div>
       {sections.map((section) => (
         <button
           key={section.id}
@@ -312,6 +283,7 @@ function SettingsInner({ initialSection = "desk" }) {
     exitRecoveryAmount: String(DEFAULT_DLL_SETTINGS.exitRecoveryAmount),
   });
   const [defaultRisk, setDefaultRisk] = useState(String(DEFAULT_TRADER_SETTINGS.defaultRisk));
+  const [beThreshold, setBeThreshold] = useState(String(DEFAULT_TRADER_SETTINGS.beThreshold));
   const [preferredName, setPreferredName] = useState("");
   const [tradingDayTimezone, setTradingDayTimezone] = useState(DEFAULT_TRADING_DAY_TIMEZONE);
   const [accounts, setAccounts] = useState([]);
@@ -378,6 +350,7 @@ function SettingsInner({ initialSection = "desk" }) {
         exitRecoveryAmount: String(dll.exitRecoveryAmount),
       });
       setDefaultRisk(String(trader.defaultRisk));
+      setBeThreshold(String(trader.beThreshold));
       setPreferredName(profile?.preferredName || "");
       setTradingDayTimezone(trader.tradingDayTimezone);
       setAccounts(trader.accounts);
@@ -434,11 +407,11 @@ function SettingsInner({ initialSection = "desk" }) {
 
     const traderCheck = validateTraderSettingsInput({
       defaultRisk,
+      beThreshold,
       tradingDayTimezone,
       accounts: accounts.map((a) => ({
         ...a,
         starting_balance: parseFloat(a.starting_balance) || 0,
-        be_threshold: parseFloat(a.be_threshold) || 30,
       })),
     });
     if (!traderCheck.ok) {
@@ -466,6 +439,7 @@ function SettingsInner({ initialSection = "desk" }) {
         exitRecoveryAmount: String(dllCheck.settings.exitRecoveryAmount),
       });
       setDefaultRisk(String(traderCheck.settings.defaultRisk));
+      setBeThreshold(String(traderCheck.settings.beThreshold));
       setPreferredName(preferredName.trim());
       setTradingDayTimezone(traderCheck.settings.tradingDayTimezone);
       setAccounts(traderCheck.settings.accounts);
@@ -501,24 +475,26 @@ function SettingsInner({ initialSection = "desk" }) {
 
   if (loading) return <div className="pm-loading">Loading...</div>;
 
-  const importAccount = accounts.find((a) => a.forImport) || accounts[0];
-  const meta = visibleSections.find((s) => s.id === activeSection) || visibleSections[0];
   const showDeskSave = activeSection !== "process" && activeSection !== "dev";
 
   return (
-    <div className="premarket-page hybrid-page settings-page">
-      <div className="pm-topbar">
-        <span>{headerDate()}</span>
-      </div>
+    <WorkflowPageLayout>
+      <div className="settings-page">
+        <div className="pm-topbar">
+          <span>{headerDate()}</span>
+        </div>
 
-      <div className="daily-plan-content settings-content">
-        <div className="pm-eyebrow hybrid-eyebrow">Settings</div>
-        <h1 className="hybrid-page-title">YOUR DESK.</h1>
-        <p className="pm-subtitle settings-lead">
-          Process, desk rules, risk limits, and accounts — everything that shapes your trading day.
-        </p>
+        <div className="settings-content">
+          <header className="settings-page-header">
+            <h1 className="hybrid-page-title">
+              Settings<span className="hybrid-page-title-stop" aria-hidden="true" />
+            </h1>
+            <p className="pm-subtitle settings-lead">
+              Your playbook, risk limits, defaults, and accounts.
+            </p>
+          </header>
 
-        <div className="settings-layout">
+          <div className="settings-layout">
           <SettingsSidebar
             active={activeSection}
             onChange={selectSection}
@@ -526,11 +502,6 @@ function SettingsInner({ initialSection = "desk" }) {
           />
 
           <div className="settings-main">
-            <div className="settings-main-head">
-              <h2 className="pm-section-title hybrid-section-title">{meta.title}</h2>
-              <p className="pm-section-desc">{meta.desc}</p>
-            </div>
-
             {activeSection === "process" && (
               <div className="settings-panel settings-panel--process">
                 <MyProcessSettings standalone />
@@ -556,7 +527,7 @@ function SettingsInner({ initialSection = "desk" }) {
                       maxLength={32}
                     />
                     <p className="pm-field-hint">
-                      Used in your Home greeting. Leave blank to use the first part of your email.
+                      Used in Home greeting.
                     </p>
                   </div>
                 </div>
@@ -586,28 +557,6 @@ function SettingsInner({ initialSection = "desk" }) {
                     </p>
                   </div>
                 </div>
-
-                <div className="settings-field-divider" />
-
-                <div className="settings-field-block">
-                  <div className="settings-field-block-label hybrid-label-sm">Close loop imports</div>
-                  <div className="pm-field">
-                    <div className="pm-field-label hybrid-label">Default risk (stop points)</div>
-                    <input
-                      type="text"
-                      value={defaultRisk}
-                      onChange={(e) => {
-                        setDefaultRisk(e.target.value);
-                        markDirty();
-                      }}
-                      className="pm-text-input settings-default-risk-input"
-                      placeholder="15"
-                    />
-                    <p className="pm-field-hint">
-                      Pre-fills stop distance on every rTrader import. You can still edit per trade in the preview.
-                    </p>
-                  </div>
-                </div>
               </section>
             )}
 
@@ -615,7 +564,7 @@ function SettingsInner({ initialSection = "desk" }) {
               <section className="pm-card settings-panel">
                 <div className="pm-risk-rails">
                   <ToggleField
-                    label="Enable Drawdown Recovery"
+                    label="Enable Drawdown Recovery Mode"
                     hint="After a loss day triggers your activation rule, the desk switches to half-size until your exit rule is met."
                     value={dllForm.recoveryEnabled}
                     onChange={(v) => setDll("recoveryEnabled", v)}
@@ -627,10 +576,10 @@ function SettingsInner({ initialSection = "desk" }) {
                     <div className="settings-field-divider" />
 
                     <div className="settings-field-block">
-                      <div className="settings-field-block-label hybrid-label-sm">Daily loss caps</div>
+                      <div className="settings-field-block-label hybrid-label-sm">Daily loss limits</div>
                       <div className="pm-field-grid">
                         <div>
-                          <div className="pm-field-label hybrid-label">Full-size max daily loss ($)</div>
+                          <div className="pm-field-label hybrid-label">Full-size daily loss limit ($)</div>
                           <input
                             type="text"
                             value={dllForm.fullDll}
@@ -639,11 +588,11 @@ function SettingsInner({ initialSection = "desk" }) {
                             placeholder="750"
                           />
                           <p className="pm-field-hint">
-                            Normal-day cap on the session plan when not in recovery.
+                            Normal DLL when not in Recovery Mode.
                           </p>
                         </div>
                         <div>
-                          <div className="pm-field-label hybrid-label">Recovery max daily loss ($)</div>
+                          <div className="pm-field-label hybrid-label">Recovery mode max daily loss limit ($)</div>
                           <input
                             type="text"
                             value={dllForm.halfDll}
@@ -652,7 +601,7 @@ function SettingsInner({ initialSection = "desk" }) {
                             placeholder="400"
                           />
                           <p className="pm-field-hint">
-                            Cap while Drawdown Recovery is active. Session plan blocks above this.
+                            DLL when in Recovery Mode. Session plan rejects if you place an amount higher than this while still recovering.
                           </p>
                         </div>
                       </div>
@@ -663,7 +612,7 @@ function SettingsInner({ initialSection = "desk" }) {
                     <div className="settings-field-block">
                       <div className="settings-field-block-label hybrid-label-sm">Activation rule</div>
                       <p className="pm-field-hint settings-field-block-lead">
-                        When should Drawdown Recovery start?
+                        When should Drawdown Recovery activate?
                       </p>
                       <div className="settings-radio-group">
                         {ACTIVATION_MODE_OPTIONS.map((opt) => (
@@ -697,17 +646,6 @@ function SettingsInner({ initialSection = "desk" }) {
                           </p>
                         </div>
                       )}
-                      <p className="pm-field-hint settings-rule-summary">
-                        Active rule:{" "}
-                        {formatActivationRule({
-                          ...DEFAULT_DLL_SETTINGS,
-                          ...dllForm,
-                          fullDll: Number(dllForm.fullDll) || DEFAULT_DLL_SETTINGS.fullDll,
-                          activationDrawdown:
-                            Number(String(dllForm.activationDrawdown).replace(/[$,\s]/g, "")) ||
-                            DEFAULT_DLL_SETTINGS.activationDrawdown,
-                        })}
-                      </p>
                     </div>
 
                     <div className="settings-field-divider" />
@@ -760,19 +698,6 @@ function SettingsInner({ initialSection = "desk" }) {
                           </p>
                         </div>
                       )}
-                      <p className="pm-field-hint settings-rule-summary">
-                        Active rule:{" "}
-                        {formatExitRule({
-                          ...DEFAULT_DLL_SETTINGS,
-                          ...dllForm,
-                          exitRecoveryPercent:
-                            Number(String(dllForm.exitRecoveryPercent).replace(/[%\s]/g, "")) ||
-                            DEFAULT_DLL_SETTINGS.exitRecoveryPercent,
-                          exitRecoveryAmount:
-                            Number(String(dllForm.exitRecoveryAmount).replace(/[$,\s]/g, "")) ||
-                            DEFAULT_DLL_SETTINGS.exitRecoveryAmount,
-                        })}
-                      </p>
                     </div>
                   </>
                 )}
@@ -787,14 +712,6 @@ function SettingsInner({ initialSection = "desk" }) {
 
             {activeSection === "accounts" && (
               <section className="pm-card settings-panel">
-                {importAccount && (
-                  <div className="settings-accounts-summary">
-                    <span className="hybrid-label-sm">Import default</span>
-                    <strong>{importAccount.name || "Untitled account"}</strong>
-                    <span className="settings-accounts-summary-meta">{importAccount.account_type}</span>
-                  </div>
-                )}
-
                 <div className="settings-accounts-list">
                   {accounts.map((account, index) => (
                     <AccountCard
@@ -813,9 +730,56 @@ function SettingsInner({ initialSection = "desk" }) {
                   ))}
                 </div>
 
-                <button type="button" className="pm-add-btn" onClick={addAccount}>
-                  + Add account
-                </button>
+                <div className="settings-add-account">
+                  <button
+                    type="button"
+                    className="pm-add-btn settings-add-account-btn"
+                    onClick={addAccount}
+                  >
+                    Add New Account
+                  </button>
+                  <p className="pm-field-hint settings-add-account-hint">
+                    Users can filter accounts on the Stats page.
+                  </p>
+                </div>
+
+                <div className="settings-field-divider" />
+
+                <div className="settings-field-block">
+                  <div className="settings-field-block-label hybrid-label-sm">Close loop imports</div>
+                  <div className="pm-field">
+                    <div className="pm-field-label hybrid-label">Default risk (stop points)</div>
+                    <input
+                      type="text"
+                      value={defaultRisk}
+                      onChange={(e) => {
+                        setDefaultRisk(e.target.value);
+                        markDirty();
+                      }}
+                      className="pm-text-input settings-default-risk-input"
+                      placeholder="15"
+                    />
+                    <p className="pm-field-hint">
+                      Pre-fills stop distance on every CSV import. You can still edit per trade during import preview.
+                    </p>
+                  </div>
+                  <div className="pm-field">
+                    <div className="pm-field-label hybrid-label">Breakeven threshold ($)</div>
+                    <input
+                      type="text"
+                      value={beThreshold}
+                      onChange={(e) => {
+                        setBeThreshold(e.target.value);
+                        markDirty();
+                      }}
+                      className="pm-text-input settings-default-risk-input"
+                      placeholder="30"
+                    />
+                    <p className="pm-field-hint">
+                      Trades within ±this amount count as breakeven in Analytics.
+                    </p>
+                  </div>
+                </div>
               </section>
             )}
 
@@ -856,8 +820,9 @@ function SettingsInner({ initialSection = "desk" }) {
             )}
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </WorkflowPageLayout>
   );
 }
 

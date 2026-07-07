@@ -175,19 +175,22 @@ function formatHeaderDateLong(date = new Date()) {
 }
 
 function StreakMetric({ label, value, target, loading }) {
-  const pct = target > 0 ? Math.min(100, (value / target) * 100) : 0;
+  const hasTarget = target != null && target > 0;
+  const pct = hasTarget ? Math.min(100, (value / target) * 100) : 0;
   return (
     <div className="home-metric-streak">
       <div className="home-metric-streak-head">
         <span className="home-metric-streak-label">{label}</span>
         <span className="home-metric-streak-value">
           {loading ? "—" : value}
-          <span className="home-metric-streak-goal">/{target}</span>
+          {hasTarget && <span className="home-metric-streak-goal">/{target}</span>}
         </span>
       </div>
-      <div className="home-metric-streak-track" aria-hidden="true">
-        <div className="home-metric-streak-fill" style={{ width: `${pct}%` }} />
-      </div>
+      {hasTarget && (
+        <div className="home-metric-streak-track" aria-hidden="true">
+          <div className="home-metric-streak-fill" style={{ width: `${pct}%` }} />
+        </div>
+      )}
     </div>
   );
 }
@@ -344,7 +347,7 @@ function HomeHeroActivePanel({
                 )}
                 {showPlaybookStreak && (
                   <StreakMetric
-                    label="Playbook streak"
+                    label="Playbook setup streak"
                     value={playbookStreak}
                     target={streakTargetDays}
                     loading={loadingPanels}
@@ -867,7 +870,7 @@ function HomeMetricsCard({
         )}
         {showPlaybookStreak && (
           <StreakMetric
-            label="Playbook streak"
+            label="Playbook setup streak"
             value={playbookStreak}
             target={streakTargetDays}
             loading={loadingPanels}
@@ -973,10 +976,11 @@ async function loadWeeklyOverviewRows() {
   const rows = focusItems.map((focus, i) => {
     const retro = currentReview.focusRetrospective?.[focus];
     const grade = retro === true ? "Yes" : retro === false ? "No" : null;
+    const retroNote = (currentReview.focusRetrospectiveNotes?.[focus] || "").trim();
     return {
       focus,
       grade,
-      notes: i === 0 ? reflectionNote : null,
+      notes: retroNote || (i === 0 ? reflectionNote : null),
     };
   });
 
@@ -1248,7 +1252,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
                   today={today}
                   processStreak={processStreak}
                   playbookStreak={playbookStreak}
-                  streakTargetDays={profile?.streakTargetDays ?? 21}
+                  streakTargetDays={profile?.streakTargetDays ?? null}
                   showRiskStreak={profile?.riskStreakEnabled !== false}
                   showPlaybookStreak={profile?.playbookStreakEnabled !== false}
                   loadingPanels={loadingPanels}
