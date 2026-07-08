@@ -13,7 +13,6 @@ import {
   loadSessionDay,
   deleteSessionDay,
   formatDetailTitle,
-  formatUsd,
   biasTag,
   volTag,
   sessionOpenVsValueTag,
@@ -29,42 +28,63 @@ import {
 } from "../lib/dll-recovery";
 import { loadDllSettings } from "../lib/dll-recovery-settings";
 
-function StatGrid({ title, items }) {
+function emptyValue(val) {
+  if (val === true) return "Yes";
+  if (val === false) return "No";
+  return val ?? "-";
+}
+
+function StatPanel({ title, items }) {
+  const visible = items.filter((item) => item.value != null && item.value !== "-");
+  if (!visible.length) return null;
+
   return (
-    <div className="history-stat-block">
-      <div className="history-stat-title hybrid-label-sm">{title}</div>
-      <div className="history-stat-grid">
-        {items.map((item) => (
-          <div key={item.label} className="history-stat-item">
-            <span>{item.label}</span>
-            <strong>{item.value ?? "—"}</strong>
+    <div className="history-detail-stat-panel">
+      <h3 className="history-detail-stat-panel__title">{title}</h3>
+      <dl className="history-detail-stat-list">
+        {visible.map((item) => (
+          <div key={item.label} className="history-detail-stat-row">
+            <dt>{item.label}</dt>
+            <dd>{item.value}</dd>
           </div>
         ))}
-      </div>
+      </dl>
     </div>
   );
 }
 
-function SectionCard({ num, title, subtitle, children, action, className = "" }) {
+function SectionCard({ num, title, subtitle, children, className = "" }) {
   return (
-    <section className={`history-section-card${className ? ` ${className}` : ""}`}>
-      <div className="history-section-head">
-        {num ? <span className="history-section-num">{num}</span> : null}
-        <div className="history-section-head__text">
-          <h2 className="history-section-title hybrid-section-title">{title}</h2>
-          {subtitle && <p className="history-section-sub">{subtitle}</p>}
+    <section className={`history-detail-section${className ? ` ${className}` : ""}`}>
+      <header className="history-detail-section__head">
+        {num ? <span className="history-detail-section__num">{num}</span> : null}
+        <div>
+          <h2 className="history-detail-section__title">{title}</h2>
+          {subtitle ? <p className="history-detail-section__sub">{subtitle}</p> : null}
         </div>
-        {action}
-      </div>
-      {children}
+      </header>
+      <div className="history-detail-section__body">{children}</div>
     </section>
   );
 }
 
-function yesNo(val) {
-  if (val === true) return "Yes";
-  if (val === false) return "—";
-  return val ?? "—";
+function ProseBlock({ label, children }) {
+  if (!children) return null;
+  return (
+    <div className="history-detail-prose">
+      <div className="history-detail-prose__label">{label}</div>
+      <p>{children}</p>
+    </div>
+  );
+}
+
+function ScoreChip({ label, value, tone }) {
+  return (
+    <div className={`history-detail-score${tone ? ` history-detail-score--${tone}` : ""}`}>
+      <span className="history-detail-score__label">{label}</span>
+      <strong className="history-detail-score__value">{value ?? "-"}</strong>
+    </div>
+  );
 }
 
 function HistoryJournalChecklist({ date, post, onPostUpdated }) {
@@ -110,15 +130,15 @@ function HistoryJournalChecklist({ date, post, onPostUpdated }) {
   };
 
   return (
-    <div className="history-journal-checklist">
-      <div className="history-journal-checklist-head">
-        <div className="history-notes-label hybrid-label-sm">Review checklist</div>
+    <div className="history-detail-checklist">
+      <div className="history-detail-checklist__head">
+        <div className="history-detail-prose__label">Review checklist</div>
         {formatJournalReviewPendingSummary(canEdit ? flags : post) ? (
-          <span className="history-journal-pending-summary">
+          <span className="history-detail-checklist__status history-detail-checklist__status--pending">
             {formatJournalReviewPendingSummary(canEdit ? flags : post)}
           </span>
         ) : (
-          <span className="history-journal-pending-summary history-journal-pending-summary--done">Complete</span>
+          <span className="history-detail-checklist__status history-detail-checklist__status--done">Complete</span>
         )}
       </div>
       {canEdit ? (
@@ -144,7 +164,7 @@ function HistoryJournalChecklist({ date, post, onPostUpdated }) {
             })}
           </div>
           {dirty && (
-            <div className="history-journal-checklist-actions">
+            <div className="history-detail-checklist__actions">
               <button type="button" className="history-journal-save-btn" onClick={saveFollowUp} disabled={saving}>
                 {saving ? "Saving…" : "Save checklist"}
               </button>
@@ -153,13 +173,11 @@ function HistoryJournalChecklist({ date, post, onPostUpdated }) {
           )}
         </>
       ) : (
-        <ul>
+        <ul className="history-detail-checklist__list">
           {JOURNAL_REVIEW_CHECKLIST.map((item) => (
             <li key={item.key} className={post[item.key] ? "done" : "pending"}>
-              <span className="history-journal-item-label">{item.label}</span>
-              <span className="history-journal-item-status">
-                {post[item.key] ? "Done" : `${item.statusLabel} pending`}
-              </span>
+              <span>{item.label}</span>
+              <span>{post[item.key] ? "Done" : `${item.statusLabel} pending`}</span>
             </li>
           ))}
         </ul>
@@ -222,7 +240,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
   if (loading) {
     return (
       <WorkflowPageLayout>
-        <div className="history-detail-page">
+        <div className="history-detail-page history-detail-page--v2">
           <div className="pm-loading">Loading...</div>
         </div>
       </WorkflowPageLayout>
@@ -232,14 +250,14 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
   if (!session) {
     return (
       <WorkflowPageLayout>
-        <div className="history-detail-page">
-          <div className="history-detail-top">
-            <button type="button" className="pm-back" onClick={onBack}>← Back to history</button>
-            <h1 className="history-detail-title hybrid-page-title">
+        <div className="history-detail-page history-detail-page--v2">
+          <div className="history-detail-page__top">
+            <button type="button" className="pm-back" onClick={onBack}>← Back to Past Sessions</button>
+            <h1 className="history-detail-page__title hybrid-page-title">
               {formatDetailTitle(date)}
               <span className="hybrid-page-title-stop" aria-hidden="true" />
             </h1>
-            <p className="history-missing">Could not load this session. Sign in and try again.</p>
+            <p className="history-detail-empty">Could not load this session. Sign in and try again.</p>
           </div>
         </div>
       </WorkflowPageLayout>
@@ -247,7 +265,6 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
   }
 
   const { pre, plan, post } = session;
-  const pnlTone = session.netPnl > 0 ? "pos" : session.netPnl < 0 ? "neg" : "dim";
   const riskPlanFollowed = getRiskPlanFollowed(post);
   const playbookLabel = session.playbookAdherence
     ? playbookAdherenceLabel(session.playbookAdherence)
@@ -255,349 +272,281 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
 
   return (
     <WorkflowPageLayout>
-      <div className="history-detail-page">
-        <div className="history-detail-top">
-          <button type="button" className="pm-back" onClick={onBack}>← Back to history</button>
-          <h1 className="history-detail-title hybrid-page-title">
+      <div className="history-detail-page history-detail-page--v2">
+        <div className="history-detail-page__top">
+          <button type="button" className="pm-back" onClick={onBack}>← Back to Past Sessions</button>
+          <h1 className="history-detail-page__title hybrid-page-title">
             {formatDetailTitle(date)}
             <span className="hybrid-page-title-stop" aria-hidden="true" />
           </h1>
           <HistoryDaySummary session={session} recoveryLabel={recoveryLabel} />
         </div>
 
-        <div className="history-detail-body">
-          <div className="history-detail-grid">
-        <SectionCard num="01" title="Check-in" subtitle="The state you arrived in.">
-          {!pre ? (
-            <p className="history-missing">No check-in saved for this day.</p>
-          ) : (
-            <div className="history-stat-groups">
-              <StatGrid
-                title="Physical"
-                items={[
-                  { label: "Sleep", value: pre.sleepHours != null ? `${pre.sleepHours}h` : null },
-                  {
-                    label: "Sleep debt",
-                    value:
-                      pre.sleepDebtMinutes != null && pre.sleepDebtMinutes !== ""
-                        ? `${parseSleepDebtMinutes(pre.sleepDebtMinutes)} min`
-                        : null,
-                  },
-                  { label: "Sleep quality", value: pre.sleepQuality },
-                  { label: "Energy", value: pre.energy },
-                  { label: "HRV", value: pre.hrvScore != null && pre.hrvScore !== "" ? `${pre.hrvScore}%` : null },
-                  { label: "Hydrated", value: yesNo(pre.hydrated) },
-                  { label: "Movement", value: yesNo(pre.movement) },
-                ]}
-              />
-              <StatGrid
-                title="Mental"
-                items={[
-                  { label: "State", value: pre.emotionalState },
-                  { label: "Confidence", value: pre.confidence },
-                  { label: "Patience", value: pre.patience },
-                  { label: "FOMO", value: pre.fomoRisk },
-                  { label: "Revenge", value: pre.revengeRisk },
-                ]}
-              />
-              <StatGrid
-                title="External"
-                items={[
-                  { label: "Distractions", value: pre.externalDistractions },
-                  { label: "Pressure", value: pre.financialPressure },
-                  { label: "Focus", value: pre.generalFocusLevel },
-                ]}
-              />
-              <StatGrid
-                title="Preparation"
-                items={[
-                  { label: "Reviewed levels", value: yesNo(pre.reviewedKeyLevels) },
-                  { label: "Reviewed news", value: yesNo(pre.reviewedNews) },
-                  { label: "Session Plan Outlined", value: yesNo(pre.dailyPlanWritten) },
-                  { label: "Routine", value: yesNo(pre.followedRoutine) },
-                  { label: "Breathwork", value: yesNo(pre.meditation) },
-                ]}
-              />
-              {pre.mantra && (
-                <div className="history-mantra-block">
-                  <div className="history-notes-label hybrid-label-sm">Mantra</div>
-                  <p>{pre.mantra}</p>
+        <div className="history-detail-page__stack">
+          <SectionCard num="01" title="Check-in" subtitle="The state you arrived in.">
+            {!pre ? (
+              <p className="history-detail-empty">No check-in saved for this day.</p>
+            ) : (
+              <>
+                <div className="history-detail-checkin-grid">
+                  <StatPanel
+                    title="Physical"
+                    items={[
+                      { label: "Sleep", value: pre.sleepHours != null ? `${pre.sleepHours}h` : null },
+                      {
+                        label: "Sleep debt",
+                        value:
+                          pre.sleepDebtMinutes != null && pre.sleepDebtMinutes !== ""
+                            ? `${parseSleepDebtMinutes(pre.sleepDebtMinutes)} min`
+                            : null,
+                      },
+                      { label: "Sleep quality", value: pre.sleepQuality },
+                      { label: "Energy", value: pre.energy },
+                      { label: "HRV", value: pre.hrvScore != null && pre.hrvScore !== "" ? `${pre.hrvScore}%` : null },
+                      { label: "Hydrated", value: emptyValue(pre.hydrated) },
+                      { label: "Movement", value: emptyValue(pre.movement) },
+                    ]}
+                  />
+                  <StatPanel
+                    title="Mental"
+                    items={[
+                      { label: "State", value: pre.emotionalState },
+                      { label: "Confidence", value: pre.confidence },
+                      { label: "Patience", value: pre.patience },
+                      { label: "FOMO", value: pre.fomoRisk },
+                      { label: "Revenge", value: pre.revengeRisk },
+                    ]}
+                  />
+                  <StatPanel
+                    title="External"
+                    items={[
+                      { label: "Distractions", value: pre.externalDistractions },
+                      { label: "Pressure", value: pre.financialPressure },
+                      { label: "Focus", value: pre.generalFocusLevel },
+                    ]}
+                  />
+                  <StatPanel
+                    title="Preparation"
+                    items={[
+                      { label: "Reviewed levels", value: emptyValue(pre.reviewedKeyLevels) },
+                      { label: "Reviewed news", value: emptyValue(pre.reviewedNews) },
+                      { label: "Plan outlined", value: emptyValue(pre.dailyPlanWritten) },
+                      { label: "Routine", value: emptyValue(pre.followedRoutine) },
+                      { label: "Breathwork", value: emptyValue(pre.meditation) },
+                    ]}
+                  />
                 </div>
-              )}
-              {(pre.unlockAccounts || pre.checkCpu || pre.selectRiskBracketOrder) && (
-                <div className="history-reminders-block">
-                  <div className="history-notes-label hybrid-label-sm">Reminders</div>
-                  <ul className="history-reminders-list">
-                    {pre.unlockAccounts && <li>Unlock Accounts</li>}
-                    {pre.checkCpu && <li>Check CPU</li>}
-                    {pre.selectRiskBracketOrder && <li>Select Risk Bracket Order</li>}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-        </SectionCard>
-
-        <SectionCard num="02" title="Session Plan" subtitle="What you said you'd do.">
-          {!plan ? (
-            <p className="history-missing">No session plan saved for this day.</p>
-          ) : (
-            <>
-              <div className="history-plan-tags">
-                {biasTag(plan.directionalBias) && (
-                  <span className="history-plan-tag">{biasTag(plan.directionalBias)}</span>
-                )}
-                {volTag(plan.expectedVolatility) && (
-                  <span className="history-plan-tag">{volTag(plan.expectedVolatility)}</span>
-                )}
-                {sessionOpenVsValueTag(plan.sessionOpenVsValue) && (
-                  <span className="history-plan-tag">{sessionOpenVsValueTag(plan.sessionOpenVsValue)}</span>
-                )}
-                {plan.positionSize && (
-                  <span className="history-plan-tag">{plan.positionSize.toUpperCase()}</span>
-                )}
-              </div>
-              {plan.whyBias && (
-                <div className="history-text-block">
-                  <div className="history-notes-label hybrid-label-sm">Thesis</div>
-                  <p>{plan.whyBias}</p>
-                </div>
-              )}
-              {plan.keyLevels?.length > 0 && (
-                <div className="history-levels-table-wrap">
-                  <table className="history-levels-table">
-                    <thead>
-                      <tr>
-                        <th>Label</th>
-                        <th>Price</th>
-                        <th>Type</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {plan.keyLevels.map((level) => (
-                        <tr key={level.id || `${level.label}-${level.price}`}>
-                          <td>{level.label || "—"}</td>
-                          <td>{level.price || "—"}</td>
-                          <td>{(level.type || "—").toUpperCase()}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-              {plan.setups?.length > 0 && (
-                <div className="history-setups">
-                  {plan.setups.map((setup) => (
-                    <div key={setup.id || setup.name} className="history-setup-card">
-                      <div className="history-setup-name">{setup.name || "Setup"}</div>
-                      {setup.conditions && <p className="history-setup-desc">{setup.conditions}</p>}
-                      <div className="history-setup-meta">
-                        {setup.target && <span><em>Target</em> {setup.target}</span>}
-                        {setup.stop && <span><em>Stop placement</em> {setup.stop}</span>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div className="history-risk-row">
-                {plan.ddFromHighWaterMark && (
-                  <div className="history-risk-chip">
-                    <span>DD from HWM</span>
-                    <strong>{plan.ddFromHighWaterMark}%</strong>
+                <ProseBlock label="Mantra">{pre.mantra}</ProseBlock>
+                {(pre.unlockAccounts || pre.checkCpu || pre.selectRiskBracketOrder) && (
+                  <div className="history-detail-reminders">
+                    <div className="history-detail-prose__label">Reminders</div>
+                    <ul>
+                      {pre.unlockAccounts && <li>Unlock accounts</li>}
+                      {pre.checkCpu && <li>Check CPU</li>}
+                      {pre.selectRiskBracketOrder && <li>Select risk bracket order</li>}
+                    </ul>
                   </div>
                 )}
-                {plan.maxDailyLoss && (
-                  <div className="history-risk-chip">
-                    <span>Max loss</span>
-                    <strong>{plan.maxDailyLoss}</strong>
-                  </div>
-                )}
-                {plan.maxTrades && (
-                  <div className="history-risk-chip">
-                    <span>Max trades</span>
-                    <strong>{plan.maxTrades}</strong>
-                  </div>
-                )}
-                {plan.stopTradingAt && (
-                  <div className="history-risk-chip">
-                    <span>Stop at</span>
-                    <strong>{plan.stopTradingAt}</strong>
-                  </div>
-                )}
-                {plan.maxDailyLossSetInBroker && (
-                  <div className="history-risk-chip">
-                    <span>Max loss in broker</span>
-                    <strong>Yes</strong>
-                  </div>
-                )}
-                {plan.coldTurkeyBlockerSet && (
-                  <div className="history-risk-chip">
-                    <span>Cold turkey blocker</span>
-                    <strong>Set</strong>
-                  </div>
-                )}
-              </div>
-              {plan.sessionRules && (
-                <div className="history-text-block">
-                  <div className="history-notes-label hybrid-label-sm">Session rules</div>
-                  <p>{plan.sessionRules}</p>
-                </div>
-              )}
-              {plan.oneThing && (
-                <div className="history-text-block">
-                  <div className="history-notes-label hybrid-label-sm">The one thing</div>
-                  <p>{plan.oneThing}</p>
-                </div>
-              )}
-              {(plan.selfCommitmentAccepted || plan.selfRegulatedCommitmentAccepted) && (
-                <div className="history-commitment">
-                  <div className="history-notes-label hybrid-label-sm">Commitment</div>
-                  {plan.selfCommitmentAccepted && (
-                    <p className="history-commitment-text">
-                      I believe in myself and I respect myself enough to follow my plan. Following my plans allows me and my family to live our dream.
-                    </p>
-                  )}
-                  {plan.selfRegulatedCommitmentAccepted && (
-                    <p className="history-commitment-text">
-                      I will not place any risk when I am not in a self-regulated state.
-                    </p>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </SectionCard>
-          </div>
-
-          <SectionCard
-            num="03"
-            title="Close loop"
-            subtitle="How it actually went."
-            className="history-section-card--close"
-          >
-        {!post ? (
-          <p className="history-missing">No close loop saved for this day.</p>
-        ) : (
-          <>
-            <div className="history-post-metrics">
-              <div className="history-post-metric history-post-metric--pnl">
-                <span>Net P&amp;L</span>
-                <strong className={pnlTone}>{session.netPnl != null ? formatUsd(session.netPnl, { signed: true }) : "-"}</strong>
-              </div>
-              <div className="history-post-metric">
-                <span>Trades</span>
-                <strong>{post.trades || "0"}</strong>
-              </div>
-              <div className="history-post-metric">
-                <span>Wins</span>
-                <strong className="pos">{post.wins || "0"}</strong>
-              </div>
-              <div className="history-post-metric">
-                <span>Losses</span>
-                <strong className="neg">{post.losses || "0"}</strong>
-              </div>
-            </div>
-
-            <div className="history-close-loop-split">
-              <div className="history-close-loop-col">
-                {session.playbookAdherence?.total > 0 && playbookLabel && (
-                  <div className="history-process-row">
-                    <div className="history-process-title hybrid-label-sm">Playbook adherence</div>
-                    <div className="history-playbook-adherence">
-                      <strong
-                        style={{
-                          color:
-                            playbookLabel.tone === "green"
-                              ? "var(--green)"
-                              : playbookLabel.tone === "red"
-                                ? "var(--red)"
-                                : "var(--amber)",
-                        }}
-                      >
-                        {session.playbookAdherence.playbookRate}%
-                      </strong>
-                      <span>{playbookLabel.text}</span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="history-process-row">
-                  <div className="history-process-title hybrid-label-sm">Process adherence (1–10)</div>
-                  <div className="history-process-grid">
-                    <div><span>Followed plan</span><strong>{post.followedPlan}</strong></div>
-                    <div><span>Setup quality</span><strong>{post.setupQuality}</strong></div>
-                    <div><span>Risk discipline</span><strong>{post.riskDiscipline}</strong></div>
-                    <div><span>Execution</span><strong>{post.executionQuality}</strong></div>
-                    <div>
-                      <span>Risk plan followed</span>
-                      <strong>
-                        {riskPlanFollowed === true
-                          ? "Yes"
-                          : riskPlanFollowed === false
-                            ? "No"
-                            : "-"}
-                      </strong>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="history-close-loop-col">
-                <div className={`history-flags-block${raisedFlags.length ? "" : " history-flags-block--clean"}`}>
-                  <div className="history-flags-title hybrid-label-sm">
-                    {raisedFlags.length
-                      ? `${raisedFlags.length} behavioral flag${raisedFlags.length === 1 ? "" : "s"} raised`
-                      : "No behavioral flags raised"}
-                  </div>
-                  {raisedFlags.length > 0 && (
-                    <div className="history-flag-pills">
-                      {raisedFlags.map((f) => (
-                        <span key={f.key} className="history-flag-pill">{f.label}</span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="history-process-row">
-                  <div className="history-process-title hybrid-label-sm">Post session</div>
-                  <div className="history-process-grid history-process-grid--3">
-                    <div><span>Emotional</span><strong>{post.emotionalState}</strong></div>
-                    <div><span>Satisfaction</span><strong>{post.satisfaction}</strong></div>
-                    <div><span>Frustration</span><strong>{post.frustration}</strong></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="history-journal-grid">
-              <div className="history-journal-card history-journal-card--wide">
-                <div className="history-notes-label hybrid-label-sm">Plan vs Reality</div>
-                <p>{post.readVsReality || "-"}</p>
-              </div>
-              <div className="history-journal-card">
-                <div className="history-notes-label hybrid-label-sm">What went well</div>
-                <p>{post.wentWell || "-"}</p>
-              </div>
-              <div className="history-journal-card">
-                <div className="history-notes-label hybrid-label-sm">What went wrong</div>
-                <p>{post.wentWrong || "-"}</p>
-              </div>
-              <div className="history-journal-card">
-                <div className="history-notes-label hybrid-label-sm">One lesson</div>
-                <p>{post.oneLesson || "-"}</p>
-              </div>
-            </div>
-
-            <HistoryJournalChecklist
-              date={date}
-              post={post}
-              onPostUpdated={(nextPost) => setSession((prev) => (prev ? { ...prev, post: nextPost } : prev))}
-            />
-          </>
-        )}
+              </>
+            )}
           </SectionCard>
 
-          <div className="history-delete-bar">
+          <SectionCard num="02" title="Session Plan" subtitle="What you said you'd do.">
+            {!plan ? (
+              <p className="history-detail-empty">No session plan saved for this day.</p>
+            ) : (
+              <>
+                <div className="history-detail-tags">
+                  {biasTag(plan.directionalBias) && <span className="history-detail-tag">{biasTag(plan.directionalBias)}</span>}
+                  {volTag(plan.expectedVolatility) && <span className="history-detail-tag">{volTag(plan.expectedVolatility)}</span>}
+                  {sessionOpenVsValueTag(plan.sessionOpenVsValue) && (
+                    <span className="history-detail-tag">{sessionOpenVsValueTag(plan.sessionOpenVsValue)}</span>
+                  )}
+                  {plan.positionSize && <span className="history-detail-tag">{plan.positionSize.toUpperCase()}</span>}
+                </div>
+
+                <ProseBlock label="Thesis">{plan.whyBias}</ProseBlock>
+
+                {plan.keyLevels?.length > 0 && (
+                  <div className="history-detail-table-wrap">
+                    <table className="history-detail-table">
+                      <thead>
+                        <tr>
+                          <th>Label</th>
+                          <th>Price</th>
+                          <th>Type</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {plan.keyLevels.map((level) => (
+                          <tr key={level.id || `${level.label}-${level.price}`}>
+                            <td>{level.label || "-"}</td>
+                            <td>{level.price || "-"}</td>
+                            <td>{(level.type || "-").toUpperCase()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {plan.setups?.length > 0 && (
+                  <div className="history-detail-setups">
+                    {plan.setups.map((setup) => (
+                      <article key={setup.id || setup.name} className="history-detail-setup">
+                        <h3>{setup.name || "Setup"}</h3>
+                        {setup.conditions && <p>{setup.conditions}</p>}
+                        <div className="history-detail-setup__meta">
+                          {setup.target && <span><em>Target</em> {setup.target}</span>}
+                          {setup.stop && <span><em>Stop</em> {setup.stop}</span>}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+
+                <div className="history-detail-limits">
+                  {plan.ddFromHighWaterMark && (
+                    <div className="history-detail-limit">
+                      <span>DD from HWM</span>
+                      <strong>{plan.ddFromHighWaterMark}%</strong>
+                    </div>
+                  )}
+                  {plan.maxDailyLoss && (
+                    <div className="history-detail-limit">
+                      <span>Max loss</span>
+                      <strong>{plan.maxDailyLoss}</strong>
+                    </div>
+                  )}
+                  {plan.maxTrades && (
+                    <div className="history-detail-limit">
+                      <span>Max trades</span>
+                      <strong>{plan.maxTrades}</strong>
+                    </div>
+                  )}
+                  {plan.stopTradingAt && (
+                    <div className="history-detail-limit">
+                      <span>Stop at</span>
+                      <strong>{plan.stopTradingAt}</strong>
+                    </div>
+                  )}
+                  {plan.maxDailyLossSetInBroker && (
+                    <div className="history-detail-limit">
+                      <span>Max loss in broker</span>
+                      <strong>Yes</strong>
+                    </div>
+                  )}
+                  {plan.coldTurkeyBlockerSet && (
+                    <div className="history-detail-limit">
+                      <span>Cold turkey blocker</span>
+                      <strong>Set</strong>
+                    </div>
+                  )}
+                </div>
+
+                <ProseBlock label="Session rules">{plan.sessionRules}</ProseBlock>
+                <ProseBlock label="The one thing">{plan.oneThing}</ProseBlock>
+
+                {(plan.selfCommitmentAccepted || plan.selfRegulatedCommitmentAccepted) && (
+                  <div className="history-detail-prose history-detail-prose--commitment">
+                    <div className="history-detail-prose__label">Commitment</div>
+                    {plan.selfCommitmentAccepted && (
+                      <p>
+                        I believe in myself and I respect myself enough to follow my plan. Following my plans allows me and my family to live our dream.
+                      </p>
+                    )}
+                    {plan.selfRegulatedCommitmentAccepted && (
+                      <p>I will not place any risk when I am not in a self-regulated state.</p>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </SectionCard>
+
+          <SectionCard num="03" title="Close loop" subtitle="How it actually went." className="history-detail-section--close">
+            {!post ? (
+              <p className="history-detail-empty">No close loop saved for this day.</p>
+            ) : (
+              <>
+                <div className="history-detail-close-summary">
+                  {session.playbookAdherence?.total > 0 && playbookLabel && (
+                    <div className={`history-detail-close-card history-detail-close-card--playbook history-detail-close-card--${playbookLabel.tone}`}>
+                      <span className="history-detail-close-card__label">Playbook</span>
+                      <strong>{session.playbookAdherence.playbookRate}%</strong>
+                      <p>{playbookLabel.text}</p>
+                    </div>
+                  )}
+                  <div className={`history-detail-close-card${raisedFlags.length ? " history-detail-close-card--flags" : " history-detail-close-card--clean"}`}>
+                    <span className="history-detail-close-card__label">Behavioral flags</span>
+                    <strong>{raisedFlags.length}</strong>
+                    {raisedFlags.length > 0 ? (
+                      <div className="history-detail-flag-list">
+                        {raisedFlags.map((f) => (
+                          <span key={f.key} className="history-detail-flag">{f.label}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p>None raised</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="history-detail-score-group">
+                  <div className="history-detail-score-group__label">Process (1-10)</div>
+                  <div className="history-detail-score-row">
+                    <ScoreChip label="Followed plan" value={post.followedPlan} />
+                    <ScoreChip label="Setup quality" value={post.setupQuality} />
+                    <ScoreChip label="Risk discipline" value={post.riskDiscipline} />
+                    <ScoreChip label="Execution" value={post.executionQuality} />
+                    <ScoreChip
+                      label="Risk plan"
+                      value={riskPlanFollowed === true ? "Yes" : riskPlanFollowed === false ? "No" : "-"}
+                      tone={riskPlanFollowed === true ? "good" : riskPlanFollowed === false ? "bad" : undefined}
+                    />
+                  </div>
+                </div>
+
+                <div className="history-detail-score-group">
+                  <div className="history-detail-score-group__label">Post session</div>
+                  <div className="history-detail-score-row history-detail-score-row--3">
+                    <ScoreChip label="Emotional" value={post.emotionalState} />
+                    <ScoreChip label="Satisfaction" value={post.satisfaction} />
+                    <ScoreChip label="Frustration" value={post.frustration} />
+                  </div>
+                </div>
+
+                <div className="history-detail-journal">
+                  <article className="history-detail-journal__main">
+                    <div className="history-detail-prose__label">Plan vs reality</div>
+                    <p>{post.readVsReality || "-"}</p>
+                  </article>
+                  <div className="history-detail-journal__side">
+                    <article className="history-detail-journal__note">
+                      <div className="history-detail-prose__label">What went well</div>
+                      <p>{post.wentWell || "-"}</p>
+                    </article>
+                    <article className="history-detail-journal__note">
+                      <div className="history-detail-prose__label">What went wrong</div>
+                      <p>{post.wentWrong || "-"}</p>
+                    </article>
+                    <article className="history-detail-journal__note">
+                      <div className="history-detail-prose__label">One lesson</div>
+                      <p>{post.oneLesson || "-"}</p>
+                    </article>
+                  </div>
+                </div>
+
+                <HistoryJournalChecklist
+                  date={date}
+                  post={post}
+                  onPostUpdated={(nextPost) => setSession((prev) => (prev ? { ...prev, post: nextPost } : prev))}
+                />
+              </>
+            )}
+          </SectionCard>
+
+          <div className="history-detail-delete">
             <p>
               Removing this day deletes all of its data (check-in, session plan, close loop, and imported trades)
               and cannot be undone.
