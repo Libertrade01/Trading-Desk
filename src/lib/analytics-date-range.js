@@ -2,6 +2,7 @@
 
 import { storage } from "./supabase";
 import { calendarDateParts } from "./today-key";
+import { lastNTradingDaysRange } from "./trading-day-range";
 import {
   PLAYBOOK_TRACKING_START_KEY,
   filterTradesForPlaybookAdherence,
@@ -20,6 +21,8 @@ function calendarStr(date) {
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
+
+export { lastNTradingDaysRange } from "./trading-day-range";
 
 export function resolveDateRangePreset(preset) {
   const { today, cal } = calendarTodayParts();
@@ -42,19 +45,13 @@ export function resolveDateRangePreset(preset) {
     return { dateFrom, dateTo: today };
   }
   if (preset === "5d") {
-    const d5 = new Date(cal);
-    d5.setDate(cal.getDate() - 4);
-    return { dateFrom: calendarStr(d5), dateTo: today };
+    return lastNTradingDaysRange(5);
   }
   if (preset === "10d") {
-    const d10 = new Date(cal);
-    d10.setDate(cal.getDate() - 9);
-    return { dateFrom: calendarStr(d10), dateTo: today };
+    return lastNTradingDaysRange(10);
   }
   if (preset === "20d") {
-    const d20 = new Date(cal);
-    d20.setDate(cal.getDate() - 19);
-    return { dateFrom: calendarStr(d20), dateTo: today };
+    return lastNTradingDaysRange(20);
   }
   if (preset === "all") {
     return { dateFrom: null, dateTo: null };
