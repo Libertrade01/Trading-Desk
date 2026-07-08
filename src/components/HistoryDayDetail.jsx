@@ -21,6 +21,7 @@ import {
 } from "../lib/history-data";
 import { playbookAdherenceLabel } from "../lib/setup-adherence";
 import HistoryDaySummary from "./history/HistoryDaySummary";
+import WorkflowPageLayout from "./WorkflowPageLayout";
 import {
   loadRecoveryState,
   buildRecoveryDayAnnotations,
@@ -44,9 +45,9 @@ function StatGrid({ title, items }) {
   );
 }
 
-function SectionCard({ num, title, subtitle, children, action }) {
+function SectionCard({ num, title, subtitle, children, action, className = "" }) {
   return (
-    <section className="history-section-card">
+    <section className={`history-section-card${className ? ` ${className}` : ""}`}>
       <div className="history-section-head">
         {num ? <span className="history-section-num">{num}</span> : null}
         <div className="history-section-head__text">
@@ -218,17 +219,30 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
     }
   };
 
-  if (loading) return <div className="pm-loading">Loading...</div>;
+  if (loading) {
+    return (
+      <WorkflowPageLayout>
+        <div className="history-detail-page">
+          <div className="pm-loading">Loading...</div>
+        </div>
+      </WorkflowPageLayout>
+    );
+  }
 
   if (!session) {
     return (
-      <div className="history-detail-page hybrid-page">
-        <div className="history-detail-top">
-          <button type="button" className="pm-back" onClick={onBack}>← Back to history</button>
-          <h1 className="history-detail-title hybrid-title">{formatDetailTitle(date)}</h1>
-          <p className="history-missing">Could not load this session. Sign in and try again.</p>
+      <WorkflowPageLayout>
+        <div className="history-detail-page">
+          <div className="history-detail-top">
+            <button type="button" className="pm-back" onClick={onBack}>← Back to history</button>
+            <h1 className="history-detail-title hybrid-page-title">
+              {formatDetailTitle(date)}
+              <span className="hybrid-page-title-stop" aria-hidden="true" />
+            </h1>
+            <p className="history-missing">Could not load this session. Sign in and try again.</p>
+          </div>
         </div>
-      </div>
+      </WorkflowPageLayout>
     );
   }
 
@@ -240,14 +254,19 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
     : null;
 
   return (
-    <div className="history-detail-page hybrid-page">
-      <div className="history-detail-top">
-        <button type="button" className="pm-back" onClick={onBack}>← Back to history</button>
-        <h1 className="history-detail-title hybrid-title">{formatDetailTitle(date)}</h1>
-        <HistoryDaySummary session={session} recoveryLabel={recoveryLabel} />
-      </div>
+    <WorkflowPageLayout>
+      <div className="history-detail-page">
+        <div className="history-detail-top">
+          <button type="button" className="pm-back" onClick={onBack}>← Back to history</button>
+          <h1 className="history-detail-title hybrid-page-title">
+            {formatDetailTitle(date)}
+            <span className="hybrid-page-title-stop" aria-hidden="true" />
+          </h1>
+          <HistoryDaySummary session={session} recoveryLabel={recoveryLabel} />
+        </div>
 
-      <div className="history-detail-grid">
+        <div className="history-detail-body">
+          <div className="history-detail-grid">
         <SectionCard num="01" title="Check-in" subtitle="The state you arrived in.">
           {!pre ? (
             <p className="history-missing">No check-in saved for this day.</p>
@@ -448,9 +467,14 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
             </>
           )}
         </SectionCard>
-      </div>
+          </div>
 
-      <SectionCard num="03" title="Close loop" subtitle="How it actually went.">
+          <SectionCard
+            num="03"
+            title="Close loop"
+            subtitle="How it actually went."
+            className="history-section-card--close"
+          >
         {!post ? (
           <p className="history-missing">No close loop saved for this day.</p>
         ) : (
@@ -458,7 +482,7 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
             <div className="history-post-metrics">
               <div className="history-post-metric history-post-metric--pnl">
                 <span>Net P&amp;L</span>
-                <strong className={pnlTone}>{session.netPnl != null ? formatUsd(session.netPnl, { signed: true }) : "—"}</strong>
+                <strong className={pnlTone}>{session.netPnl != null ? formatUsd(session.netPnl, { signed: true }) : "-"}</strong>
               </div>
               <div className="history-post-metric">
                 <span>Trades</span>
@@ -474,87 +498,93 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
               </div>
             </div>
 
-            {session.playbookAdherence?.total > 0 && playbookLabel && (
-              <div className="history-process-row">
-                <div className="history-process-title hybrid-label-sm">Playbook adherence</div>
-                <div className="history-playbook-adherence">
-                  <strong
-                    style={{
-                      color:
-                        playbookLabel.tone === "green"
-                          ? "var(--green)"
-                          : playbookLabel.tone === "red"
-                            ? "var(--red)"
-                            : "var(--amber)",
-                    }}
-                  >
-                    {session.playbookAdherence.playbookRate}%
-                  </strong>
-                  <span>{playbookLabel.text}</span>
+            <div className="history-close-loop-split">
+              <div className="history-close-loop-col">
+                {session.playbookAdherence?.total > 0 && playbookLabel && (
+                  <div className="history-process-row">
+                    <div className="history-process-title hybrid-label-sm">Playbook adherence</div>
+                    <div className="history-playbook-adherence">
+                      <strong
+                        style={{
+                          color:
+                            playbookLabel.tone === "green"
+                              ? "var(--green)"
+                              : playbookLabel.tone === "red"
+                                ? "var(--red)"
+                                : "var(--amber)",
+                        }}
+                      >
+                        {session.playbookAdherence.playbookRate}%
+                      </strong>
+                      <span>{playbookLabel.text}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="history-process-row">
+                  <div className="history-process-title hybrid-label-sm">Process adherence (1–10)</div>
+                  <div className="history-process-grid">
+                    <div><span>Followed plan</span><strong>{post.followedPlan}</strong></div>
+                    <div><span>Setup quality</span><strong>{post.setupQuality}</strong></div>
+                    <div><span>Risk discipline</span><strong>{post.riskDiscipline}</strong></div>
+                    <div><span>Execution</span><strong>{post.executionQuality}</strong></div>
+                    <div>
+                      <span>Risk plan followed</span>
+                      <strong>
+                        {riskPlanFollowed === true
+                          ? "Yes"
+                          : riskPlanFollowed === false
+                            ? "No"
+                            : "-"}
+                      </strong>
+                    </div>
+                  </div>
                 </div>
               </div>
-            )}
 
-            <div className="history-process-row">
-              <div className="history-process-title hybrid-label-sm">Process adherence (1–10)</div>
-              <div className="history-process-grid">
-                <div><span>Followed plan</span><strong>{post.followedPlan}</strong></div>
-                <div><span>Setup quality</span><strong>{post.setupQuality}</strong></div>
-                <div><span>Risk discipline</span><strong>{post.riskDiscipline}</strong></div>
-                <div><span>Execution</span><strong>{post.executionQuality}</strong></div>
-                <div>
-                  <span>Risk plan followed</span>
-                  <strong>
-                    {riskPlanFollowed === true
-                      ? "Yes"
-                      : riskPlanFollowed === false
-                        ? "No"
-                        : "—"}
-                  </strong>
+              <div className="history-close-loop-col">
+                <div className={`history-flags-block${raisedFlags.length ? "" : " history-flags-block--clean"}`}>
+                  <div className="history-flags-title hybrid-label-sm">
+                    {raisedFlags.length
+                      ? `${raisedFlags.length} behavioral flag${raisedFlags.length === 1 ? "" : "s"} raised`
+                      : "No behavioral flags raised"}
+                  </div>
+                  {raisedFlags.length > 0 && (
+                    <div className="history-flag-pills">
+                      {raisedFlags.map((f) => (
+                        <span key={f.key} className="history-flag-pill">{f.label}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
 
-            <div className={`history-flags-block${raisedFlags.length ? "" : " history-flags-block--clean"}`}>
-              <div className="history-flags-title hybrid-label-sm">
-                {raisedFlags.length
-                  ? `${raisedFlags.length} behavioral flag${raisedFlags.length === 1 ? "" : "s"} raised`
-                  : "No behavioral flags raised"}
-              </div>
-              {raisedFlags.length > 0 && (
-                <div className="history-flag-pills">
-                  {raisedFlags.map((f) => (
-                    <span key={f.key} className="history-flag-pill">{f.label}</span>
-                  ))}
+                <div className="history-process-row">
+                  <div className="history-process-title hybrid-label-sm">Post session</div>
+                  <div className="history-process-grid history-process-grid--3">
+                    <div><span>Emotional</span><strong>{post.emotionalState}</strong></div>
+                    <div><span>Satisfaction</span><strong>{post.satisfaction}</strong></div>
+                    <div><span>Frustration</span><strong>{post.frustration}</strong></div>
+                  </div>
                 </div>
-              )}
-            </div>
-
-            <div className="history-process-row">
-              <div className="history-process-title hybrid-label-sm">Post session</div>
-              <div className="history-process-grid">
-                <div><span>Emotional</span><strong>{post.emotionalState}</strong></div>
-                <div><span>Satisfaction</span><strong>{post.satisfaction}</strong></div>
-                <div><span>Frustration</span><strong>{post.frustration}</strong></div>
               </div>
             </div>
 
             <div className="history-journal-grid">
               <div className="history-journal-card history-journal-card--wide">
                 <div className="history-notes-label hybrid-label-sm">Plan vs Reality</div>
-                <p>{post.readVsReality || "—"}</p>
+                <p>{post.readVsReality || "-"}</p>
               </div>
               <div className="history-journal-card">
                 <div className="history-notes-label hybrid-label-sm">What went well</div>
-                <p>{post.wentWell || "—"}</p>
+                <p>{post.wentWell || "-"}</p>
               </div>
               <div className="history-journal-card">
                 <div className="history-notes-label hybrid-label-sm">What went wrong</div>
-                <p>{post.wentWrong || "—"}</p>
+                <p>{post.wentWrong || "-"}</p>
               </div>
               <div className="history-journal-card">
                 <div className="history-notes-label hybrid-label-sm">One lesson</div>
-                <p>{post.oneLesson || "—"}</p>
+                <p>{post.oneLesson || "-"}</p>
               </div>
             </div>
 
@@ -565,17 +595,22 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
             />
           </>
         )}
-      </SectionCard>
+          </SectionCard>
 
-      <div className="history-delete-bar">
-        <p>Removing this day deletes all of its data — check-in, session plan, close loop, and imported trades — and cannot be undone.</p>
-        <button type="button" className="history-delete-btn" onClick={handleDelete} disabled={deleting}>
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M3 4h10M6 4V2.5h4V4M5.5 4v9h5V4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          {deleting ? "Deleting..." : "Delete this day"}
-        </button>
+          <div className="history-delete-bar">
+            <p>
+              Removing this day deletes all of its data (check-in, session plan, close loop, and imported trades)
+              and cannot be undone.
+            </p>
+            <button type="button" className="history-delete-btn" onClick={handleDelete} disabled={deleting}>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M3 4h10M6 4V2.5h4V4M5.5 4v9h5V4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {deleting ? "Deleting..." : "Delete this day"}
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </WorkflowPageLayout>
   );
 }

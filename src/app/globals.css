@@ -15575,3 +15575,199 @@ input.pm-slider:active::-moz-range-thumb {
     border-bottom-color: rgba(255, 255, 255, 0.08);
   }
 }
+
+/* ── History day detail · Loop glass ── */
+.workflow-page--loop .history-detail-page {
+  width: 100%;
+  max-width: none;
+}
+
+.workflow-page--loop .history-detail-top,
+.workflow-page--loop .history-detail-body {
+  max-width: none;
+  margin: 0;
+  padding: 0 0 48px;
+}
+
+.hybrid-page.workflow-page--loop .history-detail-top,
+.hybrid-page.workflow-page--loop .history-detail-grid,
+.hybrid-page.workflow-page--loop .history-detail-body > .history-section-card,
+.hybrid-page.workflow-page--loop .history-detail-body > .history-delete-bar {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  max-width: none;
+}
+
+.workflow-page--loop .history-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.workflow-page--loop .history-detail-title {
+  font-size: clamp(32px, 4vw, 44px);
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  margin-bottom: 0;
+}
+
+.workflow-page--loop .history-detail-title .hybrid-page-title-stop {
+  margin-left: 8px;
+}
+
+.workflow-page--loop .history-day-summary {
+  margin-top: 22px;
+  padding: 18px 22px;
+  border-radius: 14px;
+  background: rgba(11, 14, 20, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 0 0 1px rgba(0, 101, 189, 0.04),
+    0 12px 32px rgba(0, 0, 0, 0.28);
+}
+
+.workflow-page--loop .history-detail-grid {
+  grid-template-columns: minmax(300px, 0.42fr) minmax(360px, 0.58fr);
+  gap: 18px;
+  padding-bottom: 0;
+  max-width: none;
+}
+
+@media (min-width: 1200px) {
+  .workflow-page--loop .history-detail-grid {
+    grid-template-columns: minmax(340px, 0.38fr) minmax(420px, 0.62fr);
+  }
+}
+
+.workflow-page--loop .history-section-card {
+  border-radius: 14px;
+  padding: 22px 24px;
+  background: rgba(11, 14, 20, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 0 0 1px rgba(0, 101, 189, 0.04),
+    0 12px 32px rgba(0, 0, 0, 0.28);
+}
+
+.workflow-page--loop .history-detail-page > .history-section-card,
+.workflow-page--loop .history-detail-body > .history-section-card {
+  padding-bottom: 22px;
+}
+
+.workflow-page--loop .history-stat-block {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(8, 12, 18, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 10px;
+}
+
+.workflow-page--loop .history-stat-block + .history-stat-block {
+  margin-top: 0;
+}
+
+.workflow-page--loop .history-mantra-block,
+.workflow-page--loop .history-reminders-block,
+.workflow-page--loop .history-text-block,
+.workflow-page--loop .history-commitment {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(8, 12, 18, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.workflow-page--loop .history-setup-card,
+.workflow-page--loop .history-risk-chip,
+.workflow-page--loop .history-post-metric,
+.workflow-page--loop .history-process-grid > div,
+.workflow-page--loop .history-journal-card {
+  background: rgba(8, 12, 18, 0.55);
+  border-color: rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+}
+
+.workflow-page--loop .history-levels-table-wrap {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  background: rgba(8, 12, 18, 0.45);
+  overflow: hidden;
+}
+
+.workflow-page--loop .history-levels-table th {
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+.workflow-page--loop .history-levels-table td {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.workflow-page--loop .history-plan-tag {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+}
+
+.workflow-page--loop .history-close-loop-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.workflow-page--loop .history-section-card--close .history-journal-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 1100px) {
+  .workflow-page--loop .history-section-card--close .history-journal-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .workflow-page--loop .history-journal-card--wide {
+    grid-column: 1 / -1;
+  }
+}
+
+.workflow-page--loop .history-flags-block {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(158, 112, 64, 0.08);
+}
+
+.workflow-page--loop .history-delete-bar {
+  margin-top: 0;
+  padding: 18px 22px;
+  border-radius: 14px;
+  background: rgba(11, 14, 20, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.workflow-page--loop .history-day-summary__alerts {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.workflow-page--loop .history-section-sub {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+@media (max-width: 900px) {
+  .workflow-page--loop .history-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .workflow-page--loop .history-close-loop-split {
+    grid-template-columns: 1fr;
+  }
+
+  .workflow-page--loop .history-section-card--close .history-journal-grid {
+    grid-template-columns: 1fr;
+  }
+}

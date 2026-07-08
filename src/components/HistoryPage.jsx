@@ -120,7 +120,7 @@ export default function HistoryPage({ onSelectDay }) {
         <div className="history-content history-content--split">
           <header className="pm-header">
             <h1 className="hybrid-page-title">
-              History
+              Past Sessions
               <span className="hybrid-page-title-stop" aria-hidden="true" />
             </h1>
             <p className="pm-subtitle">Past sessions by date. Select any day to open the full record.</p>
