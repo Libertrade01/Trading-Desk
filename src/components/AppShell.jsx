@@ -37,6 +37,9 @@ const NAV_ITEMS = [
   { id: "weeklyreview", href: "/weekly-review", label: "Weekly Review", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3" strokeLinecap="round"/></svg>
   )},
+  { id: "assistant", href: "/assistant", label: "AI Assistant", icon: (
+    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 12.5l1.2-3.6L2 6.5h3.2L8 3.5l2.8 3h3.2l-2.2 2.4L13.2 12.5 8 10.2 3 12.5z" strokeLinejoin="round"/></svg>
+  )},
   { id: "propeconomics", href: "/prop-economics", label: "Prop Profit Tracker", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 12V6l6-3 6 3v6l-6 3-6-3z"/><path d="M8 3v10M2 6l6 3 6-3" strokeLinecap="round" strokeLinejoin="round"/></svg>
   )},
@@ -64,6 +67,7 @@ function isNavActive(pathname, item, settingsSection) {
   if (item.id === "home") return pathname === "/home";
   if (item.id === "history") return pathname === "/history" || pathname.startsWith("/history/");
   if (item.id === "weeklyreview") return pathname === "/weekly-review" || pathname.startsWith("/weekly-review/");
+  if (item.id === "assistant") return pathname === "/assistant" || pathname.startsWith("/assistant/");
   if (item.id === "settings") {
     return pathname === "/settings";
   }
