@@ -96,7 +96,7 @@ function Sidebar({ pathname, settingsSection, open, onClose, userEmail, mainItem
       <div className={`sidebar-overlay${open ? " visible" : ""}`} onClick={onClose} />
       <aside className={`sidebar${open ? " open" : ""}`}>
         <div className="sidebar-brand">
-          <img src="/brand/stacked-wordmark-sidebar.png" alt="Libertrade Loop" className="sidebar-brand-logo" />
+          <img src="/brand/loop-wordmark-sidebar.png" alt="Libertrade Loop" className="sidebar-brand-logo" />
         </div>
         <nav className="sidebar-nav">
           <div className="sidebar-nav-main">

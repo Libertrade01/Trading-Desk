@@ -17391,9 +17391,9 @@ input.pm-slider:active::-moz-range-thumb {
 
 .sidebar-brand-logo {
   display: block;
-  width: min(100%, 174px);
+  width: min(100%, 154px);
   height: auto;
-  max-height: 78px;
+  max-height: 58px;
   object-fit: contain;
   object-position: left center;
   filter: saturate(1.05) contrast(1.04) drop-shadow(0 0 10px rgba(8, 125, 255, .08));
@@ -17402,7 +17402,7 @@ input.pm-slider:active::-moz-range-thumb {
 
 @media (max-width: 720px) {
   .sidebar-brand { min-height: 92px; padding: 12px 18px; }
-  .sidebar-brand-logo { width: 164px; max-height: 72px; }
+  .sidebar-brand-logo { width: 148px; max-height: 56px; }
 }
 
 
