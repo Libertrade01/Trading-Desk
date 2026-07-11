@@ -46,37 +46,26 @@ export default function LandingPage() {
 
       <header className="landing-header">
         <Link href="/" className="landing-header-brand" aria-label="Libertrade Loop home">
-          <BrandWordmark size="compact" />
+          <img src="/brand/primary-wordmark-login-v3.png" alt="Libertrade Loop" className="landing-header-logo" />
         </Link>
         <nav className="landing-header-nav" aria-label="Account">
           <Link href="/login" className="landing-link landing-link--muted">
             Sign in
           </Link>
           <Link href="/signup" className="landing-btn landing-btn--primary">
-            Get started
+            Start free
           </Link>
         </nav>
       </header>
 
       <div className="landing-page-inner">
         <main className="landing-main">
-          <section className="landing-hero" aria-labelledby="landing-hero-title">
-            <p className="landing-hero-eyebrow">Trading journal</p>
-            <h1 id="landing-hero-title" className="landing-hero-title">
-              Prepare. Trade your plan.
-              <span className="landing-hero-title-accent"> Close the loop.</span>
-            </h1>
-            <p className="landing-hero-lead">
-              A trading loop for preparation, execution, risk, and review — built for
-              discretionary traders who want structure before the open and honest review after the close.
-            </p>
-            <div className="landing-hero-actions">
-              <Link href="/signup" className="landing-btn landing-btn--primary landing-btn--lg">
-                Start free
-              </Link>
-              <Link href="/login" className="landing-btn landing-btn--outline landing-btn--lg">
-                Sign in
-              </Link>
+          <section className="landing-hero landing-hero--simple landing-hero--artwork" aria-labelledby="landing-hero-title">
+            <img src="/brand/primary-wordmark-login-v3.png" alt="Libertrade Loop" className="landing-artwork-logo" />
+            <h1 id="landing-hero-title" className="landing-artwork-title">Check-in. Trade your plan. Close the loop.</h1>
+            <div className="landing-artwork-actions">
+              <Link href="/signup" className="landing-artwork-btn landing-artwork-btn--primary">Start Free</Link>
+              <Link href="/login" className="landing-artwork-btn landing-artwork-btn--secondary">Sign in</Link>
             </div>
           </section>
 

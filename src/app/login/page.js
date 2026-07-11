@@ -39,13 +39,11 @@ function LoginForm() {
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-brand">
-          Liber<span>trade</span>
+    <div className="auth-page auth-page--hero">
+      <div className="auth-card auth-card--hero">
+        <div className="auth-brand auth-brand--hero">
+          <img src="/brand/primary-wordmark-login-v3.png" alt="Libertrade Loop" />
         </div>
-        <p className="auth-sub">Sign in to Libertrade Loop</p>
-
         <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-label">
             Email
@@ -88,7 +86,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="auth-page" />}>
+    <Suspense fallback={<div className="auth-page auth-page--hero" />}>
       <LoginForm />
     </Suspense>
   );
