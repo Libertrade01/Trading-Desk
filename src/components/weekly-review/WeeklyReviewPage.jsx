@@ -116,7 +116,7 @@ function WeekComparisonTable({ summary, priorSummary }) {
   );
 }
 
-function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving }) {
+function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving, saved }) {
   const { summary, priorSummary, findings, days, priorFocusItems } = data;
   const complete = isReviewComplete(manual);
 
@@ -433,13 +433,18 @@ function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving }) {
       <div className="wpr-save-bar">
         <button
           type="button"
-          className="wpr-save-btn"
+          className={`wpr-save-btn${saved ? " wpr-save-btn--saved" : ""}`}
           disabled={saving}
           onClick={onSave}
         >
-          {saving ? "Saving…" : complete ? "Save review" : "Save draft"}
+          {saving ? "Saving…" : saved ? "Saved" : complete ? "Save review" : "Save draft"}
         </button>
-        {!complete && (
+        {saved && (
+          <p className="wpr-save-confirm" role="status" aria-live="polite">
+            Your review is saved.
+          </p>
+        )}
+        {!complete && !saved && (
           <p className="wpr-save-hint">
             Complete when week in one line and both focus items are filled.
           </p>
@@ -457,6 +462,7 @@ export default function WeeklyReviewPage() {
   const [manual, setManual] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const refreshWeekList = useCallback(async () => {
     const list = await listBrowsableProcessWeeks();
@@ -467,6 +473,7 @@ export default function WeeklyReviewPage() {
   const loadWeek = useCallback(async (week) => {
     if (!week?.start || !week?.end) return;
     setLoading(true);
+    setSaved(false);
     try {
       const result = await loadWeeklyProcessReview(week.start, week.end);
       setData(result);
@@ -488,13 +495,25 @@ export default function WeeklyReviewPage() {
     loadWeek(selectedWeek);
   }, [selectedWeek, loadWeek]);
 
+  const handleManualChange = useCallback((next) => {
+    setSaved(false);
+    setManual(next);
+  }, []);
+
   const handleSave = async () => {
-    if (!manual || !selectedWeek) return;
+    if (!manual || !selectedWeek || saving) return;
     setSaving(true);
-    const saved = await saveReview(selectedWeek.end, manual);
-    setManual(saved);
-    await refreshWeekList();
-    setSaving(false);
+    setSaved(false);
+    try {
+      const result = await saveReview(selectedWeek.end, manual);
+      setManual(result);
+      await refreshWeekList();
+      setSaved(true);
+    } catch (err) {
+      console.error("Weekly review save failed:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const showWeekPicker = weeks.length > 1;
@@ -569,9 +588,10 @@ export default function WeeklyReviewPage() {
         <WeeklyReviewContent
           data={data}
           manual={manual}
-          onManualChange={setManual}
+          onManualChange={handleManualChange}
           onSave={handleSave}
           saving={saving}
+          saved={saved}
         />
       </div>
     </WorkflowPageLayout>
