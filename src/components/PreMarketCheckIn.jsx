@@ -20,7 +20,6 @@ import WorkflowPageLayout from "./WorkflowPageLayout";
 import SliderField from "./SliderField";
 import HabitTileField from "./HabitTileField";
 import { todayKey, offsetDateKey } from "../lib/today-key";
-import { loadHomeFocusItems } from "../lib/weekly-process-review";
 import { notifySessionSaved } from "../lib/session-events";
 import {
   loadTraderProfile,
@@ -86,7 +85,6 @@ export default function PreMarketCheckIn({ onBack }) {
   const [yesterdaySleepDebtMinutes, setYesterdaySleepDebtMinutes] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
-  const [weekFocus, setWeekFocus] = useState([]);
   const [activeSection, setActiveSection] = useState(0);
 
   const usesWearable = profile?.usesWearable ?? false;
@@ -123,17 +121,15 @@ export default function PreMarketCheckIn({ onBack }) {
     (async () => {
       const dateKey = todayKey();
       const yesterdayKey = offsetDateKey(dateKey, -1);
-      const [data, yesterdayData, focus, traderProfile] = await Promise.all([
+      const [data, yesterdayData, traderProfile] = await Promise.all([
         loadData(`premarket-checkin-${dateKey}`, null),
         loadData(`premarket-checkin-${yesterdayKey}`, null),
-        loadHomeFocusItems(dateKey),
         loadTraderProfile(),
       ]);
       setProfile(traderProfile);
       if (data) {
         setForm(migratePremarketDeskChecks({ ...DEFAULT_PREMARKET_FORM, ...data }, traderProfile));
       }
-      setWeekFocus(focus.items || []);
       if (
         yesterdayData?.sleepDebtMinutes != null
         && yesterdayData.sleepDebtMinutes !== ""
@@ -230,17 +226,6 @@ export default function PreMarketCheckIn({ onBack }) {
               Rate your readiness before you risk your capital.
             </p>
           </header>
-
-          {weekFocus.length > 0 && (
-            <div className="pm-week-focus-reminder" role="note">
-              <div className="pm-week-focus-reminder-label hybrid-eyebrow">This week&apos;s focus</div>
-              <ul className="pm-week-focus-reminder-list">
-                {weekFocus.map((item, i) => (
-                  <li key={i}>{item}</li>
-                ))}
-              </ul>
-            </div>
-          )}
 
           <CheckInHorizontalStepper activeIndex={activeSection} onSelect={setActiveSection} />
         </div>

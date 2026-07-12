@@ -10,12 +10,13 @@ export const BIAS_OPTIONS = [
 /** Map older plan bias labels onto the current option set. */
 export function normalizeDirectionalBias(value) {
   const v = String(value ?? "").trim();
+  if (!v) return "";
   if (BIAS_OPTIONS.includes(v)) return v;
   if (/long|bull/i.test(v)) return "Bullish";
   if (/short|bear/i.test(v)) return "Bearish";
   if (/neutral|two-way|balance|rotat/i.test(v)) return "Balanced/Rotational";
   if (/wait|unsure/i.test(v)) return "Unsure";
-  return "Balanced/Rotational";
+  return "";
 }
 
 export const SESSION_OPEN_VS_VALUE_OPTIONS = [
@@ -93,7 +94,7 @@ export function normalizeKeyLevelQuickAdds(value) {
 }
 
 export const DEFAULT_DAILY_PLAN = {
-  directionalBias: "Balanced/Rotational",
+  directionalBias: "",
   expectedVolatility: "Normal",
   whyBias: "",
   biasMarkedValueArea: false,
