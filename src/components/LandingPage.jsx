@@ -39,13 +39,13 @@ export default function LandingPage() {
     <div className="landing-page-vignette" aria-hidden="true" /><div className="landing-page-glow" aria-hidden="true" />
     <header className="landing-header"><Link href="/" className="landing-header-brand" aria-label="Libertrade Loop home"><img src="/brand/primary-wordmark-login-v3.png" alt="Libertrade Loop" className="landing-header-logo" /></Link><nav className="landing-header-nav" aria-label="Account"><Link href="/login" className="landing-link landing-link--muted">Sign in</Link><Link href="/signup" className="landing-btn landing-btn--primary">Start free</Link></nav></header>
     <div className="landing-page-inner"><main className="landing-main">
-      <section className="landing-hero landing-hero--simple landing-hero--artwork" aria-labelledby="landing-hero-title"><img src="/brand/primary-wordmark-login-v3.png" alt="Libertrade Loop" className="landing-artwork-logo" /><h1 id="landing-hero-title" className="landing-artwork-title">Check-in. Trade your plan. Close the loop.</h1><div className="landing-artwork-actions"><Link href="/signup" className="landing-artwork-btn landing-artwork-btn--primary">Start your loop</Link><Link href="/login" className="landing-artwork-btn landing-artwork-btn--secondary">Sign in</Link></div></section>
+      <section className="landing-hero landing-hero--simple landing-hero--artwork" aria-labelledby="landing-hero-title"><img src="/brand/primary-wordmark-login-v3.png" alt="Libertrade Loop" className="landing-artwork-logo" /><h1 id="landing-hero-title" className="landing-artwork-title">Check-in. Trade your plan. Close the loop.</h1><div className="landing-artwork-actions"><Link href="/signup" className="landing-artwork-btn landing-artwork-btn--primary">Set up your LOOP</Link><Link href="/login" className="landing-artwork-btn landing-artwork-btn--secondary">Sign in</Link></div></section>
 
-      <section className="landing-workflow-story landing-workflow-cinematic" aria-labelledby="landing-workflow-title">
+      <section id="landing-workflow" className="landing-workflow-story landing-workflow-cinematic" aria-label="The Libertrade Loop workflow">
+        <a href="#landing-checkin" className="landing-workflow-entry-cue"><span>The loop</span><b aria-hidden="true">↓</b></a>
         <div className="landing-workflow-trail" aria-hidden="true"><i /></div>
-        <header className="landing-workflow-intro"><SectionLabel>The loop</SectionLabel><h2 id="landing-workflow-title">One process.<br />Three moments.<br /><span>A better trader every session.</span></h2><p>Follow the loop <b aria-hidden="true">↓</b></p></header>
 
-        <article className="landing-workflow-chapter landing-workflow-chapter--checkin">
+        <article id="landing-checkin" className="landing-workflow-chapter landing-workflow-chapter--checkin">
           <div className="landing-workflow-chapter-copy"><span className="landing-workflow-number">01</span><SectionLabel>Before the session</SectionLabel><h3>Know your state<br />before you trade.</h3><p>Score your physical state, mindset, and market context before risk enters the equation.</p><div className="landing-workflow-proof"><strong>Readiness first.</strong><span>Clarity before execution.</span></div></div>
           <div className="landing-workflow-screen"><CheckInPreview /></div>
         </article>
