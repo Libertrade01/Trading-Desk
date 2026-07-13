@@ -8,227 +8,253 @@ import {
   openLoginWithChatGPTConsentPopup,
 } from "@opencoredev/loginwithchatgpt-react";
 import WorkflowPageLayout from "../WorkflowPageLayout";
+import styles from "./AssistantPage.module.css";
 
-const SUGGESTIONS = [
-  "How was my readiness this week?",
-  "Summarize my last 10 trades.",
-  "What patterns show up in my post-market journals?",
-  "Which days had stand-down readiness flags?",
+const PROMPTS = [
+  { index: "01", type: "READINESS", text: "Compare my readiness scores with my best trading sessions." },
+  { index: "02", type: "EXECUTION", text: "Where am I breaking my written plan most often?" },
+  { index: "03", type: "PLAYBOOK", text: "Which setups are producing my strongest expectancy?" },
+  { index: "04", type: "REVIEW", text: "Turn my last 10 journal entries into two priorities for next week." },
+];
+
+const DATA_SOURCES = [
+  ["Trades", "Imported and tagged"],
+  ["Check-ins", "Readiness and context"],
+  ["Plans", "Setups, levels, and risk"],
+  ["Journals", "Lessons and behavior"],
 ];
 
 function getMessageText(message) {
   if (!message?.parts?.length) return "";
-  return message.parts
-    .filter((part) => part.type === "text")
-    .map((part) => part.text)
-    .join("");
+  return message.parts.filter((part) => part.type === "text").map((part) => part.text).join("");
 }
 
 function headerDate() {
-  return new Date()
-    .toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    })
-    .toUpperCase();
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).toUpperCase();
+}
+
+function StatusMark() {
+  return <span className={styles.statusMark}><i /><i /></span>;
+}
+
+function ConnectionSetup({ chatgpt, startLogin, codeCopied, copyUserCode }) {
+  const pending = chatgpt.isConnecting || chatgpt.isPending;
+
+  return (
+    <div className={styles.connectWorkspace}>
+      <section className={styles.connectStory}>
+        <p className={styles.connectEyebrow}>BRING YOUR OWN CHATGPT</p>
+        <h2>Your process.<br />Your data.<br /><span>Your assistant.</span></h2>
+        <p className={styles.connectLead}>Connect your ChatGPT subscription and ask questions grounded in your Libertrade history.</p>
+        <ol>
+          <li><span>01</span><div><strong>Connect ChatGPT</strong><p>Use your own ChatGPT subscription.</p></div></li>
+          <li><span>02</span><div><strong>Ask about your process</strong><p>Trades, readiness, plans, and journals become the context.</p></div></li>
+          <li><span>03</span><div><strong>Get a focused answer</strong><p>Turn stored data into patterns and next actions.</p></div></li>
+        </ol>
+      </section>
+
+      <section className={styles.connectCard}>
+        <div className={styles.connectGraphic} aria-hidden="true"><i /><i /><span>∞</span></div>
+        <p>PRIVATE CONNECTION</p>
+        <h3>Connect your ChatGPT subscription.</h3>
+        <p>Inference runs through your account. Libertrade supplies the relevant trading context for the question you ask.</p>
+        <button type="button" onClick={startLogin} disabled={pending}>
+          {pending ? "Connecting…" : "Continue with ChatGPT"}<span>↗</span>
+        </button>
+
+        {chatgpt.isPending && chatgpt.userCode && (
+          <div className={styles.pendingCode} aria-live="polite">
+            <span>ENTER THIS CODE IN THE CHATGPT WINDOW</span>
+            <div><code>{chatgpt.userCode}</code><button type="button" onClick={copyUserCode}>Copy</button></div>
+            <p className={codeCopied ? styles.copiedMessage : ""}>
+              {codeCopied ? "✓ Code copied to clipboard" : "Copy the code, then paste it into the connection window."}
+            </p>
+          </div>
+        )}
+
+        {chatgpt.error && <div className={styles.error} role="alert">{chatgpt.error}</div>}
+
+        <div className={styles.privacyList}>
+          <span><i>✓</i> Uses your own subscription</span>
+          <span><i>✓</i> Disconnect at any time</span>
+          <span><i>✓</i> No separate AI usage fee</span>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function ConnectedWorkspace({ chatgpt, messages, status, error, input, setInput, handleSend, scrollRef }) {
+  const isStreaming = status === "streaming" || status === "submitted";
+
+  return (
+    <div className={styles.workspace}>
+      <section className={styles.chatPanel}>
+        <header className={styles.panelHead}>
+          <div><p>PROCESS INTELLIGENCE</p><h2>Ask your trading data.</h2></div>
+          <div className={styles.connectedBadge}><StatusMark /><span>ChatGPT connected</span></div>
+        </header>
+
+        <div className={styles.messageArea} ref={scrollRef}>
+          {messages.length === 0 ? (
+            <div className={styles.chatEmpty}>
+              <span className={styles.orbitMark} aria-hidden="true"><i /><i /><i /></span>
+              <p className={styles.chatEyebrow}>YOUR PROCESS, IN CONTEXT</p>
+              <h3>What do you want<br />to understand?</h3>
+              <p>Ask about a session, compare patterns across weeks, or turn your journal into a specific next action.</p>
+            </div>
+          ) : (
+            <div className={styles.messages}>
+              {messages.map((message) => {
+                const text = getMessageText(message);
+                if (!text && message.role !== "assistant") return null;
+                return (
+                  <article className={`${styles.message} ${message.role === "user" ? styles.userMessage : styles.assistantMessage}`} key={message.id}>
+                    <span>{message.role === "user" ? "YOU" : "ASSISTANT"}</span>
+                    <p>{text || (isStreaming ? "Thinking…" : "")}</p>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {error && <div className={styles.error} role="alert">{error.message || "Something went wrong. Try again."}</div>}
+
+        <form className={styles.composer} onSubmit={(event) => { event.preventDefault(); void handleSend(); }}>
+          <div className={styles.contextChips}><span>TRADES</span><span>CHECK-INS</span><span>PLANS</span><span>JOURNALS</span></div>
+          <textarea
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            onKeyDown={(event) => {
+              if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+                event.preventDefault();
+                void handleSend();
+              }
+            }}
+            placeholder="Ask a question about your process…"
+            rows={3}
+            disabled={isStreaming}
+          />
+          <div className={styles.composerFoot}>
+            <small>Relevant account data is added automatically · Ctrl+Enter to send</small>
+            <button type="submit" disabled={isStreaming || !input.trim()}>{isStreaming ? "Thinking…" : "Ask assistant"}<b>↗</b></button>
+          </div>
+        </form>
+      </section>
+
+      <aside className={styles.insightRail}>
+        <section className={styles.promptSection}>
+          <div className={styles.railHead}><p>START WITH A QUESTION</p><span>04 prompts</span></div>
+          <div className={styles.promptList}>
+            {PROMPTS.map((prompt) => (
+              <button type="button" key={prompt.index} onClick={() => setInput(prompt.text)} disabled={isStreaming}>
+                <span>{prompt.index}</span><div><small>{prompt.type}</small><strong>{prompt.text}</strong></div><b>↗</b>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.dataSection}>
+          <div className={styles.railHead}><p>DATA AVAILABLE</p><span>LIVE</span></div>
+          <div className={styles.dataList}>
+            {DATA_SOURCES.map(([label, detail]) => <div key={label}><span>{label}</span><strong>Ready</strong><small>{detail}</small></div>)}
+          </div>
+        </section>
+
+        <div className={styles.accountStrip}>
+          <span>{chatgpt.user?.email || "CHATGPT ACCOUNT"}</span>
+          <button type="button" onClick={() => void chatgpt.logout()}>Disconnect</button>
+        </div>
+      </aside>
+    </div>
+  );
 }
 
 function AssistantChat({ chatgpt }) {
   const [input, setInput] = useState("");
+  const [codeCopied, setCodeCopied] = useState(false);
   const scrollRef = useRef(null);
-
-  const transport = useMemo(
-    () => new DefaultChatTransport({ api: "/api/assistant" }),
-    []
-  );
-
-  const { messages, sendMessage, status, error, clearError } = useChat({
-    transport,
-  });
-
+  const transport = useMemo(() => new DefaultChatTransport({ api: "/api/assistant" }), []);
+  const { messages, sendMessage, status, error, clearError } = useChat({ transport });
   const isStreaming = status === "streaming" || status === "submitted";
-  const canChat = chatgpt.isAuthenticated;
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, status]);
 
+  useEffect(() => {
+    if (!chatgpt.isPending || !chatgpt.userCode) {
+      setCodeCopied(false);
+      return undefined;
+    }
+
+    let active = true;
+    navigator.clipboard?.writeText(chatgpt.userCode).then(() => {
+      if (active) setCodeCopied(true);
+    }).catch(() => {
+      if (active) setCodeCopied(false);
+    });
+    return () => { active = false; };
+  }, [chatgpt.isPending, chatgpt.userCode]);
+
+  async function copyUserCode() {
+    if (!chatgpt.userCode) return;
+    try {
+      await navigator.clipboard.writeText(chatgpt.userCode);
+      setCodeCopied(true);
+    } catch {
+      setCodeCopied(false);
+    }
+  }
+
   async function handleSend(text) {
     const trimmed = (text ?? input).trim();
-    if (!trimmed || !canChat || isStreaming) return;
+    if (!trimmed || !chatgpt.isAuthenticated || isStreaming) return;
     clearError();
     setInput("");
     await sendMessage({ text: trimmed });
   }
 
   function startLogin() {
-    const popup = openLoginWithChatGPTConsentPopup({
-      appName: "Libertrade Loop",
-      login: chatgpt.login,
-    });
+    const popup = openLoginWithChatGPTConsentPopup({ appName: "Libertrade Loop", login: chatgpt.login });
     if (!popup) void chatgpt.login();
   }
 
+  if (!chatgpt.isAuthenticated) {
+    return <ConnectionSetup chatgpt={chatgpt} startLogin={startLogin} codeCopied={codeCopied} copyUserCode={copyUserCode} />;
+  }
+
   return (
-    <div className="assistant-glass-shell">
-      <div className="assistant-panel-head">
-        <div>
-          <h2 className="assistant-panel-title">Trading data chat</h2>
-          <p className="assistant-panel-desc">
-            {canChat
-              ? "Connected to ChatGPT. Ask about any session in your Libertrade history."
-              : "Connect ChatGPT to start querying your Libertrade data."}
-          </p>
-        </div>
-        {canChat && (
-          <div className="assistant-panel-actions">
-            {chatgpt.user?.email && (
-              <span className="assistant-panel-meta hybrid-label-sm">{chatgpt.user.email}</span>
-            )}
-            <button
-              type="button"
-              className="assistant-disconnect-btn"
-              onClick={() => void chatgpt.logout()}
-            >
-              Disconnect
-            </button>
-          </div>
-        )}
-      </div>
-
-      {!canChat ? (
-        <div className="assistant-connect-panel">
-          <div className="assistant-connect-copy">
-            <div className="hybrid-label">Bring your own ChatGPT</div>
-            <p>
-              Sign in with your ChatGPT account so inference is billed to your subscription, not
-              Libertrade. Your tokens never leave the server.
-            </p>
-          </div>
-          <button
-            type="button"
-            className="assistant-login-btn"
-            onClick={startLogin}
-            disabled={chatgpt.isConnecting || chatgpt.isPending}
-          >
-            {chatgpt.isConnecting || chatgpt.isPending ? "Connecting…" : "Login with ChatGPT"}
-          </button>
-          {chatgpt.isPending && chatgpt.userCode && (
-            <div className="assistant-pending-code">
-              <span className="hybrid-label-sm">Enter this code in the OpenAI window</span>
-              <code>{chatgpt.userCode}</code>
-            </div>
-          )}
-          {chatgpt.error && <div className="assistant-error">{chatgpt.error}</div>}
-        </div>
-      ) : (
-        <>
-          <div className="assistant-messages" ref={scrollRef}>
-            {messages.length === 0 ? (
-              <div className="assistant-empty">
-                <div className="assistant-empty-title">Ask about your process</div>
-                <p className="assistant-empty-desc">
-                  The assistant can pull trades, readiness check-ins, session plans, and close-the-loop
-                  journals from your account.
-                </p>
-                <div className="assistant-suggestions">
-                  {SUGGESTIONS.map((suggestion) => (
-                    <button
-                      key={suggestion}
-                      type="button"
-                      className="assistant-suggestion"
-                      onClick={() => handleSend(suggestion)}
-                      disabled={isStreaming}
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              messages.map((message) => {
-                const text = getMessageText(message);
-                if (!text && message.role !== "assistant") return null;
-                return (
-                  <div
-                    key={message.id}
-                    className={`assistant-message assistant-message--${message.role}`}
-                  >
-                    <div className="assistant-message-label">
-                      {message.role === "user" ? "You" : "Assistant"}
-                    </div>
-                    <div
-                      className={`assistant-message-body${
-                        !text && isStreaming ? " assistant-message-body--pending" : ""
-                      }`}
-                    >
-                      {text || (isStreaming ? "Thinking…" : "")}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {error && (
-            <div className="assistant-error" role="alert">
-              {error.message || "Something went wrong. Try again."}
-            </div>
-          )}
-
-          <form
-            className="assistant-composer"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void handleSend();
-            }}
-          >
-            <textarea
-              className="assistant-input"
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              onKeyDown={(event) => {
-                if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
-                  event.preventDefault();
-                  void handleSend();
-                }
-              }}
-              placeholder="Ask about your trades, readiness, or journal…"
-              rows={3}
-              disabled={isStreaming}
-            />
-            <div className="assistant-composer-actions">
-              <span className="assistant-composer-hint">Ctrl+Enter to send</span>
-              <button
-                type="submit"
-                className="assistant-send-btn"
-                disabled={isStreaming || !input.trim()}
-              >
-                {isStreaming ? "Streaming…" : "Send"}
-              </button>
-            </div>
-          </form>
-        </>
-      )}
-    </div>
+    <ConnectedWorkspace
+      chatgpt={chatgpt}
+      messages={messages}
+      status={status}
+      error={error}
+      input={input}
+      setInput={setInput}
+      handleSend={handleSend}
+      scrollRef={scrollRef}
+    />
   );
 }
 
 export default function AssistantPage() {
   return (
     <WorkflowPageLayout>
-      <div className="assistant-page">
-        <header className="assistant-header">
-          <div className="hybrid-eyebrow">{headerDate()}</div>
-          <h1 className="hybrid-page-title">
-            AI Assistant<span className="hybrid-page-title-stop" aria-hidden="true" />
-          </h1>
-          <p className="assistant-header-desc">
-            Ask questions about your trades, readiness, plans, and journals. Answers run on your own
-            ChatGPT subscription.
-          </p>
+      <div className={styles.page}>
+        <header className={styles.header}>
+          <p>{headerDate()}</p>
+          <h1 className="hybrid-page-title">AI Assistant<span className="hybrid-page-title-stop" aria-hidden="true" /></h1>
+          <div className={styles.headerBottom}>
+            <p>Ask better questions about the process behind your results.</p>
+            <span>YOUR DATA · YOUR CHATGPT</span>
+          </div>
         </header>
 
         <LoginWithChatGPT consent={{ appName: "Libertrade Loop" }}>

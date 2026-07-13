@@ -1,5 +1,6 @@
 import Link from "next/link";
 import SessionPlanCarousel from "./SessionPlanCarousel";
+import CloseLoopCarousel from "./CloseLoopCarousel";
 import styles from "./landing-redesign.module.css";
 
 export const metadata = {
@@ -119,22 +120,7 @@ function Metric({ label, value, width }) {
 }
 
 function ReviewMockup() {
-  return (
-    <div className={styles.productWindow} aria-label="Close the LOOP product preview">
-      <div className={styles.windowBar}><i /><i /><i /><span>CLOSE THE LOOP</span></div>
-      <div className={styles.mockBody}>
-        <div className={styles.reviewHead}>
-          <div><p className={styles.mockLabel}>SESSION REVIEW</p><h3>Did you trade the plan?</h3></div>
-          <strong>+1.35R</strong>
-        </div>
-        <div className={styles.reviewGrid}>
-          <div><span>EXECUTION</span><b>8.2</b><small>Strong process</small></div>
-          <div><span>PLAYBOOK</span><b>4 / 5</b><small>One impulsive add</small></div>
-          <blockquote>“Waited for confirmation. Protected risk. No chase after the first move.”</blockquote>
-        </div>
-      </div>
-    </div>
-  );
+  return <CloseLoopCarousel />;
 }
 
 function StageMockup({ kind }) {
@@ -266,22 +252,59 @@ export default function LandingRedesignPreview() {
                 <h3>The trading week<br />scored in one place.</h3>
                 <p>Compare this week to last, spot the patterns, and refine next week with two clear focuses.</p>
               </div>
-              <div className={styles.weeklyScore}>
-                <div><span>WEEK 27</span><strong>82</strong><small>PROCESS SCORE</small></div>
-                <blockquote>“Protected risk on four of five sessions. Next focus: no impulsive adds.”</blockquote>
+              <div className={styles.weeklySnapshot} aria-label="Weekly Review product preview">
+                <div className={styles.weeklySnapshotBar}>
+                  <div><span>JUL 06–10</span><strong>WEEKLY REVIEW.</strong></div>
+                  <b>COMPLETE</b>
+                </div>
+
+                <div className={styles.weeklyOneLine}>
+                  <span>WEEK IN ONE LINE</span>
+                  <p>Patient execution. Risk stayed controlled when momentum faded.</p>
+                </div>
+
+                <div className={styles.weeklyMetrics}>
+                  <div><span>AVG READINESS</span><strong>76</strong><small className={styles.positiveChange}>+3 vs last week</small></div>
+                  <div><span>PLAYBOOK</span><strong>64%</strong><small className={styles.negativeChange}>−8 pts vs last week</small></div>
+                  <div><span>RISK PLAN</span><strong>4/5</strong><small>Same as last week</small></div>
+                </div>
+
+                <div className={styles.weeklyComparison}>
+                  <div className={styles.weeklyComparisonHead}><span>METRIC</span><span>THIS WEEK</span><span>PRIOR</span><span>CHANGE</span></div>
+                  <div><strong>Avg readiness</strong><span>76</span><span>73</span><b className={styles.positiveChange}>+3</b></div>
+                  <div><strong>Playbook</strong><span>64%</span><span>72%</span><b className={styles.negativeChange}>−8 pts</b></div>
+                  <div><strong>Risk plan</strong><span>4/5</span><span>4/5</span><b>Same</b></div>
+                </div>
               </div>
             </article>
 
             <article className={styles.propFeature}>
               <div className={styles.featureCopy}>
                 <span>PROP TRACKER / 03</span>
-                <h3>Know the room you have left.</h3>
-                <p>Keep the target, drawdown, and required trading days visible beside the process protecting the account.</p>
+                <h3>Know what prop trading is really paying you.</h3>
+                <p>Track every evaluation fee and payout to see your true net position across prop firms.</p>
               </div>
-              <div className={styles.propProgress}>
-                <div><span>50K EVALUATION</span><b>94.6%</b></div>
-                <i><em /></i>
-                <div className={styles.propStats}><span>+$2,840</span><span>$1,420 room</span><span>8 / 10 days</span></div>
+              <div className={styles.propSnapshot} aria-label="Prop profits product preview">
+                <div className={styles.propSnapshotHead}>
+                  <div><span>NET POSITION</span><strong>+$2,620</strong></div>
+                  <b>IN PROFIT</b>
+                </div>
+
+                <div className={styles.propSnapshotKpis}>
+                  <div><span>TOTAL PAYOUTS</span><strong>$3,000</strong><small>3 payouts</small></div>
+                  <div><span>TOTAL SPEND</span><strong>$380</strong><small>4 evaluations</small></div>
+                </div>
+
+                <div className={styles.propFlow}>
+                  <div><span>PAYOUTS VERSUS SPEND</span></div>
+                  <svg viewBox="0 0 360 115" preserveAspectRatio="none" aria-hidden="true">
+                    <defs><linearGradient id="prop-payout-fill" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#268eea" stopOpacity=".28" /><stop offset="1" stopColor="#268eea" stopOpacity="0" /></linearGradient></defs>
+                    <path d="M0 98 C48 96 67 78 110 73 S167 62 205 48 S265 40 300 25 S337 18 360 12 V112 H0Z" fill="url(#prop-payout-fill)" />
+                    <path d="M0 98 C48 96 67 78 110 73 S167 62 205 48 S265 40 300 25 S337 18 360 12" fill="none" stroke="#4ca3ef" strokeWidth="2.4" strokeLinecap="round" />
+                    <path d="M0 105 C70 104 110 101 158 100 S255 95 360 92" fill="none" stroke="#ff7970" strokeWidth="1.6" strokeLinecap="round" />
+                  </svg>
+                  <div className={styles.propLegend}><span><i /> Payouts $3,000</span><span><i /> Spend $380</span></div>
+                </div>
               </div>
             </article>
           </div>
