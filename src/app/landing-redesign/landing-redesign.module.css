@@ -543,16 +543,55 @@
 .featureCopy h3 { max-width: 33rem; margin: 0; font-family: var(--display); font-size: clamp(2.1rem, 3.6vw, 3.65rem); font-weight: 600; letter-spacing: -.05em; line-height: 1; text-wrap: balance; }
 .featureCopy > p { max-width: 32rem; margin: 1.4rem 0 0; color: var(--copy); font-size: .98rem; line-height: 1.75; }
 
-.analyticsFeature { display: grid; grid-template-columns: .72fr 1.28fr; align-items: center; gap: clamp(3rem, 7vw, 7rem); min-height: 42rem; padding: 5rem 0; }
-.analyticsVisual { min-height: 30rem; padding: clamp(1.4rem, 3vw, 2.2rem); border-top: 1px solid var(--line-strong); background: linear-gradient(150deg, rgba(7,21,40,.86), rgba(3,11,24,.65)); box-shadow: 0 35px 90px rgba(0,35,80,.24); }
-.analyticsTop { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(91,145,204,.14); }
-.analyticsTop > div { display: flex; min-height: 7.5rem; flex-direction: column; gap: .45rem; padding: 1rem; background: #071323; }
-.analyticsTop span { color: #6f849c; font-family: 'DM Mono', var(--font-mono); font-size: .55rem; letter-spacing: .12em; }
-.analyticsTop strong { font-family: 'DM Mono', var(--font-mono); font-size: 1.4rem; font-weight: 500; }
-.analyticsTop > div:first-child strong { color: #56b0a6; }
-.analyticsTop small { color: #657a92; }
-.chart { height: 18rem; margin-top: 1.5rem; background-image: linear-gradient(rgba(90,139,196,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(90,139,196,.08) 1px, transparent 1px); background-size: 25% 25%; }
-.chart svg { width: 100%; height: 100%; }
+.statsFeature { display: grid; grid-template-columns: .72fr 1.28fr; align-items: center; gap: clamp(3rem, 7vw, 7rem); min-height: 42rem; padding: 5rem 0; }
+.statsVisual { min-height: 39rem; padding: clamp(1rem, 2vw, 1.5rem); border-top: 1px solid var(--line-strong); background: linear-gradient(150deg, rgba(7,21,40,.9), rgba(3,11,24,.72)); box-shadow: 0 35px 90px rgba(0,35,80,.24); }
+.statsKpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: rgba(91,145,204,.13); }
+.statsKpis > div { display: flex; min-width: 0; min-height: 5.4rem; flex-direction: column; gap: .28rem; padding: .72rem; background: #071323; }
+.statsKpis span, .statsVisual header span, .performanceScore > span { color: #70859d; font-family: 'DM Mono', var(--font-mono); font-size: .45rem; letter-spacing: .11em; }
+.statsKpis strong { overflow: hidden; font-family: 'DM Mono', var(--font-mono); font-size: .92rem; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.statsKpis > div:first-child strong, .statsKpis > div:nth-child(3) strong { color: #56b0a6; }
+.statsKpis small { color: #61768e; font-size: .48rem; white-space: nowrap; }
+.outcomesKpi small { display: flex; align-items: center; gap: .3rem; }
+.outcomesKpi small i { width: .3rem; height: .3rem; border-radius: 50%; background: #4ca3ef; }
+.outcomesKpi small i:last-of-type { margin-left: .2rem; background: #a76066; }
+
+.statsMain { display: grid; grid-template-columns: 9.5rem 1fr; gap: .75rem; margin-top: .75rem; }
+.performanceScore, .equityPanel, .dailyPanel, .timePanel { border: 1px solid rgba(104,149,199,.14); background: rgba(8,20,35,.72); }
+.performanceScore { display: flex; min-height: 14.5rem; flex-direction: column; align-items: center; padding: 1rem .8rem; }
+.performanceScore > span { align-self: flex-start; }
+.scoreGauge { display: grid; width: 6.8rem; aspect-ratio: 1; place-content: center; margin: 1rem 0 .55rem; border-radius: 50%; background: radial-gradient(circle, #081423 59%, transparent 60%), conic-gradient(from 225deg, #2789df 0 68%, rgba(101,135,172,.15) 68% 75%, transparent 75%); box-shadow: 0 0 2rem rgba(39,137,223,.12); }
+.scoreGauge strong { font-family: 'DM Mono', var(--font-mono); font-size: 1.65rem; font-weight: 500; }
+.scoreGauge small { color: #7890aa; font-family: 'DM Mono', var(--font-mono); font-size: .58rem; }
+.performanceScore > b { color: #56b0a6; font-size: .6rem; font-weight: 600; }
+.performanceScore > p { display: flex; width: 100%; justify-content: space-between; margin: .85rem 0 0; color: #657b92; font-size: .55rem; }
+.performanceScore > p strong { color: #c3d1df; font-weight: 500; }
+
+.equityPanel { min-width: 0; padding: 1rem; }
+.statsVisual header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.statsVisual header b { color: #8fa5bd; font-family: 'DM Mono', var(--font-mono); font-size: .43rem; font-weight: 500; letter-spacing: .07em; }
+.equityChart { position: relative; height: 11.4rem; margin-top: .8rem; overflow: hidden; background-image: linear-gradient(rgba(90,139,196,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(90,139,196,.08) 1px, transparent 1px); background-size: 25% 25%; }
+.equityChart svg { width: 100%; height: 100%; }
+.equityValue { position: absolute; top: .55rem; right: .6rem; padding: .28rem .45rem; color: #7bc0fb; border: 1px solid rgba(76,163,239,.22); background: rgba(4,14,26,.76); font-family: 'DM Mono', var(--font-mono); font-size: .52rem; }
+
+.statsLower { display: grid; grid-template-columns: 1.15fr .85fr; gap: .75rem; margin-top: .75rem; }
+.dailyPanel, .timePanel { min-height: 10rem; padding: .9rem; }
+.dailyBars { position: relative; display: flex; height: 7.1rem; align-items: flex-end; gap: .35rem; padding: 0 .25rem 2rem; }
+.dailyBars::after, .timeBars::after { content: ""; position: absolute; right: 0; bottom: 2rem; left: 0; height: 1px; background: rgba(121,154,190,.18); }
+.dailyBars i { position: relative; z-index: 1; width: 100%; height: 35%; border-radius: .18rem .18rem 0 0; background: linear-gradient(#3c83c3, #1e5382); }
+.dailyBars i:nth-child(2), .dailyBars i:nth-child(6), .dailyBars i:nth-child(12), .dailyBars i:nth-child(16) { height: 58%; }
+.dailyBars i:nth-child(4), .dailyBars i:nth-child(9), .dailyBars i:nth-child(15) { height: 76%; }
+.dailyBars i:nth-child(5), .dailyBars i:nth-child(8), .dailyBars i:nth-child(11) { height: 22%; }
+.dailyBars i.lossBar { height: 27%; border-radius: 0 0 .18rem .18rem; background: linear-gradient(#7e4449, #a15c61); transform: translateY(100%); }
+.dailyBars i.lossBar:nth-child(7) { height: 48%; }
+
+.timeBars { position: relative; display: grid; height: 7.1rem; grid-template-columns: repeat(5, 1fr); align-items: end; gap: .55rem; padding: 0 .2rem 1.4rem; }
+.timeBars > div { position: relative; z-index: 1; display: grid; height: 100%; grid-template-rows: 1fr auto; align-items: end; gap: .35rem; }
+.timeBars i { display: block; height: 62%; border-radius: .2rem .2rem 0 0; background: linear-gradient(rgba(56,126,190,.85), rgba(25,72,112,.85)); }
+.timeBars > div:nth-child(2) i { height: 38%; }
+.timeBars > div:nth-child(4) i { height: 28%; }
+.timeBars > div:nth-child(5) i { height: 18%; }
+.timeBars .timeLoss i { height: 26%; border-radius: 0 0 .2rem .2rem; background: linear-gradient(#7b4247, #a15c61); transform: translateY(100%); }
+.timeBars span { color: #687d94; font-family: 'DM Mono', var(--font-mono); font-size: .42rem; text-align: center; }
 
 .featureSplit { display: grid; grid-template-columns: 1.12fr .88fr; align-items: start; gap: clamp(2rem, 5vw, 5rem); margin-top: 5rem; }
 .weeklyFeature, .propFeature { position: relative; padding: clamp(2rem, 4vw, 4rem); background: linear-gradient(145deg, rgba(8,24,43,.82), rgba(3,11,24,.62)); }
@@ -594,7 +633,7 @@
 .footer a:hover { color: var(--white); }
 
 @media (prefers-reduced-motion: no-preference) and (min-width: 901px) {
-  .stageCopy, .productWindow, .analyticsFeature, .weeklyFeature, .propFeature { animation: reveal linear both; animation-timeline: view(); animation-range: entry 5% cover 34%; }
+  .stageCopy, .productWindow, .statsFeature, .weeklyFeature, .propFeature { animation: reveal linear both; animation-timeline: view(); animation-range: entry 5% cover 34%; }
   .productWindow { animation-name: revealWindow; }
   @keyframes reveal { from { opacity: .15; transform: translateY(3.5rem); } to { opacity: 1; transform: translateY(0); } }
   @keyframes revealWindow { from { opacity: .12; transform: translateY(4rem) scale(.96); filter: blur(.3rem); } to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
@@ -608,7 +647,7 @@
   .stage:nth-of-type(even) .stageCopy { grid-row: 1; }
   .workflowRail { display: none; }
   .featuresHead { grid-template-columns: 1fr; gap: 2.5rem; }
-  .analyticsFeature { grid-template-columns: 1fr; gap: 4rem; }
+  .statsFeature { grid-template-columns: 1fr; gap: 4rem; }
   .featureSplit { grid-template-columns: 1fr; }
   .propFeature { margin-top: 0; }
   .finalCta { grid-template-columns: 1fr; gap: 3rem; }
@@ -664,12 +703,15 @@
   .loopStatement { min-height: 36rem; padding: 7rem 1rem; }
   .features { padding: 8rem 0 7rem; }
   .featuresHead { margin-bottom: 4rem; }
-  .analyticsFeature { min-height: 0; padding: 3rem 0 6rem; }
+  .statsFeature { min-height: 0; padding: 3rem 0 6rem; }
   .featureCopy h3 { font-size: 2.55rem; }
-  .analyticsVisual { min-height: 25rem; padding: 1rem; }
-  .analyticsTop > div { min-height: 6rem; padding: .75rem; }
-  .analyticsTop strong { font-size: 1rem; }
-  .chart { height: 15rem; }
+  .statsVisual { min-height: 0; padding: 1rem; }
+  .statsKpis { grid-template-columns: 1fr 1fr; }
+  .statsKpis > div { min-height: 5rem; }
+  .statsKpis > div:last-child { grid-column: 1 / -1; }
+  .statsMain, .statsLower { grid-template-columns: 1fr; }
+  .performanceScore { min-height: 13rem; }
+  .equityChart { height: 12rem; }
   .featureSplit { margin-top: 0; }
   .weeklyFeature, .propFeature { min-height: 0; padding: 2rem 1.35rem 3rem; }
   .weeklyScore { grid-template-columns: 1fr; margin-top: 3rem; }

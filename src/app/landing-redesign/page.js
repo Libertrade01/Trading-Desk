@@ -12,24 +12,24 @@ const stages = [
   {
     number: "01",
     eyebrow: "Before the session",
-    title: "Know your state before you trade.",
-    body: "Score readiness, name the market context, and decide whether you should be taking risk at all.",
+    title: "Rate your state before you trade.",
+    body: "Build your readiness score from Body, Mind, and External. Then tick off your final checks before the open.",
     proof: "Clarity before execution",
     kind: "checkin",
   },
   {
     number: "02",
     eyebrow: "During the session",
-    title: "Remove decisions from the moment.",
-    body: "Write the bias, levels, valid setups, and risk limits before emotion has a vote.",
+    title: "Set the plan before you execute.",
+    body: "Mark your levels, pick your setups, lock in risk limits, and define your focus before the open.",
     proof: "Your risk, already decided",
     kind: "plan",
   },
   {
     number: "03",
     eyebrow: "After the session",
-    title: "Turn execution into tomorrow’s edge.",
-    body: "Review adherence while the session is fresh and carry one useful lesson into the next open.",
+    title: "Close the loop and refine the process.",
+    body: "Import and tag your trades. Score process adherence. Walk away with one lesson to take into tomorrow.",
     proof: "Review. Refine. Repeat.",
     kind: "review",
   },
@@ -143,20 +143,52 @@ function StageMockup({ kind }) {
   return <ReviewMockup />;
 }
 
-function AnalyticsVisual() {
+function StatsVisual() {
   return (
-    <div className={styles.analyticsVisual} aria-label="Analytics performance preview">
-      <div className={styles.analyticsTop}>
-        <div><span>NET P&amp;L</span><strong>+$8,420</strong><small>+12.4%</small></div>
-        <div><span>EXPECTANCY</span><strong>1.42R</strong><small>+0.18R</small></div>
-        <div><span>WIN RATE</span><strong>64%</strong><small>28 trades</small></div>
+    <div className={styles.statsVisual} aria-label="Stats performance preview">
+      <div className={styles.statsKpis}>
+        <div><span>NET P&amp;L</span><strong>+$4,210</strong><small>132 trades</small></div>
+        <div><span>WIN RATE</span><strong>54.7%</strong><small>70W · 58L · 4BE</small></div>
+        <div><span>EXPECTANCY</span><strong>+$31.89</strong><small>per trade</small></div>
+        <div><span>PROFIT FACTOR</span><strong>1.74</strong><small>healthy edge</small></div>
+        <div className={styles.outcomesKpi}><span>OUTCOMES</span><strong>70 / 58</strong><small><i /> wins <i /> losses</small></div>
       </div>
-      <div className={styles.chart}>
-        <svg viewBox="0 0 720 230" preserveAspectRatio="none" aria-hidden="true">
-          <defs><linearGradient id="preview-chart-fill" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#0065bd" stopOpacity=".3" /><stop offset="1" stopColor="#0065bd" stopOpacity="0" /></linearGradient></defs>
-          <path d="M0 205 C60 194 78 164 128 173 S210 126 254 143 S335 88 390 108 S470 67 514 82 S612 33 720 48 V230 H0Z" fill="url(#preview-chart-fill)" />
-          <path d="M0 205 C60 194 78 164 128 173 S210 126 254 143 S335 88 390 108 S470 67 514 82 S612 33 720 48" fill="none" stroke="#4ca3ef" strokeWidth="3" />
-        </svg>
+
+      <div className={styles.statsMain}>
+        <section className={styles.performanceScore}>
+          <span>PERFORMANCE SCORE</span>
+          <div className={styles.scoreGauge}><strong>82</strong><small>/100</small></div>
+          <b>Process holding</b>
+          <p>Consistency <strong>78%</strong></p>
+        </section>
+
+        <section className={styles.equityPanel}>
+          <header><span>EQUITY CURVE</span><b>CUMULATIVE P&amp;L</b></header>
+          <div className={styles.equityChart}>
+            <svg viewBox="0 0 760 230" preserveAspectRatio="none" aria-hidden="true">
+              <defs><linearGradient id="stats-equity-fill" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#2789df" stopOpacity=".34" /><stop offset="1" stopColor="#2789df" stopOpacity="0" /></linearGradient></defs>
+              <path d="M0 207 C42 196 72 176 112 169 S178 139 222 148 S286 111 330 119 S390 83 434 91 S489 55 531 69 S587 68 628 50 S694 42 760 28 V230 H0Z" fill="url(#stats-equity-fill)" />
+              <path d="M0 207 C42 196 72 176 112 169 S178 139 222 148 S286 111 330 119 S390 83 434 91 S489 55 531 69 S587 68 628 50 S694 42 760 28" fill="none" stroke="#4ca3ef" strokeWidth="3" strokeLinecap="round" />
+            </svg>
+            <span className={styles.equityValue}>+$4,210</span>
+          </div>
+        </section>
+      </div>
+
+      <div className={styles.statsLower}>
+        <section className={styles.dailyPanel}>
+          <header><span>DAILY P&amp;L</span></header>
+          <div className={styles.dailyBars} aria-label="Mixed profitable and losing sessions">
+            <i /><i /><i className={styles.lossBar} /><i /><i /><i /><i className={styles.lossBar} /><i /><i /><i className={styles.lossBar} /><i /><i /><i /><i className={styles.lossBar} /><i /><i />
+          </div>
+        </section>
+
+        <section className={styles.timePanel}>
+          <header><span>PERFORMANCE BY TIME</span><b>AVG P&amp;L</b></header>
+          <div className={styles.timeBars}>
+            <div><i /><span>9:30</span></div><div><i /><span>10:00</span></div><div className={styles.timeLoss}><i /><span>10:30</span></div><div><i /><span>11:00</span></div><div><i /><span>11:30</span></div>
+          </div>
+        </section>
       </div>
     </div>
   );
@@ -174,9 +206,9 @@ export default function LandingRedesignPreview() {
           <Link className={styles.navSignIn} href="/login">Sign in</Link>
         </nav>
         <div className={styles.heroContent}>
-          <p className={styles.heroEyebrow}>A process for discretionary traders</p>
+          <p className={styles.heroEyebrow}>A process loop for discretionary traders</p>
           <h1 id="landing-hero-title"><span>Check-in.</span><span>Trade your plan.</span><span>Close the loop.</span></h1>
-          <p className={styles.heroLead}>Prepare before the open. Execute against written rules. Review while the session is still fresh.</p>
+          <p className={styles.heroLead}>Prepare before the open. Execute against written rules. Review to refine your process.</p>
           <div className={styles.heroActions}>
             <Link className={styles.primaryAction} href="/signup">Set up your LOOP <span>↗</span></Link>
             <Link className={styles.textAction} href="/login">Sign in <span>→</span></Link>
@@ -188,8 +220,8 @@ export default function LandingRedesignPreview() {
       <main id="preview-main">
         <section id="landing-workflow" className={styles.workflow} aria-labelledby="workflow-title">
           <div className={styles.sectionIntro}>
-            <p>YOUR TRADING DAY, CONNECTED</p>
-            <h2 id="workflow-title">A repeatable process<br />from open to review.</h2>
+            <p>Your trading day</p>
+            <h2 id="workflow-title">A repeatable process<br />from check-in to review.</h2>
           </div>
           <div className={styles.workflowRail} aria-hidden="true"><i /><i /><i /></div>
           {stages.map((stage) => (
@@ -208,31 +240,31 @@ export default function LandingRedesignPreview() {
 
         <section className={styles.loopStatement} aria-label="The completed trading loop">
           <div className={styles.statementRing} aria-hidden="true" />
-          <p>EVERY SESSION BECOMES DATA</p>
-          <h2>Every review makes<br />the next session better.</h2>
+          <p>REVIEW. REFINE. REPEAT.</p>
+          <h2>The loop compounds.<br />Each review sharpens the next session.</h2>
         </section>
 
         <section className={styles.features} aria-labelledby="features-title">
           <header className={styles.featuresHead}>
-            <div><p>BEYOND THE JOURNAL</p><h2 id="features-title">See the process.<br /><span>Then improve it.</span></h2></div>
-            <p>Performance means more when you can connect the outcome to readiness, preparation, and execution.</p>
+            <div><p>Beyond the loop</p><h2 id="features-title">Process over<br /><span>profits.</span></h2></div>
+            <p>Performance means more when you connect the outcome to readiness, preparation, and execution, not just profits.</p>
           </header>
 
-          <article className={styles.analyticsFeature}>
+          <article className={styles.statsFeature}>
             <div className={styles.featureCopy}>
-              <span>ANALYTICS / 01</span>
+              <span>STATS / 01</span>
               <h3>Know what is actually driving your results.</h3>
-              <p>Connect P&amp;L to setup quality, session type, risk, and playbook adherence.</p>
+              <p>Connect performance to setup quality, session type, risk, and playbook adherence.</p>
             </div>
-            <AnalyticsVisual />
+            <StatsVisual />
           </article>
 
           <div className={styles.featureSplit}>
             <article className={styles.weeklyFeature}>
               <div className={styles.featureCopy}>
                 <span>WEEKLY REVIEW / 02</span>
-                <h3>Seven days.<br />One clear lesson.</h3>
-                <p>Step back from individual trades and choose one improvement for the week ahead.</p>
+                <h3>The trading week<br />scored in one place.</h3>
+                <p>Compare this week to last, spot the patterns, and refine next week with two clear focuses.</p>
               </div>
               <div className={styles.weeklyScore}>
                 <div><span>WEEK 27</span><strong>82</strong><small>PROCESS SCORE</small></div>

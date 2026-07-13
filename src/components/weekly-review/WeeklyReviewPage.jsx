@@ -13,6 +13,7 @@ import {
 } from "../../lib/weekly-process-review";
 import { BEHAVIORAL_FLAG_CATEGORIES } from "../../lib/postmarket-defaults";
 import WorkflowPageLayout from "../WorkflowPageLayout";
+import styles from "./WeeklyReviewPage.module.css";
 
 function headerDate() {
   return new Date().toLocaleDateString("en-US", {
@@ -86,7 +87,7 @@ function WeekComparisonTable({ summary, priorSummary }) {
 
   return (
     <section className="wpr-section">
-      <h2 className="wpr-section-title">Vs last week</h2>
+      <h2 className="wpr-section-title">This week versus last.</h2>
       <p className="wpr-section-hint">Process scores compared to the prior Mon–Fri week.</p>
       <div className="wpr-compare-wrap">
         <table className="wpr-compare-table">
@@ -129,7 +130,7 @@ function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving, sav
   const riskDelta = formatPriorWeekDelta(summary.riskPlanFollowed, priorSummary?.riskPlanFollowed, { suffix: " days" });
 
   return (
-    <div className="wpr-main wpr-glass-shell">
+    <div className={`${styles.review} wpr-main wpr-glass-shell`}>
       <div className="wpr-main-head pm-checkin-header">
         <div className="wpr-main-eyebrow hybrid-eyebrow">{data.weekLabel}</div>
         <h1 className="hybrid-page-title">
@@ -207,8 +208,10 @@ function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving, sav
         </div>
       </section>
 
+      {priorSummary && <WeekComparisonTable summary={summary} priorSummary={priorSummary} />}
+
       <section className="wpr-section">
-        <h2 className="wpr-section-title">Accountability breakdown</h2>
+        <h2 className="wpr-section-title">What held. What slipped.</h2>
         <div className="wpr-behavior-grid">
           {BEHAVIORAL_FLAG_CATEGORIES.map((cat) => (
             <div key={cat.id} className="wpr-behavior-card">
@@ -266,7 +269,7 @@ function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving, sav
       </section>
 
       <section className="wpr-section wpr-section--focus-retro">
-        <h2 className="wpr-section-title">Focus follow up</h2>
+        <h2 className="wpr-section-title">Did you hold last week&apos;s commitment?</h2>
         <p className="wpr-section-hint">
           From last week&apos;s review. If N, say what got in the way.
         </p>
@@ -339,10 +342,8 @@ function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving, sav
         )}
       </section>
 
-      {priorSummary && <WeekComparisonTable summary={summary} priorSummary={priorSummary} />}
-
       <section className="wpr-section">
-        <h2 className="wpr-section-title">Reflection</h2>
+        <h2 className="wpr-section-title">Spot the pattern. Refine the process.</h2>
         <div className="wpr-reflections">
           <div className="wpr-field">
             <label className="wpr-field-label hybrid-label" htmlFor="wpr-pattern">
@@ -402,8 +403,8 @@ function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving, sav
       </section>
 
       <section className="wpr-section">
-        <h2 className="wpr-section-title">Focus next week</h2>
-        <p className="wpr-section-hint">Two focus items for next week that you&apos;ll be reminded of each day before the session.</p>
+        <h2 className="wpr-section-title">Set your focus for next week.</h2>
+        <p className="wpr-section-hint">Set two priorities to carry into every session.</p>
         <div className="wpr-focus-fields">
           <input
             type="text"
@@ -525,11 +526,13 @@ export default function WeeklyReviewPage() {
   if (!data || !manual) {
     return (
       <WorkflowPageLayout>
-        <div className="pm-topbar">
-          <span>{headerDate()}</span>
-        </div>
-        <div className="wpr-main wpr-glass-shell">
-          <p className="wpr-section-hint">Could not load this week. Check your connection and try again.</p>
+        <div className={styles.page}>
+          <div className="pm-topbar">
+            <span>{headerDate()}</span>
+          </div>
+          <div className="wpr-main wpr-glass-shell">
+            <p className="wpr-section-hint">Could not load this week. Check your connection and try again.</p>
+          </div>
         </div>
       </WorkflowPageLayout>
     );
@@ -537,11 +540,12 @@ export default function WeeklyReviewPage() {
 
   return (
     <WorkflowPageLayout>
-      <div className="pm-topbar">
-        <span>{headerDate()}</span>
-      </div>
+      <div className={styles.page}>
+        <div className="pm-topbar">
+          <span>{headerDate()}</span>
+        </div>
 
-      <div className={`wpr-layout${showWeekPicker ? "" : " wpr-layout--single"}`}>
+        <div className={`wpr-layout${showWeekPicker ? "" : " wpr-layout--single"}`}>
         {showWeekPicker && (
           <aside className="wpr-sidebar" aria-label="Week list">
             <div className="wpr-sidebar-label hybrid-eyebrow">Reviews</div>
@@ -585,14 +589,15 @@ export default function WeeklyReviewPage() {
           </div>
         )}
 
-        <WeeklyReviewContent
-          data={data}
-          manual={manual}
-          onManualChange={handleManualChange}
-          onSave={handleSave}
-          saving={saving}
-          saved={saved}
-        />
+          <WeeklyReviewContent
+            data={data}
+            manual={manual}
+            onManualChange={handleManualChange}
+            onSave={handleSave}
+            saving={saving}
+            saved={saved}
+          />
+        </div>
       </div>
     </WorkflowPageLayout>
   );

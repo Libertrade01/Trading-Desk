@@ -60,18 +60,17 @@
 }
 
 .hybrid-page-title-stop {
-  display: inline;
-  width: auto;
-  height: auto;
-  margin-left: 0;
-  background: none;
-  vertical-align: baseline;
+  display: inline-block;
+  width: 0.18em;
+  height: 0.18em;
+  margin-left: 0.08em;
+  background: #fff;
+  vertical-align: 0.02em;
   border-radius: 0;
 }
 
 .hybrid-page-title-stop::before {
-  content: ".";
-  color: inherit;
+  content: none;
 }
 
 .hybrid-section-title {
@@ -10637,17 +10636,17 @@ input.pm-slider:active::-moz-range-thumb {
 }
 
 .an-title-stop {
-  display: inline;
-  width: auto;
-  height: auto;
-  margin-left: 0;
-  background: none;
-  vertical-align: baseline;
+  display: inline-block;
+  width: 0.18em;
+  height: 0.18em;
+  margin-left: 0.08em;
+  background: #fff;
+  vertical-align: 0.02em;
+  border-radius: 0;
 }
 
 .an-title-stop::before {
-  content: ".";
-  color: inherit;
+  content: none;
 }
 
 .an-header-controls {
