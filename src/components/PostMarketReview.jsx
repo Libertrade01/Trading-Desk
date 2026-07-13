@@ -452,9 +452,23 @@ export default function PostMarketReview({ onBack }) {
 
           <div className="pm-import-card">
             <div className="pm-import-card-head pm-import-card-head--today">
-              <span className="pm-import-card-head-title">Session import</span>
-              <span className="pm-import-broker-pill">rTrader</span>
+              <div className="pm-import-card-head-primary">
+                <span className="pm-import-card-head-title">Session import</span>
+                <span className="pm-import-broker-pill">rTrader</span>
+              </div>
+              {showImportDrop && (
+                <button type="button" className="pm-import-help" onClick={() => setShowHelp((s) => !s)}>
+                  How do I get this file from rTrader?
+                </button>
+              )}
             </div>
+            {showImportDrop && showHelp && (
+              <div className="pm-import-help-panel">
+                <p className="pm-import-help-text">
+                  In rTrader, export your session as a CSV (Performance Summary or Trades). Upload here — trades import to Analytics and today&apos;s performance fields fill automatically.
+                </p>
+              </div>
+            )}
             {showImportDrop ? (
             <div
               className={`pm-import-drop${dragActive ? " pm-import-drop--active" : ""}`}
@@ -523,14 +537,38 @@ export default function PostMarketReview({ onBack }) {
             </div>
             )}
             {showImportDrop && (
-            <div className="pm-import-foot">
-              <button type="button" className="pm-import-help" onClick={() => setShowHelp((s) => !s)}>
-                How do I get this file from rTrader?
-              </button>
-              {showHelp && (
-                <p className="pm-import-help-text">
-                  In rTrader, export your session as a CSV (Performance Summary or Trades). Upload here — trades import to Analytics and today&apos;s performance fields fill automatically.
-                </p>
+            <div className={`pm-import-no-trade${form.noTradeToday ? " pm-import-no-trade--active" : ""}`}>
+              <label className="pm-closeout-no-trade-main">
+                <input
+                  type="checkbox"
+                  checked={form.noTradeToday}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setForm((f) => ({
+                      ...f,
+                      noTradeToday: checked,
+                      replaySequenceReviewed: checked ? true : false,
+                      setupsScreenshottedSaved: checked ? true : false,
+                    }));
+                    setSaved(false);
+                  }}
+                />
+                <div>
+                  <div className="pm-field-label hybrid-label">No trades today</div>
+                  <div className="pm-field-hint">Preservation Mode, took a rest day, or the market was closed.</div>
+                </div>
+              </label>
+              {form.noTradeToday && (
+                <button
+                  type="button"
+                  className="pm-btn-primary-sm pm-closeout-no-trade-save"
+                  onClick={async () => {
+                    const ok = await handleSave();
+                    if (ok !== false) onBack();
+                  }}
+                >
+                  Close the LOOP
+                </button>
               )}
             </div>
             )}
@@ -549,42 +587,6 @@ export default function PostMarketReview({ onBack }) {
             timeColumnHeader={importPreview?.timeColumnHeader}
             onConfirm={handleImportConfirm}
           />
-
-          <div className={`pm-closeout-context-strip pm-closeout-no-trade${form.noTradeToday ? " pm-closeout-no-trade--active" : ""}`}>
-            <label className="pm-closeout-no-trade-main">
-              <input
-                type="checkbox"
-                checked={form.noTradeToday}
-                onChange={(e) => {
-                  const checked = e.target.checked;
-                  setForm((f) => ({
-                    ...f,
-                    noTradeToday: checked,
-                    // Auto-clear journal follow-ups — nothing to replay/database on a no-trade day.
-                    replaySequenceReviewed: checked ? true : false,
-                    setupsScreenshottedSaved: checked ? true : false,
-                  }));
-                  setSaved(false);
-                }}
-              />
-              <div>
-                <div className="pm-field-label hybrid-label">No trades today</div>
-                <div className="pm-field-hint">Preservation Mode, took a rest day, or the market was closed.</div>
-              </div>
-            </label>
-            {form.noTradeToday && (
-              <button
-                type="button"
-                className="pm-btn-primary-sm pm-closeout-no-trade-save"
-                onClick={async () => {
-                  const ok = await handleSave();
-                  if (ok !== false) onBack();
-                }}
-              >
-                Close the LOOP
-              </button>
-            )}
-          </div>
 
           <PostMarketStepper activeIndex={activeStep} onSelect={setActiveStep} />
 

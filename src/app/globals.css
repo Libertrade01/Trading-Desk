@@ -7340,8 +7340,32 @@ input.pm-slider:active::-moz-range-thumb {
 }
 
 .pm-import-card-head--today {
-  justify-content: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pm-import-card-head-primary {
+  display: flex;
+  align-items: center;
   gap: 10px;
+  min-width: 0;
+}
+
+.pm-import-card-head .pm-import-help {
+  flex-shrink: 0;
+  max-width: 52%;
+  text-align: right;
+  line-height: 1.35;
+}
+
+.pm-import-help-panel {
+  padding: 0 18px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.pm-import-help-panel .pm-import-help-text {
+  margin: 0;
 }
 
 .pm-import-broker-pill {
@@ -7385,7 +7409,7 @@ input.pm-slider:active::-moz-range-thumb {
 }
 
 .pm-import-drop {
-  margin: 14px 18px 16px;
+  margin: 14px 18px 12px;
   padding: 22px 18px;
   border-radius: 12px;
   border: 1px dashed rgba(0, 101, 189, 0.35);
@@ -7512,22 +7536,28 @@ input.pm-slider:active::-moz-range-thumb {
   color: rgba(140, 190, 255, 0.95);
 }
 
-.pm-import-foot {
+.pm-import-no-trade {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0;
-  padding: 0 18px 14px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: transparent;
 }
 
-.pm-import-foot .pm-import-help {
-  margin-top: 0;
+.pm-import-no-trade--active {
+  background: rgba(0, 101, 189, 0.04);
 }
 
-.pm-import-foot .pm-import-help-text {
-  margin-top: 8px;
-  margin-bottom: 0;
-  width: 100%;
+.pm-import-no-trade .pm-field-label {
+  margin-bottom: 2px;
+}
+
+.pm-import-no-trade .pm-field-hint {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .pm-closeout-upload-btn {
@@ -7583,7 +7613,8 @@ input.pm-slider:active::-moz-range-thumb {
 }
 
 @media (max-width: 720px) {
-  .pm-closeout-no-trade {
+  .pm-closeout-no-trade,
+  .pm-import-no-trade {
     flex-direction: column;
     align-items: stretch;
   }
@@ -9885,7 +9916,18 @@ input.pm-slider:active::-moz-range-thumb {
     flex-wrap: wrap;
   }
 
-  .pm-import-foot {
+  .pm-import-card-head {
+    flex-wrap: wrap;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .pm-import-card-head .pm-import-help {
+    max-width: none;
+    margin-left: auto;
+  }
+
+  .pm-import-help-panel {
     padding-left: 14px;
     padding-right: 14px;
   }
@@ -15002,7 +15044,7 @@ input.pm-slider:active::-moz-range-thumb {
     0 20px 48px rgba(0, 0, 0, 0.32);
 }
 
-.workflow-page--loop .pm-import-foot .pm-import-help {
+.workflow-page--loop .pm-import-card-head .pm-import-help {
   font-family: 'Outfit', var(--font-poster);
   font-size: 11px;
   font-weight: 500;
@@ -15011,7 +15053,7 @@ input.pm-slider:active::-moz-range-thumb {
   color: rgba(140, 190, 255, 0.9);
 }
 
-.workflow-page--loop .pm-import-foot .pm-import-help:hover {
+.workflow-page--loop .pm-import-card-head .pm-import-help:hover {
   color: #fff;
 }
 
