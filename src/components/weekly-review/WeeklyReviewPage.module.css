@@ -119,6 +119,19 @@
   letter-spacing: .12em !important;
 }
 
+.review :global(.wpr-status-badge--complete) {
+  border-color: rgba(76, 169, 255, .42) !important;
+  color: #74beff !important;
+  background: rgba(28, 118, 208, .14) !important;
+  box-shadow: inset 0 0 18px rgba(36, 137, 237, .06) !important;
+}
+
+.review :global(.wpr-status-badge--draft) {
+  border-color: rgba(232, 181, 98, .28) !important;
+  color: #e8b562 !important;
+  background: rgba(166, 104, 18, .08) !important;
+}
+
 .review :global(.wpr-section) {
   margin: 0 0 80px !important;
   padding: 0 !important;
@@ -213,8 +226,8 @@
 .review :global(.wpr-compare-table) { width: 100% !important; border-collapse: collapse !important; }
 .review :global(.wpr-compare-table) th { padding: 8px 9px 12px !important; border-bottom: 1px solid var(--wr-line) !important; color: #58708a !important; font: 9px 'DM Mono', var(--font-mono) !important; letter-spacing: .13em !important; text-align: left !important; text-transform: uppercase !important; }
 .review :global(.wpr-compare-table) td { padding: 16px 9px !important; border-bottom: 1px solid var(--wr-line) !important; color: #a2b2c4 !important; font-size: 12px !important; }
-.review :global(.wpr-compare-delta--green) { color: var(--wr-blue-soft) !important; }
-.review :global(.wpr-compare-delta--red) { color: #ff7970 !important; }
+.review :global(.wpr-compare-table) td:global(.wpr-compare-delta--green) { color: var(--wr-blue-soft) !important; }
+.review :global(.wpr-compare-table) td:global(.wpr-compare-delta--red) { color: #ff7970 !important; }
 
 /* Accountability */
 .review :global(.wpr-behavior-grid) { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 10px !important; margin-top: 26px !important; }

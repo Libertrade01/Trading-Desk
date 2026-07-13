@@ -72,10 +72,11 @@ function FindingCard({ finding }) {
   );
 }
 
-function deltaTone(deltaText, invertGood = false) {
+function deltaTone(deltaText) {
   if (!deltaText || deltaText.startsWith("Same")) return undefined;
-  const improved = deltaText.startsWith("+") ? !invertGood : invertGood;
-  return improved ? "green" : "red";
+  if (deltaText.startsWith("+")) return "green";
+  if (deltaText.startsWith("-") || deltaText.startsWith("−")) return "red";
+  return undefined;
 }
 
 function WeekComparisonTable({ summary, priorSummary }) {
@@ -105,7 +106,7 @@ function WeekComparisonTable({ summary, priorSummary }) {
                 <td>{row.label}</td>
                 <td>{row.current}</td>
                 <td>{row.prior}</td>
-                <td className={`wpr-compare-delta wpr-compare-delta--${deltaTone(row.delta, row.invertGood) || "neutral"}`}>
+                <td className={`wpr-compare-delta wpr-compare-delta--${deltaTone(row.delta) || "neutral"}`}>
                   {row.delta || "-"}
                 </td>
               </tr>
