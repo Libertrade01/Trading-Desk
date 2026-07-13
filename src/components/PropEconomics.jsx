@@ -222,7 +222,7 @@ export default function PropEconomics() {
       <div className={styles.page}>
         <div className={styles.topbar}>{headerDate()}</div>
         <header className={styles.header}>
-          <div><p className={styles.eyebrow}>PROP ECONOMICS</p><h1>Prop profits<span className={styles.titleStop} aria-hidden="true" /></h1><p className={styles.intro}>Track what you paid prop firms versus what you withdrew. Know exactly where you stand before the next evaluation.</p></div>
+          <div><p className={styles.eyebrow}>Prop profit tracker</p><h1>Prop profits<span className={styles.titleStop} aria-hidden="true" /></h1><p className={styles.intro}>Track what you paid prop firms versus what you withdrew. Know exactly where you stand before the next evaluation.</p></div>
           <div className={styles.actions}><button type="button" className={styles.secondaryAction} onClick={() => openForm("spend")}>Log spend <span>+</span></button><button type="button" className={styles.primaryAction} onClick={() => openForm("payout")}>Log payout <span>↗</span></button></div>
         </header>
 
