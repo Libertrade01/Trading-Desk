@@ -230,21 +230,34 @@
   position: absolute;
   z-index: 3;
   left: 50%;
-  bottom: 1.6rem;
+  bottom: 2.7rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.65rem;
-  color: #7190b1;
+  gap: 0.5rem;
+  color: #a9bfd8;
   font-family: 'DM Mono', var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.68rem;
+  font-weight: 500;
   letter-spacing: 0.2em;
   text-decoration: none;
   text-transform: uppercase;
+  text-shadow: 0 0 14px rgba(91, 164, 230, 0.28);
   transform: translateX(-50%);
+  transition: color 180ms ease, text-shadow 180ms ease;
 }
 
-.scrollCue b { color: var(--blue); font-size: 1.2rem; font-weight: 400; animation: cue 1.8s ease-in-out infinite; }
+.scrollCue b {
+  color: #66afea;
+  font-size: 1.45rem;
+  font-weight: 400;
+  line-height: 1;
+  text-shadow: 0 0 16px rgba(32, 143, 255, 0.55);
+  animation: cue 1.8s ease-in-out infinite;
+}
+
+.scrollCue:hover { color: #d9e9f8; text-shadow: 0 0 18px rgba(91, 164, 230, 0.48); }
+.scrollCue:hover b { color: #9ed2ff; }
 
 @keyframes cue { 0%, 100% { transform: translateY(0); opacity: .55; } 50% { transform: translateY(.4rem); opacity: 1; } }
 
@@ -371,11 +384,127 @@
 .metric > i { display: block; height: .22rem; margin-top: .65rem; overflow: hidden; background: rgba(116,150,190,.14); }
 .metric > i em { display: block; height: 100%; background: var(--blue); box-shadow: 0 0 .7rem var(--blue); }
 
+.checkInWindow { min-height: 39rem; }
+.checkInBody { padding: clamp(1.4rem, 2.5vw, 2.3rem); }
+.checkInHeading { display: flex; align-items: end; justify-content: space-between; gap: 2rem; }
+.checkInHeading h3 { font-size: clamp(1.6rem, 2.5vw, 2.25rem); }
+.checkInHeading > span { padding-bottom: .35rem; color: #6f849c; font-family: 'DM Mono', var(--font-mono); font-size: .55rem; letter-spacing: .14em; }
+
+.checkInTabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: .35rem; margin-top: 1.65rem; }
+.checkInTabs span { padding: 0 0 .65rem; border-bottom: 2px solid rgba(135,157,181,.18); color: #71849a; font-family: 'DM Mono', var(--font-mono); font-size: .5rem; letter-spacing: .08em; text-align: center; }
+.checkInTabs .activeTab { border-color: #2096f3; color: #f4f8fd; }
+
+.checkInGrid { display: grid; grid-template-columns: minmax(0, 1fr) 11.5rem; align-items: start; gap: 1.25rem; margin-top: 1.4rem; }
+.assessmentCard, .readinessCard { border: 1px solid rgba(130,156,187,.18); border-radius: .85rem; background: rgba(4,10,19,.6); box-shadow: inset 0 1px rgba(255,255,255,.025); }
+.assessmentCard { padding: 1.2rem; }
+.assessmentHead { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.assessmentHead > div { display: flex; flex-direction: column; gap: .3rem; }
+.assessmentHead strong { font-family: var(--display); font-size: 1rem; }
+.assessmentHead small { color: #8da0b5; font-size: .68rem; }
+.assessmentHead > span { color: #8093aa; font-family: 'DM Mono', var(--font-mono); font-size: .5rem; letter-spacing: .12em; }
+
+.fieldRow { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin-top: 1.25rem; }
+.fieldRow label, .recoveryField label { display: block; margin-bottom: .45rem; color: #a9c1db; font-family: 'DM Mono', var(--font-mono); font-size: .5rem; font-weight: 600; letter-spacing: .1em; }
+.fieldRow p, .recoveryField p { display: flex; height: 2.45rem; align-items: center; justify-content: space-between; margin: 0; padding: 0 .8rem; border: 1px solid rgba(129,157,188,.16); border-radius: .65rem; background: linear-gradient(180deg, rgba(17,27,41,.8), rgba(8,15,25,.8)); }
+.fieldRow b, .recoveryField b { color: #f1f6fc; font-family: 'DM Mono', var(--font-mono); font-size: .68rem; font-weight: 500; }
+.fieldRow p span, .recoveryField p span { color: #6f8196; font-family: 'DM Mono', var(--font-mono); font-size: .55rem; }
+
+.checkInMetrics { display: grid; gap: 1rem; margin-top: 1.3rem; }
+.checkInMetrics .metric > div { font-size: .5rem; }
+.checkInMetrics .metric > i { position: relative; height: .18rem; }
+.checkInMetrics .metric > i::after { content: ""; position: absolute; top: -.25rem; left: 68%; width: 1px; height: .7rem; background: #77baf3; }
+
+.recoveryField { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(128,153,183,.12); }
+.habits { display: grid; grid-template-columns: repeat(3, 1fr); gap: .55rem; margin-top: 1rem; }
+.habits > span { display: flex; min-height: 2.25rem; align-items: center; gap: .45rem; padding: .55rem; border: 1px solid rgba(126,154,185,.16); border-radius: .65rem; background: rgba(16,27,41,.65); color: #dbe5f0; font-size: .58rem; font-weight: 600; }
+.habits i { display: grid; width: 1.1rem; height: 1.1rem; flex: 0 0 auto; place-content: center; border: 1px solid rgba(71,161,239,.42); color: #a7d6ff; font-size: .55rem; font-style: normal; }
+
+.readinessCard { padding: 1.1rem 1rem; }
+.readinessCard > p { margin: 0 0 .8rem; color: #87bff0; font-family: 'DM Mono', var(--font-mono); font-size: .52rem; letter-spacing: .16em; }
+.readinessCard > div { display: flex; align-items: baseline; }
+.readinessCard > div strong { font-family: var(--display); font-size: 3rem; font-weight: 600; letter-spacing: -.08em; line-height: .9; }
+.readinessCard > div span { color: #60748c; font-family: 'DM Mono', var(--font-mono); font-size: .65rem; }
+.readinessCard > i { display: block; height: .18rem; margin: .9rem 0; background: rgba(134,159,187,.18); }
+.readinessCard > i em { display: block; width: 76%; height: 100%; background: #7b8fa6; }
+.readinessCard > b { display: block; color: #42bba9; font-size: .7rem; font-weight: 600; }
+.readinessCard > small { display: block; margin-top: .25rem; color: #63778e; font-size: .56rem; }
+.readinessCard ul { padding: 0; margin: 1.2rem 0 0; list-style: none; }
+.readinessCard li { display: flex; align-items: center; justify-content: space-between; padding: .72rem .65rem; border-top: 1px solid rgba(127,151,179,.12); color: #66798f; font-size: .58rem; }
+.readinessCard li b { font-family: 'DM Mono', var(--font-mono); font-weight: 500; }
+.readinessCard .readinessActive { border: 1px solid rgba(101,147,194,.22); border-radius: .55rem; color: #edf5fd; background: rgba(17,30,45,.78); }
+.readinessCard .readinessActive span::before { content: ""; display: inline-block; width: .32rem; height: .32rem; margin-right: .45rem; border-radius: 50%; background: #2096f3; box-shadow: 0 0 .55rem rgba(32,150,243,.7); }
+.readinessCard .readinessActive b { color: #42bba9; }
+
 .planGrid { display: grid; grid-template-columns: 1.25fr .75fr; gap: .7rem; margin-top: 2.4rem; }
 .planGrid > div { display: flex; min-height: 5.6rem; flex-direction: column; justify-content: space-between; padding: 1.1rem; border-left: 1px solid rgba(69,150,225,.54); background: rgba(11,29,51,.5); }
 .planGrid span, .reviewGrid span { color: #70849b; font-family: 'DM Mono', var(--font-mono); font-size: .58rem; letter-spacing: .14em; }
 .planGrid strong { color: #d7e0eb; font-size: .9rem; font-weight: 500; }
 .planWide { grid-column: 1 / -1; }
+
+.planWindow { min-height: 53rem; touch-action: pan-y; }
+.planCarouselBody { display: flex; min-height: 50rem; flex-direction: column; padding: clamp(1.4rem, 2.5vw, 2.3rem); }
+.planCarouselHead { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; }
+.planCarouselHead h3 { font-size: clamp(1.6rem, 2.5vw, 2.25rem); }
+.planSummary { display: grid; min-width: 13rem; grid-template-columns: repeat(3, 1fr); padding: .75rem; border: 1px solid rgba(129,157,187,.15); border-radius: .7rem; background: rgba(4,10,19,.46); }
+.planSummary span { display: flex; flex-direction: column; gap: .25rem; color: #657990; font-family: 'DM Mono', var(--font-mono); font-size: .45rem; letter-spacing: .1em; text-align: center; }
+.planSummary b { color: #42bba9; font-size: .62rem; font-weight: 500; letter-spacing: 0; }
+
+.planTabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: .4rem; margin-top: 1.4rem; }
+.planTabs button, .planTabs > span { padding: .65rem .25rem; border: 0; border-bottom: 2px solid rgba(135,157,181,.18); background: transparent; color: #70839a; font: 500 .5rem 'DM Mono', var(--font-mono); letter-spacing: .07em; text-align: center; }
+.planTabs button { cursor: pointer; transition: color 180ms ease, border-color 180ms ease, background 180ms ease; }
+.planTabs button:hover { color: #d5e7f7; background: rgba(24,62,99,.16); }
+.planTabs button:active { transform: translateY(1px); }
+.planTabs button:focus-visible, .carouselControls button:focus-visible { outline: 2px solid #9ed2ff; outline-offset: 3px; }
+.planTabs .planTabActive { border-color: #2096f3; color: #f4f8fd; }
+.planTabs .planTabComplete { border-color: rgba(173,190,207,.46); color: #8da0b5; }
+
+.planViewport { flex: 1; margin-top: 1rem; }
+.planSlide { animation: planSlideIn 260ms ease both; }
+@keyframes planSlideIn { from { opacity: 0; transform: translateX(.8rem); } to { opacity: 1; transform: translateX(0); } }
+.planSlideHead { display: flex; align-items: start; justify-content: space-between; gap: 1.5rem; }
+.planSlideHead > div { display: flex; flex-direction: column; gap: .3rem; }
+.planSlideHead strong { font-family: var(--display); font-size: 1.05rem; }
+.planSlideHead small { color: #8da0b5; font-size: .68rem; }
+.planSlideHead > span { color: #70839a; font-family: 'DM Mono', var(--font-mono); font-size: .5rem; letter-spacing: .12em; }
+
+.playbookPills { display: flex; gap: .38rem; margin: 1rem 0; overflow: hidden; }
+.playbookPills span { flex: 0 1 auto; min-width: 0; padding: .42rem .55rem; border: 1px solid rgba(130,157,187,.18); border-radius: 2rem; background: rgba(7,14,24,.62); color: #cfdae6; font-size: .5rem; white-space: nowrap; }
+.playbookPills span:first-child { border-color: rgba(32,150,243,.42); color: #f4f8fd; background: rgba(13,54,92,.56); }
+
+.setupCard { padding: 1rem; border: 1px solid rgba(32,150,243,.32); border-radius: .8rem; background: linear-gradient(145deg, rgba(14,43,73,.74), rgba(7,19,34,.68)); }
+.setupCard h4 { margin: 0 0 .75rem; padding: .72rem .8rem; border: 1px solid rgba(129,157,187,.15); border-radius: .6rem; background: rgba(6,12,20,.72); font-family: var(--display); font-size: .82rem; font-weight: 600; }
+.criteriaBox > span, .setupTargets span, .riskHighlights span, .riskFields span, .riskRail > div span { color: #abc8e4; font-family: 'DM Mono', var(--font-mono); font-size: .48rem; font-weight: 600; letter-spacing: .1em; }
+.criteriaBox { padding: .2rem .8rem .75rem; border-bottom: 1px solid rgba(130,156,187,.14); }
+.criteriaBox p { margin: .55rem 0 0; color: #c5d2df; font-size: .62rem; line-height: 1.45; }
+.criteriaBox b { color: #f0f5fb; font-weight: 600; }
+.setupTargets { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; margin-top: .8rem; }
+.setupTargets > div { display: flex; min-height: 3.2rem; flex-direction: column; justify-content: space-between; padding: .7rem .8rem; border: 1px solid rgba(129,157,187,.15); border-radius: .6rem; background: rgba(6,12,20,.48); }
+.setupTargets strong { color: #eef4fa; font-size: .63rem; font-weight: 500; }
+
+.riskHighlights { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin-top: 1rem; }
+.riskHighlights > div { display: flex; min-height: 5.7rem; flex-direction: column; padding: .85rem; border: 1px solid rgba(60,129,195,.25); border-radius: .75rem; background: linear-gradient(145deg, rgba(18,47,78,.72), rgba(8,20,35,.62)); }
+.riskHighlights strong { margin: .55rem 0 .25rem; font-family: 'DM Mono', var(--font-mono); font-size: 1.45rem; font-weight: 500; }
+.riskHighlights small { color: #768ba2; font-size: .55rem; }
+.riskFields { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem .75rem; margin-top: .8rem; }
+.riskFields > div { display: flex; min-width: 0; flex-direction: column; gap: .4rem; padding: .55rem .75rem; border: 1px solid rgba(129,157,187,.15); border-radius: .6rem; background: rgba(7,14,24,.56); }
+.riskFields strong { overflow: hidden; color: #eef4fa; font-size: .59rem; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.riskRail { display: grid; grid-template-columns: 1fr 1.15fr; align-items: center; gap: .9rem; margin-top: .85rem; padding-top: .8rem; border-top: 1px solid rgba(129,157,187,.12); }
+.riskRail > div { display: flex; flex-direction: column; gap: .25rem; }
+.riskRail small { color: #687d94; font-size: .54rem; }
+.riskRail > strong { display: flex; align-items: center; gap: .55rem; padding: .7rem; border: 1px solid rgba(129,157,187,.17); border-radius: .65rem; background: rgba(16,28,42,.72); color: #eaf2f9; font-size: .6rem; font-weight: 600; }
+.riskRail i { display: grid; width: 1.1rem; height: 1.1rem; place-content: center; border: 1px solid rgba(71,161,239,.42); color: #a7d6ff; font-size: .55rem; font-style: normal; }
+
+.carouselControls { display: flex; align-items: center; justify-content: flex-end; gap: .65rem; margin-top: auto; padding-top: 1rem; }
+.carouselControls button { display: grid; width: 2rem; height: 2rem; place-content: center; border: 1px solid rgba(71,161,239,.34); border-radius: .5rem; background: rgba(7,34,59,.72); color: #cce7ff; cursor: pointer; transition: border-color 180ms ease, background 180ms ease, transform 180ms ease; }
+.carouselControls button:hover { border-color: #4ca3ef; background: rgba(16,63,103,.82); transform: translateY(-1px); }
+.carouselControls button:active { transform: translateY(1px); }
+.carouselStatus { display: grid; width: 8rem; gap: .38rem; }
+.carouselStatus > span { display: flex; justify-content: space-between; color: #89a5c0; font-family: 'DM Mono', var(--font-mono); font-size: .5rem; letter-spacing: .09em; }
+.carouselStatus > span b { color: #c7def3; font-weight: 500; }
+.carouselStatus > i { display: block; height: .13rem; overflow: hidden; background: rgba(126,155,188,.16); }
+.carouselStatus > i em { display: block; width: 0; height: 100%; background: #2096f3; box-shadow: 0 0 .65rem rgba(32,150,243,.7); }
+.carouselStatus > i.carouselProgressActive em { animation: carouselProgress 3s linear forwards; }
+@keyframes carouselProgress { to { width: 100%; } }
 
 .reviewHead { display: flex; align-items: start; justify-content: space-between; gap: 2rem; }
 .reviewHead > strong { color: #77baf3; font-family: 'DM Mono', var(--font-mono); font-size: 1.65rem; font-weight: 500; }
@@ -501,7 +630,8 @@
   .heroActions { width: 100%; gap: 1rem; margin-top: 1.6rem; }
   .primaryAction { min-width: 0; flex: 1; gap: 1.1rem; font-size: .84rem; }
   .textAction { min-width: 5rem; font-size: .84rem; }
-  .scrollCue { bottom: 1rem; }
+  .scrollCue { bottom: 1.5rem; font-size: 0.64rem; }
+  .scrollCue b { font-size: 1.3rem; }
   .workflow { padding: 8rem 0 7rem; }
   .sectionIntro { margin-bottom: 5rem; }
   .sectionIntro h2, .featuresHead h2, .loopStatement h2 { font-size: clamp(2.7rem, 12vw, 4.25rem); }
@@ -516,8 +646,19 @@
   .scoreRing { width: 6.5rem; }
   .scoreRing strong { font-size: 1.6rem; }
   .sliderStack { gap: 1.15rem; }
+  .checkInWindow { min-height: 0; }
+  .checkInGrid { grid-template-columns: 1fr; }
+  .readinessCard { display: none; }
+  .habits { grid-template-columns: 1fr; }
   .planGrid { grid-template-columns: 1fr; }
   .planWide { grid-column: 1; }
+  .planWindow, .planCarouselBody { min-height: 0; }
+  .planCarouselHead { align-items: start; }
+  .planSummary { display: none; }
+  .playbookPills span:nth-child(n+4) { display: none; }
+  .setupTargets, .riskHighlights, .riskFields, .riskRail { grid-template-columns: 1fr; }
+  .riskHighlights > div { min-height: 0; }
+  .riskRail { gap: .6rem; }
   .reviewGrid { grid-template-columns: 1fr; }
   .reviewGrid blockquote { grid-column: 1; }
   .loopStatement { min-height: 36rem; padding: 7rem 1rem; }
@@ -546,4 +687,6 @@
   .page { scroll-behavior: auto; }
   .scrollCue b { animation: none; }
   .primaryAction, .textAction, .skipLink { transition-duration: 0.01ms; }
+  .planSlide { animation: none; }
+  .carouselStatus > i em { animation: none; }
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SessionPlanCarousel from "./SessionPlanCarousel";
 import styles from "./landing-redesign.module.css";
 
 export const metadata = {
@@ -46,19 +47,62 @@ function Wordmark({ compact = false }) {
 
 function CheckInMockup() {
   return (
-    <div className={styles.productWindow} aria-label="Check-in product preview">
-      <div className={styles.windowBar}><i /><i /><i /><span>Wednesday, July 3</span></div>
-      <div className={styles.mockBody}>
-        <p className={styles.mockLabel}>CHECK-IN</p>
-        <h3>How ready are you to trade?</h3>
-        <p className={styles.mockIntro}>Be honest before the open. Your score updates as you go.</p>
-        <div className={styles.scoreRow}>
-          <div className={styles.scoreRing}><strong>78</strong><span>READY</span></div>
-          <div className={styles.sliderStack}>
-            <Metric label="ENERGY" value="8" width="82%" />
-            <Metric label="FOCUS" value="7" width="71%" />
-            <Metric label="DISCIPLINE" value="8" width="79%" />
+    <div className={`${styles.productWindow} ${styles.checkInWindow}`} aria-label="Check-in product preview">
+      <div className={styles.windowBar}><i /><i /><i /><span>Monday, July 13</span></div>
+      <div className={`${styles.mockBody} ${styles.checkInBody}`}>
+        <div className={styles.checkInHeading}>
+          <div>
+            <p className={styles.mockLabel}>CHECK-IN</p>
+            <h3>Rate your readiness.</h3>
+            <p className={styles.mockIntro}>Know your state before you risk your capital.</p>
           </div>
+          <span>1 OF 4</span>
+        </div>
+
+        <div className={styles.checkInTabs} aria-hidden="true">
+          <span className={styles.activeTab}>Body</span><span>Mind</span><span>External</span><span>Prep</span>
+        </div>
+
+        <div className={styles.checkInGrid}>
+          <div className={styles.assessmentCard}>
+            <div className={styles.assessmentHead}>
+              <div><strong>Body</strong><small>Fuel and recovery for the session.</small></div>
+              <span>01 / 04</span>
+            </div>
+
+            <div className={styles.fieldRow}>
+              <div><label>SLEEP</label><p><b>8.5</b><span>hrs</span></p></div>
+              <div><label>SLEEP DEBT</label><p><b>0</b><span>min</span></p></div>
+            </div>
+
+            <div className={styles.checkInMetrics}>
+              <Metric label="SLEEP RECOVERY" value="9" width="88%" />
+              <Metric label="ENERGY" value="7" width="68%" />
+            </div>
+
+            <div className={styles.recoveryField}>
+              <label>RECOVERY (HRV)</label>
+              <p><b>74</b><span>%</span></p>
+            </div>
+
+            <div className={styles.habits}>
+              <span><i>✓</i> Hydrated</span><span><i>✓</i> Movement</span><span><i /> Breathwork</span>
+            </div>
+          </div>
+
+          <aside className={styles.readinessCard}>
+            <p>READINESS</p>
+            <div><strong>76</strong><span>/100</span></div>
+            <i><em /></i>
+            <b>Ready to trade</b>
+            <small>Proceed with your plan.</small>
+            <ul>
+              <li className={styles.readinessActive}><span>Body</span><b>80</b></li>
+              <li><span>Mind</span><b>—</b></li>
+              <li><span>External</span><b>—</b></li>
+              <li><span>Prep</span><b>—</b></li>
+            </ul>
+          </aside>
         </div>
       </div>
     </div>
@@ -70,25 +114,6 @@ function Metric({ label, value, width }) {
     <div className={styles.metric}>
       <div><span>{label}</span><b>{value}</b></div>
       <i><em style={{ width }} /></i>
-    </div>
-  );
-}
-
-function PlanMockup() {
-  return (
-    <div className={styles.productWindow} aria-label="Session Plan product preview">
-      <div className={styles.windowBar}><i /><i /><i /><span>SESSION PLAN</span></div>
-      <div className={styles.mockBody}>
-        <p className={styles.mockLabel}>YOUR PLAN</p>
-        <h3>Trade what you prepared.</h3>
-        <div className={styles.planGrid}>
-          <div><span>BIAS</span><strong>Bullish above VWAP</strong></div>
-          <div><span>MAX RISK</span><strong>0.75R</strong></div>
-          <div className={styles.planWide}><span>PRIMARY SETUP</span><strong>Opening drive after confirmation</strong></div>
-          <div><span>INVALIDATION</span><strong>Below 5,418.25</strong></div>
-          <div><span>TARGET</span><strong>5,432.50</strong></div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -114,7 +139,7 @@ function ReviewMockup() {
 
 function StageMockup({ kind }) {
   if (kind === "checkin") return <CheckInMockup />;
-  if (kind === "plan") return <PlanMockup />;
+  if (kind === "plan") return <SessionPlanCarousel />;
   return <ReviewMockup />;
 }
 
