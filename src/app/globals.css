@@ -7443,6 +7443,75 @@ input.pm-slider:active::-moz-range-thumb {
   margin-bottom: 0;
 }
 
+.pm-import-success {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0;
+  padding: 13px 18px 14px;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: transparent;
+}
+
+.pm-import-success-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pm-import-success-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.pm-import-success-text {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  margin: 0;
+  min-width: 0;
+}
+
+.pm-import-success-label {
+  font-family: 'Outfit', var(--font-poster);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.pm-import-success-meta {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.pm-import-reupload-btn {
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.42);
+  font-family: 'Outfit', var(--font-poster);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.pm-import-reupload-btn:hover {
+  color: rgba(140, 190, 255, 0.95);
+}
+
 .pm-import-foot {
   display: flex;
   flex-direction: column;
@@ -9808,6 +9877,12 @@ input.pm-slider:active::-moz-range-thumb {
   .pm-import-drop {
     margin-left: 14px;
     margin-right: 14px;
+  }
+
+  .pm-import-success {
+    padding-left: 14px;
+    padding-right: 14px;
+    flex-wrap: wrap;
   }
 
   .pm-import-foot {

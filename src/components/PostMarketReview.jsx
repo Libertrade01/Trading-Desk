@@ -116,6 +116,7 @@ export default function PostMarketReview({ onBack }) {
   const [recoveryStatus, setRecoveryStatus] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
   const [dragActive, setDragActive] = useState(false);
+  const [importDropExpanded, setImportDropExpanded] = useState(false);
   const fileRef = useRef(null);
   const dragCounter = useRef(0);
 
@@ -147,6 +148,11 @@ export default function PostMarketReview({ onBack }) {
 
   const setupAdherence = useMemo(() => summarizeSetupAdherence(dayTrades), [dayTrades]);
   const adherenceLabel = useMemo(() => playbookAdherenceLabel(setupAdherence), [setupAdherence]);
+
+  const hasImportedSession =
+    dayTrades.length > 0 || !!form.lastImportAt || !!String(form.lastImportFile || "").trim();
+  const importError = importMsg.startsWith("Error");
+  const showImportDrop = !hasImportedSession || importDropExpanded || importError;
 
   const step = CLOSEOUT_STEPS[activeStep];
   const isFirstStep = activeStep === 0;
@@ -389,6 +395,8 @@ export default function PostMarketReview({ onBack }) {
     const summary = summarizeSetupAdherence(todayTrades);
     setImportMsg(`Imported ${count} trades · ${formatPlaybookBreakdown(summary)}`);
     setImportPreview(null);
+    setImportDropExpanded(false);
+    setShowHelp(false);
     setSaved(false);
     if (todayTrades.length > 0 && perf.netPnl != null && !Number.isNaN(perf.netPnl)) {
       await maybeEvaluateRecovery(perf.netPnl, false);
@@ -447,6 +455,7 @@ export default function PostMarketReview({ onBack }) {
               <span className="pm-import-card-head-title">Session import</span>
               <span className="pm-import-broker-pill">rTrader</span>
             </div>
+            {showImportDrop ? (
             <div
               className={`pm-import-drop${dragActive ? " pm-import-drop--active" : ""}`}
               onDragEnter={handleDragEnter}
@@ -487,6 +496,33 @@ export default function PostMarketReview({ onBack }) {
               </button>
               {importMsg && <p className="pm-import-msg">{importMsg}</p>}
             </div>
+            ) : (
+            <div className="pm-import-success" role="status">
+              <div className="pm-import-success-main">
+                <span className="pm-import-success-icon" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </span>
+                <p className="pm-import-success-text">
+                  <span className="pm-import-success-label">CSV uploaded</span>
+                  {(form.lastImportFile || importMsg) && (
+                    <span className="pm-import-success-meta">
+                      {[form.lastImportFile, importMsg].filter(Boolean).join(" · ")}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="pm-import-reupload-btn"
+                onClick={() => setImportDropExpanded(true)}
+              >
+                Re-upload
+              </button>
+            </div>
+            )}
+            {showImportDrop && (
             <div className="pm-import-foot">
               <button type="button" className="pm-import-help" onClick={() => setShowHelp((s) => !s)}>
                 How do I get this file from rTrader?
@@ -497,6 +533,7 @@ export default function PostMarketReview({ onBack }) {
                 </p>
               )}
             </div>
+            )}
             <input ref={fileRef} type="file" accept=".csv" hidden onChange={handleFile} />
           </div>
 
