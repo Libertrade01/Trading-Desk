@@ -1,4 +1,4 @@
-import LandingPage from "@/components/LandingPage";
+import LandingRedesignPreview from "./landing-redesign/page";
 
 export const metadata = {
   title: "Libertrade Loop — Prepare, trade your plan, close the loop",
@@ -7,5 +7,5 @@ export const metadata = {
 };
 
 export default function Page() {
-  return <LandingPage />;
+  return <LandingRedesignPreview />;
 }
