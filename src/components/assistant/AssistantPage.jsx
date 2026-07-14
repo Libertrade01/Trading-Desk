@@ -179,7 +179,13 @@ function ConnectedWorkspace({ chatgpt, messages, status, error, input, setInput,
       <section className={styles.chatPanel}>
         <header className={styles.panelHead}>
           <div><p>PROCESS INTELLIGENCE</p><h2>Ask your trading data.</h2></div>
-          <div className={styles.connectedBadge}><StatusMark /><span>ChatGPT connected</span></div>
+          <div className={styles.accountControl}>
+            <div className={styles.connectedBadge}>
+              <StatusMark />
+              <span><strong>ChatGPT connected</strong><small>{chatgpt.user?.email || "Connected account"}</small></span>
+            </div>
+            <button type="button" onClick={() => void chatgpt.logout()}>Log out</button>
+          </div>
         </header>
 
         <div className={styles.messageArea} ref={scrollRef}>
@@ -256,10 +262,6 @@ function ConnectedWorkspace({ chatgpt, messages, status, error, input, setInput,
           </div>
         </section>
 
-        <div className={styles.accountStrip}>
-          <span>{chatgpt.user?.email || "CHATGPT ACCOUNT"}</span>
-          <button type="button" onClick={() => void chatgpt.logout()}>Disconnect</button>
-        </div>
       </aside>
     </div>
   );
@@ -357,7 +359,7 @@ export default function AssistantPage() {
       <div className={styles.page}>
         <header className={styles.header}>
           <p>{headerDate()}</p>
-          <h1 className="hybrid-page-title">AI Assistant<span className="hybrid-page-title-stop" aria-hidden="true" /></h1>
+          <h1 className="hybrid-page-title">LOOP Intelligence<span className="hybrid-page-title-stop" aria-hidden="true" /></h1>
           <div className={styles.headerBottom}>
             <p>Ask questions about the process behind your results.</p>
             <span>YOUR DATA · YOUR CHATGPT</span>

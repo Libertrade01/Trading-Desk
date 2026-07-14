@@ -36,7 +36,7 @@ const NAV_ITEMS = [
   { id: "weeklyreview", href: "/weekly-review", label: "Weekly Review", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3" strokeLinecap="round"/></svg>
   )},
-  { id: "assistant", href: "/assistant", label: "AI Assistant", icon: (
+  { id: "assistant", href: "/assistant", label: "LOOP Intelligence", icon: (
     <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 12.5l1.2-3.6L2 6.5h3.2L8 3.5l2.8 3h3.2l-2.2 2.4L13.2 12.5 8 10.2 3 12.5z" strokeLinejoin="round"/></svg>
   )},
   { id: "propeconomics", href: "/prop-economics", label: "Prop Profit Tracker", icon: (

@@ -11,7 +11,13 @@
 .panelHead { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 88px; padding: 0 28px; border-bottom: 1px solid var(--line); }
 .panelHead p, .railHead p { margin: 0 0 7px; color: #6d89a7; font: 8px 'DM Mono', var(--font-mono); letter-spacing: .15em; }
 .panelHead h2 { margin: 0; color: #f5f8fc; font: 600 22px 'Syne', var(--font-display); letter-spacing: -.035em; }
-.connectedBadge { display: flex; align-items: center; gap: 8px; color: #89a1ba; font: 9px 'DM Mono', var(--font-mono); }
+.accountControl { display: flex; align-items: center; gap: 13px; }
+.connectedBadge { display: flex; align-items: center; gap: 8px; color: #89a1ba; }
+.connectedBadge > span { display: grid; gap: 3px; min-width: 0; }
+.connectedBadge strong { color: #b9c9d9; font: 600 9px 'DM Mono', var(--font-mono); letter-spacing: .02em; }
+.connectedBadge small { max-width: 190px; overflow: hidden; color: #607993; font: 7px 'DM Mono', var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
+.accountControl > button { padding: 9px 13px; border: 1px solid rgba(78,166,245,.48); border-radius: 6px; color: #dcecff; background: rgba(12,55,96,.78); font: 600 9px 'DM Sans', var(--font-sans); cursor: pointer; transition: border-color 160ms ease, background 160ms ease; }
+.accountControl > button:hover { border-color: #57adf6; background: rgba(15,72,124,.92); }
 .statusMark { position: relative; display: block; width: 24px; height: 24px; }
 .statusMark i { position: absolute; inset: 4px; border: 1px solid rgba(65,162,247,.55); border-radius: 50%; }
 .statusMark i:last-child { inset: 9px; border: 0; background: var(--blue); box-shadow: 0 0 9px rgba(36,150,243,.9); }
@@ -74,9 +80,6 @@
 .dataList span { color: #6e849c; font-size: 9px; }
 .dataList strong { align-self: end; color: #63b7ff; font: 600 17px 'Syne', var(--font-display); }
 .dataList small { color: #526a83; font-size: 7px; }
-.accountStrip { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 17px 24px; border-top: 1px solid var(--line); }
-.accountStrip span { overflow: hidden; color: #5f7690; font: 7px 'DM Mono', var(--font-mono); text-overflow: ellipsis; }
-.accountStrip button { border: 0; color: #7891aa; background: transparent; font-size: 9px; cursor: pointer; }
 
 .connectWorkspace { display: grid; grid-template-columns: 1.05fr .95fr; min-height: 650px; overflow: hidden; border: 1px solid var(--line-strong); border-radius: 16px; background: linear-gradient(145deg, rgba(8,25,46,.94), rgba(3,11,23,.94)); }
 .connectStory { padding: clamp(42px, 6vw, 72px); border-right: 1px solid var(--line); }
@@ -126,6 +129,7 @@
   .headerBottom span { display: none; }
   .workspace, .connectWorkspace { border-radius: 11px; }
   .panelHead { align-items: flex-start; flex-direction: column; padding: 20px; }
+  .accountControl { width: 100%; justify-content: space-between; }
   .chatEmpty { min-height: 420px; padding: 28px 18px; }
   .composer { margin: 0 14px 14px; }
   .contextChips { overflow-x: auto; }
