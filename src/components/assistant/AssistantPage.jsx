@@ -18,10 +18,10 @@ const PROMPTS = [
 ];
 
 const DATA_SOURCES = [
-  ["Trades", "Imported and tagged"],
-  ["Check-ins", "Readiness and context"],
-  ["Plans", "Setups, levels, and risk"],
-  ["Journals", "Lessons and behavior"],
+  { key: "trades", label: "Trades", detail: "Imported and tagged" },
+  { key: "checkIns", label: "Check-ins", detail: "Readiness and context" },
+  { key: "plans", label: "Plans", detail: "Setups, levels, and risk" },
+  { key: "journals", label: "Journals", detail: "Lessons and behavior" },
 ];
 
 function getMessageText(message) {
@@ -40,6 +40,88 @@ function headerDate() {
 
 function StatusMark() {
   return <span className={styles.statusMark}><i /><i /></span>;
+}
+
+function InlineMarkdown({ text }) {
+  const parts = String(text).split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return <code key={index}>{part.slice(1, -1)}</code>;
+    }
+    return part;
+  });
+}
+
+function MarkdownAnswer({ text }) {
+  const lines = String(text || "").replace(/\r/g, "").split("\n");
+  const blocks = [];
+  let paragraph = [];
+  let list = [];
+  let listType = null;
+
+  function flushParagraph() {
+    if (!paragraph.length) return;
+    blocks.push({ type: "paragraph", text: paragraph.join(" ") });
+    paragraph = [];
+  }
+
+  function flushList() {
+    if (!list.length) return;
+    blocks.push({ type: listType, items: list });
+    list = [];
+    listType = null;
+  }
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    const heading = line.match(/^(#{1,4})\s+(.+)$/);
+    const unordered = line.match(/^[-*]\s+(.+)$/);
+    const ordered = line.match(/^\d+[.)]\s+(.+)$/);
+
+    if (!line) {
+      flushParagraph();
+      flushList();
+    } else if (/^---+$/.test(line)) {
+      flushParagraph();
+      flushList();
+      blocks.push({ type: "rule" });
+    } else if (heading) {
+      flushParagraph();
+      flushList();
+      blocks.push({ type: "heading", level: heading[1].length, text: heading[2] });
+    } else if (unordered || ordered) {
+      flushParagraph();
+      const nextType = unordered ? "unordered" : "ordered";
+      if (listType && listType !== nextType) flushList();
+      listType = nextType;
+      list.push((unordered || ordered)[1]);
+    } else {
+      flushList();
+      paragraph.push(line);
+    }
+  }
+  flushParagraph();
+  flushList();
+
+  return (
+    <div className={styles.markdownAnswer}>
+      {blocks.map((block, index) => {
+        if (block.type === "rule") return <hr key={index} />;
+        if (block.type === "heading") {
+          const Heading = block.level <= 2 ? "h3" : "h4";
+          return <Heading key={index}><InlineMarkdown text={block.text} /></Heading>;
+        }
+        if (block.type === "unordered" || block.type === "ordered") {
+          const List = block.type === "ordered" ? "ol" : "ul";
+          return <List key={index}>{block.items.map((item, itemIndex) => <li key={itemIndex}><InlineMarkdown text={item} /></li>)}</List>;
+        }
+        return <p key={index}><InlineMarkdown text={block.text} /></p>;
+      })}
+    </div>
+  );
 }
 
 function ConnectionSetup({ chatgpt, startLogin, codeCopied, copyUserCode }) {
@@ -89,7 +171,7 @@ function ConnectionSetup({ chatgpt, startLogin, codeCopied, copyUserCode }) {
   );
 }
 
-function ConnectedWorkspace({ chatgpt, messages, status, error, input, setInput, handleSend, scrollRef }) {
+function ConnectedWorkspace({ chatgpt, messages, status, error, input, setInput, handleSend, scrollRef, dataCounts }) {
   const isStreaming = status === "streaming" || status === "submitted";
 
   return (
@@ -116,7 +198,9 @@ function ConnectedWorkspace({ chatgpt, messages, status, error, input, setInput,
                 return (
                   <article className={`${styles.message} ${message.role === "user" ? styles.userMessage : styles.assistantMessage}`} key={message.id}>
                     <span>{message.role === "user" ? "YOU" : "ASSISTANT"}</span>
-                    <p>{text || (isStreaming ? "Thinking…" : "")}</p>
+                    {message.role === "assistant"
+                      ? <MarkdownAnswer text={text || (isStreaming ? "Thinking…" : "")} />
+                      : <p>{text}</p>}
                   </article>
                 );
               })}
@@ -127,7 +211,6 @@ function ConnectedWorkspace({ chatgpt, messages, status, error, input, setInput,
         {error && <div className={styles.error} role="alert">{error.message || "Something went wrong. Try again."}</div>}
 
         <form className={styles.composer} onSubmit={(event) => { event.preventDefault(); void handleSend(); }}>
-          <div className={styles.contextChips}><span>TRADES</span><span>CHECK-INS</span><span>PLANS</span><span>JOURNALS</span></div>
           <textarea
             value={input}
             onChange={(event) => setInput(event.target.value)}
@@ -153,7 +236,7 @@ function ConnectedWorkspace({ chatgpt, messages, status, error, input, setInput,
           <div className={styles.railHead}><p>START WITH A QUESTION</p><span>04 prompts</span></div>
           <div className={styles.promptList}>
             {PROMPTS.map((prompt) => (
-              <button type="button" key={prompt.index} onClick={() => setInput(prompt.text)} disabled={isStreaming}>
+              <button type="button" key={prompt.index} onClick={() => void handleSend(prompt.text)} disabled={isStreaming}>
                 <span>{prompt.index}</span><div><small>{prompt.type}</small><strong>{prompt.text}</strong></div><b>↗</b>
               </button>
             ))}
@@ -163,7 +246,13 @@ function ConnectedWorkspace({ chatgpt, messages, status, error, input, setInput,
         <section className={styles.dataSection}>
           <div className={styles.railHead}><p>DATA AVAILABLE</p><span>LIVE</span></div>
           <div className={styles.dataList}>
-            {DATA_SOURCES.map(([label, detail]) => <div key={label}><span>{label}</span><strong>Ready</strong><small>{detail}</small></div>)}
+            {DATA_SOURCES.map((source) => (
+              <div key={source.key}>
+                <span>{source.label}</span>
+                <strong>{dataCounts?.[source.key] ?? "—"}</strong>
+                <small>{dataCounts ? `${source.detail} · entries available` : "Loading entries…"}</small>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -179,6 +268,7 @@ function ConnectedWorkspace({ chatgpt, messages, status, error, input, setInput,
 function AssistantChat({ chatgpt }) {
   const [input, setInput] = useState("");
   const [codeCopied, setCodeCopied] = useState(false);
+  const [dataCounts, setDataCounts] = useState(null);
   const scrollRef = useRef(null);
   const transport = useMemo(() => new DefaultChatTransport({ api: "/api/assistant" }), []);
   const { messages, sendMessage, status, error, clearError } = useChat({ transport });
@@ -202,6 +292,22 @@ function AssistantChat({ chatgpt }) {
     });
     return () => { active = false; };
   }, [chatgpt.isPending, chatgpt.userCode]);
+
+  useEffect(() => {
+    if (!chatgpt.isAuthenticated) {
+      setDataCounts(null);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    fetch("/api/assistant/counts", { signal: controller.signal })
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error("Count request failed")))
+      .then((counts) => setDataCounts(counts))
+      .catch((error) => {
+        if (error.name !== "AbortError") setDataCounts(null);
+      });
+    return () => controller.abort();
+  }, [chatgpt.isAuthenticated]);
 
   async function copyUserCode() {
     if (!chatgpt.userCode) return;
@@ -240,6 +346,7 @@ function AssistantChat({ chatgpt }) {
       setInput={setInput}
       handleSend={handleSend}
       scrollRef={scrollRef}
+      dataCounts={dataCounts}
     />
   );
 }
@@ -252,7 +359,7 @@ export default function AssistantPage() {
           <p>{headerDate()}</p>
           <h1 className="hybrid-page-title">AI Assistant<span className="hybrid-page-title-stop" aria-hidden="true" /></h1>
           <div className={styles.headerBottom}>
-            <p>Ask better questions about the process behind your results.</p>
+            <p>Ask questions about the process behind your results.</p>
             <span>YOUR DATA · YOUR CHATGPT</span>
           </div>
         </header>

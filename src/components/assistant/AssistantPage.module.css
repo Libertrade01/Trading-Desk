@@ -28,6 +28,17 @@
 .message { max-width: 86%; padding: 16px 18px; border: 1px solid var(--line); border-radius: 10px; background: rgba(5,16,29,.7); }
 .message > span { color: #617b96; font: 8px 'DM Mono', var(--font-mono); letter-spacing: .13em; }
 .message p { margin: 9px 0 0; color: #becbd8; font-size: 13px; line-height: 1.65; white-space: pre-wrap; }
+.markdownAnswer { display: grid; gap: 12px; margin-top: 11px; color: #c7d5e3; font-size: 13px; line-height: 1.7; }
+.markdownAnswer p { margin: 0; color: inherit; white-space: normal; }
+.markdownAnswer h3, .markdownAnswer h4 { margin: 8px 0 0; color: #f2f7fc; font-family: 'Syne', var(--font-display); letter-spacing: -.025em; }
+.markdownAnswer h3 { font-size: 18px; }
+.markdownAnswer h4 { font-size: 15px; }
+.markdownAnswer strong { color: #f2f7fc; font-weight: 650; }
+.markdownAnswer code { padding: 2px 5px; border: 1px solid rgba(82,147,210,.18); border-radius: 4px; color: #8dccff; background: rgba(3,12,22,.72); font: 11px 'DM Mono', var(--font-mono); }
+.markdownAnswer ul, .markdownAnswer ol { display: grid; gap: 7px; margin: 0; padding-left: 20px; }
+.markdownAnswer li { padding-left: 3px; }
+.markdownAnswer li::marker { color: var(--blue-soft); }
+.markdownAnswer hr { width: 100%; margin: 5px 0; border: 0; border-top: 1px solid var(--line); }
 .userMessage { justify-self: end; border-color: rgba(55,149,235,.28); background: rgba(10,46,80,.54); }
 .assistantMessage { justify-self: start; }
 .composer { margin: 0 24px 24px; overflow: hidden; border: 1px solid rgba(82,147,210,.25); border-radius: 11px; background: rgba(1,7,15,.68); }
@@ -55,7 +66,7 @@
 .promptList button > span { color: var(--blue-soft); font: 8px 'DM Mono', var(--font-mono); }
 .promptList button div { display: flex; flex-direction: column; gap: 5px; }
 .promptList small { color: #5b7591; font: 7px 'DM Mono', var(--font-mono); letter-spacing: .12em; }
-.promptList strong { color: #bdcad8; font-size: 10px; font-weight: 500; line-height: 1.4; }
+.promptList strong { color: #e0eaf4; font-size: 12px; font-weight: 600; line-height: 1.5; letter-spacing: -.01em; }
 .promptList button > b { color: #4f7599; font-size: 10px; }
 .dataSection { flex: 1; }
 .dataList { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
