@@ -12,54 +12,48 @@ import {
 import { filterNavItems } from "../lib/features";
 import { getCurrentUser } from "../lib/user-storage";
 
+function SidebarIcon({ name }) {
+  const paths = {
+    home: <><rect x="2.25" y="2.25" width="11.5" height="11.5" rx="2.25"/><path d="M2.25 8h11.5M8 2.25v11.5"/></>,
+    checkin: <><path d="M2.25 8h2.2l1.45-3.25L8.2 11l1.65-4 1.2 2.25h2.7"/><path d="M8 1.75a6.25 6.25 0 1 1-5.2 2.8"/></>,
+    plan: <><path d="M3 3.25h4l1 1.5h5v9.75H3z"/><path d="M5.25 8h5.5M5.25 11h3.5"/><circle cx="11.5" cy="11.75" r="1.75"/></>,
+    close: <><path d="M13.5 5.25A6 6 0 1 0 14 10"/><path d="M10.5 2.75h3v3"/><path d="m5.5 8.25 2 2 3.25-3.25"/></>,
+    stats: <><path d="M2 14V8.5h3V14M6.5 14V5h3v9M11 14V2.5h3V14"/><path d="M1.5 14h13"/></>,
+    history: <><path d="M3.4 4.35A6 6 0 1 1 2.25 9"/><path d="M2 3.25v3.5h3.5"/><path d="M8 4.75v3.5l2.4 1.45"/></>,
+    calendar: <><rect x="2" y="3.5" width="12" height="10.75" rx="1.25"/><path d="M2 6.75h12M5 1.75v3M11 1.75v3M5 9.25h2M9 9.25h2M5 11.75h2"/></>,
+    intelligence: <><circle cx="4" cy="8" r="1.25"/><circle cx="12" cy="4" r="1.25"/><circle cx="12" cy="12" r="1.25"/><path d="m5.15 7.4 5.7-2.8M5.15 8.6l5.7 2.8M12 5.25v5.5"/><path d="M7.5 2.25 8 3.5l1.25.5L8 4.5l-.5 1.25L7 4.5 5.75 4 7 3.5l.5-1.25z"/></>,
+    profit: <><ellipse cx="8" cy="4.25" rx="5.25" ry="2"/><path d="M2.75 4.25v3.5c0 1.1 2.35 2 5.25 2s5.25-.9 5.25-2v-3.5M2.75 7.75v3.5c0 1.1 2.35 2 5.25 2s5.25-.9 5.25-2v-3.5"/><path d="M8 3v2.5"/></>,
+    settings: <><path d="M3.25 2v12M8 2v12M12.75 2v12"/><circle cx="3.25" cy="5.5" r="1.65"/><circle cx="8" cy="10.5" r="1.65"/><circle cx="12.75" cy="6.5" r="1.65"/></>,
+    desk: <><path d="M2 4h12M2 8h8M2 12h10"/><circle cx="13" cy="8" r="1" fill="currentColor" stroke="none"/></>,
+    wiki: <><path d="M2.25 2.5h5A2 2 0 0 1 9.25 4.5v9H4.5a2.25 2.25 0 0 0-2.25 2.25V2.5z"/><path d="M13.75 2.5h-2.5a2 2 0 0 0-2 2v9H11.5a2.25 2.25 0 0 1 2.25 2.25V2.5z"/></>,
+  };
+  return <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
+}
+
 const NAV_ITEMS = [
-  { id: "home", href: "/home", label: "Home", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="5" height="5" rx="0.5"/><rect x="9" y="2" width="5" height="5" rx="0.5"/><rect x="2" y="9" width="5" height="5" rx="0.5"/><rect x="9" y="9" width="5" height="5" rx="0.5"/></svg>
-  )},
+  { id: "home", href: "/home", label: "Home", icon: <SidebarIcon name="home" /> },
   { type: "label", text: "Daily", className: "sidebar-nav-label--daily" },
-  { id: "premarket", href: "/premarket", label: "Check-in", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/></svg>
-  )},
-  { id: "dailyplan", href: "/plan", label: "Session Plan", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5" strokeLinecap="round"/></svg>
-  )},
-  { id: "postmarket", href: "/postmarket", label: "Close the LOOP", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 12h12M4 9l3-3 2 2 4-4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-  )},
-  { id: "analytics", href: "/analytics", label: "Stats", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="9" width="3" height="5" rx="0.5"/><rect x="6.5" y="5" width="3" height="9" rx="0.5"/><rect x="11" y="2" width="3" height="12" rx="0.5"/></svg>
-  )},
+  { id: "premarket", href: "/premarket", label: "Check-in", icon: <SidebarIcon name="checkin" /> },
+  { id: "dailyplan", href: "/plan", label: "Session Plan", icon: <SidebarIcon name="plan" /> },
+  { id: "postmarket", href: "/postmarket", label: "Close the LOOP", icon: <SidebarIcon name="close" /> },
+  { id: "analytics", href: "/analytics", label: "Stats", icon: <SidebarIcon name="stats" /> },
   { type: "label", text: "Review", className: "sidebar-nav-label--section-gap" },
-  { id: "history", href: "/history", label: "Past sessions", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5v4l2.5 1.5" strokeLinecap="round"/></svg>
-  )},
-  { id: "weeklyreview", href: "/weekly-review", label: "Weekly Review", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3" strokeLinecap="round"/></svg>
-  )},
-  { id: "assistant", href: "/assistant", label: "LOOP Intelligence", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 12.5l1.2-3.6L2 6.5h3.2L8 3.5l2.8 3h3.2l-2.2 2.4L13.2 12.5 8 10.2 3 12.5z" strokeLinejoin="round"/></svg>
-  )},
-  { id: "propeconomics", href: "/prop-economics", label: "Prop Profit Tracker", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 12V6l6-3 6 3v6l-6 3-6-3z"/><path d="M8 3v10M2 6l6 3 6-3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-  )},
+  { id: "history", href: "/history", label: "Past sessions", icon: <SidebarIcon name="history" /> },
+  { id: "weeklyreview", href: "/weekly-review", label: "Weekly Review", icon: <SidebarIcon name="calendar" /> },
+  { id: "assistant", href: "/assistant", label: "LOOP Intelligence", icon: <SidebarIcon name="intelligence" /> },
+  { id: "propeconomics", href: "/prop-economics", label: "Prop Profit Tracker", icon: <SidebarIcon name="profit" /> },
   {
     id: "settings",
     href: "/settings",
     label: "Settings",
     className: "sidebar-nav-item--section-gap",
-    icon: (
-      <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>
-    ),
+    icon: <SidebarIcon name="settings" />,
   },
 ];
 
 const FOUNDER_NAV_ITEMS = [
-  { id: "desk", href: "/desk", label: "Trade Desk", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
-  )},
-  { id: "wiki", href: "/wiki", label: "Wiki", icon: (
-    <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 2.5h10v11H3z"/><path d="M5.5 2.5v11M8 2.5v11M10.5 2.5v11"/></svg>
-  )},
+  { id: "desk", href: "/desk", label: "Trade Desk", icon: <SidebarIcon name="desk" /> },
+  { id: "wiki", href: "/wiki", label: "Wiki", icon: <SidebarIcon name="wiki" /> },
 ];
 
 function isNavActive(pathname, item, settingsSection) {

@@ -412,6 +412,132 @@ function HomeHeroActivePanel({
   );
 }
 
+function HomeAirDashboard({
+  hero,
+  allComplete,
+  completedCount,
+  today,
+  processStreak,
+  playbookStreak,
+  streakTargetDays,
+  showRiskStreak,
+  showPlaybookStreak,
+  loadingPanels,
+  showHeroReadiness,
+  showReadinessStat,
+  showPlaybookStat,
+  showPnlStat,
+  todayPlaybookLabel,
+  pnlTone,
+  preComplete,
+  planComplete,
+  postComplete,
+  nextStep,
+  onNavigate,
+  weekFocus,
+  showReviewPrompt,
+  onOpenWeeklyReview,
+}) {
+  const readinessValue = today?.readinessScore ?? null;
+  const readinessNote = readinessValue == null
+    ? `${completedCount} of 3 steps complete`
+    : readinessValue >= 70
+      ? "Ready · conditions supportive"
+      : readinessValue >= 50
+        ? "Neutral · trade selectively"
+        : "Protective · reduce exposure";
+
+  return (
+    <>
+      <section className="home-air-intro" aria-labelledby="home-air-title">
+        <div className="home-air-intro-copy">
+          <p className={`home-hero-eyebrow${hero.eyebrowMuted ? " home-hero-eyebrow--muted" : ""}`}>
+            {hero.eyebrow}
+          </p>
+          <h2 id="home-air-title" className="home-hero-title">{hero.title}</h2>
+          {hero.sub && <p className="home-hero-lead">{hero.sub}</p>}
+          {!allComplete && today?.playbookAdherence?.total > 0 && todayPlaybookLabel && (
+            <p className="home-hero-lead home-hero-lead--playbook">{todayPlaybookLabel.text}</p>
+          )}
+        </div>
+
+        <div className="home-air-readiness" aria-label="Today readiness">
+          <span className="home-metric-stat-label">
+            {readinessValue != null ? "Readiness" : "Today’s loop"}
+          </span>
+          <strong className="home-air-readiness-value">
+            {readinessValue != null ? readinessValue : `${completedCount}/3`}
+          </strong>
+          <small>{readinessNote}</small>
+        </div>
+      </section>
+
+      <div className="home-air-focus">
+        <WeekFocusStrip
+          items={weekFocus.items}
+          loading={loadingPanels}
+          showReviewPrompt={showReviewPrompt}
+          onOpenWeeklyReview={onOpenWeeklyReview}
+          allComplete={allComplete}
+        />
+      </div>
+
+      <section className="home-air-loop-grid" aria-label="Today’s process">
+        <div className="home-air-loop-primary">
+          <p className="home-air-section-label">
+            {allComplete ? "Today’s loop" : "Continue your LOOP"}
+          </p>
+          {!allComplete ? (
+            <HomeWorkflowSteps
+              today={today}
+              preComplete={preComplete}
+              planComplete={planComplete}
+              postComplete={postComplete}
+              nextStep={nextStep}
+              completedCount={completedCount}
+              onNavigate={onNavigate}
+              embedded
+            />
+          ) : (
+            <div className="home-air-complete">
+              <span aria-hidden="true">✓</span>
+              <div>
+                <strong>Loop complete.</strong>
+                <p>Your process is closed for today.</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <aside className="home-air-consistency" aria-label="Process consistency">
+          <p className="home-air-section-label">Process consistency</p>
+          <div className="home-air-streaks">
+            {showRiskStreak && (
+              <StreakMetric label="Risk streak" value={processStreak} target={streakTargetDays} loading={loadingPanels} />
+            )}
+            {showPlaybookStreak && (
+              <StreakMetric label="Playbook setup streak" value={playbookStreak} target={streakTargetDays} loading={loadingPanels} />
+            )}
+          </div>
+          {allComplete && (showReadinessStat || showPlaybookStat || showPnlStat) && (
+            <div className="home-air-day-stats">
+              {showReadinessStat && readinessValue != null && (
+                <div><span>Ready</span><strong>{readinessValue}</strong></div>
+              )}
+              {showPlaybookStat && (
+                <div><span>Playbook</span><strong>{today.playbookAdherence.playbookRate}%</strong></div>
+              )}
+              {showPnlStat && today?.netPnl != null && (
+                <div><span>Net P&amp;L</span><strong className={pnlTone}>{formatUsd(today.netPnl, { signed: true })}</strong></div>
+              )}
+            </div>
+          )}
+        </aside>
+      </section>
+    </>
+  );
+}
+
 function HomeQuickActionTiles({ onNavigate, onOpenWeeklyReview }) {
   const actions = [
     {
@@ -1184,10 +1310,8 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
           <div className="home-page-header-main">
             <h1 className="home-page-greeting">{greetingLine}</h1>
             <p className="home-page-date">{formatHeaderDateLong(effectiveDate)}</p>
-            <div className="home-page-header-notes">
-              <HomeMarketContextFlags dateKey={dateKey} className="home-page-market-flags--header" />
-            </div>
           </div>
+          <HomeMarketContextFlags dateKey={dateKey} className="home-page-market-flags--header" />
         </header>
 
         {showWelcomeHint && (
@@ -1225,51 +1349,32 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
 
         <div className="home-page-dashboard home-page-dashboard--workflow">
           <div className="home-page-main">
-            <section className="home-loop-card home-hero-card home-page-hero home-hero-card--active">
-              <div className="home-hero-card-inner">
-                <p
-                  className={`home-hero-eyebrow${hero.eyebrowMuted ? " home-hero-eyebrow--muted" : ""}`}
-                >
-                  {hero.eyebrow}
-                </p>
-                <h2 className="home-hero-title">{hero.title}</h2>
-                {hero.sub && <p className="home-hero-lead">{hero.sub}</p>}
-                {!allComplete && today?.playbookAdherence?.total > 0 && todayPlaybookLabel && (
-                  <p className="home-hero-lead home-hero-lead--playbook">{todayPlaybookLabel.text}</p>
-                )}
-                <div className="home-hero-week-focus">
-                  <WeekFocusStrip
-                    items={weekFocus.items}
-                    loading={loadingPanels}
-                    showReviewPrompt={showReviewPrompt}
-                    onOpenWeeklyReview={onOpenWeeklyReview}
-                    allComplete={allComplete}
-                  />
-                </div>
-                <HomeHeroActivePanel
-                  allComplete={allComplete}
-                  completedCount={completedCount}
-                  today={today}
-                  processStreak={processStreak}
-                  playbookStreak={playbookStreak}
-                  streakTargetDays={profile?.streakTargetDays ?? null}
-                  showRiskStreak={profile?.riskStreakEnabled !== false}
-                  showPlaybookStreak={profile?.playbookStreakEnabled !== false}
-                  loadingPanels={loadingPanels}
-                  showHeroReadiness={showHeroReadiness}
-                  showReadinessStat={showReadinessStat}
-                  showPlaybookStat={showPlaybookStat}
-                  showPnlStat={showPnlStat}
-                  todayPlaybookLabel={todayPlaybookLabel}
-                  pnlTone={pnlTone}
-                  preComplete={preComplete}
-                  planComplete={planComplete}
-                  postComplete={postComplete}
-                  nextStep={nextStep}
-                  onNavigate={onNavigate}
-                />
-              </div>
-            </section>
+            <HomeAirDashboard
+              hero={hero}
+              allComplete={allComplete}
+              completedCount={completedCount}
+              today={today}
+              processStreak={processStreak}
+              playbookStreak={playbookStreak}
+              streakTargetDays={profile?.streakTargetDays ?? null}
+              showRiskStreak={profile?.riskStreakEnabled !== false}
+              showPlaybookStreak={profile?.playbookStreakEnabled !== false}
+              loadingPanels={loadingPanels}
+              showHeroReadiness={showHeroReadiness}
+              showReadinessStat={showReadinessStat}
+              showPlaybookStat={showPlaybookStat}
+              showPnlStat={showPnlStat}
+              todayPlaybookLabel={todayPlaybookLabel}
+              pnlTone={pnlTone}
+              preComplete={preComplete}
+              planComplete={planComplete}
+              postComplete={postComplete}
+              nextStep={nextStep}
+              onNavigate={onNavigate}
+              weekFocus={weekFocus}
+              showReviewPrompt={showReviewPrompt}
+              onOpenWeeklyReview={onOpenWeeklyReview}
+            />
 
             <HomeJournalFollowUpNudge
               today={today}

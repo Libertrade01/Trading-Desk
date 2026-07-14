@@ -1,4 +1,6 @@
 import './globals.css';
+import './home-dashboard-redesign.css';
+import './app-sidebar-refinement.css';
 import AuthRecoveryRedirect from '../components/AuthRecoveryRedirect';
 
 export const metadata = {
