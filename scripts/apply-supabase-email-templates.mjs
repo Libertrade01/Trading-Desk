@@ -26,8 +26,9 @@ function readTemplate(name) {
 }
 
 const founderUrl = "https://libertrade-desk.vercel.app";
-const customerUrl = "https://libertrade-app.vercel.app";
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || founderUrl;
+const customerUrl = "https://libertrade.app";
+const legacyCustomerUrl = "https://libertrade-app.vercel.app";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || customerUrl;
 const redirectUrls = [
   `${founderUrl}/auth/callback`,
   `${founderUrl}/auth/recovery`,
@@ -35,6 +36,9 @@ const redirectUrls = [
   `${customerUrl}/auth/callback`,
   `${customerUrl}/auth/recovery`,
   `${customerUrl}/reset-password`,
+  `${legacyCustomerUrl}/auth/callback`,
+  `${legacyCustomerUrl}/auth/recovery`,
+  `${legacyCustomerUrl}/reset-password`,
   "http://localhost:3000/auth/callback",
   "http://localhost:3000/auth/recovery",
   "http://localhost:3000/reset-password",

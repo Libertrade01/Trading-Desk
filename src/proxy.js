@@ -12,6 +12,9 @@ const PUBLIC_PATHS = [
   "/reset-password",
   "/auth/callback",
   "/auth/recovery",
+  "/privacy",
+  "/terms",
+  "/cookies",
 ];
 
 /** Logged-in users are redirected away from these paths only (not recovery flows). */
@@ -37,7 +40,7 @@ function isStaticOrInternal(pathname) {
   );
 }
 
-export async function middleware(request) {
+export async function proxy(request) {
   const { pathname } = request.nextUrl;
 
   if (isStaticOrInternal(pathname)) {

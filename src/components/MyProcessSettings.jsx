@@ -6,6 +6,7 @@ import {
   loadTraderProfile,
   saveTraderProfile,
   validateTraderProfileInput,
+  wearableConsentPatch,
 } from "../lib/trader-profile";
 import { SETUP_IMPROVISED, SETUP_INVALID } from "../lib/setup-options";
 import HabitTileField from "./HabitTileField";
@@ -410,10 +411,10 @@ export default function MyProcessSettings({ standalone = false }) {
           <div className="pm-field process-split-field">
             <div className="pm-habit-tile-row process-split-wearable-row">
               <HabitTileField
-                label="I use a wearable"
-                hint="Turns on Recovery (HRV) and Sleep Debt tracking in Check-in."
+                label="Track wearable data"
+                hint="Adds HRV and Sleep Debt to Check-in. Enabling it records your consent to store and use those readings for readiness scores and reviews. Turn it off to hide the fields and stop future collection."
                 value={profile.usesWearable}
-                onChange={(v) => patch({ usesWearable: v })}
+                onChange={(v) => patch(wearableConsentPatch(v))}
               />
             </div>
           </div>

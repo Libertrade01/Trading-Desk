@@ -6,7 +6,7 @@ export function getAppUrl() {
   const configured = process.env.NEXT_PUBLIC_APP_URL;
   if (configured) return configured.replace(/\/$/, "");
   const vercel = process.env.VERCEL_URL;
-  if (!vercel) return "https://libertrade-desk.vercel.app";
+  if (!vercel) return "https://libertrade.app";
   if (vercel.startsWith("http")) return vercel.replace(/\/$/, "");
   return `https://${vercel}`;
 }

@@ -2,6 +2,7 @@ import { BEHAVIORAL_FLAG_CATEGORIES } from "./postmarket-defaults";
 import { VALID_SETUPS } from "./setup-options";
 import { normalizeKeyLevelQuickAdds } from "./daily-plan-defaults";
 import { storage } from "./supabase";
+import { WEARABLE_CONSENT_VERSION } from "./legal";
 
 export const TRADER_PROFILE_KEY = "trader-profile";
 export const PROFILE_UPDATED_EVENT = "trader-profile-updated";
@@ -135,6 +136,27 @@ function normalizeStreakTargetDays(raw) {
   return Math.min(365, Math.round(n));
 }
 
+function normalizeConsentTimestamp(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+export function wearableConsentPatch(enabled, now = new Date()) {
+  if (!enabled) {
+    return {
+      usesWearable: false,
+      wearableConsentAt: null,
+      wearableConsentVersion: null,
+    };
+  }
+  return {
+    usesWearable: true,
+    wearableConsentAt: now.toISOString(),
+    wearableConsentVersion: WEARABLE_CONSENT_VERSION,
+  };
+}
+
 export function createCustomerDefaultProfile() {
   return normalizeTraderProfile({
     profileKind: "customer",
@@ -232,6 +254,12 @@ export function normalizeTraderProfile(raw = {}) {
 
   const streakTargetDays = normalizeStreakTargetDays(raw.streakTargetDays);
   const profileKind = raw.profileKind === "founder" ? "founder" : "customer";
+  const wearableConsentAt = normalizeConsentTimestamp(raw.wearableConsentAt);
+  const wearableConsentVersion = raw.wearableConsentVersion
+    ? String(raw.wearableConsentVersion)
+    : null;
+  const hasCurrentWearableConsent =
+    !!wearableConsentAt && wearableConsentVersion === WEARABLE_CONSENT_VERSION;
 
   return {
     profileKind,
@@ -247,7 +275,10 @@ export function normalizeTraderProfile(raw = {}) {
     streakTargetDays,
     riskStreakEnabled: raw.riskStreakEnabled !== false,
     playbookStreakEnabled: raw.playbookStreakEnabled !== false,
-    usesWearable: !!raw.usesWearable,
+    usesWearable:
+      !!raw.usesWearable && (profileKind === "founder" || hasCurrentWearableConsent),
+    wearableConsentAt,
+    wearableConsentVersion,
     showColdTurkeyBlocker:
       profileKind === "founder" ? !!raw.showColdTurkeyBlocker : false,
     finishChecklist,

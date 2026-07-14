@@ -11,7 +11,7 @@ import { dirname, join } from 'node:path';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SOURCE_ENV = join(ROOT, '.env.founder.prod.tmp');
 const CUSTOMER_PROJECT = 'libertrade-app';
-const CUSTOMER_URL = 'https://libertrade-app.vercel.app';
+const CUSTOMER_URL = 'https://libertrade.app';
 
 const COPY_KEYS = [
   'NEXT_PUBLIC_SUPABASE_URL',

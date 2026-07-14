@@ -22,6 +22,7 @@ import {
   DEFAULT_COMMITMENT,
   WELCOME_HINT_STORAGE_KEY,
   parsePlanRailMoney,
+  wearableConsentPatch,
 } from "../lib/trader-profile";
 import { ACCOUNT_TYPE_OPTIONS } from "../lib/trade-import-options";
 import { getCurrentUser } from "../lib/user-storage";
@@ -117,7 +118,6 @@ export default function OnboardingWizard() {
   const [error, setError] = useState("");
 
   const [accountName, setAccountName] = useState("");
-  const [preferredName, setPreferredName] = useState("");
   const [accountType, setAccountType] = useState("funded");
   const [setups, setSetups] = useState([{ id: crypto.randomUUID(), name: "" }]);
   const [commitments, setCommitments] = useState([
@@ -127,6 +127,7 @@ export default function OnboardingWizard() {
   const [playbookStreakEnabled, setPlaybookStreakEnabled] = useState(true);
   const [streakTargetDays, setStreakTargetDays] = useState(21);
   const [biasChecklistEnabled, setBiasChecklistEnabled] = useState(false);
+  const [usesWearable, setUsesWearable] = useState(false);
   const [drawdownRecoveryEnabled, setDrawdownRecoveryEnabled] = useState(
     DEFAULT_DLL_SETTINGS.recoveryEnabled
   );
@@ -219,17 +220,19 @@ export default function OnboardingWizard() {
         accounts: [account],
       });
 
+      const currentProfile = await loadTraderProfile();
       const base = createCustomerDefaultProfile();
       const fullSizeDll = parsePlanRailMoney(defaultMaxDailyLoss);
       await completeOnboarding({
         ...base,
-        preferredName: preferredName.trim(),
+        preferredName: currentProfile.preferredName,
         setups: setupNames.map((name) => ({ id: crypto.randomUUID(), name })),
         commitments: namedCommitments.slice(0, 3).map((text) => ({
           id: crypto.randomUUID(),
           text,
         })),
         biasChecklistEnabled,
+        ...wearableConsentPatch(usesWearable),
         riskStreakEnabled,
         playbookStreakEnabled,
         streakTargetDays: Number(streakTargetDays) || 21,
@@ -335,18 +338,6 @@ export default function OnboardingWizard() {
 
         {step.id === "account" && (
           <>
-            <div className="pm-field">
-              <div className="pm-field-label hybrid-label">What should we call you?</div>
-              <input
-                type="text"
-                value={preferredName}
-                onChange={(e) => setPreferredName(e.target.value)}
-                className="pm-text-input"
-                placeholder="Mike"
-                autoComplete="nickname"
-              />
-              <p className="pm-field-hint">Optional — used in your Home greeting.</p>
-            </div>
             <div className="pm-field-grid">
               <div>
                 <div className="pm-field-label hybrid-label">Account name</div>
@@ -560,6 +551,12 @@ export default function OnboardingWizard() {
 
         {step.id === "extras" && (
           <>
+            <ToggleField
+              label="Do you own a wearable and want to track HRV and sleep debt?"
+              hint="Optional. Enabling this adds HRV and Sleep Debt to Check-in. By enabling it, you consent to Libertrade storing and using those wellbeing readings for your readiness scores and reviews. You can turn it off in Settings."
+              value={usesWearable}
+              onChange={setUsesWearable}
+            />
             <ToggleField
               label="Chart annotation checklist"
               hint="Examples: value area marked, nodes/LVNs, weekly profile. Edit the list anytime."

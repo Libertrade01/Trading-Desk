@@ -1,4 +1,4 @@
-import { normalizeEconEvent } from "./econ-calendar";
+import { normalizeEconEvent } from "./econ-calendar.js";
 
 const IMPACT_MAP = {
   high: "high",

@@ -1,6 +1,6 @@
 # Mental Game Framework
 
-Schema Awareness Trading Framework — a personal tool for identifying and interrupting psychological patterns that interfere with trading execution.
+Schema Awareness Trading Framework - a personal tool for identifying and interrupting psychological patterns that interfere with trading execution.
 
 ## Deployment Guide
 
@@ -10,8 +10,8 @@ Schema Awareness Trading Framework — a personal tool for identifying and inter
 2. Click **SQL Editor** in the left sidebar
 3. Click **New Query**
 4. Copy and paste the contents of `supabase-setup.sql` into the editor
-5. Click **Run** — you should see "Success. No rows returned"
-6. Done — your database is ready
+5. Click **Run** - you should see "Success. No rows returned"
+6. Done - your database is ready
 
 ### Step 2: Push to GitHub
 
@@ -37,7 +37,7 @@ git push -u origin main
    - `NEXT_PUBLIC_SUPABASE_URL` = `https://uzbsuyknfnzqwdpzspfs.supabase.co`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = your anon/publishable key
 4. Click **Deploy**
-5. Wait ~60 seconds — your app will be live at `mental-game-framework.vercel.app`
+5. Wait ~60 seconds - your app will be live at `mental-game-framework.vercel.app`
 
 ### Step 4: Add to iPad Home Screen
 
@@ -59,11 +59,11 @@ For small text changes (rewording a non-negotiable, adjusting thresholds), you c
 ```
 src/
   app/
-    globals.css    — Global styles
-    layout.js      — Root layout with PWA metadata
-    page.js        — The entire app (single component)
+    globals.css    - Global styles
+    layout.js      - Root layout with PWA metadata
+    page.js        - The entire app (single component)
   lib/
-    supabase.js    — Supabase client & storage helpers
+    supabase.js    - Supabase client & storage helpers
 public/
-  manifest.json    — PWA manifest for Add to Home Screen
+  manifest.json    - PWA manifest for Add to Home Screen
 ```

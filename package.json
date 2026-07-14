@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test src/lib/market-events.test.js src/lib/econ-calendar.test.js src/lib/analytics-playbook-filter.test.js src/lib/trading-day-range.test.js src/lib/trade-time.test.js"
+    "check:launch-env": "node scripts/check-production-env.mjs",
+    "test": "node --test src/lib/market-events.test.js src/lib/econ-calendar.test.js src/lib/analytics-playbook-filter.test.js src/lib/trading-day-range.test.js src/lib/trade-time.test.js src/lib/age-eligibility.test.js"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.0",
@@ -16,11 +17,15 @@
     "@opencoredev/loginwithchatgpt-server": "^0.1.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.45.0",
+    "@vercel/analytics": "^2.0.1",
     "ai": "^7.0.0",
     "chart.js": "^4.4.1",
-    "next": "^16.1.6",
+    "next": "^16.2.6",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "zod": "^3.24.0"
+  },
+  "overrides": {
+    "postcss": "^8.5.10"
   }
 }

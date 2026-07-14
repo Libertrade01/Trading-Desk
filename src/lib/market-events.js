@@ -1,5 +1,5 @@
-import staticEvents2026 from "../data/market-events-2026.json";
-import marketHolidays2026 from "../data/market-holidays-2026.json";
+import staticEvents2026 from "../data/market-events-2026.json" with { type: "json" };
+import marketHolidays2026 from "../data/market-holidays-2026.json" with { type: "json" };
 
 const SEVERITY_ORDER = { high: 0, medium: 1, low: 2 };
 

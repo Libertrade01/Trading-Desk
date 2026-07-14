@@ -1,6 +1,7 @@
 /**
- * Feature flags for split Vercel deploys (founder vs customer SaaS).
- * Defaults to true locally for backward compatibility.
+ * Feature flags for the shared founder and customer deployment.
+ * Defaults to true in local development and false in production so founder
+ * routes fail closed if a production environment variable is missing.
  *
  * Customer deploy: set NEXT_PUBLIC_FEATURE_WIKI=false and
  * NEXT_PUBLIC_FEATURE_LEGACY_DESK=false in Vercel env.
@@ -14,14 +15,16 @@ function parseFlag(value, defaultValue = true) {
   return normalized === "true" || normalized === "1";
 }
 
+const DEFAULT_FEATURE_ENABLED = process.env.NODE_ENV !== "production";
+
 export const FEATURE_WIKI = parseFlag(
   process.env.NEXT_PUBLIC_FEATURE_WIKI,
-  true
+  DEFAULT_FEATURE_ENABLED
 );
 
 export const FEATURE_LEGACY_DESK = parseFlag(
   process.env.NEXT_PUBLIC_FEATURE_LEGACY_DESK,
-  true
+  DEFAULT_FEATURE_ENABLED
 );
 
 const FOUNDER_ONLY_NAV = new Set(["wiki", "desk"]);

@@ -1,4 +1,4 @@
-import econReleases2026 from "../data/econ-releases-2026.json";
+import econReleases2026 from "../data/econ-releases-2026.json" with { type: "json" };
 
 export const US_ECON_HOURS = { start: "08:00", end: "16:00" };
 

@@ -99,9 +99,9 @@ function CheckInMockup() {
             <small>Proceed with your plan.</small>
             <ul>
               <li className={styles.readinessActive}><span>Body</span><b>80</b></li>
-              <li><span>Mind</span><b>—</b></li>
-              <li><span>External</span><b>—</b></li>
-              <li><span>Prep</span><b>—</b></li>
+              <li><span>Mind</span><b>·</b></li>
+              <li><span>External</span><b>·</b></li>
+              <li><span>Prep</span><b>·</b></li>
             </ul>
           </aside>
         </div>
@@ -235,7 +235,7 @@ function IntelligenceVisual() {
   );
 }
 
-export default function LandingRedesignPreview({ intelligencePreview = false }) {
+export default function LandingRedesignPreview() {
   return (
     <div className={styles.page}>
       <a className={styles.skipLink} href="#preview-main">Skip to content</a>
@@ -251,7 +251,7 @@ export default function LandingRedesignPreview({ intelligencePreview = false }) 
           <h1 id="landing-hero-title"><span>Check-in.</span><span>Trade your plan.</span><span>Close the loop.</span></h1>
           <p className={styles.heroLead}>Prepare before the open. Execute against written rules. Review to refine your process.</p>
           <div className={styles.heroActions}>
-            <Link className={styles.primaryAction} href="/signup">Set up your LOOP <span>↗</span></Link>
+            <Link className={styles.primaryAction} href="/signup">Build Your Loop <span>↗</span></Link>
             <Link className={styles.textAction} href="/login">Sign in <span>→</span></Link>
           </div>
         </div>
@@ -287,8 +287,8 @@ export default function LandingRedesignPreview({ intelligencePreview = false }) 
 
         <section className={styles.features} aria-labelledby="features-title">
           <header className={styles.featuresHead}>
-            <div><p>Beyond the loop</p><h2 id="features-title">{intelligencePreview ? <>Your process,<br /><span>connected.</span></> : <>Process over<br /><span>profits.</span></>}</h2></div>
-            <p>{intelligencePreview ? "The LOOP records what happened. Intelligence connects the evidence and helps you decide what to change next." : "Performance means more when you connect the outcome to readiness, preparation, and execution, not just profits."}</p>
+            <div><p>Beyond the loop</p><h2 id="features-title">Process over<br /><span>profits.</span></h2></div>
+            <p>Performance means more when you connect the outcome to readiness, preparation, and execution, not just profits.</p>
           </header>
 
           <article className={styles.statsFeature}>
@@ -300,26 +300,24 @@ export default function LandingRedesignPreview({ intelligencePreview = false }) 
             <StatsVisual />
           </article>
 
-          {intelligencePreview && (
-            <article className={styles.intelligenceFeature}>
-              <div className={styles.featureCopy}>
-                <span>LOOP INTELLIGENCE / 02</span>
-                <h3>Find the leaks. Strengthen the process.</h3>
-                <p>Use AI to connect the evidence across your trades, readiness, plans, and journals, powered through your own ChatGPT subscription.</p>
-                <ul className={styles.intelligenceBenefits}>
-                  <li>Surface recurring execution leaks</li>
-                  <li>Connect readiness to performance</li>
-                  <li>Turn patterns into your next focus</li>
-                </ul>
-              </div>
-              <IntelligenceVisual />
-            </article>
-          )}
+          <article className={styles.intelligenceFeature}>
+            <div className={styles.featureCopy}>
+              <span>LOOP INTELLIGENCE / 02</span>
+              <h3>Find the leaks. Strengthen the process.</h3>
+              <p>Use AI to connect the evidence across your trades, readiness, plans, and journals, powered through your own ChatGPT subscription.</p>
+              <ul className={styles.intelligenceBenefits}>
+                <li>Surface recurring execution leaks</li>
+                <li>Connect readiness to performance</li>
+                <li>Turn patterns into your next focus</li>
+              </ul>
+            </div>
+            <IntelligenceVisual />
+          </article>
 
           <div className={styles.featureSplit}>
             <article className={styles.weeklyFeature}>
               <div className={styles.featureCopy}>
-                <span>WEEKLY REVIEW / {intelligencePreview ? "03" : "02"}</span>
+                <span>WEEKLY REVIEW / 03</span>
                 <h3>The trading week<br />scored in one place.</h3>
                 <p>Compare this week to last, spot the patterns, and refine next week with two clear focuses.</p>
               </div>
@@ -351,7 +349,7 @@ export default function LandingRedesignPreview({ intelligencePreview = false }) 
 
             <article className={styles.propFeature}>
               <div className={styles.featureCopy}>
-                <span>PROP TRACKER / {intelligencePreview ? "04" : "03"}</span>
+                <span>PROP TRACKER / 04</span>
                 <h3>Know what prop trading is really paying you.</h3>
                 <p>Track every evaluation fee and payout to see your true net position across prop firms.</p>
               </div>
@@ -381,22 +379,28 @@ export default function LandingRedesignPreview({ intelligencePreview = false }) 
           </div>
         </section>
 
-        <section className={styles.finalCta}>
-          <div>
-            <p>YOUR NEXT SESSION</p>
-            <h2>Start before<br />the market opens.</h2>
-          </div>
-          <div>
-            <p>Build the plan. Trade it. Review it. Carry the lesson forward.</p>
-            <Link className={styles.primaryAction} href="/signup">Set up your LOOP <span>↗</span></Link>
-          </div>
-        </section>
       </main>
 
-      <footer className={styles.footer}>
-        <Wordmark compact />
-        <p>Session journal for discretionary traders.</p>
-        <Link href="/login">Sign in</Link>
+      <footer className={styles.footerHorizon}>
+        <div className={styles.footerOrbit} aria-hidden="true"><i /><i /></div>
+        <div className={styles.footerTop}>
+          <Wordmark compact />
+          <Link className={styles.footerCta} href="/signup">Build Your Loop <span>↗</span></Link>
+        </div>
+        <div className={styles.footerStatement}>
+          <span>REVIEW. REFINE. REPEAT.</span>
+          <h2>Every session<br />sharpens the next.</h2>
+        </div>
+        <div className={styles.footerBase}>
+          <p className={styles.footerPurpose}>Trading journal and educational review tools.<br />No trade signals or personalised investment recommendations.</p>
+          <span>© 2026 LIBERTRADE</span>
+          <nav className={styles.footerLegal} aria-label="Legal and account links">
+            <Link href="/terms">Terms</Link>
+            <Link href="/privacy">Privacy</Link>
+            <Link href="/cookies">Cookies</Link>
+            <Link href="/login">Sign in</Link>
+          </nav>
+        </div>
       </footer>
     </div>
   );

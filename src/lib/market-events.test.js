@@ -55,13 +55,13 @@ describe("NYSE holiday display windows", () => {
     assert.ok(!hasHolidayLabel(holidayEventsForDate("2026-02-17"), label));
   });
 
-  it("Day after Thanksgiving 2026 (Friday half day): shows Mon Nov 24 through Fri Nov 27", () => {
+  it("Day after Thanksgiving 2026 (Friday half day): shows Mon Nov 23 through Fri Nov 27", () => {
     const halfDay = "2026-11-27";
     const label = formatHolidayDisplayLabel(halfDay, "Day after Thanksgiving");
-    assert.equal(displayStartForHoliday(halfDay), "2026-11-24");
+    assert.equal(displayStartForHoliday(halfDay), "2026-11-23");
     assert.equal(displayEndForHoliday(halfDay), "2026-11-27");
 
-    const active = holidayEventsForDate("2026-11-24");
+    const active = holidayEventsForDate("2026-11-23");
     const half = active.find((e) => e.label === label);
     assert.ok(half);
     assert.equal(half.kind, "halfday");

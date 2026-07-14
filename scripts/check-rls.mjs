@@ -77,7 +77,13 @@ async function anonProbe() {
   if (!url || !anon) {
     return { skipped: true, reason: "no anon keys available" };
   }
-  const tables = ["trades", "app_data", "intraday_journal", "weekly_reviews"];
+  const tables = [
+    "trades",
+    "app_data",
+    "intraday_journal",
+    "weekly_reviews",
+    "legal_acceptances",
+  ];
   const out = {};
   for (const table of tables) {
     const res = await fetch(`${url}/rest/v1/${table}?select=id&limit=5`, {
@@ -101,7 +107,7 @@ SELECT c.relname AS table_name, c.relrowsecurity AS rls_enabled
 FROM pg_class c
 JOIN pg_namespace n ON n.oid = c.relnamespace
 WHERE n.nspname = 'public' AND c.relkind = 'r'
-  AND c.relname = ANY(ARRAY['app_data','trades','trading_days','trade_notes','trade_tag_links'])
+  AND c.relname = ANY(ARRAY['app_data','trades','trading_days','trade_notes','trade_tag_links','legal_acceptances'])
 ORDER BY 1;
 `;
 
@@ -109,7 +115,7 @@ const policiesSql = `
 SELECT tablename, policyname, roles::text AS roles, cmd
 FROM pg_policies
 WHERE schemaname = 'public'
-  AND tablename = ANY(ARRAY['app_data','trades','trading_days','trade_notes','trade_tag_links'])
+  AND tablename = ANY(ARRAY['app_data','trades','trading_days','trade_notes','trade_tag_links','legal_acceptances'])
 ORDER BY tablename, policyname;
 `;
 
@@ -125,7 +131,7 @@ WHERE schemaname = 'public'
     OR qual = 'true'
     OR with_check = 'true'
   )
-  AND tablename NOT IN ('app_data','trades','trading_days','trade_notes','trade_tag_links');
+  AND tablename NOT IN ('app_data','trades','trading_days','trade_notes','trade_tag_links','legal_acceptances');
 `;
 
 const migrationsSql = `
@@ -138,7 +144,7 @@ const columnsSql = `
 SELECT table_name, column_name, data_type
 FROM information_schema.columns
 WHERE table_schema = 'public'
-  AND table_name IN ('trades','app_data','trading_days','trade_notes','trade_tag_links')
+  AND table_name IN ('trades','app_data','trading_days','trade_notes','trade_tag_links','legal_acceptances')
   AND column_name IN ('user_id','id','trade_id')
 ORDER BY table_name, column_name;
 `;
@@ -153,7 +159,7 @@ console.log("\n=== Risky / open policies (should be empty) ===");
 const risky = await query(riskySql);
 console.table(risky);
 if (Array.isArray(risky) && risky.length === 0) {
-  console.log("(none — good)");
+  console.log("(none, good)");
 }
 
 console.log("\n=== Applied migrations ===");

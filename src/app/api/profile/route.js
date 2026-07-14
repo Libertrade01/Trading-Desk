@@ -44,7 +44,13 @@ export async function GET() {
     if (!profile) {
       profile = isFounderUser(user)
         ? createFounderDefaultProfile()
-        : createCustomerDefaultProfile();
+        : normalizeTraderProfile({
+            ...createCustomerDefaultProfile(),
+            preferredName:
+              user.user_metadata?.preferred_name ??
+              user.user_metadata?.display_name ??
+              "",
+          });
       await writeProfile(supabase, user.id, profile);
     }
     return NextResponse.json(profile);
