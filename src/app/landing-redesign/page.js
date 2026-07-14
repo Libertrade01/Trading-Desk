@@ -180,7 +180,62 @@ function StatsVisual() {
   );
 }
 
-export default function LandingRedesignPreview() {
+function IntelligenceVisual() {
+  return (
+    <div className={styles.intelligenceVisual} aria-label="LOOP Intelligence product preview">
+      <div className={styles.intelligenceBar}>
+        <div>
+          <span>PROCESS INTELLIGENCE</span>
+          <strong>Ask your trading data.</strong>
+        </div>
+        <div className={styles.intelligenceAccount}>
+          <div className={styles.intelligenceStatus}><i /> ChatGPT connected</div>
+          <button type="button" tabIndex="-1">Log out</button>
+        </div>
+      </div>
+
+      <div className={styles.intelligenceBody}>
+        <div className={styles.intelligenceWorkspace}>
+          <div className={styles.intelligenceWelcome}>
+            <div className={styles.intelligenceOrb}><i /></div>
+            <span>YOUR PROCESS, IN CONTEXT</span>
+            <h4>What do you want<br />to understand?</h4>
+            <p>Ask about a session, compare patterns across weeks, or turn your journal into a specific next action.</p>
+          </div>
+          <div className={styles.intelligenceComposer}>
+            <span>Ask a question about your process...</span>
+            <div>
+              <small>Relevant account data is added automatically</small>
+              <button type="button" tabIndex="-1">Ask assistant <b>{"\u2197"}</b></button>
+            </div>
+          </div>
+        </div>
+
+        <aside className={styles.intelligenceRail}>
+          <div className={styles.intelligencePrompts}>
+            <div className={styles.intelligenceRailHead}><span>START WITH A QUESTION</span><b>04 PROMPTS</b></div>
+            <div className={styles.intelligencePrompt}><span>01 &nbsp; READINESS</span><strong>Compare my readiness with my best sessions.</strong><b>{"\u2197"}</b></div>
+            <div className={styles.intelligencePrompt}><span>02 &nbsp; EXECUTION</span><strong>Where am I breaking my written plan most often?</strong><b>{"\u2197"}</b></div>
+            <div className={styles.intelligencePrompt}><span>03 &nbsp; PLAYBOOK</span><strong>Which setups produce my strongest expectancy?</strong><b>{"\u2197"}</b></div>
+            <div className={styles.intelligencePrompt}><span>04 &nbsp; REVIEW</span><strong>Turn my journal history into next week&apos;s priorities.</strong><b>{"\u2197"}</b></div>
+          </div>
+
+          <div className={styles.intelligenceSources}>
+            <div className={styles.intelligenceSourcesHead}><span>DATA AVAILABLE</span><b>LIVE</b></div>
+            <div className={styles.intelligenceSourceGrid}>
+              <div><span>Trades</span><strong>637</strong><small>Tagged outcomes</small></div>
+              <div><span>Check-ins</span><strong>29</strong><small>Readiness history</small></div>
+              <div><span>Plans</span><strong>19</strong><small>Rules and setups</small></div>
+              <div><span>Journals</span><strong>21</strong><small>Lessons and flags</small></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+export default function LandingRedesignPreview({ intelligencePreview = false }) {
   return (
     <div className={styles.page}>
       <a className={styles.skipLink} href="#preview-main">Skip to content</a>
@@ -232,8 +287,8 @@ export default function LandingRedesignPreview() {
 
         <section className={styles.features} aria-labelledby="features-title">
           <header className={styles.featuresHead}>
-            <div><p>Beyond the loop</p><h2 id="features-title">Process over<br /><span>profits.</span></h2></div>
-            <p>Performance means more when you connect the outcome to readiness, preparation, and execution, not just profits.</p>
+            <div><p>Beyond the loop</p><h2 id="features-title">{intelligencePreview ? <>Your process,<br /><span>connected.</span></> : <>Process over<br /><span>profits.</span></>}</h2></div>
+            <p>{intelligencePreview ? "The LOOP records what happened. Intelligence connects the evidence and helps you decide what to change next." : "Performance means more when you connect the outcome to readiness, preparation, and execution, not just profits."}</p>
           </header>
 
           <article className={styles.statsFeature}>
@@ -245,10 +300,26 @@ export default function LandingRedesignPreview() {
             <StatsVisual />
           </article>
 
+          {intelligencePreview && (
+            <article className={styles.intelligenceFeature}>
+              <div className={styles.featureCopy}>
+                <span>LOOP INTELLIGENCE / 02</span>
+                <h3>Find the leaks. Strengthen the process.</h3>
+                <p>Use AI to connect the evidence across your trades, readiness, plans, and journals, powered through your own ChatGPT subscription.</p>
+                <ul className={styles.intelligenceBenefits}>
+                  <li>Surface recurring execution leaks</li>
+                  <li>Connect readiness to performance</li>
+                  <li>Turn patterns into your next focus</li>
+                </ul>
+              </div>
+              <IntelligenceVisual />
+            </article>
+          )}
+
           <div className={styles.featureSplit}>
             <article className={styles.weeklyFeature}>
               <div className={styles.featureCopy}>
-                <span>WEEKLY REVIEW / 02</span>
+                <span>WEEKLY REVIEW / {intelligencePreview ? "03" : "02"}</span>
                 <h3>The trading week<br />scored in one place.</h3>
                 <p>Compare this week to last, spot the patterns, and refine next week with two clear focuses.</p>
               </div>
@@ -280,7 +351,7 @@ export default function LandingRedesignPreview() {
 
             <article className={styles.propFeature}>
               <div className={styles.featureCopy}>
-                <span>PROP TRACKER / 03</span>
+                <span>PROP TRACKER / {intelligencePreview ? "04" : "03"}</span>
                 <h3>Know what prop trading is really paying you.</h3>
                 <p>Track every evaluation fee and payout to see your true net position across prop firms.</p>
               </div>

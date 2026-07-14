@@ -7,5 +7,5 @@ export const metadata = {
 };
 
 export default function Page() {
-  return <LandingRedesignPreview />;
+  return <LandingRedesignPreview intelligencePreview />;
 }
