@@ -35,13 +35,13 @@ export default function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <div className="auth-page">
-        <div className="auth-card">
-          <div className="auth-brand">
-            Liber<span>trade</span>
+      <div className="auth-page auth-page--hero">
+        <div className="auth-card auth-card--hero">
+          <div className="auth-brand auth-brand--hero">
+            <img src="/brand/primary-wordmark-login-v3.png" alt="Libertrade Loop" />
           </div>
-          <p className="auth-sub">Check your email</p>
-          <p className="auth-success">
+          <p className="auth-sub">Check your inbox</p>
+          <p className="auth-success auth-success--hero">
             If an account exists for <strong>{email}</strong>, we sent a password
             reset link.
           </p>
@@ -54,10 +54,10 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-brand">
-          Liber<span>trade</span>
+    <div className="auth-page auth-page--hero">
+      <div className="auth-card auth-card--hero">
+        <div className="auth-brand auth-brand--hero">
+          <img src="/brand/primary-wordmark-login-v3.png" alt="Libertrade Loop" />
         </div>
         <p className="auth-sub">Reset your password</p>
 

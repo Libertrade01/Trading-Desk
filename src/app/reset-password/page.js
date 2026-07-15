@@ -122,13 +122,13 @@ export default function ResetPasswordPage() {
 
   if (status === "checking") {
     return (
-      <div className="auth-page">
-        <div className="auth-card">
-          <div className="auth-brand">
-            Liber<span>trade</span>
+      <div className="auth-page auth-page--hero">
+        <div className="auth-card auth-card--hero">
+          <div className="auth-brand auth-brand--hero">
+            <img src="/brand/primary-wordmark-login-v3.png" alt="Libertrade Loop" />
           </div>
           <p className="auth-sub">Reset your password</p>
-          <p className="auth-sub">Verifying reset link…</p>
+          <p className="auth-success auth-success--hero">Verifying your secure reset link…</p>
         </div>
       </div>
     );
@@ -136,10 +136,10 @@ export default function ResetPasswordPage() {
 
   if (status === "invalid") {
     return (
-      <div className="auth-page">
-        <div className="auth-card">
-          <div className="auth-brand">
-            Liber<span>trade</span>
+      <div className="auth-page auth-page--hero">
+        <div className="auth-card auth-card--hero">
+          <div className="auth-brand auth-brand--hero">
+            <img src="/brand/primary-wordmark-login-v3.png" alt="Libertrade Loop" />
           </div>
           <p className="auth-sub">Reset your password</p>
           <p className="auth-error">
@@ -154,10 +154,10 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-brand">
-          Liber<span>trade</span>
+    <div className="auth-page auth-page--hero">
+      <div className="auth-card auth-card--hero">
+        <div className="auth-brand auth-brand--hero">
+          <img src="/brand/primary-wordmark-login-v3.png" alt="Libertrade Loop" />
         </div>
         <p className="auth-sub">Choose a new password</p>
 

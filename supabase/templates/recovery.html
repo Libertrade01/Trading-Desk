@@ -28,7 +28,7 @@
               <table role="presentation" cellspacing="0" cellpadding="0">
                 <tr>
                   <td style="border-radius:4px;background-color:#0065bd;">
-                    <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:12px 20px;font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
+                    <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=recovery" style="display:inline-block;padding:12px 20px;font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
                       Reset password
                     </a>
                   </td>

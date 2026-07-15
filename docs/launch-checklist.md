@@ -1,6 +1,6 @@
 # Libertrade beta launch checklist
 
-Status date: 14 July 2026
+Status date: 15 July 2026
 
 ## Completed in the codebase
 
@@ -40,12 +40,14 @@ Status date: 14 July 2026
 - [x] Live RLS audit confirms protection on core user-data tables
 - [x] Vercel Web Analytics enabled and restricted in code to public pages
 - [x] ImprovMX configured to receive and forward mail for `support@libertrade.app`
+- [x] Resend connected to the production Supabase project for transactional email
+- [x] Resend DNS records added and `libertrade.app` verified for sending
+- [x] Supabase SMTP configured as `Libertrade <support@libertrade.app>`
+- [x] Branded password-recovery email delivered successfully through Resend
 
 ## Needs the operator's answer or approval
 
 - [ ] Approve retiring the duplicate `trading-desk` Vercel project after production cutover is verified
-- [ ] Complete or approve the Resend account used for Supabase transactional email
-- [ ] Add and verify Resend's sending MX, SPF, DKIM and DMARC records
 
 ## External legal and business actions
 
@@ -58,8 +60,9 @@ Status date: 14 July 2026
 
 - [x] Confirm `libertrade.app` and `www.libertrade.app` resolve to Vercel over HTTPS
 - [x] Confirm the root domain is canonical and `www` redirects correctly
-- [ ] Confirm `support@libertrade.app` can send and receive mail
-- [ ] Confirm SPF, DKIM and DMARC pass
+- [x] Confirm `support@libertrade.app` can send transactional mail
+- [ ] Confirm incoming mail to `support@libertrade.app` forwards successfully through ImprovMX
+- [x] Confirm SPF, DKIM and DMARC pass
 - [x] Apply the legal-acceptance migration and rerun the live RLS audit
 - [x] Confirm production email verification is mandatory
 - [ ] Test signup, confirmation, sign-in, password reset and sign-out
