@@ -31,6 +31,13 @@ export default function ResetPasswordPage() {
       return Boolean(session);
     }
 
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("verified") === "1") {
+      markReady();
+      cleanUrl();
+      return;
+    }
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -47,7 +54,6 @@ export default function ResetPasswordPage() {
         return;
       }
 
-      const params = new URLSearchParams(window.location.search);
       const code = params.get("code");
       if (code) {
         const { error: exchangeError } =
