@@ -1019,9 +1019,13 @@ textarea:focus, input:focus, select:focus {
 /* Onboarding wizard facelift */
 .premarket-page.onboarding-page--flow {
   height: 100vh;
+  height: 100dvh;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
   align-items: center;
   padding: 104px 28px 56px;
   background:

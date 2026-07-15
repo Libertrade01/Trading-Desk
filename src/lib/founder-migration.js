@@ -47,6 +47,11 @@ export async function isEligibleFounder(user, admin) {
   if (founderEmail) {
     return user.email?.toLowerCase() === founderEmail;
   }
+  // Never allow a public production account to claim legacy founder data when
+  // the allowlisted founder email has been omitted from the environment.
+  if (process.env.NODE_ENV === "production") {
+    return false;
+  }
   const scoped = await anyUserScopedData(admin);
   return !scoped;
 }

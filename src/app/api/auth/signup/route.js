@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getAgeBand } from "@/lib/age-eligibility";
 import { PRIVACY_VERSION, TERMS_VERSION } from "@/lib/legal";
+import { getAuthCallbackUrl } from "@/lib/app-url";
 
 const signupSchema = z.object({
   preferredName: z.string().trim().min(1).max(32),
@@ -40,7 +41,7 @@ export async function POST(request) {
     email: body.email,
     password: body.password,
     options: {
-      emailRedirectTo: new URL("/auth/callback", request.url).toString(),
+      emailRedirectTo: getAuthCallbackUrl(),
       data: {
         preferred_name: body.preferredName,
         age_band: ageBand,

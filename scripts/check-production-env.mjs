@@ -2,6 +2,7 @@ const checks = [
   ["NEXT_PUBLIC_SUPABASE_URL", (value) => /^https:\/\/.+\.supabase\.co$/.test(value), "must be a Supabase HTTPS URL"],
   ["NEXT_PUBLIC_SUPABASE_ANON_KEY", (value) => value.length > 20, "is missing or too short"],
   ["SUPABASE_SERVICE_ROLE_KEY", (value) => value.length > 20, "is missing or too short"],
+  ["FOUNDER_EMAIL", (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value), "must be a valid email address"],
   ["NEXT_PUBLIC_APP_URL", (value) => value === "https://libertrade.app", "must equal https://libertrade.app"],
   ["AUTH_DISABLED", (value) => value === "false", "must equal false"],
   ["NEXT_PUBLIC_FEATURE_WIKI", (value) => value === "false", "must equal false on the customer app"],

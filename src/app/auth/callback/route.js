@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { migrateFounderDataForUser } from "@/lib/founder-migration";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
 export async function GET(request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const tokenHash = searchParams.get("token_hash");
-  const next = searchParams.get("next") ?? "/home";
+  const next = safeRedirectPath(searchParams.get("next"));
   const type = searchParams.get("type");
 
   const supabase = await createClient();
