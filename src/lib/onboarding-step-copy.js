@@ -11,13 +11,9 @@ export const ONBOARDING_STEP_COPY = {
     title: "Your commitment.",
     lead: "You'll commit to these each morning before you trade.",
   },
-  "plan-rails": {
-    title: "Your daily risk.",
-    lead: "Optional defaults for each session plan. Confirm or change them each morning.",
-  },
   "drawdown-recovery": {
     title: "Recovery mode.",
-    lead: "A built-in protocol for bad loss days that downshifts you until you've earned your way back.",
+    lead: "A built-in protocol for bad loss days that downshifts your max risk and limits until you've earned your way back.",
   },
   streaks: {
     title: "Process streaks.",

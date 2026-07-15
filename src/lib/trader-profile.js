@@ -10,7 +10,7 @@ export const PROFILE_UPDATED_EVENT = "trader-profile-updated";
 export const WELCOME_HINT_STORAGE_KEY = "libertrade-show-welcome-hint";
 
 export const DEFAULT_COMMITMENT =
-  "I agree to fully follow my plan and commit to process over P&L.";
+  "I agree to follow my plan and commit to process over P&L.";
 
 const FOUNDER_COMMITMENTS = [
   "I believe in myself and I respect myself enough to follow my plan. Following my plans allows me and my family to live our dream.",

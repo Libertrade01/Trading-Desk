@@ -12,50 +12,45 @@ import {
   loadDllSettings,
   saveDllSettings,
   DEFAULT_DLL_SETTINGS,
+  ACTIVATION_MODES,
+  ACTIVATION_MODE_OPTIONS,
+  EXIT_MODES,
+  EXIT_MODE_OPTIONS,
+  validateDllSettingsInput,
 } from "../lib/dll-recovery-settings";
 import {
   loadTraderProfile,
-  saveTraderProfile,
   completeOnboarding,
-  createFounderDefaultProfile,
   createCustomerDefaultProfile,
   DEFAULT_COMMITMENT,
-  WELCOME_HINT_STORAGE_KEY,
-  parsePlanRailMoney,
   wearableConsentPatch,
 } from "../lib/trader-profile";
-import { ACCOUNT_TYPE_OPTIONS } from "../lib/trade-import-options";
-import { getCurrentUser } from "../lib/user-storage";
-import OnboardingLoopPreview from "./OnboardingLoopPreview";
-import OnboardingWelcome from "./OnboardingWelcome";
 import OnboardingFlowLayout, {
   OnboardingSectionProgress,
   OnboardingStepHeader,
   OnboardingStepNav,
+  OnboardingBrand,
 } from "./OnboardingFlowLayout";
 import { ONBOARDING_STEP_COPY } from "../lib/onboarding-step-copy";
-import BrandWordmark from "./BrandWordmark";
 
 const STEPS = [
-  { id: "welcome", label: "Welcome" },
   { id: "account", label: "Account" },
   { id: "playbook", label: "Playbook" },
-  { id: "commitment", label: "Commitment" },
-  { id: "plan-rails", label: "Daily risk" },
   { id: "drawdown-recovery", label: "Drawdown Recovery" },
   { id: "streaks", label: "Setup streaks" },
   { id: "extras", label: "Extras" },
+  { id: "commitment", label: "Commitment" },
 ];
 
 const ONBOARDING_SECTIONS = [
   { id: "basics", label: "Basics", steps: ["account"] },
-  { id: "process", label: "Your process", steps: ["playbook", "commitment"] },
-  { id: "risk", label: "Risk rails", steps: ["plan-rails", "drawdown-recovery"] },
-  { id: "finish", label: "Finish", steps: ["streaks", "extras"] },
+  { id: "process", label: "Your process", steps: ["playbook"] },
+  { id: "risk", label: "Recovery", steps: ["drawdown-recovery"] },
+  { id: "habits", label: "Habits", steps: ["streaks", "extras"] },
+  { id: "commitment", label: "Commitment", steps: ["commitment"] },
 ];
 
 function resolveOnboardingSection(stepId) {
-  if (stepId === "welcome") return null;
   const index = ONBOARDING_SECTIONS.findIndex((section) => section.steps.includes(stepId));
   if (index < 0) return null;
   return { ...ONBOARDING_SECTIONS[index], index };
@@ -63,29 +58,13 @@ function resolveOnboardingSection(stepId) {
 
 const BROWSER_LOCAL_TRADING_DAY = "local";
 
-const previewProps = ({
-  step,
-  accountName,
-  setups,
-  defaultMaxDailyLoss,
-  defaultMaxTrades,
-  defaultPositionSize,
-  drawdownRecoveryEnabled,
-}) => ({
-  variant: "hero",
-  stepId: step.id,
-  tradingDayTimezone: BROWSER_LOCAL_TRADING_DAY,
-  accountName,
-  setups,
-  defaultMaxDailyLoss,
-  defaultMaxTrades,
-  defaultPositionSize,
-  drawdownRecoveryEnabled,
-});
+const ONBOARDING_ACCOUNT_TYPES = [
+  { value: "funded", label: "Prop" },
+  { value: "cash", label: "Cash" },
+];
 
 function primaryCtaLabel(step, { saving, isLast }) {
   if (saving) return "Saving…";
-  if (step.id === "welcome") return "Build my loop";
   if (isLast) return "Finish setup";
   return "Continue";
 }
@@ -114,7 +93,6 @@ export default function OnboardingWizard() {
   const [stepIndex, setStepIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [isFounder, setIsFounder] = useState(false);
   const [error, setError] = useState("");
 
   const [accountName, setAccountName] = useState("");
@@ -125,29 +103,42 @@ export default function OnboardingWizard() {
   ]);
   const [riskStreakEnabled, setRiskStreakEnabled] = useState(true);
   const [playbookStreakEnabled, setPlaybookStreakEnabled] = useState(true);
+  const [streakTargetEnabled, setStreakTargetEnabled] = useState(true);
   const [streakTargetDays, setStreakTargetDays] = useState(21);
   const [biasChecklistEnabled, setBiasChecklistEnabled] = useState(false);
   const [usesWearable, setUsesWearable] = useState(false);
-  const [drawdownRecoveryEnabled, setDrawdownRecoveryEnabled] = useState(
-    DEFAULT_DLL_SETTINGS.recoveryEnabled
-  );
-  const [defaultMaxDailyLoss, setDefaultMaxDailyLoss] = useState("");
-  const [defaultMaxTrades, setDefaultMaxTrades] = useState("");
-  const [defaultPositionSize, setDefaultPositionSize] = useState("");
+  const [dllForm, setDllForm] = useState({
+    fullDll: String(DEFAULT_DLL_SETTINGS.fullDll),
+    halfDll: String(DEFAULT_DLL_SETTINGS.halfDll),
+    recoveryEnabled: DEFAULT_DLL_SETTINGS.recoveryEnabled,
+    activationMode: DEFAULT_DLL_SETTINGS.activationMode,
+    activationDrawdown: String(DEFAULT_DLL_SETTINGS.activationDrawdown),
+    exitMode: DEFAULT_DLL_SETTINGS.exitMode,
+    exitRecoveryPercent: String(DEFAULT_DLL_SETTINGS.exitRecoveryPercent),
+    exitRecoveryAmount: String(DEFAULT_DLL_SETTINGS.exitRecoveryAmount),
+  });
+
+  const setDll = (key, value) => setDllForm((current) => ({ ...current, [key]: value }));
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/auth/founder-migrate", { method: "POST" });
-        if (res.ok) {
-          const data = await res.json();
-          setIsFounder(!!data.isFounder);
-        }
         const profile = await loadTraderProfile();
         if (profile?.onboardingCompletedAt) {
           router.replace("/home");
           return;
         }
+        const dll = await loadDllSettings();
+        setDllForm({
+          fullDll: String(dll.fullDll),
+          halfDll: String(dll.halfDll),
+          recoveryEnabled: dll.recoveryEnabled,
+          activationMode: dll.activationMode,
+          activationDrawdown: String(dll.activationDrawdown),
+          exitMode: dll.exitMode,
+          exitRecoveryPercent: String(dll.exitRecoveryPercent),
+          exitRecoveryAmount: String(dll.exitRecoveryAmount),
+        });
       } catch {
         /* continue with defaults */
       } finally {
@@ -161,31 +152,6 @@ export default function OnboardingWizard() {
   const isLast = stepIndex === STEPS.length - 1;
   const activeSection = resolveOnboardingSection(step.id);
   const ctaLabel = primaryCtaLabel(step, { saving, isLast });
-
-  const handleFounderTemplate = async () => {
-    setSaving(true);
-    setError("");
-    try {
-      const user = await getCurrentUser();
-      if (!user) throw new Error("Not signed in");
-
-      const founderProfile = createFounderDefaultProfile();
-      await saveTraderProfile(founderProfile);
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem(WELCOME_HINT_STORAGE_KEY, "1");
-      }
-
-      const settings = await loadTraderSettings();
-      await saveTraderSettings(settings);
-
-      router.replace("/home");
-      router.refresh();
-    } catch (err) {
-      setError(err.message || "Could not apply template");
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleFinish = async () => {
     setSaving(true);
@@ -201,6 +167,13 @@ export default function OnboardingWizard() {
       const namedCommitments = commitments.map((c) => c.text.trim()).filter(Boolean);
       if (!namedCommitments.length) {
         setError("Add at least one commitment.");
+        setSaving(false);
+        return;
+      }
+
+      const dllCheck = validateDllSettingsInput(dllForm);
+      if (!dllCheck.ok) {
+        setError(dllCheck.message);
         setSaving(false);
         return;
       }
@@ -222,7 +195,6 @@ export default function OnboardingWizard() {
 
       const currentProfile = await loadTraderProfile();
       const base = createCustomerDefaultProfile();
-      const fullSizeDll = parsePlanRailMoney(defaultMaxDailyLoss);
       await completeOnboarding({
         ...base,
         preferredName: currentProfile.preferredName,
@@ -235,18 +207,10 @@ export default function OnboardingWizard() {
         ...wearableConsentPatch(usesWearable),
         riskStreakEnabled,
         playbookStreakEnabled,
-        streakTargetDays: Number(streakTargetDays) || 21,
-        defaultMaxDailyLoss: defaultMaxDailyLoss.trim(),
-        defaultMaxTrades: defaultMaxTrades.trim(),
-        defaultPositionSize: defaultPositionSize.trim(),
+        streakTargetDays: streakTargetEnabled ? Number(streakTargetDays) || 21 : null,
       });
 
-      const dllSettings = await loadDllSettings().catch(() => ({ ...DEFAULT_DLL_SETTINGS }));
-      await saveDllSettings({
-        ...dllSettings,
-        recoveryEnabled: drawdownRecoveryEnabled,
-        ...(fullSizeDll ? { fullDll: fullSizeDll } : {}),
-      });
+      await saveDllSettings(dllCheck.settings);
 
       router.replace("/home");
       router.refresh();
@@ -266,6 +230,13 @@ export default function OnboardingWizard() {
       setError("Add at least one commitment.");
       return;
     }
+    if (step.id === "drawdown-recovery") {
+      const dllCheck = validateDllSettingsInput(dllForm);
+      if (!dllCheck.ok) {
+        setError(dllCheck.message);
+        return;
+      }
+    }
     setError("");
     if (isLast) {
       handleFinish();
@@ -276,56 +247,14 @@ export default function OnboardingWizard() {
 
   if (loading) return <div className="pm-loading onboarding-page onboarding-page--flow">Loading...</div>;
 
-  if (step.id === "welcome") {
-    return (
-      <div className="premarket-page hybrid-page onboarding-page onboarding-page--flow">
-        <BrandWordmark className="onboarding-page-brand" size="sidebar" />
-        <div className="onboarding-welcome-glow" aria-hidden="true" />
-        <div className="onboarding-welcome-layout">
-          <OnboardingWelcome
-            onContinue={goNext}
-            saving={saving}
-            error={error}
-            isFounder={isFounder}
-            onFounderTemplate={handleFounderTemplate}
-          />
-          <OnboardingLoopPreview
-            variant="hero"
-            stepId={step.id}
-            tradingDayTimezone={BROWSER_LOCAL_TRADING_DAY}
-            accountName={accountName}
-            setups={setups}
-            defaultMaxDailyLoss={defaultMaxDailyLoss}
-            defaultMaxTrades={defaultMaxTrades}
-            defaultPositionSize={defaultPositionSize}
-            drawdownRecoveryEnabled={drawdownRecoveryEnabled}
-          />
-        </div>
-      </div>
-    );
-  }
-
   const stepCopy = ONBOARDING_STEP_COPY[step.id];
-  const loopPreview = (
-    <OnboardingLoopPreview
-      {...previewProps({
-        step,
-        accountName,
-        setups,
-        defaultMaxDailyLoss,
-        defaultMaxTrades,
-        defaultPositionSize,
-        drawdownRecoveryEnabled,
-      })}
-    />
-  );
-
   return (
-    <OnboardingFlowLayout preview={loopPreview}>
+    <OnboardingFlowLayout>
       {activeSection && (
         <OnboardingSectionProgress
-          sections={ONBOARDING_SECTIONS}
-          activeIndex={activeSection.index}
+          currentStep={stepIndex + 1}
+          totalSteps={STEPS.length}
+          sectionLabel={activeSection.label}
         />
       )}
 
@@ -346,7 +275,7 @@ export default function OnboardingWizard() {
                   value={accountName}
                   onChange={(e) => setAccountName(e.target.value)}
                   className="pm-text-input"
-                  placeholder="50K"
+                  placeholder="Funded 50K"
                 />
               </div>
               <div>
@@ -356,7 +285,7 @@ export default function OnboardingWizard() {
                   onChange={(e) => setAccountType(e.target.value)}
                   className="pm-select"
                 >
-                  {ACCOUNT_TYPE_OPTIONS.map((o) => (
+                  {ONBOARDING_ACCOUNT_TYPES.map((o) => (
                     <option key={o.value} value={o.value}>
                       {o.label}
                     </option>
@@ -445,47 +374,6 @@ export default function OnboardingWizard() {
           </>
         )}
 
-        {step.id === "plan-rails" && (
-          <>
-            <p className="onboarding-body-copy onboarding-body-copy--compact">
-              recovery mode feature
-            </p>
-            <div className="pm-field-grid">
-              <div>
-                <div className="pm-field-label hybrid-label">Usual max daily loss ($)</div>
-                <input
-                  type="text"
-                  value={defaultMaxDailyLoss}
-                  onChange={(e) => setDefaultMaxDailyLoss(e.target.value)}
-                  className="pm-text-input"
-                  placeholder="Optional — e.g. 750"
-                />
-                <p className="pm-field-hint">Also sets your full-size cap when recovery mode is on.</p>
-              </div>
-              <div>
-                <div className="pm-field-label hybrid-label">Usual max trades</div>
-                <input
-                  type="text"
-                  value={defaultMaxTrades}
-                  onChange={(e) => setDefaultMaxTrades(e.target.value)}
-                  className="pm-text-input"
-                  placeholder="Optional"
-                />
-              </div>
-              <div>
-                <div className="pm-field-label hybrid-label">Usual position size ($ or contracts)</div>
-                <input
-                  type="text"
-                  value={defaultPositionSize}
-                  onChange={(e) => setDefaultPositionSize(e.target.value)}
-                  className="pm-text-input"
-                  placeholder="e.g. $200 or 8 micros"
-                />
-              </div>
-            </div>
-          </>
-        )}
-
         {step.id === "drawdown-recovery" && (
           <>
             <div className="onboarding-flow-panel">
@@ -501,10 +389,100 @@ export default function OnboardingWizard() {
             </div>
             <ToggleField
               label="Enable recovery mode"
-              hint="Default rules work for most traders. Fine-tune activation and exit rules anytime."
-              value={drawdownRecoveryEnabled}
-              onChange={setDrawdownRecoveryEnabled}
+              hint="When enabled, set the limits, activation rule, and the point where you return to full size."
+              value={dllForm.recoveryEnabled}
+              onChange={(value) => setDll("recoveryEnabled", value)}
             />
+            {dllForm.recoveryEnabled && (
+              <div className="onboarding-recovery-config">
+                <div className="onboarding-recovery-section">
+                  <div className="settings-field-block-label hybrid-label-sm">Daily loss limits</div>
+                  <div className="pm-field-grid">
+                    <div>
+                      <div className="pm-field-label hybrid-label">Full-size daily loss limit ($)</div>
+                      <input
+                        type="text"
+                        value={dllForm.fullDll}
+                        onChange={(e) => setDll("fullDll", e.target.value)}
+                        className="pm-text-input"
+                        placeholder="750"
+                      />
+                    </div>
+                    <div>
+                      <div className="pm-field-label hybrid-label">Recovery max daily loss ($)</div>
+                      <input
+                        type="text"
+                        value={dllForm.halfDll}
+                        onChange={(e) => setDll("halfDll", e.target.value)}
+                        className="pm-text-input"
+                        placeholder="400"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="onboarding-recovery-section">
+                  <div className="settings-field-block-label hybrid-label-sm">When should recovery mode activate?</div>
+                  <select
+                    className="pm-select"
+                    value={dllForm.activationMode}
+                    onChange={(e) => setDll("activationMode", e.target.value)}
+                  >
+                    {ACTIVATION_MODE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                  {dllForm.activationMode === ACTIVATION_MODES.DRAWDOWN_AMOUNT && (
+                    <div className="pm-field onboarding-recovery-nested">
+                      <div className="pm-field-label hybrid-label">Activation drawdown ($)</div>
+                      <input
+                        type="text"
+                        value={dllForm.activationDrawdown}
+                        onChange={(e) => setDll("activationDrawdown", e.target.value)}
+                        className="pm-text-input"
+                        placeholder="750"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="onboarding-recovery-section">
+                  <div className="settings-field-block-label hybrid-label-sm">When do you return to full size?</div>
+                  <select
+                    className="pm-select"
+                    value={dllForm.exitMode}
+                    onChange={(e) => setDll("exitMode", e.target.value)}
+                  >
+                    {EXIT_MODE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                  {dllForm.exitMode === EXIT_MODES.PERCENT ? (
+                    <div className="pm-field onboarding-recovery-nested">
+                      <div className="pm-field-label hybrid-label">Recover before exiting (%)</div>
+                      <input
+                        type="text"
+                        value={dllForm.exitRecoveryPercent}
+                        onChange={(e) => setDll("exitRecoveryPercent", e.target.value)}
+                        className="pm-text-input"
+                        placeholder="50"
+                      />
+                    </div>
+                  ) : (
+                    <div className="pm-field onboarding-recovery-nested">
+                      <div className="pm-field-label hybrid-label">Recover before exiting ($)</div>
+                      <input
+                        type="text"
+                        value={dllForm.exitRecoveryAmount}
+                        onChange={(e) => setDll("exitRecoveryAmount", e.target.value)}
+                        className="pm-text-input"
+                        placeholder="400"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -521,7 +499,7 @@ export default function OnboardingWizard() {
               </ul>
             </div>
             <p className="onboarding-body-copy onboarding-body-copy--compact onboarding-flow-panel-note">
-              Set your target below. Turn either streak off if you don&apos;t want it tracked.
+              Choose which streaks to track. Add a target if you want a visible goal.
             </p>
             <div className="pm-toggle-row">
               <ToggleField
@@ -535,16 +513,26 @@ export default function OnboardingWizard() {
                 onChange={setPlaybookStreakEnabled}
               />
             </div>
-            <div className="pm-field">
-              <div className="pm-field-label hybrid-label">Streak target (days)</div>
-              <input
-                type="number"
-                min={1}
-                max={365}
-                value={streakTargetDays}
-                onChange={(e) => setStreakTargetDays(Number(e.target.value) || 21)}
-                className="pm-number-input"
+            <div className="onboarding-streak-target">
+              <ToggleField
+                label="Set a streak target"
+                hint="When off, Home shows the streak count only. When on, it shows progress toward a goal such as 9/21."
+                value={streakTargetEnabled}
+                onChange={setStreakTargetEnabled}
               />
+              {streakTargetEnabled && (
+                <div className="pm-field onboarding-streak-target-days">
+                  <div className="pm-field-label hybrid-label">Target days</div>
+                  <input
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={streakTargetDays}
+                    onChange={(e) => setStreakTargetDays(Number(e.target.value) || 21)}
+                    className="pm-number-input"
+                  />
+                </div>
+              )}
             </div>
           </>
         )}
@@ -577,18 +565,6 @@ export default function OnboardingWizard() {
           onPrimary={goNext}
           primaryLabel={ctaLabel}
           saving={saving}
-          secondaryAction={
-            step.id === "extras" ? (
-              <button
-                type="button"
-                className="onboarding-flow-skip"
-                onClick={handleFinish}
-                disabled={saving}
-              >
-                Skip to Home
-              </button>
-            ) : null
-          }
         />
     </OnboardingFlowLayout>
   );

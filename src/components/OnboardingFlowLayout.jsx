@@ -1,7 +1,16 @@
 "use client";
 
 import { IconArrowRight } from "./onboarding-icons";
-import BrandWordmark from "./BrandWordmark";
+
+export function OnboardingBrand() {
+  return (
+    <img
+      className="onboarding-page-brand"
+      src="/brand/primary-wordmark-login-v3.png"
+      alt="Libertrade LOOP"
+    />
+  );
+}
 
 export function OnboardingStepHeader({ title, lead }) {
   return (
@@ -12,16 +21,21 @@ export function OnboardingStepHeader({ title, lead }) {
   );
 }
 
-export function OnboardingSectionProgress({ sections, activeIndex }) {
+export function OnboardingSectionProgress({ currentStep, totalSteps, sectionLabel }) {
   return (
-    <div className="onboarding-progress" aria-hidden="true">
-      {sections.map((section, i) => (
-        <span
-          key={section.id}
-          className={`onboarding-progress-dot${i <= activeIndex ? " active" : ""}${i === activeIndex ? " current" : ""}`}
-          title={section.label}
-        />
-      ))}
+    <div className="onboarding-progress-block" aria-label={`Setup step ${currentStep} of ${totalSteps}: ${sectionLabel}`}>
+      <div className="onboarding-progress-meta">
+        <span>SETUP WIZARD</span>
+        <span>STEP {currentStep} OF {totalSteps} &nbsp;·&nbsp; {sectionLabel}</span>
+      </div>
+      <div className="onboarding-progress" aria-hidden="true">
+        {Array.from({ length: totalSteps }, (_, index) => (
+          <span
+            key={index}
+            className={`onboarding-progress-dot${index < currentStep ? " active" : ""}${index === currentStep - 1 ? " current" : ""}`}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -63,14 +77,13 @@ export function OnboardingStepNav({
   );
 }
 
-export default function OnboardingFlowLayout({ children, preview }) {
+export default function OnboardingFlowLayout({ children }) {
   return (
     <div className="premarket-page hybrid-page onboarding-page onboarding-page--flow">
-      <BrandWordmark className="onboarding-page-brand" size="sidebar" />
+      <OnboardingBrand />
       <div className="onboarding-welcome-glow" aria-hidden="true" />
       <div className="onboarding-welcome-layout">
         <div className="onboarding-flow-main">{children}</div>
-        {preview}
       </div>
     </div>
   );

@@ -76,13 +76,16 @@ export default function SignupPage() {
           <div className="auth-brand auth-brand--hero">
             <img src="/brand/primary-wordmark-login-v3.png" alt="Libertrade Loop" />
           </div>
-          <p className="auth-sub">One last step</p>
+          <p className="auth-sub">Check your email</p>
           <p className="auth-success auth-success--hero">
-            We sent a confirmation link to <strong>{email}</strong>. Open it to
-            activate your account and start setting up your LOOP.
+            If <strong>{email}</strong> is new, we sent a confirmation link to
+            activate your account. If no email arrives, you may already have an
+            account. Try signing in or reset your password.
           </p>
           <p className="auth-footer">
-            <Link href="/login">Back to sign in</Link>
+            <Link href="/login">Sign in</Link>
+            {" · "}
+            <Link href="/forgot-password">Reset password</Link>
           </p>
         </div>
       </div>

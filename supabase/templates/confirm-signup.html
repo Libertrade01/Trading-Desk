@@ -4,50 +4,55 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Confirm your Libertrade account</title>
+  <style>
+    @media only screen and (max-width: 640px) {
+      .email-shell { padding: 24px 12px !important; }
+      .email-card { border-radius: 14px !important; }
+      .email-header { padding: 34px 24px 18px !important; }
+      .email-content { padding: 8px 24px 34px !important; }
+      .email-footer { padding: 22px 24px 26px !important; }
+      .email-title { font-size: 27px !important; }
+      .email-button { display: block !important; padding: 16px 18px !important; text-align: center !important; }
+    }
+  </style>
 </head>
-<body style="margin:0;padding:0;background-color:#111217;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#111217;padding:32px 16px;">
+<body style="margin:0;padding:0;background-color:#020812;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Confirm your email and begin setting up your LOOP.</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;background-color:#020812;">
     <tr>
-      <td align="center">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:480px;background-color:#16171e;border:1px solid #22242e;border-radius:8px;">
+      <td class="email-shell" align="center" style="padding:56px 20px;">
+        <table class="email-card" role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;max-width:600px;background-color:#071426;border:1px solid #173552;border-radius:18px;box-shadow:0 22px 70px rgba(0,83,173,0.18);overflow:hidden;">
           <tr>
-            <td style="padding:32px 28px 8px;">
-              <p style="margin:0;font-size:24px;font-weight:700;color:#ffffff;letter-spacing:-0.03em;">
-                Libertrade <span style="color:#1473e6;">LOOP</span>
-              </p>
-              <p style="margin:12px 0 0;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#4a4f5e;">
-                Confirm your account
-              </p>
+            <td class="email-header" style="padding:46px 44px 22px;background-color:#091b31;border-bottom:1px solid #122d49;">
+              <img src="https://libertrade.app/brand/primary-wordmark-login-v3.png" width="280" alt="Libertrade LOOP" style="display:block;width:280px;max-width:100%;height:auto;border:0;" />
+              <p style="margin:26px 0 0;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#4d9aff;">Confirm your account</p>
+              <h1 class="email-title" style="margin:11px 0 0;font-size:32px;line-height:1.18;font-weight:600;letter-spacing:-0.035em;color:#f5f8fc;">One click, then you are in.</h1>
             </td>
           </tr>
           <tr>
-            <td style="padding:8px 28px 24px;">
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#b8bcc8;">
-                Thanks for creating your account. Confirm your email to begin setting up your LOOP.
-              </p>
-              <table role="presentation" cellspacing="0" cellpadding="0">
+            <td class="email-content" style="padding:30px 44px 44px;">
+              <p style="margin:0 0 26px;font-size:16px;line-height:1.7;color:#aabbd0;">Thanks for creating your account. Confirm your email to activate Libertrade and begin setting up your LOOP.</p>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td style="border-radius:4px;background-color:#0065bd;">
-                    <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=email" style="display:inline-block;padding:12px 20px;font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
-                      Confirm email
-                    </a>
+                  <td align="center" style="border-radius:8px;background-color:#1473e6;box-shadow:0 10px 28px rgba(20,115,230,0.28);">
+                    <a class="email-button" href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=email" style="display:block;padding:17px 26px;font-size:13px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#ffffff;text-decoration:none;">Confirm email</a>
                   </td>
                 </tr>
               </table>
-              <p style="margin:20px 0 0;font-size:12px;line-height:1.6;color:#4a4f5e;">
-                Or enter this code: <strong style="color:#b8bcc8;">{{ .Token }}</strong>
-              </p>
-              <p style="margin:16px 0 0;font-size:11px;line-height:1.5;color:#4a4f5e;">
-                If you didn&apos;t create a Libertrade account, you can ignore this email.
-              </p>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:26px;background-color:#05101f;border:1px solid #132a43;border-radius:9px;">
+                <tr>
+                  <td style="padding:18px 20px;">
+                    <p style="margin:0 0 7px;font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#607994;">Or use this confirmation code</p>
+                    <p style="margin:0;font-size:21px;font-weight:700;letter-spacing:0.16em;color:#f1f6fc;">{{ .Token }}</p>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:24px 0 0;font-size:12px;line-height:1.6;color:#657a91;">If you did not create a Libertrade account, you can safely ignore this email.</p>
             </td>
           </tr>
           <tr>
-            <td style="padding:0 28px 28px;border-top:1px solid #22242e;">
-              <p style="margin:16px 0 0;font-size:11px;line-height:1.5;color:#4a4f5e;">
-                Libertrade LOOP &nbsp;&middot;&nbsp; Process-first trading<br />
-                Need help? <a href="mailto:support@libertrade.app" style="color:#4d9aff;text-decoration:none;">support@libertrade.app</a>
-              </p>
+            <td class="email-footer" style="padding:24px 44px 30px;background-color:#05101f;border-top:1px solid #122940;">
+              <p style="margin:0;font-size:11px;line-height:1.7;color:#60748a;">Libertrade LOOP &nbsp;&middot;&nbsp; Process-first trading<br />Need help? <a href="mailto:support@libertrade.app" style="color:#4d9aff;text-decoration:none;">support@libertrade.app</a></p>
             </td>
           </tr>
         </table>
