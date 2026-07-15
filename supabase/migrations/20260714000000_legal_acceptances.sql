@@ -10,6 +10,9 @@ create table if not exists public.legal_acceptances (
 
 alter table public.legal_acceptances enable row level security;
 
+drop policy if exists "Users can read their own legal acceptances"
+  on public.legal_acceptances;
+
 create policy "Users can read their own legal acceptances"
   on public.legal_acceptances
   for select

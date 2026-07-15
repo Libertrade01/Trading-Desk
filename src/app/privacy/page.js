@@ -6,7 +6,7 @@ export const metadata = { title: "Privacy Notice | Libertrade", description: "Ho
 export default function PrivacyPage() {
   return (
     <LegalPage eyebrow="PRIVACY / YOUR DATA" title="Privacy, without the fine-print fog." intro="This notice explains what Libertrade collects during the beta, why we use it, and the choices you have." effective={PRIVACY_VERSION}>
-      <LegalNotice><strong>Data controller:</strong> {LEGAL_OPERATOR}, trading as {TRADING_NAME}, operating from Peru.<br /><strong>Privacy contact:</strong> <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a></LegalNotice>
+      <LegalNotice><strong>Data controller:</strong> {LEGAL_OPERATOR}, trading as {TRADING_NAME}.<br /><strong>Privacy contact:</strong> <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a></LegalNotice>
 
       <LegalSection title="1. Information we collect">
         <ul>
@@ -41,7 +41,7 @@ export default function PrivacyPage() {
 
       <LegalSection title="6. Your choices and rights">
         <p>Depending on where you live, you may have rights to access, correct, delete, restrict, object to, or receive a copy of your information. Data exports are available by request rather than through an in-app button.</p>
-        <p>Email <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a> for an access, export or deletion request. We may need to verify that the account belongs to you. You may also complain to the Peruvian National Authority for Personal Data Protection or the relevant privacy authority where you live.</p>
+        <p>Email <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a> for an access, export or deletion request. We may need to verify that the account belongs to you. You may also complain to the relevant data protection authority where you live, including the UK Information Commissioner&apos;s Office if you are in the UK.</p>
       </LegalSection>
 
       <LegalSection title="7. Users aged 14–17">
