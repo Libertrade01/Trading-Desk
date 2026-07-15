@@ -153,6 +153,11 @@ export default function OnboardingWizard() {
   const activeSection = resolveOnboardingSection(step.id);
   const ctaLabel = primaryCtaLabel(step, { saving, isLast });
 
+  useEffect(() => {
+    const page = document.querySelector(".onboarding-page--flow");
+    if (page) page.scrollTop = 0;
+  }, [stepIndex]);
+
   const handleFinish = async () => {
     setSaving(true);
     setError("");
