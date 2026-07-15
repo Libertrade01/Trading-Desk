@@ -32,6 +32,7 @@ import OnboardingFlowLayout, {
   OnboardingBrand,
 } from "./OnboardingFlowLayout";
 import { ONBOARDING_STEP_COPY } from "../lib/onboarding-step-copy";
+import { SETUP_IMPROVISED, SETUP_INVALID } from "../lib/setup-options";
 
 const STEPS = [
   { id: "account", label: "Account" },
@@ -61,6 +62,11 @@ const BROWSER_LOCAL_TRADING_DAY = "local";
 const ONBOARDING_ACCOUNT_TYPES = [
   { value: "funded", label: "Prop" },
   { value: "cash", label: "Cash" },
+];
+
+const GLOBAL_PLAYBOOK_SETUPS = [
+  { id: "global-improvised", label: SETUP_IMPROVISED },
+  { id: "global-invalid", label: "Invalid", fullName: SETUP_INVALID },
 ];
 
 function primaryCtaLabel(step, { saving, isLast }) {
@@ -306,7 +312,7 @@ export default function OnboardingWizard() {
             <div className="onboarding-flow-panel">
               <p className="onboarding-body-copy">
                 Add at least one setup now, or add more anytime later. Improvised and Invalid are included
-                automatically for trades that weren&apos;t a real setup.
+                automatically for trades taken outside your playbook.
               </p>
             </div>
             <div className="settings-list">
@@ -336,9 +342,21 @@ export default function OnboardingWizard() {
                   setSetups((rows) => [...rows, { id: crypto.randomUUID(), name: "" }])
                 }
               >
-                + Add another
+                + Add setup
               </button>
             )}
+            <div className="settings-global-setups" aria-label="Global setup tags">
+              {GLOBAL_PLAYBOOK_SETUPS.map((setup) => (
+                <div key={setup.id} className="settings-list-row settings-list-row--global">
+                  <div className="settings-list-row-body">
+                    <div className="settings-setup-locked" title={setup.fullName || setup.label}>
+                      {setup.label}
+                    </div>
+                  </div>
+                  <span className="settings-setup-global-tag">Global</span>
+                </div>
+              ))}
+            </div>
           </>
         )}
 

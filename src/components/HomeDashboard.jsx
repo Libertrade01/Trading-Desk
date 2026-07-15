@@ -1318,10 +1318,10 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
           <div className="home-welcome-hint">
             <p>
               You&apos;re set up. Start with check-in, then customize your full process anytime in{" "}
-              <button type="button" className="home-welcome-hint-link" onClick={() => onNavigate("process")}>
-                My process
+              <button type="button" className="home-welcome-hint-link" onClick={() => onNavigate("settings")}>
+                Settings
               </button>
-              {" "}or Settings.
+              .
             </p>
             <button
               type="button"

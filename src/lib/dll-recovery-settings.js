@@ -42,7 +42,7 @@ export const EXIT_MODE_OPTIONS = [
 export const DEFAULT_DLL_SETTINGS = {
   fullDll: 750,
   halfDll: 400,
-  recoveryEnabled: true,
+  recoveryEnabled: false,
   activationMode: ACTIVATION_MODES.FULL_DLL,
   activationDrawdown: 750,
   exitMode: EXIT_MODES.PERCENT,
