@@ -5,7 +5,6 @@ import {
   countBehavioralFlags,
   DEFAULT_POSTMARKET,
   normalizePostmarketFlags,
-  JOURNAL_REVIEW_CHECKLIST,
   formatJournalReviewPendingSummary,
 } from "../lib/postmarket-defaults";
 import {
@@ -13,6 +12,7 @@ import {
   PROFILE_UPDATED_EVENT,
   getVisibleBehavioralFlagCategories,
   getPlaybookSetupNames,
+  getVisibleCloseoutHabits,
   countVisibleBehavioralFlags,
   createCustomerDefaultProfile,
 } from "../lib/trader-profile";
@@ -129,9 +129,14 @@ export default function PostMarketReview({ onBack }) {
     setSaved(false);
   }, []);
 
+  const closeoutHabits = useMemo(
+    () => getVisibleCloseoutHabits(profile ?? createCustomerDefaultProfile()),
+    [profile],
+  );
+
   const journalPendingSummary = useMemo(
-    () => formatJournalReviewPendingSummary(form),
-    [form],
+    () => formatJournalReviewPendingSummary(form, { checklist: closeoutHabits }),
+    [form, closeoutHabits],
   );
 
   const netPnl = useMemo(() => {
@@ -294,6 +299,13 @@ export default function PostMarketReview({ onBack }) {
       replaySequenceReviewed: formData.noTradeToday ? true : !!formData.replaySequenceReviewed,
       setupsScreenshottedSaved: formData.noTradeToday ? true : !!formData.setupsScreenshottedSaved,
       riskPlanFollowed: formData.noTradeToday ? null : formData.riskPlanFollowed,
+      closeoutHabitsSnapshot: closeoutHabits.map((habit) => ({
+        id: habit.id,
+        key: habit.fieldKey,
+        statusLabel: habit.statusLabel,
+        label: habit.label,
+        enabled: true,
+      })),
       savedAt: new Date().toISOString(),
     };
 
@@ -309,7 +321,7 @@ export default function PostMarketReview({ onBack }) {
 
     notifySessionSaved();
     await maybeEvaluateRecovery(computedNet, formData.noTradeToday);
-  }, [winRate, dayTrades, maybeEvaluateRecovery, profile]);
+  }, [winRate, dayTrades, maybeEvaluateRecovery, profile, closeoutHabits]);
 
   const handleSave = async () => {
     if (!form.noTradeToday && form.riskPlanFollowed == null) {
@@ -887,15 +899,15 @@ export default function PostMarketReview({ onBack }) {
                     <div className="pm-habit-group">
                       <div className="pm-flags-category-title">Close-out habits</div>
                       <div className="pm-habit-tile-row pm-habit-tile-row--prep" role="group" aria-label="End-of-day review checklist">
-                        {JOURNAL_REVIEW_CHECKLIST.map((item) => {
-                          const done = !!form[item.key];
+                        {closeoutHabits.map((item) => {
+                          const done = !!form[item.fieldKey];
                           return (
                             <HabitTileField
-                              key={item.key}
+                              key={item.id}
                               label={item.label}
                               hint={done ? "Done" : "Pending"}
                               value={done}
-                              onChange={(v) => set(item.key, v)}
+                              onChange={(v) => set(item.fieldKey, v)}
                             />
                           );
                         })}

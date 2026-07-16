@@ -88,23 +88,25 @@ function ScoreChip({ label, value, tone }) {
 }
 
 function HistoryJournalChecklist({ date, post, onPostUpdated }) {
-  const [flags, setFlags] = useState(() => ({
-    replaySequenceReviewed: !!post?.replaySequenceReviewed,
-    setupsScreenshottedSaved: !!post?.setupsScreenshottedSaved,
-  }));
+  const checklist = Array.isArray(post?.closeoutHabitsSnapshot)
+    ? post.closeoutHabitsSnapshot.filter((item) => item.enabled !== false)
+    : JOURNAL_REVIEW_CHECKLIST;
+  const [flags, setFlags] = useState(() => Object.fromEntries(
+    checklist.map((item) => [item.key, !!post?.[item.key]]),
+  ));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    setFlags({
-      replaySequenceReviewed: !!post?.replaySequenceReviewed,
-      setupsScreenshottedSaved: !!post?.setupsScreenshottedSaved,
-    });
+    const nextChecklist = Array.isArray(post?.closeoutHabitsSnapshot)
+      ? post.closeoutHabitsSnapshot.filter((item) => item.enabled !== false)
+      : JOURNAL_REVIEW_CHECKLIST;
+    setFlags(Object.fromEntries(nextChecklist.map((item) => [item.key, !!post?.[item.key]])));
     setError(null);
   }, [post, date]);
 
   const canEdit = hasJournalReviewPending(post);
-  const dirty = JOURNAL_REVIEW_CHECKLIST.some((item) => flags[item.key] !== !!post?.[item.key]);
+  const dirty = checklist.some((item) => flags[item.key] !== !!post?.[item.key]);
 
   const saveFollowUp = async () => {
     setSaving(true);
@@ -133,9 +135,9 @@ function HistoryJournalChecklist({ date, post, onPostUpdated }) {
     <div className="history-detail-checklist">
       <div className="history-detail-checklist__head">
         <div className="history-detail-prose__label">Review checklist</div>
-        {formatJournalReviewPendingSummary(canEdit ? flags : post) ? (
+        {formatJournalReviewPendingSummary(canEdit ? flags : post, { checklist }) ? (
           <span className="history-detail-checklist__status history-detail-checklist__status--pending">
-            {formatJournalReviewPendingSummary(canEdit ? flags : post)}
+            {formatJournalReviewPendingSummary(canEdit ? flags : post, { checklist })}
           </span>
         ) : (
           <span className="history-detail-checklist__status history-detail-checklist__status--done">Complete</span>
@@ -144,7 +146,7 @@ function HistoryJournalChecklist({ date, post, onPostUpdated }) {
       {canEdit ? (
         <>
           <div className="pm-journal-checklist history-journal-checklist-edit" role="group" aria-label="End-of-day review checklist">
-            {JOURNAL_REVIEW_CHECKLIST.map((item) => {
+            {checklist.map((item) => {
               const done = !!flags[item.key];
               return (
                 <label key={item.key} className={`pm-journal-check${done ? " pm-journal-check--done" : ""}`}>
@@ -174,7 +176,7 @@ function HistoryJournalChecklist({ date, post, onPostUpdated }) {
         </>
       ) : (
         <ul className="history-detail-checklist__list">
-          {JOURNAL_REVIEW_CHECKLIST.map((item) => (
+          {checklist.map((item) => (
             <li key={item.key} className={post[item.key] ? "done" : "pending"}>
               <span>{item.label}</span>
               <span>{post[item.key] ? "Done" : `${item.statusLabel} pending`}</span>
@@ -182,6 +184,64 @@ function HistoryJournalChecklist({ date, post, onPostUpdated }) {
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+function HistoryRiskPlanEditor({ date, post, onPostUpdated }) {
+  const current = getRiskPlanFollowed(post);
+  const [value, setValue] = useState(current);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    setValue(getRiskPlanFollowed(post));
+    setError(null);
+  }, [post, date]);
+
+  const dirty = value !== current;
+
+  const save = async () => {
+    if (value !== true && value !== false) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const payload = { ...post, riskPlanFollowed: value, savedAt: post.savedAt };
+      const response = await fetch(`/api/sessions/${date}/post`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to update risk-plan outcome");
+      }
+      notifySessionSaved();
+      onPostUpdated?.(payload);
+    } catch (err) {
+      setError(err.message || "Failed to update risk-plan outcome");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="history-risk-editor">
+      <div className="history-risk-editor__head">
+        <div>
+          <div className="history-detail-prose__label">Risk plan followed?</div>
+          <p>Correct this answer if the completed session was recorded incorrectly.</p>
+        </div>
+        <span className={value === true ? "yes" : value === false ? "no" : ""}>
+          {value === true ? "Streak continues" : value === false ? "Streak ends" : "Not answered"}
+        </span>
+      </div>
+      <div className="history-risk-editor__actions" role="radiogroup" aria-label="Risk plan followed for this session">
+        <button type="button" role="radio" aria-checked={value === true} className={value === true ? "active yes" : ""} onClick={() => setValue(true)}>Yes</button>
+        <button type="button" role="radio" aria-checked={value === false} className={value === false ? "active no" : ""} onClick={() => setValue(false)}>No</button>
+        {dirty && <button type="button" className="history-risk-editor__save" onClick={save} disabled={saving}>{saving ? "Saving…" : "Save change"}</button>}
+      </div>
+      {error && <p className="history-journal-save-error">{error}</p>}
     </div>
   );
 }
@@ -506,6 +566,12 @@ export default function HistoryDayDetail({ date, onBack, onDeleted }) {
                     />
                   </div>
                 </div>
+
+                <HistoryRiskPlanEditor
+                  date={date}
+                  post={post}
+                  onPostUpdated={(nextPost) => setSession((prev) => (prev ? { ...prev, post: nextPost } : prev))}
+                />
 
                 <div className="history-detail-score-group">
                   <div className="history-detail-score-group__label">Post session</div>

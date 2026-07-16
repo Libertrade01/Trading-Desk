@@ -123,10 +123,22 @@ export const JOURNAL_REVIEW_CHECKLIST = [
   },
 ];
 
-export function getJournalReviewPendingItems(formOrPost = {}) {
+function resolvedJournalChecklist(formOrPost, checklist) {
+  if (Array.isArray(checklist)) return checklist;
+  if (Array.isArray(formOrPost?.closeoutHabitsSnapshot)) {
+    return formOrPost.closeoutHabitsSnapshot;
+  }
+  return JOURNAL_REVIEW_CHECKLIST;
+}
+
+export function getJournalReviewPendingItems(formOrPost = {}, { checklist } = {}) {
   // No-trade days (holiday, rest, Preservation Mode) do not require replay/database follow-up.
   if (formOrPost?.noTradeToday) return [];
-  return JOURNAL_REVIEW_CHECKLIST.filter((item) => !formOrPost?.[item.key]);
+  return resolvedJournalChecklist(formOrPost, checklist)
+    .filter((item) => {
+      const key = item.key || item.fieldKey;
+      return item.enabled !== false && key && !formOrPost?.[key];
+    });
 }
 
 export function hasJournalReviewPending(formOrPost = {}) {
@@ -140,8 +152,8 @@ export function isNoTradeDay(sessionOrPost = {}) {
 }
 
 /** e.g. "Replay pending · Setups pending" */
-export function formatJournalReviewPendingSummary(formOrPost = {}, { separator = " · " } = {}) {
-  const pending = getJournalReviewPendingItems(formOrPost);
+export function formatJournalReviewPendingSummary(formOrPost = {}, { separator = " · ", checklist } = {}) {
+  const pending = getJournalReviewPendingItems(formOrPost, { checklist });
   if (!pending.length) return null;
   return pending.map((item) => `${item.statusLabel} pending`).join(separator);
 }

@@ -12,6 +12,23 @@ export const WELCOME_HINT_STORAGE_KEY = "libertrade-show-welcome-hint";
 export const DEFAULT_COMMITMENT =
   "I agree to follow my plan and commit to process over P&L.";
 
+export const DEFAULT_CLOSEOUT_HABITS = [
+  {
+    id: "setup-screenshots",
+    fieldKey: "setupsScreenshottedSaved",
+    statusLabel: "Setups",
+    label: "Today's A+ setup screenshots saved (taken or missed)",
+    enabled: true,
+  },
+  {
+    id: "trade-replay",
+    fieldKey: "replaySequenceReviewed",
+    statusLabel: "Replay",
+    label: "One trade sequence reviewed in REPLAY.",
+    enabled: true,
+  },
+];
+
 const FOUNDER_COMMITMENTS = [
   "I believe in myself and I respect myself enough to follow my plan. Following my plans allows me and my family to live our dream.",
   "I will not place any risk when I am not in a self-regulated state.",
@@ -61,6 +78,10 @@ function defaultCommitments(texts) {
 
 function defaultFinishChecklist(labels = DEFAULT_FINISH_CHECKLIST) {
   return labels.map((label) => ({ id: newId(), label }));
+}
+
+function defaultCloseoutHabits() {
+  return DEFAULT_CLOSEOUT_HABITS.map((habit) => ({ ...habit }));
 }
 
 function migrateFinishChecklist(items) {
@@ -171,6 +192,7 @@ export function createCustomerDefaultProfile() {
     usesWearable: false,
     showColdTurkeyBlocker: false,
     finishChecklist: defaultFinishChecklist(),
+    closeoutHabits: defaultCloseoutHabits(),
     behavioralFlags: defaultBehavioralFlags(),
     ...normalizePlanRails({}),
   });
@@ -190,6 +212,7 @@ export function createFounderDefaultProfile() {
     usesWearable: true,
     showColdTurkeyBlocker: true,
     finishChecklist: defaultFinishChecklist(),
+    closeoutHabits: defaultCloseoutHabits(),
     behavioralFlags: defaultBehavioralFlags(),
     ...normalizePlanRails({}),
   });
@@ -214,6 +237,18 @@ function normalizeChecklistItem(raw, index = 0, fallbackLabel = "Item") {
     id: raw?.id || newId(),
     label: String(raw?.label ?? fallbackLabel).trim() || fallbackLabel,
     ...(raw?.fieldKey ? { fieldKey: String(raw.fieldKey) } : {}),
+  };
+}
+
+function normalizeCloseoutHabit(raw, index = 0) {
+  const fallback = DEFAULT_CLOSEOUT_HABITS[index] || DEFAULT_CLOSEOUT_HABITS[0];
+  const id = String(raw?.id || fallback.id || newId());
+  return {
+    id,
+    fieldKey: String(raw?.fieldKey || fallback.fieldKey || `closeoutHabit_${id}`),
+    statusLabel: String(raw?.statusLabel || fallback.statusLabel || "Habit"),
+    label: String(raw?.label ?? fallback.label).trim() || fallback.label,
+    enabled: raw?.enabled !== false,
   };
 }
 
@@ -252,6 +287,11 @@ export function normalizeTraderProfile(raw = {}) {
     : defaultFinishChecklist();
   if (!finishChecklist.length) finishChecklist = defaultFinishChecklist();
 
+  let closeoutHabits = Array.isArray(raw.closeoutHabits)
+    ? raw.closeoutHabits.map((item, i) => normalizeCloseoutHabit(item, i))
+    : defaultCloseoutHabits();
+  if (!closeoutHabits.length) closeoutHabits = defaultCloseoutHabits();
+
   const streakTargetDays = normalizeStreakTargetDays(raw.streakTargetDays);
   const profileKind = raw.profileKind === "founder" ? "founder" : "customer";
   const wearableConsentAt = normalizeConsentTimestamp(raw.wearableConsentAt);
@@ -282,6 +322,7 @@ export function normalizeTraderProfile(raw = {}) {
     showColdTurkeyBlocker:
       profileKind === "founder" ? !!raw.showColdTurkeyBlocker : false,
     finishChecklist,
+    closeoutHabits,
     keyLevelQuickAdds: normalizeKeyLevelQuickAdds(raw.keyLevelQuickAdds),
     behavioralFlags: normalizeBehavioralFlags(raw.behavioralFlags),
     ...normalizePlanRails(raw),
@@ -334,6 +375,7 @@ export function validateTraderProfileInput(form) {
         ? profile.biasChecklistItems.filter((item) => item.label.trim()).slice(0, 8)
         : profile.biasChecklistItems,
       finishChecklist: finishItems.slice(0, 6),
+      closeoutHabits: profile.closeoutHabits.slice(0, 6),
       keyLevelQuickAdds: normalizeKeyLevelQuickAdds(profile.keyLevelQuickAdds),
     },
   };
@@ -449,6 +491,11 @@ export function getPlaybookSetupNames(profile) {
   const source = profile || profileCache;
   const names = source?.setups?.map((s) => s.name.trim()).filter(Boolean);
   return names?.length ? names : ["My setup"];
+}
+
+export function getVisibleCloseoutHabits(profile) {
+  const source = profile?.closeoutHabits?.length ? profile.closeoutHabits : defaultCloseoutHabits();
+  return source.filter((habit) => habit.enabled !== false && habit.label.trim());
 }
 
 export function getEnabledBiasItems(profile) {

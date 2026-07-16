@@ -21,6 +21,7 @@ const SECTIONS = [
   { id: "chart", label: "Charting Checklist" },
   { id: "final-checks", label: "Final Check" },
   { id: "flags", label: "Accountability" },
+  { id: "closeout", label: "Closeout habits" },
   { id: "streaks", label: "Streaks" },
   { id: "commitments", label: "Commitments" },
   { id: "other", label: "Other" },
@@ -73,6 +74,8 @@ function getSectionStatus(profile, sectionId) {
         : "ok";
     case "final-checks":
       return profile.finishChecklist.some((i) => !i.label.trim()) ? "warn" : "ok";
+    case "closeout":
+      return profile.closeoutHabits.some((i) => i.enabled && !i.label.trim()) ? "warn" : "ok";
     case "streaks":
     case "other":
     case "cold-turkey":
@@ -402,6 +405,50 @@ export default function MyProcessSettings({ standalone = false }) {
                   aria-label="Streak target days"
                 />
               )}
+            </div>
+          </div>
+        );
+
+      case "closeout":
+        return (
+          <div className="pm-field process-split-field">
+            <p className="pm-field-hint process-split-lead">
+              Choose the follow-up habits shown at the end of Close the LOOP. Changes apply to future sessions.
+            </p>
+            <div className="settings-list settings-closeout-habits">
+              {profile.closeoutHabits.map((habit) => (
+                <div className="settings-list-row settings-closeout-habit" key={habit.id}>
+                  <div className="settings-list-row-body">
+                    <input
+                      type="text"
+                      value={habit.label}
+                      disabled={!habit.enabled}
+                      onChange={(event) => {
+                        const closeoutHabits = profile.closeoutHabits.map((item) =>
+                          item.id === habit.id ? { ...item, label: event.target.value } : item
+                        );
+                        patch({ closeoutHabits });
+                      }}
+                      className="pm-text-input"
+                      aria-label="Closeout habit label"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className={`pm-toggle${habit.enabled ? " on" : ""}`}
+                    onClick={() => {
+                      const closeoutHabits = profile.closeoutHabits.map((item) =>
+                        item.id === habit.id ? { ...item, enabled: !item.enabled } : item
+                      );
+                      patch({ closeoutHabits });
+                    }}
+                    aria-label={`${habit.enabled ? "Disable" : "Enable"} ${habit.label}`}
+                    aria-pressed={habit.enabled}
+                  >
+                    <span className="pm-toggle-knob" />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         );
