@@ -8552,6 +8552,88 @@ input.pm-slider:active::-moz-range-thumb {
 
 .pm-manual-footer p.success { color: var(--green); }
 
+.pm-risk-answer-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.pm-risk-answer-head .pm-field-label { margin-bottom: 4px; }
+
+.pm-risk-answer-head > span {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+
+.pm-risk-answer-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.pm-risk-answer-options > button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, .09);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .018);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+
+.pm-risk-answer-options > button:hover { border-color: rgba(80, 160, 255, .3); }
+
+.pm-risk-answer-options > button.active.yes {
+  border-color: color-mix(in srgb, var(--green) 48%, transparent);
+  background: color-mix(in srgb, var(--green) 8%, transparent);
+}
+
+.pm-risk-answer-options > button.active.no {
+  border-color: color-mix(in srgb, var(--red) 48%, transparent);
+  background: color-mix(in srgb, var(--red) 8%, transparent);
+}
+
+.pm-risk-answer-radio {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, .28);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 3px rgba(7, 13, 22, .94);
+}
+
+.pm-risk-answer-options > button.active.yes .pm-risk-answer-radio { background: var(--green); border-color: var(--green); }
+.pm-risk-answer-options > button.active.no .pm-risk-answer-radio { background: var(--red); border-color: var(--red); }
+
+.pm-risk-answer-options > button > span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pm-risk-answer-options strong {
+  font-family: var(--font-poster);
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.pm-risk-answer-options small {
+  font-size: 10px;
+  color: var(--muted);
+}
+
 .an-summary-only-card {
   margin-bottom: 16px;
   padding: 20px;
@@ -8668,6 +8750,7 @@ input.pm-slider:active::-moz-range-thumb {
 
 @media (max-width: 460px) {
   .pm-manual-grid { grid-template-columns: 1fr; }
+  .pm-risk-answer-options { grid-template-columns: 1fr; }
 }
 
 .pm-flags-categories {

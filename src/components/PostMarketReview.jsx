@@ -312,6 +312,11 @@ export default function PostMarketReview({ onBack }) {
   }, [winRate, dayTrades, maybeEvaluateRecovery, profile]);
 
   const handleSave = async () => {
+    if (!form.noTradeToday && form.riskPlanFollowed == null) {
+      window.alert("Choose Yes or No for Risk plan followed before closing the LOOP.");
+      setActiveStep(CLOSEOUT_STEPS.findIndex((item) => item.id === "process"));
+      return false;
+    }
     if (!form.noTradeToday && setupAdherence.untagged > 0) {
       window.alert(
         `${setupAdherence.untagged} trade${setupAdherence.untagged === 1 ? "" : "s"} still need a setup tag. Import again with every trade tagged, or tag trades in Analytics (Trade log).`
@@ -768,12 +773,35 @@ export default function PostMarketReview({ onBack }) {
                     <SliderField label="Risk discipline" hint="Stops respected, sizing right" minLabel="Loose" maxLabel="Tight" value={form.riskDiscipline} onChange={(v) => set("riskDiscipline", v)} />
                     <SliderField label="Execution quality" hint="Entries, exits, fills" minLabel="Sloppy" maxLabel="Sharp" value={form.executionQuality} onChange={(v) => set("executionQuality", v)} />
                     <div className="pm-risk-block">
-                      <HabitTileField
-                        label="Risk plan followed?"
-                        hint="This is your Risk Adherence streak, check box ONLY if you followed your plan and respected your limits."
-                        value={form.riskPlanFollowed === true}
-                        onChange={(on) => set("riskPlanFollowed", on)}
-                      />
+                      <div className="pm-risk-answer-head">
+                        <div>
+                          <div className="pm-field-label hybrid-label">Risk plan followed?</div>
+                          <div className="pm-field-hint">Choose the outcome for today&apos;s Risk Adherence streak.</div>
+                        </div>
+                        {form.riskPlanFollowed == null && <span>Answer required</span>}
+                      </div>
+                      <div className="pm-risk-answer-options" role="radiogroup" aria-label="Risk plan followed">
+                        <button
+                          type="button"
+                          role="radio"
+                          aria-checked={form.riskPlanFollowed === true}
+                          className={form.riskPlanFollowed === true ? "active yes" : ""}
+                          onClick={() => set("riskPlanFollowed", true)}
+                        >
+                          <span className="pm-risk-answer-radio" aria-hidden="true" />
+                          <span><strong>Yes</strong><small>Streak continues</small></span>
+                        </button>
+                        <button
+                          type="button"
+                          role="radio"
+                          aria-checked={form.riskPlanFollowed === false}
+                          className={form.riskPlanFollowed === false ? "active no" : ""}
+                          onClick={() => set("riskPlanFollowed", false)}
+                        >
+                          <span className="pm-risk-answer-radio" aria-hidden="true" />
+                          <span><strong>No</strong><small>Streak ends</small></span>
+                        </button>
+                      </div>
                     </div>
                   </>
                 )}
