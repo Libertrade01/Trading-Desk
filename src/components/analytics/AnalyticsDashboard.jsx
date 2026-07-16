@@ -14,6 +14,7 @@ import { calcSessionSummaryStats } from "../../lib/session-summary-stats";
 import { countUntaggedTrades } from "../../lib/setup-adherence";
 import { loadTraderSettings, saveTraderSettings } from "../../lib/trader-settings";
 import AnalyticsChart from "./AnalyticsChart";
+import AnalyticsCsvImporter from "./AnalyticsCsvImporter";
 import AnalyticsSlidePanel from "./AnalyticsSlidePanel";
 import AnalyticsToolbar from "./AnalyticsToolbar";
 import AnalyticsTradeLogPanel from "./AnalyticsTradeLogPanel";
@@ -41,6 +42,7 @@ export default function AnalyticsDashboard() {
   const [playbookTrackingStart, setPlaybookTrackingStart] = useState(null);
   const [listPanel, setListPanel] = useState(null);
   const [selectedTradeId, setSelectedTradeId] = useState(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const load = useCallback(async (from, to) => {
     setLoading(true);
@@ -145,6 +147,20 @@ export default function AnalyticsDashboard() {
     if (untagged) setSelectedTradeId(untagged.id);
   }, [playbookTrades]);
 
+  const handleTradesImported = useCallback(async (importedTrades) => {
+    const dates = importedTrades.map((trade) => trade.date).filter(Boolean).sort();
+    if (!dates.length) {
+      await load(dateFrom, dateTo);
+      return;
+    }
+    const from = dates[0];
+    const to = dates[dates.length - 1];
+    setActivePreset("");
+    setDateFrom(from);
+    setDateTo(to);
+    await load(from, to);
+  }, [dateFrom, dateTo, load]);
+
   if (loading && !trades.length) {
     return <div className="analytics-loading">Loading analytics…</div>;
   }
@@ -175,6 +191,7 @@ export default function AnalyticsDashboard() {
         onCustomRangeChange={applyCustomRange}
         onToggleAccount={toggleAccount}
         onOpenTradeLog={() => setListPanel("trade-log")}
+        onImport={() => setImportOpen(true)}
       />
 
       <div className="analytics-dashboard__body">
@@ -307,6 +324,11 @@ export default function AnalyticsDashboard() {
         onClose={() => setSelectedTradeId(null)}
         onUpdated={handleTradeUpdated}
         onDeleted={handleTradeDeleted}
+      />
+      <AnalyticsCsvImporter
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={handleTradesImported}
       />
     </div>
   );

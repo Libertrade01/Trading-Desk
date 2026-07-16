@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { RANGE_PRESETS } from "../../lib/analytics-date-range";
 
 function CalendarIcon() {
@@ -47,6 +46,7 @@ export default function AnalyticsToolbar({
   onCustomRangeChange,
   onToggleAccount,
   onOpenTradeLog,
+  onImport,
 }) {
   const showChips =
     accounts.length > 1 || (accounts.length === 1 && accounts[0].id !== "default");
@@ -125,10 +125,10 @@ export default function AnalyticsToolbar({
           </button>
         ) : null}
 
-        <Link href="/postmarket" className="an-btn-import">
+        <button type="button" className="an-btn-import" onClick={onImport}>
           <ImportIcon />
           Import
-        </Link>
+        </button>
       </div>
     </header>
   );

@@ -164,3 +164,39 @@
   .import-footer-field { align-items: stretch; flex-direction: column; }
   .import-footer-select, .import-footer-risk { width: 100%; }
 }
+
+.analytics-import-dialog {
+  width: min(620px, calc(100vw - 32px));
+  overflow: hidden;
+  border: 1px solid rgba(55, 139, 238, 0.28);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 80% 0%, rgba(15, 109, 219, 0.13), transparent 42%),
+    linear-gradient(145deg, rgba(10, 27, 47, 0.99), rgba(4, 12, 22, 0.995));
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.68), 0 0 60px rgba(11, 105, 218, 0.08);
+}
+
+.analytics-import-dialog__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 26px 20px;
+  border-bottom: 1px solid rgba(90, 157, 232, 0.12);
+}
+
+.analytics-import-dialog__head h2 { margin: 5px 0 4px; color: #f7fbff; font-size: 25px; }
+.analytics-import-dialog__head p { margin: 0; color: rgba(173, 196, 224, 0.66); font-size: 13px; }
+.analytics-import-dialog__broker { display: grid; grid-template-columns: 90px 1fr; align-items: center; gap: 14px; padding: 18px 26px 0; }
+.analytics-import-dialog__broker label { color: rgba(130, 178, 232, 0.7); font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.analytics-import-dialog__broker select { min-height: 40px; padding: 0 12px; border-radius: 8px; }
+.analytics-import-dialog__drop { margin: 18px 26px 14px; }
+.analytics-import-dialog__error { margin: 0 26px 12px; padding: 10px 12px; border: 1px solid rgba(239, 104, 104, 0.24); border-radius: 8px; background: rgba(190, 45, 45, 0.08); color: #ef9393; font-size: 12px; }
+.analytics-import-dialog__note { margin: 0; padding: 14px 26px 18px; border-top: 1px solid rgba(90, 157, 232, 0.1); color: rgba(145, 172, 204, 0.5); font-size: 11px; line-height: 1.55; }
+
+@media (max-width: 620px) {
+  .analytics-import-dialog__head { padding: 20px; }
+  .analytics-import-dialog__broker { grid-template-columns: 1fr; padding: 16px 20px 0; }
+  .analytics-import-dialog__drop { margin: 16px 20px 12px; }
+  .analytics-import-dialog__note { padding: 12px 20px 16px; }
+}
