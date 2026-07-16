@@ -18,7 +18,6 @@ import {
 } from "../lib/trader-profile";
 import { notifySessionSaved, TRADES_CHANGED_EVENT } from "../lib/session-events";
 import {
-  processRTraderCSV,
   tradesForDate,
   computePerformanceFromTrades,
   fetchTradesForDate,
@@ -27,6 +26,7 @@ import {
   loadImportAccount,
   performanceFromDbOrImport,
 } from "../lib/rtrader-import";
+import { processBrokerCSV } from "../lib/broker-csv-import";
 import {
   summarizeSetupAdherence,
   validateImportSetupTags,
@@ -118,6 +118,7 @@ export default function PostMarketReview({ onBack }) {
   const [dayTrades, setDayTrades] = useState([]);
   const [traderSettings, setTraderSettings] = useState(null);
   const [performanceMode, setPerformanceMode] = useState("csv");
+  const [csvBroker, setCsvBroker] = useState("rtrader");
   const [recoveryStatus, setRecoveryStatus] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
   const [dragActive, setDragActive] = useState(false);
@@ -380,7 +381,11 @@ export default function PostMarketReview({ onBack }) {
     try {
       const text = await file.text();
       const account = await loadImportAccount();
-      const { trades, openPosition, sourceTimeZone, timeColumnHeader } = processRTraderCSV(text, account);
+      const { trades, openPosition, sourceTimeZone, timeColumnHeader, brokerName } = processBrokerCSV(
+        text,
+        account,
+        csvBroker,
+      );
       const missingSymbols =
         account?.commissions_enabled !== false
           ? getMissingCommissionSymbols(trades, account?.commissions || {})
@@ -393,6 +398,7 @@ export default function PostMarketReview({ onBack }) {
         missingSymbols,
         sourceTimeZone,
         timeColumnHeader,
+        brokerName,
       });
       setImportMsg("");
     } catch (err) {
@@ -546,18 +552,31 @@ export default function PostMarketReview({ onBack }) {
             <div className="pm-import-card-head pm-import-card-head--today">
               <div className="pm-import-card-head-primary">
                 <span className="pm-import-card-head-title">Session import</span>
-                <span className="pm-import-broker-pill">rTrader</span>
+                <select
+                  className="pm-import-broker-select"
+                  value={csvBroker}
+                  onChange={(event) => {
+                    setCsvBroker(event.target.value);
+                    setImportMsg("");
+                  }}
+                  aria-label="CSV broker"
+                >
+                  <option value="rtrader">R Trader</option>
+                  <option value="tradovate">Tradovate</option>
+                </select>
               </div>
               {showImportDrop && (
                 <button type="button" className="pm-import-help" onClick={() => setShowHelp((s) => !s)}>
-                  How do I get this file from rTrader?
+                  How do I get this CSV?
                 </button>
               )}
             </div>
             {showImportDrop && showHelp && (
               <div className="pm-import-help-panel">
                 <p className="pm-import-help-text">
-                  In rTrader, export your session as a CSV (Performance Summary or Trades). Upload here — trades import to Analytics and today&apos;s performance fields fill automatically.
+                  {csvBroker === "tradovate"
+                    ? "Export your completed trades from Tradovate as a CSV, then upload it here. Confirm the export timezone in the review screen before importing."
+                    : "In R Trader, export your session as a Performance Summary or Trades CSV, then upload the file here."}
                 </p>
               </div>
             )}
@@ -682,6 +701,7 @@ export default function PostMarketReview({ onBack }) {
             account={importPreview?.account}
             sourceTimeZone={importPreview?.sourceTimeZone}
             timeColumnHeader={importPreview?.timeColumnHeader}
+            brokerName={importPreview?.brokerName}
             onConfirm={handleImportConfirm}
           />
 

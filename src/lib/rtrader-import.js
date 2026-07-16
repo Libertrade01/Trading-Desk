@@ -358,7 +358,7 @@ export async function executeTradesImport(
     const exitUTC = exitInstant.toISOString();
     return {
       user_id: userId,
-      broker_trade_id: `${entryUTC}_${t.symbol}_${t.direction}_${t.qty}`,
+      broker_trade_id: t.broker_trade_id || `${entryUTC}_${t.symbol}_${t.direction}_${t.qty}`,
       entry_time: entryUTC,
       exit_time: exitUTC,
       date: t.date || sessionDateFromNaive(t.entry_time, "UTC"),
@@ -370,7 +370,7 @@ export async function executeTradesImport(
       gross_pnl: t.raw_pnl,
       commission: t.commission,
       net_pnl: t.net_pnl,
-      platform: "rTrader",
+      platform: t.platform || "rTrader",
       account_name: accountName,
       stop_loss_points: t.stop_loss_points != null ? t.stop_loss_points : null,
       setup: t.setup || null,
@@ -381,18 +381,23 @@ export async function executeTradesImport(
   });
 
   const dates = [...new Set(rows.map((r) => r.date))];
+  // A CSV is the detailed source of truth for one account/day. Re-importing from
+  // either supported broker replaces the previous CSV source instead of double-counting it.
+  const platforms = ["rTrader", "Tradovate"];
 
   for (const date of dates) {
-    const { error: delError } = await withUserTradesQuery(
-      supabaseClient
-        .from("trades")
-        .delete()
-        .eq("date", date)
-        .eq("platform", "rTrader")
-        .eq("account_name", accountName),
-      userId
-    );
-    if (delError) throw new Error(delError.message);
+    for (const platform of platforms) {
+      const { error: delError } = await withUserTradesQuery(
+        supabaseClient
+          .from("trades")
+          .delete()
+          .eq("date", date)
+          .eq("platform", platform)
+          .eq("account_name", accountName),
+        userId
+      );
+      if (delError) throw new Error(delError.message);
+    }
   }
 
   const { error } = await supabaseClient.from("trades").insert(rows);

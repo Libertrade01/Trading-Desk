@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "check:launch-env": "node scripts/check-production-env.mjs",
-    "test": "node --test src/lib/market-events.test.js src/lib/econ-calendar.test.js src/lib/analytics-playbook-filter.test.js src/lib/trading-day-range.test.js src/lib/trade-time.test.js src/lib/age-eligibility.test.js src/lib/safe-redirect.test.js src/lib/founder-migration.test.js src/lib/manual-trades.test.js src/lib/session-summary-stats.test.js src/lib/workflow-defaults.test.js"
+    "test": "node --test src/lib/market-events.test.js src/lib/econ-calendar.test.js src/lib/analytics-playbook-filter.test.js src/lib/trading-day-range.test.js src/lib/trade-time.test.js src/lib/age-eligibility.test.js src/lib/safe-redirect.test.js src/lib/founder-migration.test.js src/lib/manual-trades.test.js src/lib/session-summary-stats.test.js src/lib/workflow-defaults.test.js src/lib/tradovate-import.test.js"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.0",

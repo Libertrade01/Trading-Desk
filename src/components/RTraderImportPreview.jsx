@@ -37,6 +37,7 @@ export default function RTraderImportPreview({
   account,
   sourceTimeZone = "UTC",
   timeColumnHeader = "",
+  brokerName = "R Trader",
   onConfirm,
 }) {
   const [pendingTrades, setPendingTrades] = useState([]);
@@ -115,7 +116,7 @@ export default function RTraderImportPreview({
       <div className="import-modal" role="dialog" aria-modal="true" aria-labelledby="import-modal-title">
         <div className="import-modal-header">
           <div>
-            <span className="import-modal-eyebrow">rTrader CSV</span>
+            <span className="import-modal-eyebrow">{brokerName} CSV</span>
             <h2 className="import-modal-title" id="import-modal-title">Review your session import.</h2>
             <p>Confirm the trade data, risk and playbook setup before adding it to Stats.</p>
           </div>
@@ -253,7 +254,7 @@ export default function RTraderImportPreview({
                 className="import-footer-select"
                 value={importTimeZone}
                 onChange={(e) => setImportTimeZone(e.target.value)}
-                title="Timezone of timestamps in your rTrader export"
+                title={`Timezone of timestamps in your ${brokerName} export`}
               >
                 {RTRADER_IMPORT_TIMEZONE_OPTIONS.map((o) => (
                   <option key={o.id} value={o.id}>{o.label}</option>
