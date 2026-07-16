@@ -67,8 +67,8 @@ Status date: 16 July 2026
 - [x] Confirm production email verification is mandatory
 - [x] Test signup, confirmation, sign-in, password reset and sign-out
 - [x] Test a second user and confirm there is no cross-account data access
-- [ ] Import a real Tradovate CSV in production and confirm its date, New York time, P&L, Stats and History
-- [ ] Test a dummy export and deletion request end to end
+- [x] Import a real Tradovate CSV in production and confirm its date, New York time, P&L, Stats and History
+- [x] Test a dummy export and deletion request end to end
 - [x] Confirm analytics is enabled and the integration filters to public page views only
 - [ ] Test landing, signup and legal pages on phone, tablet and desktop
 - [ ] Review logs after the first beta users and establish an incident-response contact process
