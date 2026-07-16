@@ -119,7 +119,8 @@ export function hrvScoreToScore(value) {
 }
 
 export function toggleToScore(on) {
-  return on ? 100 : 0;
+  // An unchecked physical habit is a weak input, not proof of a total-zero physical state.
+  return on ? 100 : 20;
 }
 
 /** Prep toggles off = neutral baseline (not done yet). On = complete. */
@@ -258,7 +259,7 @@ export function sliderValueColor(value, inverted = false) {
   return "var(--red)";
 }
 
-/** Fresh non-wearable baseline: 51, just above Preservation Mode, with all sliders centred at 5. */
+/** Fresh non-wearable baseline: 51, just above Preservation Mode. */
 export const DEFAULT_PREMARKET_FORM = {
   emotionalState: 5,
   confidence: 5,
@@ -267,10 +268,10 @@ export const DEFAULT_PREMARKET_FORM = {
   revengeRisk: 5,
   sleepHours: 9,
   sleepDebtMinutes: 0,
-  sleepQuality: 5,
-  energy: 5,
+  sleepQuality: 6,
+  energy: 6,
   hrvScore: 50,
-  hydrated: true,
+  hydrated: false,
   movement: false,
   externalDistractions: 5,
   financialPressure: 5,

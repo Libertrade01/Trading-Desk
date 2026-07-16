@@ -248,12 +248,8 @@ export default function DailyPlan({ onBack }) {
 
     await persistPlan(form, status.active);
     setSaved(true);
+    onBack();
     return true;
-  };
-
-  const handleReturn = async () => {
-    const ok = await handleSave();
-    if (ok) onBack();
   };
 
   const persistQuickAdds = useCallback(async (nextQuickAdds) => {
@@ -873,11 +869,8 @@ export default function DailyPlan({ onBack }) {
                 </button>
               ) : (
                 <div className="pm-closeout-finish-actions-right">
-                  <button type="button" className="pm-btn-outline" onClick={handleSave}>
-                    {saved ? "Updated" : "Save plan"}
-                  </button>
-                  <button type="button" className="pm-btn-primary-sm" onClick={handleReturn}>
-                    Return HOME
+                  <button type="button" className="pm-btn-primary-sm" onClick={handleSave}>
+                    Save plan
                   </button>
                 </div>
               )}

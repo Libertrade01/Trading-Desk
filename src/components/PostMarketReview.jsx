@@ -980,20 +980,13 @@ export default function PostMarketReview({ onBack }) {
                 <div className="pm-closeout-finish-actions-right">
                   <button
                     type="button"
-                    className={`pm-btn-outline${saved ? " pm-btn-outline--saved" : ""}`}
-                    onClick={handleSave}
-                  >
-                    {saved ? "Saved" : "Save & Close Loop"}
-                  </button>
-                  <button
-                    type="button"
                     className="pm-btn-primary-sm"
                     onClick={async () => {
                       const ok = await handleSave();
                       if (ok !== false) onBack();
                     }}
                   >
-                    Return home
+                    Save &amp; Close LOOP
                     <span className="checkin-btn-arrow" aria-hidden="true">
                       →
                     </span>

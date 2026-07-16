@@ -16,8 +16,9 @@ test("fresh non-wearable check-in begins at 51 without Preservation Mode", () =>
   assert.equal(DEFAULT_PREMARKET_FORM.patience, 5);
   assert.equal(DEFAULT_PREMARKET_FORM.fomoRisk, 5);
   assert.equal(DEFAULT_PREMARKET_FORM.revengeRisk, 5);
-  assert.equal(DEFAULT_PREMARKET_FORM.sleepQuality, 5);
-  assert.equal(DEFAULT_PREMARKET_FORM.energy, 5);
+  assert.equal(DEFAULT_PREMARKET_FORM.sleepQuality, 6);
+  assert.equal(DEFAULT_PREMARKET_FORM.energy, 6);
+  assert.equal(DEFAULT_PREMARKET_FORM.hydrated, false);
   assert.equal(DEFAULT_PREMARKET_FORM.externalDistractions, 5);
   assert.equal(DEFAULT_PREMARKET_FORM.financialPressure, 5);
   assert.equal(DEFAULT_PREMARKET_FORM.generalFocusLevel, 5);

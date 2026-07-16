@@ -186,6 +186,7 @@ export default function PreMarketCheckIn({ onBack }) {
   const handleSave = async () => {
     await persistCheckin(form, scores, status);
     setSaved(true);
+    onBack();
   };
 
   const handleProtectiveAcknowledge = async (checked) => {
@@ -496,18 +497,12 @@ export default function PreMarketCheckIn({ onBack }) {
 
               <div className="checkin-finish-actions">
                 <div className="checkin-finish-actions-right">
-                  <button type="button" className="pm-btn-outline" onClick={handleSave}>
-                    {saved ? "Updated" : "Save check-in"}
-                  </button>
                   <button
                     type="button"
                     className="pm-btn-primary-sm"
-                    onClick={() => {
-                      handleSave();
-                      onBack();
-                    }}
+                    onClick={handleSave}
                   >
-                    Return HOME
+                    Save check-in
                   </button>
                 </div>
               </div>

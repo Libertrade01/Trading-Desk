@@ -4,10 +4,6 @@ import { useState, useEffect, useMemo } from "react";
 import { formatLimaTime } from "../lib/trade-time";
 import { RTRADER_IMPORT_TIMEZONE_OPTIONS } from "../lib/rtrader-timezone";
 import { normalizeTradeTimestamps } from "../lib/rtrader-import";
-import {
-  MGMT_OPTIONS,
-  POST_EXIT_OPTIONS,
-} from "../lib/trade-import-options";
 import { buildSetupOptions } from "../lib/setup-options";
 import { loadTraderProfile, getPlaybookSetupNames } from "../lib/trader-profile";
 import { loadTraderSettings, saveTraderSettings } from "../lib/trader-settings";
@@ -28,9 +24,6 @@ function initTrades(trades, defaultRisk) {
     ...t,
     stop_loss_points: t.stop_loss_points ?? defaultRisk,
     setup: t.setup ?? null,
-    management: t.management ?? null,
-    sequence_id: t.sequence_id ?? null,
-    post_exit_outcome: t.post_exit_outcome ?? null,
   }));
 }
 
@@ -121,8 +114,12 @@ export default function RTraderImportPreview({
     <div className="import-modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="import-modal" role="dialog" aria-modal="true" aria-labelledby="import-modal-title">
         <div className="import-modal-header">
-          <span className="import-modal-title" id="import-modal-title">Import Preview — rTrader CSV</span>
-          <button type="button" className="import-modal-close" onClick={onClose} aria-label="Close">✕</button>
+          <div>
+            <span className="import-modal-eyebrow">rTrader CSV</span>
+            <h2 className="import-modal-title" id="import-modal-title">Review your session import.</h2>
+            <p>Confirm the trade data, risk and playbook setup before adding it to Stats.</p>
+          </div>
+          <button type="button" className="import-modal-close" onClick={onClose} aria-label="Close">&times;</button>
         </div>
 
         <div className="import-modal-summary">
@@ -193,9 +190,6 @@ export default function RTraderImportPreview({
                 <th>Net P&amp;L</th>
                 <th>Risk (pts)</th>
                 <th>Setup</th>
-                <th>Mgmt</th>
-                <th>Seq</th>
-                <th>Post-Exit</th>
               </tr>
             </thead>
             <tbody>
@@ -237,41 +231,6 @@ export default function RTraderImportPreview({
                         onChange={(e) => updateTrade(i, { setup: e.target.value || null })}
                       >
                         {setupOptions.map((o) => (
-                          <option key={o.value || "empty"} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td>
-                      <select
-                        className="import-cell-select import-cell-select--mgmt"
-                        value={t.management || ""}
-                        onChange={(e) => updateTrade(i, { management: e.target.value || null })}
-                      >
-                        {MGMT_OPTIONS.map((o) => (
-                          <option key={o.value || "empty"} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        min="1"
-                        step="1"
-                        value={t.sequence_id ?? ""}
-                        placeholder="—"
-                        className="import-cell-input import-cell-input--seq"
-                        onChange={(e) => updateTrade(i, {
-                          sequence_id: e.target.value ? parseInt(e.target.value, 10) : null,
-                        })}
-                      />
-                    </td>
-                    <td>
-                      <select
-                        className="import-cell-select import-cell-select--post"
-                        value={t.post_exit_outcome || ""}
-                        onChange={(e) => updateTrade(i, { post_exit_outcome: e.target.value || null })}
-                      >
-                        {POST_EXIT_OPTIONS.map((o) => (
                           <option key={o.value || "empty"} value={o.value}>{o.label}</option>
                         ))}
                       </select>
