@@ -35,6 +35,9 @@ input.pm-slider:focus-visible::-webkit-slider-thumb {
 }
 
 input.pm-slider:active::-webkit-slider-thumb {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.12), rgba(42, 151, 255, 0.96) 30%, rgba(42, 151, 255, 0.96) 70%, rgba(0, 50, 112, 0.18)),
+    linear-gradient(180deg, #8ac8ff 0%, #2998f7 46%, #0875dc 100%);
   transform: scaleY(1.04);
   filter: brightness(1.16);
   cursor: grabbing;
@@ -69,6 +72,7 @@ input.pm-slider:focus-visible::-moz-range-thumb {
 }
 
 input.pm-slider:active::-moz-range-thumb {
+  background: linear-gradient(180deg, #8ac8ff 0%, #2998f7 46%, #0875dc 100%);
   filter: brightness(1.16);
   cursor: grabbing;
 }
