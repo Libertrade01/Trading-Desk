@@ -68,7 +68,7 @@ export function countBehavioralFlags(form) {
 
 export const DEFAULT_POSTMARKET = {
   noTradeToday: false,
-  performanceEntryMode: "summary",
+  performanceEntryMode: "csv",
   trades: "",
   wins: "",
   losses: "",

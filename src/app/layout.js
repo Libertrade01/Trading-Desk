@@ -1,4 +1,6 @@
 import './globals.css';
+import './branded-selects.css';
+import './premium-sliders.css';
 import './home-dashboard-redesign.css';
 import './app-sidebar-refinement.css';
 import AuthRecoveryRedirect from '../components/AuthRecoveryRedirect';

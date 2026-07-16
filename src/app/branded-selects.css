@@ -1,0 +1,103 @@
+/* App-wide dropdown treatment with a native fallback for older browsers. */
+select:not([multiple]) {
+  color-scheme: dark;
+  border-color: rgba(83, 147, 222, 0.22);
+  background-color: rgba(7, 19, 34, 0.92);
+  color: rgba(240, 247, 255, 0.94);
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+select:not([multiple]):hover {
+  border-color: rgba(72, 158, 255, 0.42);
+  background-color: rgba(9, 25, 44, 0.96);
+}
+
+select:not([multiple]):focus-visible {
+  outline: none;
+  border-color: rgba(31, 143, 255, 0.72);
+  box-shadow: 0 0 0 3px rgba(8, 125, 255, 0.1), 0 0 24px rgba(8, 125, 255, 0.08);
+}
+
+@supports (appearance: base-select) {
+  select:not([multiple]),
+  select:not([multiple])::picker(select) {
+    appearance: base-select;
+  }
+
+  select:not([multiple]) {
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  select:not([multiple])::picker-icon {
+    width: 7px;
+    height: 7px;
+    margin-left: auto;
+    border-right: 1.5px solid rgba(119, 184, 255, 0.8);
+    border-bottom: 1.5px solid rgba(119, 184, 255, 0.8);
+    transform: rotate(45deg) translateY(-2px);
+    color: transparent;
+    transition: transform 160ms ease;
+  }
+
+  select:not([multiple]):open::picker-icon {
+    transform: rotate(225deg) translate(-2px, -2px);
+  }
+
+  select:not([multiple])::picker(select) {
+    margin-top: 7px;
+    padding: 7px;
+    border: 1px solid rgba(67, 146, 239, 0.3);
+    border-radius: 11px;
+    background: linear-gradient(145deg, rgba(11, 30, 51, 0.995), rgba(4, 12, 22, 0.995));
+    box-shadow: 0 20px 54px rgba(0, 0, 0, 0.56), 0 0 34px rgba(25, 111, 216, 0.1);
+    opacity: 0;
+    transform: translateY(-5px) scale(0.985);
+    transition: opacity 150ms ease, transform 150ms ease, display 150ms allow-discrete;
+  }
+
+  select:not([multiple]):open::picker(select) {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  select:not([multiple]) option {
+    min-height: 38px;
+    margin: 2px 0;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: rgba(210, 227, 247, 0.84);
+    font: inherit;
+    cursor: pointer;
+    transition: color 120ms ease, background-color 120ms ease;
+  }
+
+  select:not([multiple]) option:hover,
+  select:not([multiple]) option:focus-visible {
+    outline: none;
+    background: rgba(22, 111, 218, 0.15);
+    color: #f7fbff;
+  }
+
+  select:not([multiple]) option:checked {
+    background: linear-gradient(90deg, rgba(18, 117, 235, 0.24), rgba(18, 117, 235, 0.08));
+    color: #72b9ff;
+  }
+
+  select:not([multiple]) option::checkmark {
+    order: 1;
+    margin-left: auto;
+    color: #3da1ff;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  select:not([multiple]),
+  select:not([multiple])::picker(select) {
+    transition: none;
+  }
+}

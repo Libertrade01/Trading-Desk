@@ -258,19 +258,19 @@ export function sliderValueColor(value, inverted = false) {
   return "var(--red)";
 }
 
-/** Baseline defaults — composite 50 with all prep toggles off (neutral prep scoring). */
+/** Fresh non-wearable baseline: 51, just above Preservation Mode, with all sliders centred at 5. */
 export const DEFAULT_PREMARKET_FORM = {
   emotionalState: 5,
   confidence: 5,
   patience: 5,
   fomoRisk: 5,
   revengeRisk: 5,
-  sleepHours: 6,
+  sleepHours: 9,
   sleepDebtMinutes: 0,
   sleepQuality: 5,
   energy: 5,
   hrvScore: 50,
-  hydrated: false,
+  hydrated: true,
   movement: false,
   externalDistractions: 5,
   financialPressure: 5,

@@ -117,7 +117,7 @@ export default function PostMarketReview({ onBack }) {
   const [importMsg, setImportMsg] = useState("");
   const [dayTrades, setDayTrades] = useState([]);
   const [traderSettings, setTraderSettings] = useState(null);
-  const [performanceMode, setPerformanceMode] = useState("summary");
+  const [performanceMode, setPerformanceMode] = useState("csv");
   const [recoveryStatus, setRecoveryStatus] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
   const [dragActive, setDragActive] = useState(false);
@@ -213,7 +213,7 @@ export default function PostMarketReview({ onBack }) {
         ? "manual"
         : dbTrades.length > 0 || savedReview?.lastImportAt
           ? "csv"
-          : savedReview?.performanceEntryMode || "summary";
+          : savedReview?.performanceEntryMode || "csv";
       next.performanceEntryMode = inferredMode;
       setPerformanceMode(inferredMode);
 
