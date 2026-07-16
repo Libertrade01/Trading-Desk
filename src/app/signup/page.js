@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getAgeBand } from "../../lib/age-eligibility";
@@ -8,7 +8,9 @@ import { getAgeBand } from "../../lib/age-eligibility";
 export default function SignupPage() {
   const router = useRouter();
   const [preferredName, setPreferredName] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [birthDay, setBirthDay] = useState("");
+  const [birthMonth, setBirthMonth] = useState("");
+  const [birthYear, setBirthYear] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [legalAccepted, setLegalAccepted] = useState(false);
@@ -16,6 +18,24 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [pendingConfirmation, setPendingConfirmation] = useState(false);
+
+  const currentYear = new Date().getUTCFullYear();
+  const birthYears = useMemo(
+    () => Array.from({ length: 121 }, (_, index) => currentYear - index),
+    [currentYear],
+  );
+  const daysInBirthMonth = useMemo(() => {
+    if (!birthMonth) return 31;
+    const year = Number(birthYear) || 2000;
+    return new Date(Date.UTC(year, Number(birthMonth), 0)).getUTCDate();
+  }, [birthMonth, birthYear]);
+  const dateOfBirth = birthDay && birthMonth && birthYear
+    ? `${birthYear}-${String(birthMonth).padStart(2, "0")}-${String(birthDay).padStart(2, "0")}`
+    : "";
+
+  useEffect(() => {
+    if (birthDay && Number(birthDay) > daysInBirthMonth) setBirthDay("");
+  }, [birthDay, daysInBirthMonth]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -114,18 +134,35 @@ export default function SignupPage() {
               onChange={(e) => setPreferredName(e.target.value)}
             />
           </label>
-          <label className="auth-label">
+          <fieldset className="auth-label auth-birth-field">
+            <legend>
             Date of birth
-            <input
-              className="pm-text-input auth-input"
-              type="date"
-              autoComplete="bday"
-              required
-              value={dateOfBirth}
-              onChange={(e) => setDateOfBirth(e.target.value)}
-            />
+            </legend>
+            <div className="auth-birth-selects">
+              <label>
+                <span>Day</span>
+                <select required aria-label="Birth day" autoComplete="bday-day" value={birthDay} onChange={(event) => setBirthDay(event.target.value)}>
+                  <option value="">DD</option>
+                  {Array.from({ length: daysInBirthMonth }, (_, index) => index + 1).map((day) => <option key={day} value={day}>{day}</option>)}
+                </select>
+              </label>
+              <label>
+                <span>Month</span>
+                <select required aria-label="Birth month" autoComplete="bday-month" value={birthMonth} onChange={(event) => setBirthMonth(event.target.value)}>
+                  <option value="">Month</option>
+                  {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((month, index) => <option key={month} value={index + 1}>{month}</option>)}
+                </select>
+              </label>
+              <label>
+                <span>Year</span>
+                <select required aria-label="Birth year" autoComplete="bday-year" value={birthYear} onChange={(event) => setBirthYear(event.target.value)}>
+                  <option value="">YYYY</option>
+                  {birthYears.map((year) => <option key={year} value={year}>{year}</option>)}
+                </select>
+              </label>
+            </div>
             <span className="auth-field-note">Used to confirm eligibility. We retain only your age group, not your birth date.</span>
-          </label>
+          </fieldset>
           <label className="auth-label">
             Email
             <input

@@ -18794,6 +18794,78 @@ input.pm-slider:active::-moz-range-thumb {
   text-transform: none;
 }
 
+.auth-birth-field {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.auth-birth-field legend {
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.auth-birth-selects {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr) 104px;
+  gap: 9px;
+}
+
+.auth-birth-selects label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.auth-birth-selects label > span {
+  padding-left: 2px;
+  color: rgba(163, 191, 226, .38);
+  font-family: var(--landing-font), var(--font-sans);
+  font-size: 8px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.auth-birth-selects select {
+  width: 100%;
+  height: 52px;
+  padding: 0 34px 0 13px;
+  border: 1px solid rgba(87, 141, 205, .18);
+  border-radius: 9px;
+  outline: none;
+  appearance: none;
+  background:
+    linear-gradient(45deg, transparent 50%, rgba(142, 181, 225, .58) 50%) calc(100% - 16px) 23px / 5px 5px no-repeat,
+    linear-gradient(135deg, rgba(142, 181, 225, .58) 50%, transparent 50%) calc(100% - 11px) 23px / 5px 5px no-repeat,
+    linear-gradient(180deg, rgba(12, 29, 50, .82), rgba(6, 18, 34, .82));
+  color: rgba(244, 248, 255, .94);
+  font-family: var(--landing-font), var(--font-sans);
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.auth-birth-selects select:hover { border-color: rgba(82, 153, 235, .3); }
+
+.auth-birth-selects select:focus {
+  border-color: rgba(22, 140, 255, .72);
+  box-shadow: 0 0 0 3px rgba(8, 125, 255, .1), 0 0 24px rgba(8, 125, 255, .08);
+}
+
+.auth-birth-selects select option {
+  background: #09182a;
+  color: #eef5ff;
+}
+
+@media (max-width: 440px) {
+  .auth-birth-selects { grid-template-columns: 70px minmax(0, 1fr) 92px; gap: 7px; }
+  .auth-birth-selects select { padding-right: 26px; padding-left: 10px; font-size: 12px; }
+}
+
 .auth-legal-check {
   display: grid;
   grid-template-columns: 17px 1fr;
