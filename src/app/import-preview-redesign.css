@@ -126,7 +126,8 @@
   background: rgba(4, 12, 22, 0.96);
 }
 
-.import-footer-note { color: rgba(159, 187, 219, 0.48); }
+.import-footer-note { display: flex; flex-direction: column; gap: 4px; color: rgba(159, 187, 219, 0.48); }
+.import-footer-note span:last-child { color: rgba(111, 177, 255, 0.72); }
 .import-footer-actions { gap: 10px; }
 .import-footer-field { gap: 7px; }
 .import-footer-select { width: 150px; min-height: 38px; border-radius: 7px; }

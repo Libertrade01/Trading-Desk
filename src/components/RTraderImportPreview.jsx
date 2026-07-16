@@ -141,7 +141,7 @@ export default function RTraderImportPreview({
             <div className="import-ms-val import-warn">-{formatMoney(totals.totalComm)}</div>
           </div>
           <div className="import-summary-cell">
-            <div className="import-ms-label">CSV Timezone</div>
+            <div className="import-ms-label">Time source</div>
             <div className="import-ms-text" title={timeColumnHeader || undefined}>
               {timeColumnHeader || "Update Time"}
             </div>
@@ -245,11 +245,12 @@ export default function RTraderImportPreview({
 
         <div className="import-modal-footer">
           <div className="import-footer-note">
-            {pendingTrades.length} trades · {totals.winners} winners · {formatPlaybookBreakdown(totals.setupSummary)}
+            <span>{pendingTrades.length} trades · {totals.winners} winners · {formatPlaybookBreakdown(totals.setupSummary)}</span>
+            <span>All imported trade times are converted to New York time.</span>
           </div>
           <div className="import-footer-actions">
             <div className="import-footer-field">
-              <span className="import-footer-label">CSV timezone</span>
+              <span className="import-footer-label">Times in this CSV</span>
               <select
                 className="import-footer-select"
                 value={importTimeZone}
