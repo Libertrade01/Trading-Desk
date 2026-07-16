@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "check:launch-env": "node scripts/check-production-env.mjs",
-    "test": "node --test src/lib/market-events.test.js src/lib/econ-calendar.test.js src/lib/analytics-playbook-filter.test.js src/lib/trading-day-range.test.js src/lib/trade-time.test.js src/lib/age-eligibility.test.js src/lib/safe-redirect.test.js src/lib/founder-migration.test.js src/lib/manual-trades.test.js src/lib/session-summary-stats.test.js src/lib/workflow-defaults.test.js src/lib/tradovate-import.test.js"
+    "test": "node --test src/lib/market-events.test.js src/lib/econ-calendar.test.js src/lib/analytics-playbook-filter.test.js src/lib/trading-day-range.test.js src/lib/trade-time.test.js src/lib/age-eligibility.test.js src/lib/safe-redirect.test.js src/lib/founder-migration.test.js src/lib/manual-trades.test.js src/lib/session-summary-stats.test.js src/lib/workflow-defaults.test.js src/lib/tradovate-import.test.js src/lib/sentry-privacy.test.js"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.0",
@@ -15,6 +15,7 @@
     "@opencoredev/loginwithchatgpt-ai": "^0.1.0",
     "@opencoredev/loginwithchatgpt-react": "^0.1.0",
     "@opencoredev/loginwithchatgpt-server": "^0.1.0",
+    "@sentry/nextjs": "^10.66.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.45.0",
     "@vercel/analytics": "^2.0.1",

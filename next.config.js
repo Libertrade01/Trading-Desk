@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const path = require('path');
+const { withSentryConfig } = require('@sentry/nextjs');
 
 const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',
@@ -53,4 +54,14 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+module.exports = withSentryConfig(nextConfig, {
+  silent: true,
+  webpack: {
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
+  sourcemaps: {
+    deleteSourcemapsAfterUpload: true,
+  },
+});
