@@ -48,6 +48,7 @@ import {
 import { loadDllSettings } from "../lib/dll-recovery-settings";
 import { loadTraderSettings } from "../lib/trader-settings";
 import { todayKey } from "../lib/today-key";
+import { storage } from "../lib/supabase";
 import ManualTradeEntry from "./ManualTradeEntry";
 
 function headerDate() {
@@ -121,6 +122,8 @@ export default function PostMarketReview({ onBack }) {
   const [activeStep, setActiveStep] = useState(0);
   const [dragActive, setDragActive] = useState(false);
   const [importDropExpanded, setImportDropExpanded] = useState(false);
+  const [morningThesis, setMorningThesis] = useState("");
+  const [showThesis, setShowThesis] = useState(false);
   const fileRef = useRef(null);
   const dragCounter = useRef(0);
 
@@ -228,6 +231,33 @@ export default function PostMarketReview({ onBack }) {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const result = await storage.get(`daily-plan-${todayKey()}`);
+        if (!result?.value || cancelled) return;
+        let plan = JSON.parse(result.value);
+        if (typeof plan === "string") plan = JSON.parse(plan);
+        if (!cancelled) setMorningThesis(String(plan?.whyBias || "").trim());
+      } catch (error) {
+        console.error("PostMarketReview load thesis:", error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!showThesis) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setShowThesis(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [showThesis]);
 
   const refreshRecoveryStatus = useCallback(async () => {
     const [state, settings] = await Promise.all([
@@ -784,8 +814,8 @@ export default function PostMarketReview({ onBack }) {
                     <SliderField label="Setup quality" hint="Were the setups you took A+?" minLabel="Marginal" maxLabel="A+" value={form.setupQuality} onChange={(v) => set("setupQuality", v)} />
                     <SliderField label="Risk discipline" hint="Stops respected, sizing right" minLabel="Loose" maxLabel="Tight" value={form.riskDiscipline} onChange={(v) => set("riskDiscipline", v)} />
                     <SliderField label="Execution quality" hint="Entries, exits, fills" minLabel="Sloppy" maxLabel="Sharp" value={form.executionQuality} onChange={(v) => set("executionQuality", v)} />
-                    <div className="pm-risk-block">
-                      <div className="pm-risk-answer-head">
+                    <div className="pm-risk-block pm-risk-answer-inline">
+                      <div className="pm-risk-answer-copy">
                         <div>
                           <div className="pm-field-label hybrid-label">Risk plan followed?</div>
                           <div className="pm-field-hint">Choose the outcome for today&apos;s Risk Adherence streak.</div>
@@ -799,9 +829,9 @@ export default function PostMarketReview({ onBack }) {
                           aria-checked={form.riskPlanFollowed === true}
                           className={form.riskPlanFollowed === true ? "active yes" : ""}
                           onClick={() => set("riskPlanFollowed", true)}
+                          aria-label="Yes, risk plan followed"
                         >
-                          <span className="pm-risk-answer-radio" aria-hidden="true" />
-                          <span><strong>Yes</strong><small>Streak continues</small></span>
+                          Y
                         </button>
                         <button
                           type="button"
@@ -809,9 +839,9 @@ export default function PostMarketReview({ onBack }) {
                           aria-checked={form.riskPlanFollowed === false}
                           className={form.riskPlanFollowed === false ? "active no" : ""}
                           onClick={() => set("riskPlanFollowed", false)}
+                          aria-label="No, risk plan not followed"
                         >
-                          <span className="pm-risk-answer-radio" aria-hidden="true" />
-                          <span><strong>No</strong><small>Streak ends</small></span>
+                          N
                         </button>
                       </div>
                     </div>
@@ -863,7 +893,12 @@ export default function PostMarketReview({ onBack }) {
                 {step.id === "journal" && (
                   <>
                     <div className="pm-field">
-                      <div className="pm-field-label hybrid-label">Plan vs Reality</div>
+                      <div className="pm-journal-heading-row">
+                        <div className="pm-field-label hybrid-label">Plan versus reality</div>
+                        <button type="button" className="pm-see-thesis" onClick={() => setShowThesis(true)}>
+                          See Thesis
+                        </button>
+                      </div>
                       <textarea
                         value={form.readVsReality}
                         onChange={(e) => set("readVsReality", e.target.value)}
@@ -969,6 +1004,29 @@ export default function PostMarketReview({ onBack }) {
           </div>
         </div>
       </div>
+      {showThesis && (
+        <div className="pm-thesis-overlay" role="presentation" onMouseDown={() => setShowThesis(false)}>
+          <section
+            className="pm-thesis-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pm-thesis-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="pm-thesis-dialog-head">
+              <div>
+                <span className="hybrid-label-sm">This morning</span>
+                <h2 id="pm-thesis-title">Your thesis</h2>
+              </div>
+              <button type="button" onClick={() => setShowThesis(false)} aria-label="Close thesis">&times;</button>
+            </div>
+            <div className="pm-thesis-dialog-body">
+              {morningThesis || "No thesis was saved in this morning's session plan."}
+            </div>
+            <button type="button" className="pm-thesis-dialog-close" onClick={() => setShowThesis(false)}>Close</button>
+          </section>
+        </div>
+      )}
     </WorkflowPageLayout>
   );
 }
