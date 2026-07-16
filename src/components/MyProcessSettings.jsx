@@ -380,7 +380,7 @@ export default function MyProcessSettings({ standalone = false }) {
                   checked={profile.streakTargetDays != null}
                   onChange={(e) => {
                     if (e.target.checked) {
-                      patch({ streakTargetDays: profile.streakTargetDays ?? 21 });
+                      patch({ streakTargetDays: profile.streakTargetDays ?? 20 });
                     } else {
                       patch({ streakTargetDays: null });
                     }
@@ -389,7 +389,7 @@ export default function MyProcessSettings({ standalone = false }) {
                 <span className="pm-commitment-text">Streak target (days)</span>
               </label>
               <p className="pm-field-hint">
-                When off, home shows the streak count only. When on, shows a goal like 9/21.
+                When off, home shows the streak count only. When on, shows a goal like 9/20.
               </p>
               {profile.streakTargetDays != null && (
                 <input

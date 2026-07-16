@@ -110,7 +110,7 @@ export default function OnboardingWizard() {
   const [riskStreakEnabled, setRiskStreakEnabled] = useState(true);
   const [playbookStreakEnabled, setPlaybookStreakEnabled] = useState(true);
   const [streakTargetEnabled, setStreakTargetEnabled] = useState(true);
-  const [streakTargetDays, setStreakTargetDays] = useState(21);
+  const [streakTargetDays, setStreakTargetDays] = useState(20);
   const [biasChecklistEnabled, setBiasChecklistEnabled] = useState(false);
   const [usesWearable, setUsesWearable] = useState(false);
   const [dllForm, setDllForm] = useState({
@@ -218,7 +218,7 @@ export default function OnboardingWizard() {
         ...wearableConsentPatch(usesWearable),
         riskStreakEnabled,
         playbookStreakEnabled,
-        streakTargetDays: streakTargetEnabled ? Number(streakTargetDays) || 21 : null,
+        streakTargetDays: streakTargetEnabled ? Number(streakTargetDays) || 20 : null,
       });
 
       await saveDllSettings(dllCheck.settings);
@@ -539,7 +539,7 @@ export default function OnboardingWizard() {
             <div className="onboarding-streak-target">
               <ToggleField
                 label="Set a streak target"
-                hint="When off, Home shows the streak count only. When on, it shows progress toward a goal such as 9/21."
+                hint="When off, Home shows the streak count only. When on, it shows progress toward a goal such as 9/20."
                 value={streakTargetEnabled}
                 onChange={setStreakTargetEnabled}
               />
@@ -551,7 +551,7 @@ export default function OnboardingWizard() {
                     min={1}
                     max={365}
                     value={streakTargetDays}
-                    onChange={(e) => setStreakTargetDays(Number(e.target.value) || 21)}
+                    onChange={(e) => setStreakTargetDays(Number(e.target.value) || 20)}
                     className="pm-number-input"
                   />
                 </div>

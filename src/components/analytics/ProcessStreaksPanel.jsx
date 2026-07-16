@@ -1,6 +1,6 @@
 "use client";
 
-const GOAL = 21;
+const GOAL = 20;
 
 export default function ProcessStreaksPanel({ riskStreak, playbookStreak }) {
   return (
