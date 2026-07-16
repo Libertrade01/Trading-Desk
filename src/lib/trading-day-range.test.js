@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { lastNTradingDaysRange } from "./trading-day-range.js";
+import { lastNTradingDaysRange, previousTradingDateKeys } from "./trading-day-range.js";
 
 describe("trading-day-range", () => {
   it("lastNTradingDaysRange counts Mon-Fri only", () => {
@@ -20,4 +20,9 @@ describe("trading-day-range", () => {
     assert.equal(range.dateTo, "2026-07-08");
     assert.equal(range.dateFrom, "2026-06-25");
   });
+});
+
+it("previousTradingDateKeys skips weekends", () => {
+  assert.deepEqual(previousTradingDateKeys("2026-07-20", 2), ["2026-07-17", "2026-07-16"]);
+  assert.deepEqual(previousTradingDateKeys("2026-07-16", 2), ["2026-07-15", "2026-07-14"]);
 });

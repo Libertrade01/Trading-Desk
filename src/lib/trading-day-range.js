@@ -35,3 +35,16 @@ export function lastNTradingDaysRange(n, referenceDate = new Date()) {
 
   return { dateFrom, dateTo };
 }
+
+/** Previous Mon-Fri date keys, newest first, excluding the supplied date. */
+export function previousTradingDateKeys(dateKey, count = 1) {
+  const cur = new Date(`${dateKey}T12:00:00`);
+  if (Number.isNaN(cur.getTime()) || count <= 0) return [];
+
+  const keys = [];
+  while (keys.length < count) {
+    cur.setDate(cur.getDate() - 1);
+    if (isWeekday(cur)) keys.push(calendarStr(cur));
+  }
+  return keys;
+}

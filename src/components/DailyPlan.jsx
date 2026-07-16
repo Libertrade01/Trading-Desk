@@ -143,6 +143,7 @@ export default function DailyPlan({ onBack }) {
   const [recoveryStatus, setRecoveryStatus] = useState(null);
   const [dllSettings, setDllSettings] = useState(DEFAULT_DLL_SETTINGS);
   const [activeStep, setActiveStep] = useState(0);
+  const [meditationStandDownRequired, setMeditationStandDownRequired] = useState(false);
 
   const set = useCallback((key, value) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -155,13 +156,19 @@ export default function DailyPlan({ onBack }) {
 
   useEffect(() => {
     (async () => {
-      const [data, recoveryState, settings, traderProfile] = await Promise.all([
+      const [data, recoveryState, settings, traderProfile, checkin] = await Promise.all([
         loadData(`daily-plan-${todayKey()}`, null),
         loadRecoveryState(),
         loadDllSettings(),
         loadTraderProfile(),
+        loadData(`premarket-checkin-${todayKey()}`, null),
       ]);
       setProfile(traderProfile);
+      setMeditationStandDownRequired(
+        traderProfile?.profileKind === "founder"
+        && checkin?.meditationStandDownRequired === true
+        && checkin?.meditation !== true,
+      );
       setQuickAdds(normalizeKeyLevelQuickAdds(traderProfile?.keyLevelQuickAdds));
       setDllSettings(settings);
       const status = getRecoveryStatus(recoveryState, settings);
@@ -344,6 +351,28 @@ export default function DailyPlan({ onBack }) {
   const biasItems = getEnabledBiasItems(profile);
   const isFounder = profile.profileKind === "founder";
   const commitmentList = profile.commitments || [];
+
+  if (meditationStandDownRequired) {
+    return (
+      <WorkflowPageLayout>
+        <div className="pm-topbar"><span>{headerDate()}</span></div>
+        <div className="pm-plan-layout">
+          <main className="pm-plan-main">
+            <div className="pm-section-panel">
+              <div className="pm-section-panel-body">
+                <span className="hybrid-label">Defence Day</span>
+                <h1 className="hybrid-page-title">Meditation first<span className="hybrid-page-title-stop" aria-hidden="true" /></h1>
+                <p className="pm-subtitle">
+                  The Session Plan is locked after three consecutive missed meditation check-ins. Complete Meditation in today&apos;s Check-in to clear Defence Day.
+                </p>
+                <a className="pm-btn-primary-sm" href="/premarket">Return to Check-in</a>
+              </div>
+            </div>
+          </main>
+        </div>
+      </WorkflowPageLayout>
+    );
+  }
 
   return (
     <WorkflowPageLayout>

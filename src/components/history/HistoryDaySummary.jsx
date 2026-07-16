@@ -48,7 +48,7 @@ export default function HistoryDaySummary({ session, recoveryLabel }) {
         </div>
       </div>
 
-      {(pre?.standDownAcknowledged || pre?.sleepDebtStandDownRequired || recoveryLabel) && (
+      {(pre?.standDownAcknowledged || pre?.sleepDebtStandDownRequired || pre?.meditationStandDownRequired || recoveryLabel) && (
         <div className="history-detail-hero__alerts">
           {recoveryLabel && (
             <span className="history-detail-hero__alert history-detail-hero__alert--recovery">
@@ -61,6 +61,11 @@ export default function HistoryDaySummary({ session, recoveryLabel }) {
           {pre?.sleepDebtStandDownRequired && (
             <span className="history-detail-hero__alert history-detail-hero__alert--severe">
               Recovery day
+            </span>
+          )}
+          {pre?.meditationStandDownRequired && (
+            <span className="history-detail-hero__alert history-detail-hero__alert--severe">
+              Meditation Defence Day
             </span>
           )}
         </div>

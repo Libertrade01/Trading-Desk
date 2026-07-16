@@ -2,7 +2,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { DEFAULT_POSTMARKET } from "./postmarket-defaults.js";
-import { computeReadinessScore, DEFAULT_PREMARKET_FORM } from "./premarket-scoring.js";
+import {
+  computeReadinessScore,
+  DEFAULT_PREMARKET_FORM,
+  founderMeditationMissStreak,
+  requiresFounderMeditationStandDown,
+} from "./premarket-scoring.js";
 
 test("fresh close loop defaults to CSV import", () => {
   assert.equal(DEFAULT_POSTMARKET.performanceEntryMode, "csv");
@@ -22,4 +27,11 @@ test("fresh non-wearable check-in begins at 51 without Preservation Mode", () =>
   assert.equal(DEFAULT_PREMARKET_FORM.externalDistractions, 5);
   assert.equal(DEFAULT_PREMARKET_FORM.financialPressure, 5);
   assert.equal(DEFAULT_PREMARKET_FORM.generalFocusLevel, 5);
+});
+
+test("founder meditation rule activates on the third consecutive missed check-in", () => {
+  assert.equal(founderMeditationMissStreak(false, [false, false]), 3);
+  assert.equal(requiresFounderMeditationStandDown(false, [false, false]), true);
+  assert.equal(requiresFounderMeditationStandDown(true, [false, false]), false);
+  assert.equal(requiresFounderMeditationStandDown(false, [false, null, false]), false);
 });

@@ -12,6 +12,8 @@ import {
   SLEEP_DEBT_SEVERE_CAUTION_MINS,
   PROTECTIVE_DAY_COPY,
   PROTECTIVE_DAY_THRESHOLD,
+  founderMeditationMissStreak,
+  requiresFounderMeditationStandDown,
 } from "../lib/premarket-scoring";
 import MarketEventNudge from "./MarketEventNudge";
 import CheckInRail, { CHECKIN_RAIL_SECTIONS } from "./CheckInRail";
@@ -20,6 +22,7 @@ import WorkflowPageLayout from "./WorkflowPageLayout";
 import SliderField from "./SliderField";
 import HabitTileField from "./HabitTileField";
 import { todayKey, offsetDateKey } from "../lib/today-key";
+import { previousTradingDateKeys } from "../lib/trading-day-range";
 import { notifySessionSaved } from "../lib/session-events";
 import {
   loadTraderProfile,
@@ -55,26 +58,39 @@ function headerDate() {
   });
 }
 
-function ProtectiveDayBanner({ recoveryDay, acknowledged, onAcknowledge }) {
-  const title = recoveryDay ? PROTECTIVE_DAY_COPY.recoveryTitle : PROTECTIVE_DAY_COPY.scoreTitle;
-  const body = recoveryDay ? PROTECTIVE_DAY_COPY.recoveryBody : PROTECTIVE_DAY_COPY.scoreBody;
+function ProtectiveDayBanner({ recoveryDay, meditationDay, acknowledged, onAcknowledge }) {
+  const effectiveAcknowledged = meditationDay ? false : acknowledged;
+  const title = meditationDay
+    ? PROTECTIVE_DAY_COPY.meditationTitle
+    : recoveryDay
+      ? PROTECTIVE_DAY_COPY.recoveryTitle
+      : PROTECTIVE_DAY_COPY.scoreTitle;
+  const body = meditationDay
+    ? PROTECTIVE_DAY_COPY.meditationBody
+    : recoveryDay
+      ? PROTECTIVE_DAY_COPY.recoveryBody
+      : PROTECTIVE_DAY_COPY.scoreBody;
   const ackLabel = recoveryDay ? PROTECTIVE_DAY_COPY.recoveryAckLabel : PROTECTIVE_DAY_COPY.scoreAckLabel;
 
   return (
     <div
-      className={`checkin-protective-bar${acknowledged ? " checkin-protective-bar--acknowledged" : ""}`}
-      role={recoveryDay ? "alert" : "status"}
+      className={`checkin-protective-bar${effectiveAcknowledged ? " checkin-protective-bar--acknowledged" : ""}`}
+      role={recoveryDay || meditationDay ? "alert" : "status"}
     >
       <span className="checkin-protective-bar-badge">{title}</span>
-      {!acknowledged && <p className="checkin-protective-bar-text">{body}</p>}
-      <label className={`checkin-protective-bar-ack${acknowledged ? " checkin-protective-bar-ack--done" : ""}`}>
-        <input
-          type="checkbox"
-          checked={acknowledged}
-          onChange={(e) => onAcknowledge(e.target.checked)}
-        />
-        <span>{acknowledged ? PROTECTIVE_DAY_COPY.scoreAckDone : ackLabel}</span>
-      </label>
+      {!effectiveAcknowledged && <p className="checkin-protective-bar-text">{body}</p>}
+      {meditationDay ? (
+        <span className="checkin-protective-bar-ack">Complete Meditation below to clear Defence Day.</span>
+      ) : (
+        <label className={`checkin-protective-bar-ack${acknowledged ? " checkin-protective-bar-ack--done" : ""}`}>
+          <input
+            type="checkbox"
+            checked={acknowledged}
+            onChange={(e) => onAcknowledge(e.target.checked)}
+          />
+          <span>{acknowledged ? PROTECTIVE_DAY_COPY.scoreAckDone : ackLabel}</span>
+        </label>
+      )}
     </div>
   );
 }
@@ -83,6 +99,7 @@ export default function PreMarketCheckIn({ onBack }) {
   const [form, setForm] = useState(DEFAULT_PREMARKET_FORM);
   const [profile, setProfile] = useState(null);
   const [yesterdaySleepDebtMinutes, setYesterdaySleepDebtMinutes] = useState(null);
+  const [previousMeditationValues, setPreviousMeditationValues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [activeSection, setActiveSection] = useState(0);
@@ -99,8 +116,14 @@ export default function PreMarketCheckIn({ onBack }) {
   const sleepDebtSevere = usesWearable && isSleepDebtSevere(sleepDebtMinutes);
   const recoveryDay =
     usesWearable && requiresSleepDebtStandDown(sleepDebtMinutes, yesterdaySleepDebtMinutes);
+  const founderProfile = profile?.profileKind === "founder";
+  const meditationStandDownRequired =
+    founderProfile && requiresFounderMeditationStandDown(form.meditation, previousMeditationValues);
+  const meditationMissStreak = founderProfile
+    ? founderMeditationMissStreak(form.meditation, previousMeditationValues)
+    : 0;
   const showProtectiveBanner =
-    recoveryDay || scores.composite < PROTECTIVE_DAY_THRESHOLD;
+    meditationStandDownRequired || recoveryDay || scores.composite < PROTECTIVE_DAY_THRESHOLD;
 
   const railDimensions = useMemo(
     () => ({
@@ -121,10 +144,12 @@ export default function PreMarketCheckIn({ onBack }) {
     (async () => {
       const dateKey = todayKey();
       const yesterdayKey = offsetDateKey(dateKey, -1);
-      const [data, yesterdayData, traderProfile] = await Promise.all([
+      const meditationHistoryKeys = previousTradingDateKeys(dateKey, 2);
+      const [data, yesterdayData, traderProfile, ...meditationHistory] = await Promise.all([
         loadData(`premarket-checkin-${dateKey}`, null),
         loadData(`premarket-checkin-${yesterdayKey}`, null),
         loadTraderProfile(),
+        ...meditationHistoryKeys.map((key) => loadData(`premarket-checkin-${key}`, null)),
       ]);
       setProfile(traderProfile);
       if (data) {
@@ -138,6 +163,9 @@ export default function PreMarketCheckIn({ onBack }) {
       } else {
         setYesterdaySleepDebtMinutes(null);
       }
+      setPreviousMeditationValues(
+        meditationHistory.map((entry) => entry?.savedAt ? entry.meditation === true : null),
+      );
       setLoading(false);
     })();
   }, []);
@@ -154,8 +182,8 @@ export default function PreMarketCheckIn({ onBack }) {
     date: todayKey(),
     ...formData,
     readinessScore: scoreData.composite,
-    readinessStatus: statusData.label,
-    readinessTone: statusData.tone,
+    readinessStatus: meditationStandDownRequired ? "Defence day - meditation required" : statusData.label,
+    readinessTone: meditationStandDownRequired ? "red" : statusData.tone,
     dimensionScores: {
       emotional: scoreData.emotional,
       physical: scoreData.physical,
@@ -170,8 +198,16 @@ export default function PreMarketCheckIn({ onBack }) {
     sleepDebtStandDownRequired:
       usesWearable
       && requiresSleepDebtStandDown(formData.sleepDebtMinutes, yesterdaySleepDebtMinutes),
+    meditationMissStreak,
+    meditationStandDownRequired,
+    automaticNoTradeRequired: meditationStandDownRequired,
     savedAt: new Date().toISOString(),
-  }), [usesWearable, yesterdaySleepDebtMinutes]);
+  }), [
+    usesWearable,
+    yesterdaySleepDebtMinutes,
+    meditationMissStreak,
+    meditationStandDownRequired,
+  ]);
 
   const persistCheckin = useCallback(async (formData, scoreData, statusData) => {
     const payload = buildSavePayload(formData, scoreData, statusData);
@@ -235,6 +271,7 @@ export default function PreMarketCheckIn({ onBack }) {
             {showProtectiveBanner && (
               <ProtectiveDayBanner
                 recoveryDay={recoveryDay}
+                meditationDay={meditationStandDownRequired}
                 acknowledged={form.standDownAcknowledged}
                 onAcknowledge={handleProtectiveAcknowledge}
               />
@@ -363,7 +400,7 @@ export default function PreMarketCheckIn({ onBack }) {
                         onChange={(v) => set("movement", v)}
                       />
                       <HabitTileField
-                        label="Breathwork"
+                        label={founderProfile ? "Meditation" : "Breathwork"}
                         value={form.meditation}
                         onChange={(v) => set("meditation", v)}
                       />
@@ -515,7 +552,7 @@ export default function PreMarketCheckIn({ onBack }) {
           onSelect={setActiveSection}
           composite={scores.composite}
           dimensions={railDimensions}
-          cautionActive={showProtectiveBanner && !form.standDownAcknowledged}
+          cautionActive={meditationStandDownRequired || (showProtectiveBanner && !form.standDownAcknowledged)}
         />
       </div>
     </WorkflowPageLayout>

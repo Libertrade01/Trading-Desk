@@ -70,6 +70,30 @@ export function requiresSleepDebtStandDown(todayMinutes, yesterdayMinutes) {
   return isSleepDebtSevere(todayMinutes) && isSleepDebtSevere(yesterdayMinutes);
 }
 
+export const FOUNDER_MEDITATION_STAND_DOWN_MISSES = 3;
+
+/**
+ * Founder rule: the third consecutive saved trading check-in without meditation
+ * becomes a mandatory Defence Day until today's meditation is completed.
+ * Previous values must be ordered newest first; null marks a missing check-in and
+ * breaks the streak rather than treating an inactive day as a missed habit.
+ */
+export function founderMeditationMissStreak(todayMeditation, previousValues = []) {
+  if (todayMeditation) return 0;
+
+  let misses = 1;
+  for (const value of previousValues) {
+    if (value !== false) break;
+    misses += 1;
+  }
+  return misses;
+}
+
+export function requiresFounderMeditationStandDown(todayMeditation, previousValues = []) {
+  return founderMeditationMissStreak(todayMeditation, previousValues)
+    >= FOUNDER_MEDITATION_STAND_DOWN_MISSES;
+}
+
 export const EXTERNAL_FIELD_WEIGHTS = {
   financialPressure: 0.34,
   externalDistractions: 0.33,
@@ -244,6 +268,9 @@ export const PROTECTIVE_DAY_COPY = {
   sleepDebtCaution:
     "Another day at this level triggers a mandatory recovery day.",
   sleepDebtMandatory: "Mandatory recovery day",
+  meditationTitle: "Defence Day · Meditation Required",
+  meditationBody:
+    "Meditation has been missed for two consecutive trading check-ins. Stand down: no trading until meditation is complete.",
 };
 
 export function readinessScoreColor(score) {
