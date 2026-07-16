@@ -12,6 +12,7 @@ import {
   loadTraderProfile,
   PROFILE_UPDATED_EVENT,
   getVisibleBehavioralFlagCategories,
+  getPlaybookSetupNames,
   countVisibleBehavioralFlags,
   createCustomerDefaultProfile,
 } from "../lib/trader-profile";
@@ -47,6 +48,7 @@ import {
 import { loadDllSettings } from "../lib/dll-recovery-settings";
 import { loadTraderSettings } from "../lib/trader-settings";
 import { todayKey } from "../lib/today-key";
+import ManualTradeEntry from "./ManualTradeEntry";
 
 function headerDate() {
   return new Date().toLocaleDateString("en-US", {
@@ -113,6 +115,8 @@ export default function PostMarketReview({ onBack }) {
   const [importPreview, setImportPreview] = useState(null);
   const [importMsg, setImportMsg] = useState("");
   const [dayTrades, setDayTrades] = useState([]);
+  const [traderSettings, setTraderSettings] = useState(null);
+  const [performanceMode, setPerformanceMode] = useState("summary");
   const [recoveryStatus, setRecoveryStatus] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
   const [dragActive, setDragActive] = useState(false);
@@ -150,7 +154,9 @@ export default function PostMarketReview({ onBack }) {
   const adherenceLabel = useMemo(() => playbookAdherenceLabel(setupAdherence), [setupAdherence]);
 
   const hasImportedSession =
-    dayTrades.length > 0 || !!form.lastImportAt || !!String(form.lastImportFile || "").trim();
+    dayTrades.some((trade) => trade.platform !== "manual") ||
+    !!form.lastImportAt ||
+    !!String(form.lastImportFile || "").trim();
   const importError = importMsg.startsWith("Error");
   const showImportDrop = !hasImportedSession || importDropExpanded || importError;
 
@@ -170,16 +176,17 @@ export default function PostMarketReview({ onBack }) {
 
   const hydrateDay = useCallback(async () => {
     try {
-      await loadTraderSettings().catch(() => {});
       const dateKey = todayKey();
-      const [reviewRes, dbTrades, traderProfile] = await Promise.all([
+      const [reviewRes, dbTrades, traderProfile, loadedSettings] = await Promise.all([
         fetch(`/api/sessions/${dateKey}/post`).then((r) =>
           r.ok ? r.json() : { review: null }
         ),
         fetchTradesForDate(dateKey).catch(() => []),
         loadTraderProfile(),
+        loadTraderSettings(),
       ]);
       setProfile(traderProfile ?? createCustomerDefaultProfile());
+      setTraderSettings(loadedSettings);
       const savedReview = reviewRes?.review ?? null;
 
       setDayTrades(dbTrades);
@@ -193,6 +200,14 @@ export default function PostMarketReview({ onBack }) {
       if (perf) {
         next = { ...next, ...perf };
       }
+
+      const inferredMode = dbTrades.some((trade) => trade.platform === "manual")
+        ? "manual"
+        : dbTrades.length > 0 || savedReview?.lastImportAt
+          ? "csv"
+          : savedReview?.performanceEntryMode || "summary";
+      next.performanceEntryMode = inferredMode;
+      setPerformanceMode(inferredMode);
 
       setForm(next);
 
@@ -381,6 +396,18 @@ export default function PostMarketReview({ onBack }) {
       throw new Error(check.message);
     }
 
+    const replacingManual = dayTrades.filter(
+      (trade) => trade.platform === "manual" && trade.account_name === importPreview?.account?.name,
+    ).length;
+    if (
+      replacingManual > 0 &&
+      !window.confirm(
+        `This CSV will replace ${replacingManual} manually entered trade${replacingManual === 1 ? "" : "s"} for this account and day. Continue?`,
+      )
+    ) {
+      return;
+    }
+
     const count = await importTradesToSupabase(trades, importPreview?.account);
     const todayTrades = tradesForDate(trades, todayKey());
     const perf = computePerformanceFromTrades(todayTrades);
@@ -390,6 +417,7 @@ export default function PostMarketReview({ onBack }) {
       ...perf,
       lastImportFile: importPreview?.filename || "",
       lastImportAt: new Date().toISOString(),
+      performanceEntryMode: "csv",
       noTradeToday: todayTrades.length === 0 ? f.noTradeToday : false,
     }));
     const summary = summarizeSetupAdherence(todayTrades);
@@ -398,9 +426,25 @@ export default function PostMarketReview({ onBack }) {
     setImportDropExpanded(false);
     setShowHelp(false);
     setSaved(false);
+    setPerformanceMode("csv");
     if (todayTrades.length > 0 && perf.netPnl != null && !Number.isNaN(perf.netPnl)) {
       await maybeEvaluateRecovery(perf.netPnl, false);
     }
+  };
+
+  const handleManualTradesSaved = async () => {
+    const trades = await reloadDayTrades();
+    setPerformanceMode("manual");
+    setForm((current) => ({
+      ...current,
+      performanceEntryMode: "manual",
+      noTradeToday: false,
+      lastImportAt: null,
+      lastImportFile: "",
+    }));
+    notifySessionSaved();
+    setSaved(false);
+    return trades;
   };
 
   useEffect(() => {
@@ -450,6 +494,7 @@ export default function PostMarketReview({ onBack }) {
             </div>
           )}
 
+          {performanceMode === "csv" && (
           <div className="pm-import-card">
             <div className="pm-import-card-head pm-import-card-head--today">
               <div className="pm-import-card-head-primary">
@@ -574,6 +619,11 @@ export default function PostMarketReview({ onBack }) {
             )}
             <input ref={fileRef} type="file" accept=".csv" hidden onChange={handleFile} />
           </div>
+          )}
+
+          {performanceMode !== "csv" && (
+            <input ref={fileRef} type="file" accept=".csv" hidden onChange={handleFile} />
+          )}
 
           <RTraderImportPreview
             open={!!importPreview}
@@ -605,92 +655,109 @@ export default function PostMarketReview({ onBack }) {
               <div className="pm-section-panel-body">
                 {step.id === "performance" && (
                   <>
-                    <div className="pm-perf-split">
-                      <div className="pm-perf-col">
-                        <div className="pm-perf-col-head">Session Stats</div>
-                        <div className="pm-perf-rows">
-                          <div className="pm-perf-row">
-                            <div className="pm-field-label hybrid-label">Trades</div>
-                            <input
-                              type="text"
-                              value={form.trades}
-                              onChange={(e) => set("trades", e.target.value)}
-                              className="pm-text-input pm-perf-row-input"
-                              disabled={form.noTradeToday}
-                            />
-                          </div>
-                          <div className="pm-perf-row">
-                            <div className="pm-field-label hybrid-label">Wins</div>
-                            <input
-                              type="text"
-                              value={form.wins}
-                              onChange={(e) => set("wins", e.target.value)}
-                              className="pm-text-input pm-perf-row-input"
-                              disabled={form.noTradeToday}
-                            />
-                          </div>
-                          <div className="pm-perf-row">
-                            <div className="pm-field-label hybrid-label">Losses</div>
-                            <input
-                              type="text"
-                              value={form.losses}
-                              onChange={(e) => set("losses", e.target.value)}
-                              className="pm-text-input pm-perf-row-input"
-                              disabled={form.noTradeToday}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="pm-perf-col">
-                        <div className="pm-perf-col-head">Performance</div>
-                        <div className="pm-perf-rows">
-                          <div className="pm-perf-row">
-                            <div className="pm-field-label hybrid-label">Gross P&amp;L</div>
-                            <input
-                              type="text"
-                              value={form.grossPnl}
-                              onChange={(e) => set("grossPnl", e.target.value)}
-                              className={`pm-text-input pm-perf-row-input pm-perf-row-input--wide ${dollarInputTone(form.grossPnl)}`}
-                              placeholder="$"
-                              disabled={form.noTradeToday}
-                            />
-                          </div>
-                          <div className="pm-perf-row">
-                            <div className="pm-field-label hybrid-label">Commissions</div>
-                            <input
-                              type="text"
-                              value={form.commissionsFees}
-                              onChange={(e) => set("commissionsFees", e.target.value)}
-                              className="pm-text-input pm-perf-row-input pm-perf-row-input--wide"
-                              placeholder="$"
-                              disabled={form.noTradeToday}
-                            />
-                          </div>
-                          <div className="pm-perf-row">
-                            <div className="pm-field-label hybrid-label">Best winner</div>
-                            <input
-                              type="text"
-                              value={form.bestWinner}
-                              onChange={(e) => set("bestWinner", e.target.value)}
-                              className={`pm-text-input pm-perf-row-input pm-perf-row-input--wide ${dollarInputTone(form.bestWinner, "pos")}`}
-                              placeholder="$"
-                              disabled={form.noTradeToday}
-                            />
-                          </div>
-                          <div className="pm-perf-row">
-                            <div className="pm-field-label hybrid-label">Worst loss</div>
-                            <input
-                              type="text"
-                              value={form.worstLoss}
-                              onChange={(e) => set("worstLoss", e.target.value)}
-                              className={`pm-text-input pm-perf-row-input pm-perf-row-input--wide ${dollarInputTone(form.worstLoss, "neg")}`}
-                              placeholder="$"
-                              disabled={form.noTradeToday}
-                            />
-                          </div>
-                        </div>
-                      </div>
+                    <div className="pm-performance-mode-grid" role="radiogroup" aria-label="Performance entry method">
+                      {[
+                        { id: "csv", title: "Import CSV", copy: "Fastest and most detailed", badge: "Full analytics" },
+                        { id: "manual", title: "Enter trades manually", copy: "Record every completed trade", badge: "Full analytics" },
+                        { id: "summary", title: "Enter day summary", copy: "Totals only, without trade detail", badge: "Limited analytics" },
+                      ].map((option) => (
+                        <button
+                          type="button"
+                          role="radio"
+                          aria-checked={performanceMode === option.id}
+                          className={`pm-performance-mode${performanceMode === option.id ? " active" : ""}`}
+                          key={option.id}
+                          onClick={() => {
+                            setPerformanceMode(option.id);
+                            set("performanceEntryMode", option.id);
+                          }}
+                        >
+                          <span className="pm-performance-mode-check" aria-hidden="true" />
+                          <strong>{option.title}</strong>
+                          <small>{option.copy}</small>
+                          <em>{option.badge}</em>
+                        </button>
+                      ))}
                     </div>
+
+                    {performanceMode !== "csv" && (
+                      <div className={`pm-import-no-trade${form.noTradeToday ? " pm-import-no-trade--active" : ""}`}>
+                        <label className="pm-closeout-no-trade-main">
+                          <input
+                            type="checkbox"
+                            checked={form.noTradeToday}
+                            onChange={(event) => {
+                              const checked = event.target.checked;
+                              setForm((current) => ({
+                                ...current,
+                                noTradeToday: checked,
+                                replaySequenceReviewed: checked,
+                                setupsScreenshottedSaved: checked,
+                              }));
+                            }}
+                          />
+                          <div>
+                            <div className="pm-field-label hybrid-label">No trades today</div>
+                            <div className="pm-field-hint">Preservation Mode, took a rest day, or the market was closed.</div>
+                          </div>
+                        </label>
+                      </div>
+                    )}
+
+                    {performanceMode === "csv" && (
+                      <div className="pm-performance-route-note">
+                        <strong>CSV import is ready above.</strong>
+                        <span>Upload your rTrader file and today&apos;s trades and performance will populate automatically.</span>
+                      </div>
+                    )}
+
+                    {performanceMode === "manual" && !form.noTradeToday && (
+                      <ManualTradeEntry
+                        dateKey={todayKey()}
+                        dayTrades={dayTrades}
+                        accounts={traderSettings?.accounts || []}
+                        setupNames={getPlaybookSetupNames(activeProfile)}
+                        onSaved={handleManualTradesSaved}
+                      />
+                    )}
+
+                    {performanceMode === "summary" && !form.noTradeToday && (
+                      <>
+                        <div className="pm-performance-route-note pm-performance-route-note--limited">
+                          <strong>Summary mode records the day, not individual trades.</strong>
+                          <span>Time, setup, holding-period and recent-trade analytics require CSV import or manual trade entry.</span>
+                        </div>
+                        <div className="pm-perf-split">
+                          <div className="pm-perf-col">
+                            <div className="pm-perf-col-head">Session Stats</div>
+                            <div className="pm-perf-rows">
+                              {[["Trades", "trades"], ["Wins", "wins"], ["Losses", "losses"]].map(([label, key]) => (
+                                <div className="pm-perf-row" key={key}>
+                                  <div className="pm-field-label hybrid-label">{label}</div>
+                                  <input type="number" min="0" value={form[key]} onChange={(e) => set(key, e.target.value)} className="pm-text-input pm-perf-row-input" />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="pm-perf-col">
+                            <div className="pm-perf-col-head">Performance</div>
+                            <div className="pm-perf-rows">
+                              {[
+                                ["Gross P&L", "grossPnl", ""],
+                                ["Commissions", "commissionsFees", ""],
+                                ["Largest winner", "bestWinner", "pos"],
+                                ["Largest loss", "worstLoss", "neg"],
+                              ].map(([label, key, tone]) => (
+                                <div className="pm-perf-row" key={key}>
+                                  <div className="pm-field-label hybrid-label">{label}</div>
+                                  <input type="number" step="any" value={form[key]} onChange={(e) => set(key, e.target.value)} className={`pm-text-input pm-perf-row-input pm-perf-row-input--wide ${dollarInputTone(form[key], tone)}`} placeholder="$" />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
 

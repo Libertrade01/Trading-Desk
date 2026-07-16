@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { fetchAnalyticsTrades, filterTradesByAccounts } from "../../lib/analytics-data";
+import { fetchAnalyticsTrades, fetchCloseLoopSummaries, filterTradesByAccounts } from "../../lib/analytics-data";
 import {
   resolveDateRangePreset,
   loadPlaybookTrackingStartDate,
@@ -10,6 +10,7 @@ import {
 } from "../../lib/analytics-date-range";
 import { getChartConfigs } from "../../lib/analytics-charts";
 import { calcStats } from "../../lib/analytics-stats";
+import { calcSessionSummaryStats } from "../../lib/session-summary-stats";
 import { countUntaggedTrades } from "../../lib/setup-adherence";
 import { loadTraderSettings, saveTraderSettings } from "../../lib/trader-settings";
 import AnalyticsChart from "./AnalyticsChart";
@@ -24,6 +25,7 @@ import OutcomesDonut from "./OutcomesDonut";
 import PerformanceScoreCard from "./PerformanceScoreCard";
 import RecentTradesTable from "./RecentTradesTable";
 import SessionAnalyticsGrid from "./SessionAnalyticsGrid";
+import SessionSummaryPanel from "./SessionSummaryPanel";
 import TradeDetailPanel from "./TradeDetailPanel";
 
 export default function AnalyticsDashboard() {
@@ -31,6 +33,7 @@ export default function AnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [trades, setTrades] = useState([]);
+  const [sessionSummaries, setSessionSummaries] = useState([]);
   const [settings, setSettings] = useState(null);
   const [activePreset, setActivePreset] = useState("10d");
   const [dateFrom, setDateFrom] = useState(null);
@@ -43,12 +46,16 @@ export default function AnalyticsDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const [traderSettings, rawTrades] = await Promise.all([
+      const [traderSettings, rawTrades, rawSummaries] = await Promise.all([
         loadTraderSettings(),
         fetchAnalyticsTrades({ dateFrom: from, dateTo: to }),
+        fetchCloseLoopSummaries({ dateFrom: from, dateTo: to }),
       ]);
       setSettings(traderSettings);
-      setTrades(filterTradesByAccounts(rawTrades, traderSettings.accounts));
+      const filteredTrades = filterTradesByAccounts(rawTrades, traderSettings.accounts);
+      setTrades(filteredTrades);
+      const detailedDates = new Set(filteredTrades.map((trade) => String(trade.date).slice(0, 10)));
+      setSessionSummaries(rawSummaries.filter((summary) => !detailedDates.has(summary.date)));
     } catch (e) {
       setError(e.message || "Failed to load analytics");
     } finally {
@@ -103,6 +110,7 @@ export default function AnalyticsDashboard() {
   };
 
   const stats = useMemo(() => calcStats(trades, settings), [trades, settings]);
+  const summaryStats = useMemo(() => calcSessionSummaryStats(sessionSummaries), [sessionSummaries]);
   const playbookTrades = useMemo(
     () => filterTradesForPlaybookAdherence(trades, playbookTrackingStart),
     [trades, playbookTrackingStart]
@@ -171,6 +179,7 @@ export default function AnalyticsDashboard() {
 
       <div className="analytics-dashboard__body">
         <AnalyticsWorkflowNotice />
+        <SessionSummaryPanel stats={summaryStats} />
         <AnalyticsUntaggedBanner untaggedCount={untaggedCount} onTagTrade={openUntaggedTrade} />
 
         <div className="an-layout">

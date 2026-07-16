@@ -33,6 +33,36 @@ export async function fetchTradingDays({ dateFrom, dateTo } = {}) {
   return data || [];
 }
 
+export async function fetchCloseLoopSummaries({ dateFrom, dateTo } = {}) {
+  let userId;
+  try {
+    userId = await getCurrentUserId();
+  } catch {
+    return [];
+  }
+
+  let query = getSupabaseBrowserClient()
+    .from("app_data")
+    .select("key,value")
+    .eq("user_id", userId)
+    .like("key", "postmarket-review-%");
+  if (dateFrom) query = query.gte("key", `postmarket-review-${dateFrom}`);
+  if (dateTo) query = query.lte("key", `postmarket-review-${dateTo}`);
+
+  const { data, error } = await query;
+  if (error) throw error;
+
+  return (data || []).flatMap((row) => {
+    try {
+      const value = JSON.parse(row.value);
+      const date = row.key.replace("postmarket-review-", "");
+      return value && !value.noTradeToday ? [{ ...value, date }] : [];
+    } catch {
+      return [];
+    }
+  });
+}
+
 /** Filter trades to active accounts by name (matches analytics chip behaviour). */
 export function filterTradesByAccounts(trades, accounts) {
   const active = (accounts || []).filter((a) => a.active !== false);

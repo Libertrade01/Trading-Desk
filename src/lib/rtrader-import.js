@@ -289,7 +289,7 @@ export async function fetchTradesForDate(dateKey) {
   const { data, error } = await withUserTradesQuery(
     supabase
       .from("trades")
-      .select("gross_pnl, net_pnl, commission, date, setup")
+      .select("*")
       .eq("date", dateKey),
     userId
   );
@@ -397,6 +397,21 @@ export async function executeTradesImport(
 
   const { error } = await supabaseClient.from("trades").insert(rows);
   if (error) throw new Error(error.message);
+
+  // CSV and manual entry are alternative detailed sources for an account/day.
+  // Remove manual versions only after the CSV rows have inserted successfully.
+  for (const date of dates) {
+    const { error: manualDeleteError } = await withUserTradesQuery(
+      supabaseClient
+        .from("trades")
+        .delete()
+        .eq("date", date)
+        .eq("platform", "manual")
+        .eq("account_name", accountName),
+      userId,
+    );
+    if (manualDeleteError) throw new Error(manualDeleteError.message);
+  }
   return rows.length;
 }
 
