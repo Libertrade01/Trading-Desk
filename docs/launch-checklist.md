@@ -44,6 +44,9 @@ Status date: 16 July 2026
 - [x] Resend DNS records added and `libertrade.app` verified for sending
 - [x] Supabase SMTP configured as `Libertrade <support@libertrade.app>`
 - [x] Branded password-recovery email delivered successfully through Resend
+- [x] Privacy-safe Sentry production error monitoring configured with source maps and email alerts
+- [x] Sentry production acceptance event captured and inspected without application user data or sensitive request content
+- [x] Simple incident-response runbook documented
 
 ## Needs the operator's answer or approval
 
@@ -61,7 +64,7 @@ Status date: 16 July 2026
 - [x] Confirm `libertrade.app` and `www.libertrade.app` resolve to Vercel over HTTPS
 - [x] Confirm the root domain is canonical and `www` redirects correctly
 - [x] Confirm `support@libertrade.app` can send transactional mail
-- [ ] Confirm incoming mail to `support@libertrade.app` forwards successfully through ImprovMX
+- [x] Confirm incoming mail to `support@libertrade.app` forwards successfully through ImprovMX
 - [x] Confirm SPF, DKIM and DMARC pass
 - [x] Apply the legal-acceptance migration and rerun the live RLS audit
 - [x] Confirm production email verification is mandatory
@@ -70,5 +73,6 @@ Status date: 16 July 2026
 - [x] Import a real Tradovate CSV in production and confirm its date, New York time, P&L, Stats and History
 - [x] Test a dummy export and deletion request end to end
 - [x] Confirm analytics is enabled and the integration filters to public page views only
-- [ ] Test landing, signup and legal pages on phone, tablet and desktop
-- [ ] Review logs after the first beta users and establish an incident-response contact process
+- [x] Test landing, signup and legal pages on phone, tablet and desktop
+- [x] Establish production error alerts and an incident-response contact process
+- [ ] Review Sentry issues and Vercel logs after the first beta users

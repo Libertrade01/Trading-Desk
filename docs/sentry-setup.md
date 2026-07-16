@@ -20,7 +20,7 @@ In Sentry organization or project settings:
 2. Prevent storage of IP addresses.
 3. Add sensitive fields for `email`, `name`, `journal`, `thesis`, `notes`, `prompt`, `response`, `authorization`, `cookie`, `token` and `api_key`.
 4. Keep Session Replay disabled.
-5. Send issue-alert emails to `support@libertrade.app`.
+5. Send issue-alert emails to the verified Sentry account email.
 
 The SDK also removes user identity, request bodies, headers, query strings, breadcrumbs, arbitrary extra data and Vercel AI prompt/output instrumentation before transmission.
 
@@ -29,6 +29,8 @@ The SDK also removes user identity, request bodies, headers, query strings, brea
 After deploying, send one deliberate test exception from an authenticated founder-only path or temporary test endpoint. Confirm:
 
 - the event appears in the Libertrade Sentry project;
-- the email alert arrives at `support@libertrade.app`;
+- the issue is classified as high priority and the configured email alert is active;
 - the event contains no email, journal text, trade details, cookies, tokens, request body or query string;
 - the temporary test path is removed immediately after verification.
+
+Production acceptance was completed on 16 July 2026. Sentry resolved the event to the original application source, tagged it as production and stored no application user identity or sensitive request data.
