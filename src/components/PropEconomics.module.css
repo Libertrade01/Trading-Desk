@@ -135,6 +135,7 @@
 .tableWrap tbody tr:hover { background: rgba(19,136,255,.035); }
 .typePill { padding: 5px 7px; border: 1px solid rgba(255,114,104,.18); border-radius: 4px; color: #ff9189; background: rgba(255,114,104,.07); font: 8px 'DM Mono', var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
 .payoutPill { border-color: rgba(67,221,177,.22); color: #43ddb1; background: rgba(67,221,177,.07); }
+.resetPill { border-color: rgba(255,190,92,.25); color: #ffc26f; background: rgba(255,190,92,.08); }
 .firmCell { display: flex; align-items: center; gap: 8px; }
 .firmCell i { display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid #25598c; border-radius: 5px; color: #74b8fa; background: #081c32; font-size: 9px; font-style: normal; }
 .noteCell { max-width: 220px; overflow: hidden; color: #7f91a7 !important; text-overflow: ellipsis; white-space: nowrap; }
@@ -164,8 +165,8 @@
   .header { align-items: flex-start; flex-direction: column; padding: 52px 0 42px; }
   .header h1 { font-size: 32px; }
   .intro { font-size: 14px; }
-  .actions { width: 100%; }
-  .actions button { flex: 1; }
+  .actions { width: 100%; flex-wrap: wrap; }
+  .actions button { flex: 1 1 10rem; }
   .positionGrid { grid-template-columns: 1fr; padding-bottom: 70px; }
   .netCard { min-height: 275px; padding: 23px 20px; }
   .netAmount { font-size: 54px; }

@@ -9,7 +9,7 @@ import styles from "./PropEconomics.module.css";
 
 const STORAGE_KEY = "prop-ledger";
 const DEFAULT_FIRMS = ["Lucid", "Tradeify"];
-const SPEND_CATEGORIES = ["eval", "reset", "data", "other"];
+const LEGACY_SPEND_CATEGORIES = ["data", "other"];
 const ADD_FIRM_VALUE = "__add_firm__";
 const EMPTY_LEDGER = { firms: [...DEFAULT_FIRMS], entries: [] };
 
@@ -48,8 +48,28 @@ function newId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-function emptyForm(type = "spend") {
-  return { date: todayKey(), type, firm: DEFAULT_FIRMS[0], amount: "", category: "eval", note: "" };
+function emptyForm(mode = "evaluation") {
+  const type = mode === "payout" ? "payout" : "spend";
+  const category = mode === "reset" ? "reset" : "eval";
+  return { date: todayKey(), type, firm: DEFAULT_FIRMS[0], amount: "", category, note: "" };
+}
+
+function entryMode(entry) {
+  if (entry.type === "payout") return "payout";
+  if (entry.category === "reset") return "reset";
+  if (entry.category === "data" || entry.category === "other") return "cost";
+  return "evaluation";
+}
+
+function entryTypeLabel(entry) {
+  const mode = entryMode(entry);
+  return mode === "evaluation" ? "evaluation" : mode;
+}
+
+function formModeLabel(mode) {
+  if (mode === "evaluation") return "evaluation cost";
+  if (mode === "cost") return "cost";
+  return mode;
 }
 
 function formatRowDate(dateStr) {
@@ -115,7 +135,7 @@ function CumulativeChart({ entries }) {
   }, [series]);
 
   if (!chart) {
-    return <div className={styles.chartEmpty}><span>NO CAPITAL FLOW YET</span><p>Log your first evaluation fee or payout to begin the trend.</p></div>;
+    return <div className={styles.chartEmpty}><span>NO CAPITAL FLOW YET</span><p>Log your first evaluation, reset, or payout to begin the trend.</p></div>;
   }
 
   const firstDate = chart.dates[0];
@@ -178,9 +198,9 @@ export default function PropEconomics() {
     return [...totals.entries()].map(([firm, amount]) => ({ firm, amount })).sort((a, b) => b.amount - a.amount);
   }, [ledger.entries]);
 
-  const openForm = (type) => { setFormMode(type); setEditingId(null); setForm(emptyForm(type)); setAddingFirm(false); setNewFirmName(""); };
+  const openForm = (mode) => { setFormMode(mode); setEditingId(null); setForm(emptyForm(mode)); setAddingFirm(false); setNewFirmName(""); };
   const openEdit = (entry) => {
-    setFormMode(entry.type); setEditingId(entry.id);
+    setFormMode(entryMode(entry)); setEditingId(entry.id);
     setForm({ date: entry.date, type: entry.type, firm: entry.firm, amount: String(entry.amount), category: entry.category || "eval", note: entry.note || "" });
     setAddingFirm(false); setNewFirmName("");
   };
@@ -200,7 +220,9 @@ export default function PropEconomics() {
     const amount = parseFloat(form.amount);
     if (!form.date || !form.firm || !amount || amount <= 0) { window.alert("Enter a valid date, firm, and positive amount."); return; }
     const firms = ledger.firms.includes(form.firm) ? ledger.firms : [...ledger.firms, form.firm];
-    const entry = { id: editingId || newId(), date: form.date, type: formMode, firm: form.firm, amount, category: formMode === "spend" ? form.category : "payout", note: form.note.trim() || undefined };
+    const isPayout = formMode === "payout";
+    const category = formMode === "reset" ? "reset" : formMode === "evaluation" ? "eval" : form.category;
+    const entry = { id: editingId || newId(), date: form.date, type: isPayout ? "payout" : "spend", firm: form.firm, amount, category: isPayout ? "payout" : category, note: form.note.trim() || undefined };
     const entries = editingId ? ledger.entries.map((row) => row.id === editingId ? entry : row) : [...ledger.entries, entry];
     await persist({ firms, entries }); closeForm();
   };
@@ -222,8 +244,8 @@ export default function PropEconomics() {
       <div className={styles.page}>
         <div className={styles.topbar}>{headerDate()}</div>
         <header className={styles.header}>
-          <div><p className={styles.eyebrow}>Prop profit tracker</p><h1>Prop profits<span className={styles.titleStop} aria-hidden="true" /></h1><p className={styles.intro}>Track what you paid prop firms versus what you withdrew. Know exactly where you stand before the next evaluation.</p></div>
-          <div className={styles.actions}><button type="button" className={styles.secondaryAction} onClick={() => openForm("spend")}>Log spend <span>+</span></button><button type="button" className={styles.primaryAction} onClick={() => openForm("payout")}>Log payout <span>↗</span></button></div>
+          <div><p className={styles.eyebrow}>Prop profit tracker</p><h1>Prop profits<span className={styles.titleStop} aria-hidden="true" /></h1><p className={styles.intro}>Track evaluation fees, resets, and payouts across prop firms. Know exactly where you stand before the next challenge.</p></div>
+          <div className={styles.actions}><button type="button" className={styles.secondaryAction} onClick={() => openForm("evaluation")}>Log evaluation <span>+</span></button><button type="button" className={styles.secondaryAction} onClick={() => openForm("reset")}>Log reset <span>+</span></button><button type="button" className={styles.primaryAction} onClick={() => openForm("payout")}>Log payout <span>↗</span></button></div>
         </header>
 
         <section className={styles.positionGrid} aria-label="Prop economics summary">
@@ -236,20 +258,20 @@ export default function PropEconomics() {
           </article>
           <div className={styles.metricStack}>
             <article className={styles.metricCard}><p>TOTAL PAYOUTS</p><strong>{formatAmount(totalPayouts)}</strong><span>{totalPayouts > 0 ? "Recovered capital" : "No payouts logged yet"}</span></article>
-            <article className={styles.metricCard}><p>TOTAL SPEND</p><strong>{formatAmount(totalSpend)}</strong><span>Across {ledger.entries.filter((entry) => entry.type === "spend").length} spend entries</span></article>
+            <article className={styles.metricCard}><p>TOTAL COSTS</p><strong>{formatAmount(totalSpend)}</strong><span>{ledger.entries.filter((entry) => entry.type === "spend" && entry.category === "reset").length} resets recorded</span></article>
           </div>
           <article className={styles.milestoneCard}><p className={styles.eyebrow}>NEXT MILESTONE</p><div className={styles.milestoneIcon}>01</div><h2>{net >= 0 ? "Grow the edge." : "First payout."}</h2><p>{net >= 0 ? "Keep the account profitable without letting fees outrun withdrawals." : "Turn evaluation spend into recovered capital, then move the account into profit."}</p><div className={styles.milestoneMeta}><span>{net >= 0 ? "Net profit" : "Break-even target"}</span><strong>{formatAmount(net >= 0 ? net : breakEvenRemaining)}</strong></div></article>
         </section>
 
         {formMode && (
           <section className={styles.formPanel} aria-labelledby="prop-entry-form-title">
-            <div className={styles.formHeader}><div><p className={styles.eyebrow}>LEDGER ENTRY</p><h2 id="prop-entry-form-title">{editingId ? "Edit" : "Log"} {formMode}.</h2></div><button type="button" onClick={closeForm} aria-label="Close form">×</button></div>
+            <div className={styles.formHeader}><div><p className={styles.eyebrow}>LEDGER ENTRY</p><h2 id="prop-entry-form-title">{editingId ? "Edit" : "Log"} {formModeLabel(formMode)}.</h2></div><button type="button" onClick={closeForm} aria-label="Close form">×</button></div>
             <form onSubmit={handleSubmit}>
               <div className={styles.formGrid}>
                 <label><span>Date</span><input type="date" value={form.date} onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))} required /></label>
                 <label><span>Firm</span>{!addingFirm ? <select value={form.firm} onChange={(event) => handleFirmSelect(event.target.value)}>{ledger.firms.map((firm) => <option key={firm} value={firm}>{firm}</option>)}<option value={ADD_FIRM_VALUE}>Add firm...</option></select> : <div className={styles.addFirm}><input type="text" placeholder="Firm name" value={newFirmName} onChange={(event) => setNewFirmName(event.target.value)} autoFocus /><button type="button" onClick={confirmAddFirm}>Add</button></div>}</label>
                 <label><span>Amount ($)</span><input type="number" min="0.01" step="0.01" value={form.amount} onChange={(event) => setForm((current) => ({ ...current, amount: event.target.value }))} required /></label>
-                {formMode === "spend" && <label><span>Category</span><select value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))}>{SPEND_CATEGORIES.map((category) => <option key={category} value={category}>{category}</option>)}</select></label>}
+                {formMode === "cost" && <label><span>Category</span><select value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))}>{LEGACY_SPEND_CATEGORIES.map((category) => <option key={category} value={category}>{category}</option>)}</select></label>}
               </div>
               <label className={styles.noteField}><span>Note</span><textarea rows={2} placeholder="Optional" value={form.note} onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))} /></label>
               <div className={styles.formActions}><button type="submit">{editingId ? "Save changes" : "Add entry"}</button><button type="button" onClick={closeForm}>Cancel</button></div>
@@ -258,7 +280,7 @@ export default function PropEconomics() {
         )}
 
         <section className={styles.trendSection} aria-labelledby="capital-flow-heading">
-          <div className={styles.sectionHeader}><div><p className={styles.eyebrow}>CAPITAL FLOW</p><h2 id="capital-flow-heading">See the economics clearly.</h2><p>Every fee and payout, mapped against your break-even point.</p></div><div className={styles.legend}><span><i className={styles.payoutKey} /> Payouts {formatAmount(totalPayouts)}</span><span><i className={styles.spendKey} /> Spend {formatAmount(totalSpend)}</span></div></div>
+          <div className={styles.sectionHeader}><div><p className={styles.eyebrow}>CAPITAL FLOW</p><h2 id="capital-flow-heading">See the economics clearly.</h2><p>Every evaluation, reset, and payout mapped against your break-even point.</p></div><div className={styles.legend}><span><i className={styles.payoutKey} /> Payouts {formatAmount(totalPayouts)}</span><span><i className={styles.spendKey} /> Costs {formatAmount(totalSpend)}</span></div></div>
           <div className={styles.chartLayout}>
             <article className={styles.chartCard}><CumulativeChart entries={ledger.entries} /></article>
             <aside className={styles.exposureCard}><div><p className={styles.eyebrow}>FIRM EXPOSURE</p><h3>Where your capital sits.</h3></div>{topFirm ? <><div className={styles.firmRow}><div className={styles.firmMonogram}>{topFirm.firm.slice(0, 1).toUpperCase()}</div><div><strong>{topFirm.firm}</strong><span>{ledger.entries.filter((entry) => entry.type === "spend" && entry.firm === topFirm.firm).length} spend entries</span></div><strong>{formatAmount(topFirm.amount)}</strong></div><div className={styles.exposureBar}><span style={{ width: `${totalSpend ? (topFirm.amount / totalSpend) * 100 : 0}%` }} /></div><div className={styles.exposureMeta}><span>Share of spend</span><strong>{totalSpend ? Math.round((topFirm.amount / totalSpend) * 100) : 0}%</strong></div><p className={styles.exposureNote}>{firmExposure.length === 1 ? "All current evaluation cost is concentrated with one firm." : `${firmExposure.length} firms currently make up your recorded prop spend.`}</p></> : <p className={styles.emptyExposure}>Log spend to reveal firm exposure.</p>}</aside>
@@ -266,8 +288,8 @@ export default function PropEconomics() {
         </section>
 
         <section className={styles.ledgerSection} aria-labelledby="ledger-heading">
-          <div className={styles.sectionHeader}><div><p className={styles.eyebrow}>LEDGER</p><h2 id="ledger-heading">Every dollar accounted for.</h2><p>All spend and payout entries in one clean record.</p></div><div className={styles.ledgerTools}><span>{filteredEntries.length} entries</span><select id="prop-firm-filter" value={firmFilter} onChange={(event) => setFirmFilter(event.target.value)} aria-label="Filter by firm"><option value="all">All firms</option>{filterFirms.map((firm) => <option key={firm} value={firm}>{firm}</option>)}</select></div></div>
-          {filteredEntries.length === 0 ? <div className={styles.emptyLedger}>{firmFilter === "all" ? "No entries yet. Log your first spend or payout above." : `No entries for ${firmFilter}.`}</div> : <div className={styles.tableWrap}><table><thead><tr><th>Date</th><th>Type</th><th>Firm</th><th>Category</th><th>Note</th><th>Amount</th><th aria-label="Actions" /></tr></thead><tbody>{filteredEntries.map((entry) => <tr key={entry.id}><td>{formatRowDate(entry.date)}</td><td><span className={`${styles.typePill} ${entry.type === "payout" ? styles.payoutPill : ""}`}>{entry.type}</span></td><td><span className={styles.firmCell}><i>{entry.firm.slice(0, 1).toUpperCase()}</i>{entry.firm}</span></td><td>{entry.type === "spend" ? entry.category : "—"}</td><td className={styles.noteCell}>{entry.note || "—"}</td><td className={entry.type === "payout" ? styles.positiveAmount : styles.negativeAmount}>{entry.type === "payout" ? "+" : "−"}{formatAmount(entry.amount)}</td><td><div className={styles.rowActions}><button type="button" onClick={() => openEdit(entry)}>Edit ↗</button><TrashButton onClick={() => handleDelete(entry.id)} /></div></td></tr>)}</tbody></table></div>}
+          <div className={styles.sectionHeader}><div><p className={styles.eyebrow}>LEDGER</p><h2 id="ledger-heading">Every dollar accounted for.</h2><p>All evaluations, resets, and payouts in one clean record.</p></div><div className={styles.ledgerTools}><span>{filteredEntries.length} entries</span><select id="prop-firm-filter" value={firmFilter} onChange={(event) => setFirmFilter(event.target.value)} aria-label="Filter by firm"><option value="all">All firms</option>{filterFirms.map((firm) => <option key={firm} value={firm}>{firm}</option>)}</select></div></div>
+          {filteredEntries.length === 0 ? <div className={styles.emptyLedger}>{firmFilter === "all" ? "No entries yet. Log your first evaluation, reset, or payout above." : `No entries for ${firmFilter}.`}</div> : <div className={styles.tableWrap}><table><thead><tr><th>Date</th><th>Type</th><th>Firm</th><th>Category</th><th>Note</th><th>Amount</th><th aria-label="Actions" /></tr></thead><tbody>{filteredEntries.map((entry) => { const typeLabel = entryTypeLabel(entry); return <tr key={entry.id}><td>{formatRowDate(entry.date)}</td><td><span className={`${styles.typePill} ${entry.type === "payout" ? styles.payoutPill : typeLabel === "reset" ? styles.resetPill : ""}`}>{typeLabel}</span></td><td><span className={styles.firmCell}><i>{entry.firm.slice(0, 1).toUpperCase()}</i>{entry.firm}</span></td><td>{entry.type === "spend" ? entry.category : "—"}</td><td className={styles.noteCell}>{entry.note || "—"}</td><td className={entry.type === "payout" ? styles.positiveAmount : styles.negativeAmount}>{entry.type === "payout" ? "+" : "−"}{formatAmount(entry.amount)}</td><td><div className={styles.rowActions}><button type="button" onClick={() => openEdit(entry)}>Edit ↗</button><TrashButton onClick={() => handleDelete(entry.id)} /></div></td></tr>; })}</tbody></table></div>}
         </section>
       </div>
     </WorkflowPageLayout>

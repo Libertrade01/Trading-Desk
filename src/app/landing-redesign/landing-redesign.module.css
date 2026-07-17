@@ -184,6 +184,13 @@
   margin-top: 2.25rem;
 }
 
+.heroNote {
+  margin: 1rem 0 0;
+  color: #71869e;
+  font-size: .76rem;
+  line-height: 1.5;
+}
+
 .primaryAction,
 .textAction {
   display: inline-flex;
@@ -587,9 +594,9 @@
 .intelligenceFeature { display: grid; grid-template-columns: 1.28fr .72fr; align-items: center; gap: clamp(3rem, 6vw, 6rem); min-height: 48rem; margin: 7rem 0 5rem; padding: 7rem 0 9rem; }
 .intelligenceFeature .featureCopy { align-self: start; grid-column: 2; grid-row: 1; padding-top: 1.5rem; }
 .intelligenceFeature .intelligenceVisual { grid-column: 1; grid-row: 1; }
-.intelligenceBenefits { display: grid; gap: .78rem; margin: 2rem 0 0; padding: 0; list-style: none; }
-.intelligenceBenefits li { display: flex; align-items: center; gap: .75rem; color: #aabbd0; font-size: .75rem; }
-.intelligenceBenefits li::before { content: ""; width: 1.2rem; height: 1px; background: #3e9be9; box-shadow: 0 0 .8rem rgba(62,155,233,.55); }
+.intelligenceBenefits, .featureBenefits { display: grid; gap: .78rem; margin: 2rem 0 0; padding: 0; list-style: none; }
+.intelligenceBenefits li, .featureBenefits li { display: flex; align-items: center; gap: .75rem; color: #aabbd0; font-size: .75rem; }
+.intelligenceBenefits li::before, .featureBenefits li::before { content: ""; width: 1.2rem; height: 1px; flex: 0 0 auto; background: #3e9be9; box-shadow: 0 0 .8rem rgba(62,155,233,.55); }
 .intelligenceVisual { min-width: 0; overflow: hidden; border: 1px solid rgba(76, 155, 230, .34); border-radius: 1rem; background: linear-gradient(145deg, rgba(7, 25, 47, .98), rgba(2, 10, 22, .96)); box-shadow: 0 2.5rem 7rem rgba(0, 42, 94, .25); }
 .intelligenceBar { display: flex; min-height: 5.2rem; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.35rem; border-bottom: 1px solid rgba(92, 148, 205, .16); }
 .intelligenceBar > div:first-child { display: flex; flex-direction: column; gap: .38rem; }

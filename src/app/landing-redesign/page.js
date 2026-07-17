@@ -13,24 +13,24 @@ const stages = [
   {
     number: "01",
     eyebrow: "Before the session",
-    title: "Rate your state before you trade.",
-    body: "Build your readiness score from Body, Mind, and External. Then tick off your final checks before the open.",
-    proof: "Clarity before execution",
+    title: "Know your state before you risk capital.",
+    body: "Check your energy, recovery, and mindset before the session. Libertrade LOOP turns that check-in into a readiness score and highlights when conditions call for greater caution.",
+    proof: "Readiness before risk",
     kind: "checkin",
   },
   {
     number: "02",
-    eyebrow: "During the session",
-    title: "Set the plan before you execute.",
-    body: "Mark your levels, pick your setups, lock in risk limits, and define your focus before the open.",
+    eyebrow: "Before execution",
+    title: "Make the decisions before the pressure arrives.",
+    body: "Define your market thesis, key levels, valid setups, and risk limits before the session begins. Keep the plan visible when the market starts moving.",
     proof: "Your risk, already decided",
     kind: "plan",
   },
   {
     number: "03",
     eyebrow: "After the session",
-    title: "Close the loop and refine the process.",
-    body: "Import and tag your trades. Score process adherence. Walk away with one lesson to take into tomorrow.",
+    title: "Review the process, not just the P&L.",
+    body: "Import your trades, record whether you followed the plan, and examine the decisions behind the result. Finish with one clear lesson to carry into the next session.",
     proof: "Review. Refine. Repeat.",
     kind: "review",
   },
@@ -247,13 +247,14 @@ export default function LandingRedesignPreview() {
           <Link className={styles.navSignIn} href="/login">Sign in</Link>
         </nav>
         <div className={styles.heroContent}>
-          <p className={styles.heroEyebrow}>A process loop for discretionary traders</p>
-          <h1 id="landing-hero-title"><span>Check-in.</span><span>Trade your plan.</span><span>Close the loop.</span></h1>
-          <p className={styles.heroLead}>Prepare before the open. Execute against written rules. Review to refine your process.</p>
+          <p className={styles.heroEyebrow}>A process-first trading journal</p>
+          <h1 id="landing-hero-title"><span>Check in.</span><span>Trade your plan.</span><span>Close the LOOP.</span></h1>
+          <p className={styles.heroLead}>A process-first trading journal for discretionary futures traders. Prepare for the session, protect your risk, and review the decisions behind your results.</p>
           <div className={styles.heroActions}>
-            <Link className={styles.primaryAction} href="/signup">Build Your Loop <span>↗</span></Link>
+            <Link className={styles.primaryAction} href="/signup">Set up your LOOP <span>↗</span></Link>
             <Link className={styles.textAction} href="/login">Sign in <span>→</span></Link>
           </div>
+          <p className={styles.heroNote}>Free during beta. Import from your broker or enter trades manually.</p>
         </div>
         <a className={styles.scrollCue} href="#landing-workflow"><span>The LOOP</span><b>↓</b></a>
       </header>
@@ -282,20 +283,26 @@ export default function LandingRedesignPreview() {
         <section className={styles.loopStatement} aria-label="The completed trading loop">
           <div className={styles.statementRing} aria-hidden="true" />
           <p>REVIEW. REFINE. REPEAT.</p>
-          <h2>The loop compounds.<br />Each review sharpens the next session.</h2>
+          <h2>Every session becomes evidence.<br />See what changes when you follow the process.</h2>
         </section>
 
         <section className={styles.features} aria-labelledby="features-title">
           <header className={styles.featuresHead}>
-            <div><p>Beyond the loop</p><h2 id="features-title">Process over<br /><span>profits.</span></h2></div>
+            <div><p>Beyond the LOOP</p><h2 id="features-title">Process over<br /><span>profits.</span></h2></div>
             <p>Performance means more when you connect the outcome to readiness, preparation, and execution, not just profits.</p>
           </header>
 
           <article className={styles.statsFeature}>
             <div className={styles.featureCopy}>
               <span>STATS / 01</span>
-              <h3>Know what is actually driving your results.</h3>
-              <p>Connect performance to setup quality, session type, risk, and playbook adherence.</p>
+              <h3>Understand what is driving your results.</h3>
+              <p>Look beyond headline P&amp;L. Compare performance with readiness, setup selection, risk-plan adherence, and the process decisions recorded during each session.</p>
+              <ul className={styles.featureBenefits}>
+                <li>Performance by setup and session</li>
+                <li>Win rate, expectancy, and R-multiple</li>
+                <li>Readiness and process trends over time</li>
+                <li>Broker trade imports</li>
+              </ul>
             </div>
             <StatsVisual />
           </article>
@@ -318,8 +325,14 @@ export default function LandingRedesignPreview() {
             <article className={styles.weeklyFeature}>
               <div className={styles.featureCopy}>
                 <span>WEEKLY REVIEW / 03</span>
-                <h3>The trading week<br />scored in one place.</h3>
-                <p>Compare this week to last, spot the patterns, and refine next week with two clear focuses.</p>
+                <h3>Turn a week of trading into one clear focus.</h3>
+                <p>Compare the week with the one before it, identify repeated strengths and mistakes, and choose the behaviour that deserves your attention next week.</p>
+                <ul className={styles.featureBenefits}>
+                  <li>A weekly process scorecard</li>
+                  <li>Repeated strengths and mistakes</li>
+                  <li>Progress against your chosen focus</li>
+                  <li>One priority for the week ahead</li>
+                </ul>
               </div>
               <div className={styles.weeklySnapshot} aria-label="Weekly Review product preview">
                 <div className={styles.weeklySnapshotBar}>
@@ -351,17 +364,22 @@ export default function LandingRedesignPreview() {
               <div className={styles.featureCopy}>
                 <span>PROP TRACKER / 04</span>
                 <h3>Know what prop trading is really paying you.</h3>
-                <p>Track every evaluation fee and payout to see your true net position across prop firms.</p>
+                <p>Track evaluation fees, resets, and payouts across prop firms. See your true net position before paying for another challenge.</p>
+                <ul className={styles.featureBenefits}>
+                  <li>Evaluation fees and reset costs</li>
+                  <li>Payouts recorded by prop firm</li>
+                  <li>Your overall net prop position</li>
+                </ul>
               </div>
               <div className={styles.propSnapshot} aria-label="Prop profits product preview">
                 <div className={styles.propSnapshotHead}>
-                  <div><span>NET POSITION</span><strong>+$2,620</strong></div>
+                  <div><span>NET POSITION</span><strong>+$2,540</strong></div>
                   <b>IN PROFIT</b>
                 </div>
 
                 <div className={styles.propSnapshotKpis}>
                   <div><span>TOTAL PAYOUTS</span><strong>$3,000</strong><small>3 payouts</small></div>
-                  <div><span>TOTAL SPEND</span><strong>$380</strong><small>4 evaluations</small></div>
+                  <div><span>TOTAL COSTS</span><strong>$460</strong><small>4 evaluations · 2 resets</small></div>
                 </div>
 
                 <div className={styles.propFlow}>
@@ -372,7 +390,7 @@ export default function LandingRedesignPreview() {
                     <path d="M0 98 C48 96 67 78 110 73 S167 62 205 48 S265 40 300 25 S337 18 360 12" fill="none" stroke="#4ca3ef" strokeWidth="2.4" strokeLinecap="round" />
                     <path d="M0 105 C70 104 110 101 158 100 S255 95 360 92" fill="none" stroke="#ff7970" strokeWidth="1.6" strokeLinecap="round" />
                   </svg>
-                  <div className={styles.propLegend}><span><i /> Payouts $3,000</span><span><i /> Spend $380</span></div>
+                  <div className={styles.propLegend}><span><i /> Payouts $3,000</span><span><i /> Costs $460</span></div>
                 </div>
               </div>
             </article>
@@ -385,7 +403,7 @@ export default function LandingRedesignPreview() {
         <div className={styles.footerOrbit} aria-hidden="true"><i /><i /></div>
         <div className={styles.footerTop}>
           <Wordmark compact />
-          <Link className={styles.footerCta} href="/signup">Build Your Loop <span>↗</span></Link>
+          <Link className={styles.footerCta} href="/signup">Set up your LOOP <span>↗</span></Link>
         </div>
         <div className={styles.footerStatement}>
           <span>REVIEW. REFINE. REPEAT.</span>
