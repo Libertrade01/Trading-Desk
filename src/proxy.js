@@ -40,6 +40,10 @@ function isStaticOrInternal(pathname) {
   );
 }
 
+function isFounderOnlyPath(pathname) {
+  return pathname === "/admin" || pathname.startsWith("/admin/");
+}
+
 export async function proxy(request) {
   const { pathname } = request.nextUrl;
 
@@ -49,6 +53,11 @@ export async function proxy(request) {
 
   const { supabaseResponse, user } = await updateSession(request);
   const isFounder = isFounderUser(user);
+
+  if (isFounderOnlyPath(pathname) && !isFounder) {
+    const fallback = user && !AUTH_DISABLED ? "/home" : "/login";
+    return NextResponse.redirect(new URL(fallback, request.url));
+  }
 
   if (!isRouteEnabled(pathname, { isFounder })) {
     const fallback = user && !AUTH_DISABLED ? "/home" : "/";

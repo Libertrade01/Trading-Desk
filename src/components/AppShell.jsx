@@ -26,6 +26,7 @@ function SidebarIcon({ name }) {
     settings: <><path d="M3.25 2v12M8 2v12M12.75 2v12"/><circle cx="3.25" cy="5.5" r="1.65"/><circle cx="8" cy="10.5" r="1.65"/><circle cx="12.75" cy="6.5" r="1.65"/></>,
     desk: <><path d="M2 4h12M2 8h8M2 12h10"/><circle cx="13" cy="8" r="1" fill="currentColor" stroke="none"/></>,
     wiki: <><path d="M2.25 2.5h5A2 2 0 0 1 9.25 4.5v9H4.5a2.25 2.25 0 0 0-2.25 2.25V2.5z"/><path d="M13.75 2.5h-2.5a2 2 0 0 0-2 2v9H11.5a2.25 2.25 0 0 1 2.25 2.25V2.5z"/></>,
+    admin: <><rect x="2" y="2.25" width="12" height="11.5" rx="2"/><path d="M5 11V8.75M8 11V5.5M11 11V7"/><path d="M4.5 4.5h2"/></>,
   };
   return <svg className="sidebar-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
 }
@@ -52,6 +53,7 @@ const NAV_ITEMS = [
 ];
 
 const FOUNDER_NAV_ITEMS = [
+  { id: "admin", href: "/admin", label: "Operations", icon: <SidebarIcon name="admin" /> },
   { id: "desk", href: "/desk", label: "Trade Desk", icon: <SidebarIcon name="desk" /> },
   { id: "wiki", href: "/wiki", label: "Wiki", icon: <SidebarIcon name="wiki" /> },
 ];

@@ -43,6 +43,7 @@ import {
 import DailyPlanStepper, { PLAN_STEPS } from "./DailyPlanStepper";
 import WorkflowPageLayout from "./WorkflowPageLayout";
 import HabitTileField from "./HabitTileField";
+import RiskRailsWarningDialog from "./RiskRailsWarningDialog";
 
 async function loadData(key, fallback) {
   try {
@@ -126,7 +127,6 @@ function PlanProgressMetrics({ form, profile }) {
   );
 }
 
-const RISK_RAILS_MESSAGE = "I can not trade until risk rails are in place";
 const BIAS_CHECKLIST_MESSAGE = "Complete the chart annotation checklist before saving the plan.";
 const COMMITMENT_MESSAGE = "Confirm all commitments before saving the plan.";
 const BIAS_GUIDANCE =
@@ -144,6 +144,7 @@ export default function DailyPlan({ onBack }) {
   const [dllSettings, setDllSettings] = useState(DEFAULT_DLL_SETTINGS);
   const [activeStep, setActiveStep] = useState(0);
   const [meditationStandDownRequired, setMeditationStandDownRequired] = useState(false);
+  const [showRiskRailsWarning, setShowRiskRailsWarning] = useState(false);
 
   const set = useCallback((key, value) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -230,7 +231,7 @@ export default function DailyPlan({ onBack }) {
 
   const handleSave = async () => {
     if (!riskRailsReady(form, profile)) {
-      window.alert(RISK_RAILS_MESSAGE);
+      setShowRiskRailsWarning(true);
       return false;
     }
     if (!biasChecklistReady(form, profile)) {
@@ -351,6 +352,9 @@ export default function DailyPlan({ onBack }) {
   const biasItems = getEnabledBiasItems(profile);
   const isFounder = profile.profileKind === "founder";
   const commitmentList = profile.commitments || [];
+  const missingMaxDailyLoss = !form.maxDailyLossSetInBroker;
+  const missingColdTurkeyBlocker = profile.showColdTurkeyBlocker && !form.coldTurkeyBlockerSet;
+  const riskStepIndex = PLAN_STEPS.findIndex((item) => item.id === "risk");
 
   if (meditationStandDownRequired) {
     return (
@@ -907,6 +911,18 @@ export default function DailyPlan({ onBack }) {
           </div>
         </div>
       </div>
+
+      {showRiskRailsWarning && (
+        <RiskRailsWarningDialog
+          missingMaxDailyLoss={missingMaxDailyLoss}
+          missingColdTurkeyBlocker={missingColdTurkeyBlocker}
+          onClose={() => setShowRiskRailsWarning(false)}
+          onReview={() => {
+            setShowRiskRailsWarning(false);
+            setActiveStep(riskStepIndex);
+          }}
+        />
+      )}
     </WorkflowPageLayout>
   );
 }

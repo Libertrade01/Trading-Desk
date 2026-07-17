@@ -5,7 +5,7 @@ export const ONBOARDING_STEP_COPY = {
   },
   playbook: {
     title: "Your playbook.",
-    lead: "Name the setups you trade with a plan. They appear on your session plan, in close loop, and each imported trade is tagged with these setups.",
+    lead: "Build your playbook by adding your valid setups. They’ll be available to select in your Session Plan, when you Close the LOOP, and when tagging imported trades.",
   },
   commitment: {
     title: "Your commitment.",

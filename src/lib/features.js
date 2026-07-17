@@ -27,7 +27,7 @@ export const FEATURE_LEGACY_DESK = parseFlag(
   DEFAULT_FEATURE_ENABLED
 );
 
-const FOUNDER_ONLY_NAV = new Set(["wiki", "desk"]);
+const FOUNDER_ONLY_NAV = new Set(["admin", "wiki", "desk"]);
 
 /** Nav item ids gated by feature flags */
 export const FEATURE_GATED_NAV = {
