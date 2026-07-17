@@ -1,4 +1,6 @@
 import Link from "next/link";
+import PublicConversionLink from "../../components/PublicConversionLink";
+import { PUBLIC_CONVERSION_EVENTS } from "../../lib/public-analytics";
 import SessionPlanCarousel from "./SessionPlanCarousel";
 import CloseLoopCarousel from "./CloseLoopCarousel";
 import styles from "./landing-redesign.module.css";
@@ -244,15 +246,15 @@ export default function LandingRedesignPreview() {
         <div className={styles.heroShade} aria-hidden="true" />
         <nav className={styles.heroNav} aria-label="Account">
           <Link href="/" aria-label="Libertrade LOOP home"><Wordmark /></Link>
-          <Link className={styles.navSignIn} href="/login">Sign in</Link>
+          <PublicConversionLink eventName={PUBLIC_CONVERSION_EVENTS.loginClicked} className={styles.navSignIn} href="/login">Sign in</PublicConversionLink>
         </nav>
         <div className={styles.heroContent}>
           <p className={styles.heroEyebrow}>A process-first trading journal</p>
           <h1 id="landing-hero-title"><span>Check in.</span><span>Trade your plan.</span><span>Close the LOOP.</span></h1>
           <p className={styles.heroLead}>A process-first trading journal for discretionary futures traders. Prepare for the session, protect your risk, and review the decisions behind your results.</p>
           <div className={styles.heroActions}>
-            <Link className={styles.primaryAction} href="/signup">Set up your LOOP <span>↗</span></Link>
-            <Link className={styles.textAction} href="/login">Sign in <span>→</span></Link>
+            <PublicConversionLink eventName={PUBLIC_CONVERSION_EVENTS.landingSignupClicked} className={styles.primaryAction} href="/signup">Set up your LOOP <span>↗</span></PublicConversionLink>
+            <PublicConversionLink eventName={PUBLIC_CONVERSION_EVENTS.loginClicked} className={styles.textAction} href="/login">Sign in <span>→</span></PublicConversionLink>
           </div>
           <p className={styles.heroNote}>Free during beta. Import from your broker or enter trades manually.</p>
         </div>
@@ -403,7 +405,7 @@ export default function LandingRedesignPreview() {
         <div className={styles.footerOrbit} aria-hidden="true"><i /><i /></div>
         <div className={styles.footerTop}>
           <Wordmark compact />
-          <Link className={styles.footerCta} href="/signup">Set up your LOOP <span>↗</span></Link>
+          <PublicConversionLink eventName={PUBLIC_CONVERSION_EVENTS.landingSignupClicked} className={styles.footerCta} href="/signup">Set up your LOOP <span>↗</span></PublicConversionLink>
         </div>
         <div className={styles.footerStatement}>
           <span>REVIEW. REFINE. REPEAT.</span>
@@ -416,7 +418,7 @@ export default function LandingRedesignPreview() {
             <Link href="/terms">Terms</Link>
             <Link href="/privacy">Privacy</Link>
             <Link href="/cookies">Cookies</Link>
-            <Link href="/login">Sign in</Link>
+            <PublicConversionLink eventName={PUBLIC_CONVERSION_EVENTS.loginClicked} href="/login">Sign in</PublicConversionLink>
           </nav>
         </div>
       </footer>

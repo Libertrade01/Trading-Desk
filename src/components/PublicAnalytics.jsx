@@ -1,26 +1,13 @@
 "use client";
 
 import { Analytics } from "@vercel/analytics/next";
-
-const PUBLIC_ANALYTICS_PATHS = new Set([
-  "/",
-  "/cookies",
-  "/login",
-  "/privacy",
-  "/signup",
-  "/terms",
-]);
+import { isPublicAnalyticsUrl } from "../lib/public-analytics";
 
 export default function PublicAnalytics() {
   return (
     <Analytics
       beforeSend={(event) => {
-        try {
-          const pathname = new URL(event.url).pathname;
-          return PUBLIC_ANALYTICS_PATHS.has(pathname) ? event : null;
-        } catch {
-          return null;
-        }
+        return isPublicAnalyticsUrl(event.url) ? event : null;
       }}
     />
   );

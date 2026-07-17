@@ -15,7 +15,7 @@ Status date: 16 July 2026
 - [x] Database migration for durable legal-acceptance records
 - [x] Request-only user-data export workflow with no in-app export button
 - [x] Confirmed account-deletion workflow
-- [x] Public-page-only Vercel Web Analytics integration with no analytics cookies
+- [x] Public-page-only Vercel Web Analytics integration with no analytics cookies, including anonymous signup-funnel events
 - [x] Security headers for framing, MIME sniffing, referrers and browser permissions
 - [x] Public sitemap, canonical production domain and robots rules
 - [x] Authentication pages excluded from indexing
@@ -38,7 +38,7 @@ Status date: 16 July 2026
 - [x] Email confirmation remains mandatory
 - [x] Legal-acceptance migration applied to production and verified
 - [x] Live RLS audit confirms protection on core user-data tables
-- [x] Vercel Web Analytics enabled and restricted in code to public pages
+- [x] Vercel Web Analytics enabled and restricted in code to public pages; conversion events contain no form values or account identifiers
 - [x] ImprovMX configured to receive and forward mail for `support@libertrade.app`
 - [x] Resend connected to the production Supabase project for transactional email
 - [x] Resend DNS records added and `libertrade.app` verified for sending
@@ -72,7 +72,7 @@ Status date: 16 July 2026
 - [x] Test a second user and confirm there is no cross-account data access
 - [x] Import a real Tradovate CSV in production and confirm its date, New York time, P&L, Stats and History
 - [x] Test a dummy export and deletion request end to end
-- [x] Confirm analytics is enabled and the integration filters to public page views only
+- [x] Confirm analytics is enabled and the integration filters page views and anonymous conversion events to public routes only
 - [x] Test landing, signup and legal pages on phone, tablet and desktop
 - [x] Establish production error alerts and an incident-response contact process
 - [ ] Review Sentry issues and Vercel logs after the first beta users

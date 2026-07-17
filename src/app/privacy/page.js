@@ -13,7 +13,7 @@ export default function PrivacyPage() {
           <li><strong>Account information:</strong> email address, preferred name or nickname, authentication records, and the age group 14–17 or 18+.</li>
           <li><strong>Trading and journal information:</strong> imported executions, plans, levels, tags, notes, reviews, performance statistics and prop-account records you choose to add.</li>
           <li><strong>Readiness information:</strong> optional check-in information such as sleep, energy, mindset, recovery and process scores. If you enable wearable tracking, this also includes the HRV and Sleep Debt readings you choose to enter. These may be treated as sensitive health-related information.</li>
-          <li><strong>Technical information:</strong> security logs, device and browser information, approximate network information, essential session cookies and aggregate public-page analytics.</li>
+          <li><strong>Technical information:</strong> security logs, device and browser information, approximate network information, essential session cookies, aggregate public-page analytics and anonymous public signup-funnel events. Form values and account identifiers are not included in those analytics events.</li>
           <li><strong>Support information:</strong> messages, requests and feedback you send to us.</li>
         </ul>
         <p>Your date of birth is used only to confirm eligibility during signup and is then discarded. We retain only your age group and verification time, not your complete birth date.</p>

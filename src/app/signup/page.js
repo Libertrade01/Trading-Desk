@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { track } from "@vercel/analytics";
+import PublicConversionLink from "../../components/PublicConversionLink";
 import { getAgeBand } from "../../lib/age-eligibility";
+import { PUBLIC_CONVERSION_EVENTS } from "../../lib/public-analytics";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -18,6 +21,7 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [pendingConfirmation, setPendingConfirmation] = useState(false);
+  const signupStartedTracked = useRef(false);
 
   const currentYear = new Date().getUTCFullYear();
   const birthYears = useMemo(
@@ -36,6 +40,16 @@ export default function SignupPage() {
   useEffect(() => {
     if (birthDay && Number(birthDay) > daysInBirthMonth) setBirthDay("");
   }, [birthDay, daysInBirthMonth]);
+
+  function trackSignupStarted() {
+    if (signupStartedTracked.current) return;
+    signupStartedTracked.current = true;
+    try {
+      track(PUBLIC_CONVERSION_EVENTS.signupStarted);
+    } catch {
+      // Analytics must never interrupt account creation.
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -76,6 +90,11 @@ export default function SignupPage() {
         else setError(result.error || "Sign up failed. Please try again.");
         return;
       }
+      try {
+        track(PUBLIC_CONVERSION_EVENTS.signupSubmitted);
+      } catch {
+        // Analytics must never interrupt account creation.
+      }
       if (result.hasSession) {
         router.replace("/home");
         router.refresh();
@@ -103,7 +122,7 @@ export default function SignupPage() {
             account. Try signing in or reset your password.
           </p>
           <p className="auth-footer">
-            <Link href="/login">Sign in</Link>
+            <PublicConversionLink eventName={PUBLIC_CONVERSION_EVENTS.loginClicked} href="/login">Sign in</PublicConversionLink>
             {" · "}
             <Link href="/forgot-password">Reset password</Link>
           </p>
@@ -120,7 +139,7 @@ export default function SignupPage() {
         </div>
         <p className="auth-sub">Start building your trading process</p>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
+        <form className="auth-form" onChangeCapture={trackSignupStarted} onSubmit={handleSubmit}>
           <label className="auth-label">
             First name or nickname
             <input
@@ -202,7 +221,7 @@ export default function SignupPage() {
         </form>
 
         <p className="auth-footer">
-          Already have an account? <Link href="/login">Sign in</Link>
+          Already have an account? <PublicConversionLink eventName={PUBLIC_CONVERSION_EVENTS.loginClicked} href="/login">Sign in</PublicConversionLink>
         </p>
       </div>
       {showAgeDialog && (
