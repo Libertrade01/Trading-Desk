@@ -9,21 +9,34 @@ import PublicAnalytics from '../components/PublicAnalytics';
 
 export const metadata = {
   metadataBase: new URL('https://libertrade.app'),
-  title: 'Libertrade Loop',
+  applicationName: 'Libertrade LOOP',
+  title: 'Libertrade LOOP',
   description: 'Prepare, trade your plan, manage risk, and close the loop after each session.',
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'Libertrade Loop',
+    title: 'Libertrade LOOP',
     description: 'Prepare, trade your plan, manage risk, and close the loop after each session.',
     url: 'https://libertrade.app',
     siteName: 'Libertrade',
     type: 'website',
+    images: [{
+      url: '/opengraph-image',
+      width: 1200,
+      height: 630,
+      alt: 'Libertrade LOOP: Check in. Trade your plan. Close the LOOP.',
+    }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Libertrade LOOP',
+    description: 'Check in. Trade your plan. Close the LOOP.',
+    images: ['/opengraph-image'],
   },
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Trade Desk',
+    title: 'Libertrade LOOP',
   },
 };
 
