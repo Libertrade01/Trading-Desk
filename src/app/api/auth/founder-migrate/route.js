@@ -15,14 +15,25 @@ export async function POST() {
 
   const isFounder = isFounderUser(user);
 
+  if (!isFounder) {
+    return NextResponse.json({
+      migrated: false,
+      reason: "not_founder",
+      isFounder: false,
+    });
+  }
+
   try {
     const result = await migrateFounderDataForUser(user);
     return NextResponse.json({ ...result, isFounder });
   } catch (err) {
     console.error("founder-migrate:", err);
-    return NextResponse.json(
-      { error: err.message || "Migration failed", isFounder },
-      { status: 500 }
-    );
+    // Founder identity and navigation must not depend on the optional,
+    // one-time legacy data migration succeeding.
+    return NextResponse.json({
+      migrated: false,
+      reason: "migration_failed",
+      isFounder: true,
+    });
   }
 }

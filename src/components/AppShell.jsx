@@ -169,15 +169,15 @@ function AppShellInner({ children }) {
 
         try {
           const res = await fetch("/api/auth/founder-migrate", { method: "POST" });
-          if (res.ok) {
-            serverAuthOk = true;
-            const data = await res.json();
+          const data = await res.json().catch(() => null);
+          if (typeof data?.isFounder === "boolean") {
             founder = !!data.isFounder;
             if (!cancelled) setIsFounder(founder);
             if (founder) {
               await ensureFounderProfile();
             }
           }
+          if (res.ok) serverAuthOk = true;
         } catch {
           /* dev / offline — continue without server auth */
         }
