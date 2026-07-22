@@ -659,11 +659,15 @@ export async function loadHomeFocusItems(dateKey = todayKey()) {
   for (let i = 0; i < candidates.length; i += 1) {
     const weekEnd = candidates[i];
     const review = reviews[i];
-    if (!isReviewComplete(review)) continue;
     const items = review.focusItems.filter((f) => f.trim());
     if (!items.length) continue;
     if (focusAppliesForDate(weekEnd, dateKey)) {
-      return { items, weekEnd, complete: true };
+      return {
+        items,
+        weekEnd,
+        complete: isReviewComplete(review),
+        missingReviewWeek: null,
+      };
     }
   }
 
