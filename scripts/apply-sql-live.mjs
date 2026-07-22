@@ -6,7 +6,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const PROJECT_REF = "uzbsuyknfnzqwdpzspfs";
 const sqlFile = process.argv[2];
 if (!sqlFile) {
   console.error("Usage: node scripts/apply-sql-live.mjs <path-to.sql>");
@@ -31,7 +30,14 @@ function loadEnvLocal() {
   return env;
 }
 
-const token = process.env.SUPABASE_ACCESS_TOKEN || loadEnvLocal().SUPABASE_ACCESS_TOKEN;
+const envLocal = loadEnvLocal();
+const PROJECT_REF = process.env.SUPABASE_PROJECT_REF || envLocal.SUPABASE_PROJECT_REF || "";
+if (!PROJECT_REF) {
+  console.error("Missing SUPABASE_PROJECT_REF in env or .env.local");
+  process.exit(1);
+}
+
+const token = process.env.SUPABASE_ACCESS_TOKEN || envLocal.SUPABASE_ACCESS_TOKEN;
 if (!token) {
   console.error("Missing SUPABASE_ACCESS_TOKEN");
   process.exit(1);

@@ -1,69 +1,105 @@
-# Mental Game Framework
+# Libertrade LOOP
 
-Schema Awareness Trading Framework - a personal tool for identifying and interrupting psychological patterns that interfere with trading execution.
+A trading performance operating system for discretionary futures traders.
 
-## Deployment Guide
+LOOP guides a full daily workflow: pre-market readiness check-in, session plan, trade import, close-loop review, analytics, weekly process review, prop economics, and Loop Intelligence over the trader's own data. Built as a multi-user product with process settings and a public landing path so others can adapt the loop to their own playbook.
 
-### Step 1: Set Up Supabase Database
+Live: [libertrade.app](https://libertrade.app)
 
-1. Go to your Supabase project dashboard
-2. Click **SQL Editor** in the left sidebar
-3. Click **New Query**
-4. Copy and paste the contents of `supabase-setup.sql` into the editor
-5. Click **Run** - you should see "Success. No rows returned"
-6. Done - your database is ready
+## What this repo is
 
-### Step 2: Push to GitHub
+- Next.js app (App Router) for the LOOP daily workflow and systems on top
+- Supabase-backed auth, RLS, journals, trades, readiness, plans, and reviews
+- Loop Intelligence: tool-using AI assistant over scoped user data
+- Production ops: Sentry, analytics, export/delete paths, cron helpers
 
-1. Create a new repository on GitHub called `mental-game-framework`
-2. Do NOT initialise it with a README (leave it empty)
-3. In your terminal, run:
+## What this repo is not
+
+- A generic "AI trading coach" that invents advice
+- Broker execution or order routing
+- The portfolio marketing site (separate repo)
+
+## Architecture
+
+```text
+Check-in (readiness)
+  -> Session plan (risk rails / commitments)
+  -> Trade (import or manual)
+  -> Close the loop (process honesty + flags)
+  -> Analytics / Weekly review / Prop Economics
+  -> Loop Intelligence (read-only tools over user data)
+```
+
+Core product rule: fetch before answering. The assistant must not invent trade or journal history.
+
+## Stack
+
+- Next.js / React
+- Supabase (Auth, Postgres, RLS)
+- Vercel
+- OpenAI / Login with ChatGPT + AI SDK
+- Chart.js
+- Sentry
+
+## Quick start
 
 ```bash
-cd mental-game-framework
-git init
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/mental-game-framework.git
-git push -u origin main
+npm install
+cp .env.example .env.local
+# Fill Supabase + app URL + optional assistant secrets
+# See docs/ for launch and Supabase setup notes
+
+npm run dev
 ```
 
-### Step 3: Deploy to Vercel
+Open [http://localhost:3000](http://localhost:3000).
 
-1. Go to [vercel.com](https://vercel.com) and click **Add New Project**
-2. Import your `mental-game-framework` GitHub repository
-3. Before clicking Deploy, add **Environment Variables**:
-   - `NEXT_PUBLIC_SUPABASE_URL` = `https://uzbsuyknfnzqwdpzspfs.supabase.co`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = your anon/publishable key
-4. Click **Deploy**
-5. Wait ~60 seconds - your app will be live at `mental-game-framework.vercel.app`
+## Environment
 
-### Step 4: Add to iPad Home Screen
+Copy `.env.example` to `.env.local`. Important variables:
 
-1. Open Safari on your iPad
-2. Navigate to your Vercel URL
-3. Tap the **Share** button (box with arrow)
-4. Tap **Add to Home Screen**
-5. Name it "Mental Game" and tap **Add**
-6. The app will now open full-screen like a native app
+| Variable | Purpose |
+|----------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-side admin key |
+| `NEXT_PUBLIC_APP_URL` | Public app URL (auth redirects) |
+| `FOUNDER_EMAIL` | Optional founder account email |
+| `LWC_SECRET` | Login with ChatGPT session secret |
+| `CRON_SECRET` | Protects cron routes |
+| `SUPABASE_PROJECT_REF` | Optional; used by management scripts |
+| `SUPABASE_ACCESS_TOKEN` | Optional; Supabase Management API |
 
-## Making Updates
+Never commit `.env` / `.env.local`. Keep service-role keys and tokens server-side only.
 
-Any changes pushed to the `main` branch on GitHub will automatically redeploy on Vercel within ~60 seconds.
+## Product surfaces
 
-For small text changes (rewording a non-negotiable, adjusting thresholds), you can edit `src/app/page.js` directly on GitHub.
+| Path | Purpose |
+|------|---------|
+| `/` | Public landing |
+| `/home` | Today desk |
+| `/premarket` | Readiness check-in |
+| `/plan` | Session plan |
+| `/postmarket` | Close the loop |
+| `/analytics` | Performance / process analytics |
+| `/weekly-review` | Weekly process review |
+| `/prop-economics` | Prop fees, resets, payouts |
+| `/assistant` | Loop Intelligence |
 
-## Project Structure
+## Docs
 
+| File | Purpose |
+|------|---------|
+| `docs/launch-checklist.md` | Production launch checks |
+| `docs/sentry-setup.md` | Error monitoring |
+| `docs/saas-phases-checklist.md` | Productization phases |
+| `docs/incident-response.md` | Incident notes |
+
+## Scripts
+
+```bash
+npm run check:launch-env   # Verify production env shape
+npm test                   # Unit tests
 ```
-src/
-  app/
-    globals.css    - Global styles
-    layout.js      - Root layout with PWA metadata
-    page.js        - The entire app (single component)
-  lib/
-    supabase.js    - Supabase client & storage helpers
-public/
-  manifest.json    - PWA manifest for Add to Home Screen
-```
+
+Management scripts under `scripts/` expect secrets from `.env.local` and, where needed, `SUPABASE_PROJECT_REF` + `SUPABASE_ACCESS_TOKEN`.

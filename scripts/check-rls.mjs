@@ -9,7 +9,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const PROJECT_REF = "uzbsuyknfnzqwdpzspfs";
+const PROJECT_REF =
+  process.env.SUPABASE_PROJECT_REF ||
+  loadEnvLocal().SUPABASE_PROJECT_REF ||
+  "";
 
 function loadEnvLocal() {
   const file = path.join(ROOT, ".env.local");
@@ -27,6 +30,11 @@ function loadEnvLocal() {
     env[t.slice(0, eq)] = val;
   }
   return env;
+}
+
+if (!PROJECT_REF) {
+  console.error("Missing SUPABASE_PROJECT_REF in env or .env.local");
+  process.exit(1);
 }
 
 async function query(sql) {

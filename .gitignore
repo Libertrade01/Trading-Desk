@@ -2,7 +2,11 @@ node_modules/
 .next/
 .next-build/
 .next-*/
+.env
 .env.local
+.env.*.local
 out/
 
 .vercel
+*.log
+.DS_Store

@@ -155,7 +155,7 @@ Re-run security audit: `node scripts/check-rls.mjs`
 - Streaks: both on; target **21** (user-configurable in My process)
 - Empty accounts + trader-settings defaults (already exist)
 
-**Founder template (`midefi@protonmail.com` / founder flag):**
+**Founder template (`FOUNDER_EMAIL` / founder flag):**
 - Seed current hardcoded playbook: PAF, BAR, LVN continuation, VWAP in trend
 - Current commitment texts (both) + bias checklist (value area, nodes/LVNs, weekly profile)
 - Streak target **21** (already hardcoded today)

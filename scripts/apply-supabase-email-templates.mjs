@@ -13,7 +13,11 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
-const projectRef = "uzbsuyknfnzqwdpzspfs";
+const projectRef = process.env.SUPABASE_PROJECT_REF;
+if (!projectRef) {
+  console.error("Missing SUPABASE_PROJECT_REF");
+  process.exit(1);
+}
 
 const token = process.env.SUPABASE_ACCESS_TOKEN;
 if (!token) {
