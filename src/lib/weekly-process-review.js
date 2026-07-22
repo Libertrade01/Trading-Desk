@@ -132,28 +132,42 @@ export function buildWeekComparison(summary, priorSummary) {
   return rows.filter((r) => r.current !== "—" || r.prior !== "—");
 }
 
-/** Current week plus completed past reviews (newest first). */
+function isValidWeekEnd(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value || "");
+}
+
+function weekHasSessionDate(sessionDates, week) {
+  return sessionDates.some((d) => d >= week.start && d <= week.end);
+}
+
+/** Current week plus recent session weeks and saved reviews (newest first). */
 export async function listBrowsableProcessWeeks() {
   const current = getCurrentProcessWeek();
-  const { keys } = await storage.list(REVIEW_KEY_PREFIX);
-  const completedPast = [];
-
-  await Promise.all(
-    (keys || []).map(async (key) => {
-      const weekEnd = key.slice(REVIEW_KEY_PREFIX.length);
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(weekEnd) || weekEnd === current.end) return;
-      const review = await loadSavedReview(weekEnd);
-      if (isReviewComplete(review)) completedPast.push(weekEnd);
-    })
+  const [{ keys }, sessionDates] = await Promise.all([
+    storage.list(REVIEW_KEY_PREFIX),
+    fetchSessionDates(),
+  ]);
+  const savedWeekEnds = new Set(
+    (keys || [])
+      .map((key) => key.slice(REVIEW_KEY_PREFIX.length))
+      .filter(isValidWeekEnd)
   );
+  const byEnd = new Map();
 
-  completedPast.sort((a, b) => b.localeCompare(a));
+  const addWeek = (week) => {
+    const isCurrent = week.end === current.end;
+    if (!isCurrent && !savedWeekEnds.has(week.end) && !weekHasSessionDate(sessionDates, week)) return;
+    byEnd.set(week.end, { ...week, isCurrent });
+  };
 
-  const weeks = [{ ...current, isCurrent: true }];
-  for (const end of completedPast) {
-    weeks.push({ ...weekRangeFromEnd(end), isCurrent: false });
-  }
-  return weeks;
+  getRecentProcessWeeks(12).forEach(addWeek);
+  savedWeekEnds.forEach((end) => addWeek(weekRangeFromEnd(end)));
+
+  return Array.from(byEnd.values()).sort((a, b) => {
+    if (a.isCurrent) return -1;
+    if (b.isCurrent) return 1;
+    return b.end.localeCompare(a.end);
+  });
 }
 
 /** Remove saved reviews for weeks before weekStart (YYYY-MM-DD). */
@@ -652,7 +666,25 @@ export async function loadHomeFocusItems(dateKey = todayKey()) {
       return { items, weekEnd, complete: true };
     }
   }
-  return { items: [], weekEnd: null, complete: false };
+
+  const sessionDates = await fetchSessionDates();
+  for (let i = 0; i < candidates.length; i += 1) {
+    const weekEnd = candidates[i];
+    if (!focusAppliesForDate(weekEnd, dateKey)) continue;
+    if (isReviewComplete(reviews[i])) continue;
+
+    const week = weekRangeFromEnd(weekEnd);
+    if (weekHasSessionDate(sessionDates, week)) {
+      return {
+        items: [],
+        weekEnd: null,
+        complete: false,
+        missingReviewWeek: week,
+      };
+    }
+  }
+
+  return { items: [], weekEnd: null, complete: false, missingReviewWeek: null };
 }
 
 export function shouldPromptWeeklyReview(dateKey = todayKey()) {

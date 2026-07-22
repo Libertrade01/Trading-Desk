@@ -475,6 +475,7 @@ function HomeAirDashboard({
       <div className="home-air-focus">
         <WeekFocusStrip
           items={weekFocus.items}
+          missingReviewWeek={weekFocus.missingReviewWeek}
           loading={loadingPanels}
           showReviewPrompt={showReviewPrompt}
           onOpenWeeklyReview={onOpenWeeklyReview}
@@ -676,7 +677,7 @@ function stepStarted(stepId, today) {
   return !!stepData(stepId, today);
 }
 
-function WeekFocusStrip({ items, loading, showReviewPrompt, onOpenWeeklyReview, allComplete }) {
+function WeekFocusStrip({ items, missingReviewWeek, loading, showReviewPrompt, onOpenWeeklyReview, allComplete }) {
   if (items.length > 0) {
     return (
       <section
@@ -692,6 +693,24 @@ function WeekFocusStrip({ items, loading, showReviewPrompt, onOpenWeeklyReview, 
             </li>
           ))}
         </ul>
+      </section>
+    );
+  }
+
+  if (missingReviewWeek && missingReviewWeek.end !== getProcessWeekRange(0).end && onOpenWeeklyReview) {
+    const isLastWeek = missingReviewWeek.end === getProcessWeekRange(-1).end;
+    return (
+      <section className={`home-week-focus home-week-focus--prompt${allComplete ? " home-week-focus--complete" : ""}`}>
+        <button
+          type="button"
+          className="home-review-prompt home-review-prompt--focus"
+          onClick={() => onOpenWeeklyReview(missingReviewWeek.end)}
+        >
+          <span className="home-review-prompt-label">
+            {isLastWeek ? "Fill last week's weekly review" : "Fill missing weekly review"}
+          </span>
+          <span className="home-review-prompt-action">Set focus →</span>
+        </button>
       </section>
     );
   }

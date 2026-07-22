@@ -22,7 +22,9 @@ export default function HomePage() {
     <HomeDashboard
       onNavigate={(id) => router.push(SECTION_ROUTES[id] || "/home")}
       onOpenHistoryDay={(date) => router.push(`/history/${date}`)}
-      onOpenWeeklyReview={() => router.push("/weekly-review")}
+      onOpenWeeklyReview={(weekEnd) =>
+        router.push(weekEnd ? `/weekly-review?week=${encodeURIComponent(weekEnd)}` : "/weekly-review")
+      }
     />
   );
 }

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   getCurrentProcessWeek,
   formatProcessWeekLabel,
+  weekRangeFromEnd,
   listBrowsableProcessWeeks,
   loadWeeklyProcessReview,
   saveReview,
@@ -27,6 +28,18 @@ function headerDate() {
 function formatScoreDelta(text) {
   if (!text || text.startsWith("Same")) return null;
   return text.replace(" vs prior week", " vs last week");
+}
+
+function validWeekEnd(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value || "");
+}
+
+function buildInitialWeek(currentWeek, initialWeekEnd) {
+  if (!validWeekEnd(initialWeekEnd)) return { ...currentWeek, isCurrent: true };
+  return {
+    ...weekRangeFromEnd(initialWeekEnd),
+    isCurrent: initialWeekEnd === currentWeek.end,
+  };
 }
 
 function WprScoreStat({ label, value, delta, tone }) {
@@ -456,10 +469,14 @@ function WeeklyReviewContent({ data, manual, onManualChange, onSave, saving, sav
   );
 }
 
-export default function WeeklyReviewPage() {
+export default function WeeklyReviewPage({ initialWeekEnd = null }) {
   const currentWeek = useMemo(() => getCurrentProcessWeek(), []);
-  const [weeks, setWeeks] = useState([{ ...currentWeek, isCurrent: true }]);
-  const [selectedWeek, setSelectedWeek] = useState(currentWeek);
+  const initialWeek = useMemo(
+    () => buildInitialWeek(currentWeek, initialWeekEnd),
+    [currentWeek, initialWeekEnd]
+  );
+  const [weeks, setWeeks] = useState([initialWeek]);
+  const [selectedWeek, setSelectedWeek] = useState(initialWeek);
   const [data, setData] = useState(null);
   const [manual, setManual] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -468,9 +485,11 @@ export default function WeeklyReviewPage() {
 
   const refreshWeekList = useCallback(async () => {
     const list = await listBrowsableProcessWeeks();
-    setWeeks(list);
-    return list;
-  }, []);
+    const hasSelectedWeek = list.some((w) => w.end === selectedWeek.end);
+    const nextList = hasSelectedWeek ? list : [selectedWeek, ...list];
+    setWeeks(nextList);
+    return nextList;
+  }, [selectedWeek]);
 
   const loadWeek = useCallback(async (week) => {
     if (!week?.start || !week?.end) return;
