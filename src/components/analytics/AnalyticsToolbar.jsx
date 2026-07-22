@@ -47,6 +47,7 @@ export default function AnalyticsToolbar({
   onToggleAccount,
   onOpenTradeLog,
   onImport,
+  readOnly = false,
 }) {
   const showChips =
     accounts.length > 1 || (accounts.length === 1 && accounts[0].id !== "default");
@@ -112,6 +113,7 @@ export default function AnalyticsToolbar({
                 type="button"
                 className={`an-account-chip${a.active !== false ? " active" : ""}`}
                 onClick={() => onToggleAccount(a.id)}
+                disabled={readOnly}
               >
                 {a.name}
               </button>
@@ -125,10 +127,12 @@ export default function AnalyticsToolbar({
           </button>
         ) : null}
 
-        <button type="button" className="an-btn-import" onClick={onImport}>
-          <ImportIcon />
-          Import
-        </button>
+        {!readOnly && onImport ? (
+          <button type="button" className="an-btn-import" onClick={onImport}>
+            <ImportIcon />
+            Import
+          </button>
+        ) : null}
       </div>
     </header>
   );

@@ -34,23 +34,50 @@ import SessionAnalyticsGrid from "./SessionAnalyticsGrid";
 import SessionSummaryPanel from "./SessionSummaryPanel";
 import TradeDetailPanel from "./TradeDetailPanel";
 
-export default function AnalyticsDashboard() {
+export default function AnalyticsDashboard({
+  demoMode = false,
+  demoBundle = null,
+}) {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const isDemo = demoMode && !!demoBundle;
+  const [loading, setLoading] = useState(!isDemo);
   const [error, setError] = useState(null);
-  const [trades, setTrades] = useState([]);
-  const [readinessScores, setReadinessScores] = useState([]);
+  const [trades, setTrades] = useState(isDemo ? demoBundle.trades : []);
+  const [readinessScores, setReadinessScores] = useState(isDemo ? demoBundle.readinessScores : []);
   const [sessionSummaries, setSessionSummaries] = useState([]);
-  const [settings, setSettings] = useState(null);
-  const [activePreset, setActivePreset] = useState("10d");
-  const [dateFrom, setDateFrom] = useState(null);
-  const [dateTo, setDateTo] = useState(null);
-  const [playbookTrackingStart, setPlaybookTrackingStart] = useState(null);
+  const [settings, setSettings] = useState(isDemo ? demoBundle.settings : null);
+  const [activePreset, setActivePreset] = useState(isDemo ? "all" : "10d");
+  const [dateFrom, setDateFrom] = useState(isDemo ? demoBundle.startDate : null);
+  const [dateTo, setDateTo] = useState(isDemo ? demoBundle.endDate : null);
+  const [playbookTrackingStart, setPlaybookTrackingStart] = useState(
+    isDemo ? demoBundle.playbookTrackingStart : null
+  );
   const [listPanel, setListPanel] = useState(null);
   const [selectedTradeId, setSelectedTradeId] = useState(null);
   const [importOpen, setImportOpen] = useState(false);
 
+  const applyDemoRange = useCallback((from, to) => {
+    if (!demoBundle) return;
+    const nextTrades = demoBundle.trades.filter((t) => {
+      if (from && t.date < from) return false;
+      if (to && t.date > to) return false;
+      return true;
+    });
+    const nextReadiness = demoBundle.readinessScores.filter((row) => {
+      if (from && row.date < from) return false;
+      if (to && row.date > to) return false;
+      return true;
+    });
+    setTrades(nextTrades);
+    setReadinessScores(nextReadiness);
+    setLoading(false);
+  }, [demoBundle]);
+
   const load = useCallback(async (from, to) => {
+    if (isDemo) {
+      applyDemoRange(from, to);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -71,9 +98,10 @@ export default function AnalyticsDashboard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isDemo, applyDemoRange]);
 
   useEffect(() => {
+    if (isDemo) return;
     let cancelled = false;
     loadPlaybookTrackingStartDate()
       .then((start) => {
@@ -85,21 +113,33 @@ export default function AnalyticsDashboard() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isDemo]);
 
   useEffect(() => {
+    if (isDemo) {
+      applyDemoRange(demoBundle.startDate, demoBundle.endDate);
+      return;
+    }
     const { dateFrom: from, dateTo: to } = resolveDateRangePreset("10d");
     setDateFrom(from);
     setDateTo(to);
     load(from, to);
-  }, [load]);
+  }, [load, isDemo, demoBundle, applyDemoRange]);
 
   const applyPreset = (preset) => {
     setActivePreset(preset);
+    if (isDemo && preset === "all") {
+      setDateFrom(demoBundle.startDate);
+      setDateTo(demoBundle.endDate);
+      load(demoBundle.startDate, demoBundle.endDate);
+      return;
+    }
     const range = resolveDateRangePreset(preset);
-    setDateFrom(range.dateFrom);
-    setDateTo(range.dateTo);
-    load(range.dateFrom, range.dateTo);
+    const from = range.dateFrom || (isDemo ? demoBundle.startDate : null);
+    const to = range.dateTo || (isDemo ? demoBundle.endDate : null);
+    setDateFrom(from);
+    setDateTo(to);
+    load(from, to);
   };
 
   const applyCustomRange = (from, to) => {
@@ -110,7 +150,7 @@ export default function AnalyticsDashboard() {
   };
 
   const toggleAccount = async (id) => {
-    if (!settings) return;
+    if (isDemo || !settings) return;
     const accounts = settings.accounts.map((a) =>
       a.id === id ? { ...a, active: a.active === false } : a
     );
@@ -199,13 +239,16 @@ export default function AnalyticsDashboard() {
         onCustomRangeChange={applyCustomRange}
         onToggleAccount={toggleAccount}
         onOpenTradeLog={() => setListPanel("trade-log")}
-        onImport={() => setImportOpen(true)}
+        onImport={isDemo ? null : () => setImportOpen(true)}
+        readOnly={isDemo}
       />
 
       <div className="analytics-dashboard__body">
-        <AnalyticsWorkflowNotice />
+        {!isDemo && <AnalyticsWorkflowNotice />}
         <SessionSummaryPanel stats={summaryStats} />
-        <AnalyticsUntaggedBanner untaggedCount={untaggedCount} onTagTrade={openUntaggedTrade} />
+        {!isDemo && (
+          <AnalyticsUntaggedBanner untaggedCount={untaggedCount} onTagTrade={openUntaggedTrade} />
+        )}
 
         <div className="an-layout">
           <MetricCards
@@ -312,10 +355,14 @@ export default function AnalyticsDashboard() {
         <DailyPnlTable
           trades={trades}
           limit={null}
-          onRowClick={(date) => {
-            setListPanel(null);
-            router.push(`/history/${date}`);
-          }}
+          onRowClick={
+            isDemo
+              ? null
+              : (date) => {
+                  setListPanel(null);
+                  router.push(`/history/${date}`);
+                }
+          }
         />
       </AnalyticsSlidePanel>
 
@@ -352,14 +399,17 @@ export default function AnalyticsDashboard() {
       <TradeDetailPanel
         trade={selectedTrade}
         onClose={() => setSelectedTradeId(null)}
-        onUpdated={handleTradeUpdated}
-        onDeleted={handleTradeDeleted}
+        onUpdated={isDemo ? undefined : handleTradeUpdated}
+        onDeleted={isDemo ? undefined : handleTradeDeleted}
+        readOnly={isDemo}
       />
-      <AnalyticsCsvImporter
-        open={importOpen}
-        onClose={() => setImportOpen(false)}
-        onImported={handleTradesImported}
-      />
+      {!isDemo && (
+        <AnalyticsCsvImporter
+          open={importOpen}
+          onClose={() => setImportOpen(false)}
+          onImported={handleTradesImported}
+        />
+      )}
     </div>
   );
 }

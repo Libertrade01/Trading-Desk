@@ -23,17 +23,17 @@ function Field({ label, children }) {
   );
 }
 
-export default function TradeDetailPanel({ trade, onClose, onUpdated, onDeleted }) {
+export default function TradeDetailPanel({ trade, onClose, onUpdated, onDeleted, readOnly = false }) {
   const [saving, setSaving] = useState(null);
   const [error, setError] = useState(null);
   const [notes, setNotes] = useState("");
-  const [notesLoaded, setNotesLoaded] = useState(false);
+  const [notesLoaded, setNotesLoaded] = useState(readOnly);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    if (!trade?.id) {
-      setNotes("");
-      setNotesLoaded(false);
+    if (!trade?.id || readOnly) {
+      setNotes(readOnly ? "Demo trade — edits disabled." : "");
+      setNotesLoaded(true);
       return undefined;
     }
 
@@ -56,7 +56,7 @@ export default function TradeDetailPanel({ trade, onClose, onUpdated, onDeleted 
     return () => {
       cancelled = true;
     };
-  }, [trade?.id]);
+  }, [trade?.id, readOnly]);
 
   if (!trade) return null;
 
@@ -72,6 +72,7 @@ export default function TradeDetailPanel({ trade, onClose, onUpdated, onDeleted 
   ];
 
   const saveField = async (field, value) => {
+    if (readOnly) return;
     setSaving(field);
     setError(null);
     try {
@@ -85,6 +86,7 @@ export default function TradeDetailPanel({ trade, onClose, onUpdated, onDeleted 
   };
 
   const saveNotesField = async () => {
+    if (readOnly) return;
     setSaving("notes");
     setError(null);
     try {
@@ -97,6 +99,7 @@ export default function TradeDetailPanel({ trade, onClose, onUpdated, onDeleted 
   };
 
   const handleDelete = async () => {
+    if (readOnly) return;
     if (!window.confirm("Delete this trade? This cannot be undone.")) return;
     setDeleting(true);
     setError(null);
@@ -133,69 +136,81 @@ export default function TradeDetailPanel({ trade, onClose, onUpdated, onDeleted 
         <Field label="Entry px">{trade.entry_price ?? "—"}</Field>
         <Field label="Exit px">{trade.exit_price ?? "—"}</Field>
         {r != null ? <Field label="R">{r.toFixed(2)}R</Field> : null}
+        {readOnly ? <Field label="Setup">{trade.setup || "—"}</Field> : null}
+        {readOnly ? <Field label="Management">{trade.management || "—"}</Field> : null}
       </div>
 
-      <div className="analytics-divider" />
+      {!readOnly && (
+        <>
+          <div className="analytics-divider" />
 
-      <div className="analytics-trade-edit">
-        <label className="analytics-trade-edit__label">
-          Setup
-          {saving === "setup" ? <span className="analytics-trade-edit__saving">Saving…</span> : null}
-        </label>
-        <select
-          className="analytics-date-input analytics-trade-edit__select"
-          value={trade.setup || ""}
-          onChange={(e) => saveField("setup", e.target.value)}
-        >
-          {setupOptions.map((o) => (
-            <option key={o.value || "empty"} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+          <div className="analytics-trade-edit">
+            <label className="analytics-trade-edit__label">
+              Setup
+              {saving === "setup" ? <span className="analytics-trade-edit__saving">Saving…</span> : null}
+            </label>
+            <select
+              className="analytics-date-input analytics-trade-edit__select"
+              value={trade.setup || ""}
+              onChange={(e) => saveField("setup", e.target.value)}
+            >
+              {setupOptions.map((o) => (
+                <option key={o.value || "empty"} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
 
-        <label className="analytics-trade-edit__label">
-          Management
-          {saving === "management" ? <span className="analytics-trade-edit__saving">Saving…</span> : null}
-        </label>
-        <select
-          className="analytics-date-input analytics-trade-edit__select"
-          value={trade.management || ""}
-          onChange={(e) => saveField("management", e.target.value)}
-        >
-          {MGMT_OPTIONS.map((o) => (
-            <option key={o.value || "empty"} value={o.value}>
-              {o.label === "—" ? "None" : o.label}
-            </option>
-          ))}
-        </select>
+            <label className="analytics-trade-edit__label">
+              Management
+              {saving === "management" ? <span className="analytics-trade-edit__saving">Saving…</span> : null}
+            </label>
+            <select
+              className="analytics-date-input analytics-trade-edit__select"
+              value={trade.management || ""}
+              onChange={(e) => saveField("management", e.target.value)}
+            >
+              {MGMT_OPTIONS.map((o) => (
+                <option key={o.value || "empty"} value={o.value}>
+                  {o.label === "—" ? "None" : o.label}
+                </option>
+              ))}
+            </select>
 
-        <label className="analytics-trade-edit__label">
-          Notes
-          {saving === "notes" ? <span className="analytics-trade-edit__saving">Saving…</span> : null}
-        </label>
-        <textarea
-          className="analytics-trade-notes"
-          placeholder="Add trade notes…"
-          value={notes}
-          disabled={!notesLoaded || deleting}
-          onChange={(e) => setNotes(e.target.value)}
-          onBlur={saveNotesField}
-        />
-      </div>
+            <label className="analytics-trade-edit__label">
+              Notes
+              {saving === "notes" ? <span className="analytics-trade-edit__saving">Saving…</span> : null}
+            </label>
+            <textarea
+              className="analytics-trade-notes"
+              placeholder="Add trade notes…"
+              value={notes}
+              disabled={!notesLoaded || deleting}
+              onChange={(e) => setNotes(e.target.value)}
+              onBlur={saveNotesField}
+            />
+          </div>
 
-      {error ? <p className="analytics-trade-edit__error">{error}</p> : null}
+          {error ? <p className="analytics-trade-edit__error">{error}</p> : null}
 
-      <div className="analytics-trade-actions">
-        <button
-          type="button"
-          className="analytics-trade-delete-btn"
-          disabled={deleting}
-          onClick={handleDelete}
-        >
-          {deleting ? "Deleting…" : "Delete trade"}
-        </button>
-      </div>
+          <div className="analytics-trade-actions">
+            <button
+              type="button"
+              className="analytics-trade-delete-btn"
+              disabled={deleting}
+              onClick={handleDelete}
+            >
+              {deleting ? "Deleting…" : "Delete trade"}
+            </button>
+          </div>
+        </>
+      )}
+
+      {readOnly ? (
+        <p className="analytics-trade-edit__error" style={{ color: "var(--an-muted)", marginTop: 16 }}>
+          Demo data is read-only. Create an account to track your own trades.
+        </p>
+      ) : null}
     </AnalyticsSlidePanel>
   );
 }

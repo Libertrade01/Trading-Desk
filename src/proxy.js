@@ -15,6 +15,7 @@ const PUBLIC_PATHS = [
   "/privacy",
   "/terms",
   "/cookies",
+  "/demo",
 ];
 
 /** Logged-in users are redirected away from these paths only (not recovery flows). */

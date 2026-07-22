@@ -1142,33 +1142,43 @@ function mergeTodaySession(sessions, todaySession) {
   return next;
 }
 
-export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeeklyReview }) {
-  const [dateKey, setDateKey] = useState(() => todayKey());
+export default function HomeDashboard({
+  onNavigate,
+  onOpenHistoryDay,
+  onOpenWeeklyReview,
+  demoBundle = null,
+}) {
+  const isDemo = !!demoBundle;
+  const [dateKey, setDateKey] = useState(() => (isDemo ? demoBundle.endDate : todayKey()));
   const effectiveDate = useMemo(() => dateFromKey(dateKey), [dateKey]);
 
-  const [today, setToday] = useState(null);
-  const [sessions, setSessions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingPanels, setLoadingPanels] = useState(true);
+  const [today, setToday] = useState(isDemo ? demoBundle.todaySession : null);
+  const [sessions, setSessions] = useState(isDemo ? demoBundle.sessions.slice(0, 35) : []);
+  const [loading, setLoading] = useState(!isDemo);
+  const [loadingPanels, setLoadingPanels] = useState(!isDemo);
   const [recoveryStatus, setRecoveryStatus] = useState(null);
   const [dllSettings, setDllSettings] = useState(null);
   const [showDrSetupHint, setShowDrSetupHint] = useState(false);
-  const [weekFocus, setWeekFocus] = useState({ items: [], complete: false });
+  const [weekFocus, setWeekFocus] = useState(
+    isDemo ? demoBundle.weekFocus : { items: [], complete: false }
+  );
   const [weeklyOverviewRows, setWeeklyOverviewRows] = useState([]);
   const [showReviewPrompt, setShowReviewPrompt] = useState(false);
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState(isDemo ? demoBundle.profile : null);
   const [showWelcomeHint, setShowWelcomeHint] = useState(false);
-  const [userName, setUserName] = useState(null);
+  const [userName, setUserName] = useState(isDemo ? demoBundle.profile?.preferredName || "Alex" : null);
   const [journalCarryover, setJournalCarryover] = useState([]);
 
   useEffect(() => {
+    if (isDemo) return;
     if (typeof window !== "undefined" && sessionStorage.getItem(WELCOME_HINT_STORAGE_KEY) === "1") {
       sessionStorage.removeItem(WELCOME_HINT_STORAGE_KEY);
       setShowWelcomeHint(true);
     }
-  }, []);
+  }, [isDemo]);
 
   useEffect(() => {
+    if (isDemo) return;
     loadTraderProfile().then(setProfile).catch(() => {});
     getCurrentUser()
       .then((user) => setUserName(greetingFromEmail(user?.email)))
@@ -1178,9 +1188,10 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
     };
     window.addEventListener(PROFILE_UPDATED_EVENT, refreshProfile);
     return () => window.removeEventListener(PROFILE_UPDATED_EVENT, refreshProfile);
-  }, []);
+  }, [isDemo]);
 
   const reloadPanels = useCallback(async (todaySession, key = todayKey()) => {
+    if (isDemo) return;
     setLoadingPanels(true);
     try {
       const [recent, focus, showPrompt, recoveryState, dllSettings, overviewRows, carryover] =
@@ -1204,9 +1215,10 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
     } finally {
       setLoadingPanels(false);
     }
-  }, []);
+  }, [isDemo]);
 
   const loadDashboard = useCallback(async ({ refreshTodayOnly = false } = {}) => {
+    if (isDemo) return;
     const key = todayKey();
     setDateKey(key);
 
@@ -1231,9 +1243,10 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
     setLoading(false);
 
     await reloadPanels(todaySession, key);
-  }, [reloadPanels]);
+  }, [reloadPanels, isDemo]);
 
   useEffect(() => {
+    if (isDemo) return;
     let cancelled = false;
     setLoading(true);
     loadDashboard().catch(() => {
@@ -1242,9 +1255,10 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
     return () => {
       cancelled = true;
     };
-  }, [loadDashboard]);
+  }, [loadDashboard, isDemo]);
 
   useEffect(() => {
+    if (isDemo) return;
     let timer;
     const refresh = () => {
       clearTimeout(timer);
@@ -1259,7 +1273,7 @@ export default function HomeDashboard({ onNavigate, onOpenHistoryDay, onOpenWeek
       window.removeEventListener(SESSION_SAVED_EVENT, refresh);
       window.removeEventListener(TRADES_CHANGED_EVENT, refresh);
     };
-  }, [loadDashboard]);
+  }, [loadDashboard, isDemo]);
 
   const preComplete = isWorkflowStepComplete("premarket", today);
   const planComplete = isWorkflowStepComplete("dailyplan", today);
