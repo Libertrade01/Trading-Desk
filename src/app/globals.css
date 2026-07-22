@@ -11978,6 +11978,13 @@ input.pm-slider:active::-moz-range-thumb {
   min-height: 0;
 }
 
+.an-bottom-insight-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
 .an-left-col,
 .an-main-col {
   display: flex;
@@ -12009,6 +12016,12 @@ input.pm-slider:active::-moz-range-thumb {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.48);
+}
+
+.an-card-subtitle {
+  margin: 7px 0 0;
+  font: 500 11px/1.2 "DM Sans", sans-serif;
+  color: var(--an-muted);
 }
 
 .analytics-card__title::before {
@@ -12471,6 +12484,48 @@ input.pm-slider:active::-moz-range-thumb {
   border-radius: 3px;
   background: linear-gradient(180deg, rgba(80, 160, 255, 0.55), rgba(240, 113, 103, 0.55));
   border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.an-readiness-pnl-card {
+  min-height: 280px;
+}
+
+.an-readiness-pnl-chart {
+  height: 220px;
+  margin-top: 6px;
+}
+
+.an-readiness-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: 500 11px/1 "DM Sans", sans-serif;
+  color: var(--an-muted);
+  white-space: nowrap;
+}
+
+.an-readiness-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.an-readiness-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 0 14px currentColor;
+}
+
+.an-readiness-legend i.pos {
+  background: rgba(80, 160, 255, 0.86);
+  color: rgba(80, 160, 255, 0.5);
+}
+
+.an-readiness-legend i.neg {
+  background: rgba(240, 113, 103, 0.86);
+  color: rgba(240, 113, 103, 0.48);
 }
 
 /* Recent trades table */
@@ -13093,6 +13148,10 @@ input.pm-slider:active::-moz-range-thumb {
   .an-hero-row {
     grid-template-columns: 1fr;
   }
+
+  .an-bottom-insight-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 1100px) {
@@ -13103,7 +13162,8 @@ input.pm-slider:active::-moz-range-thumb {
 @media (max-width: 900px) {
   .analytics-dashboard { padding: 20px 16px 40px; }
   .an-hero-row,
-  .an-charts-row {
+  .an-charts-row,
+  .an-bottom-insight-row {
     grid-template-columns: 1fr;
   }
   .an-hero-equity {

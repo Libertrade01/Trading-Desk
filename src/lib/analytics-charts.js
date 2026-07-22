@@ -13,6 +13,8 @@ const POS_LINE = "#50a0ff";
 const NEG_LINE = "#f07167";
 const EQUITY_POS_FILL = "rgba(80,160,255,0.2)";
 const EQUITY_NEG_FILL = "rgba(240,113,103,0.2)";
+const SCATTER_POS = "rgba(80,160,255,0.86)";
+const SCATTER_NEG = "rgba(240,113,103,0.86)";
 
 /** Fill area between the equity line and y=0, blue above / red below. */
 const equityZeroFillPlugin = {
@@ -272,11 +274,95 @@ export function buildDayOfWeekConfig(trades) {
   };
 }
 
-export function getChartConfigs(trades) {
+export function buildReadinessPnlScatterConfig(trades, readinessScores = []) {
+  const byDate = buildDailyPnlByDate(trades);
+  const points = readinessScores
+    .map((row) => {
+      const day = byDate[row.date];
+      if (!day || row.readinessScore == null) return null;
+      return {
+        x: row.readinessScore,
+        y: +day.pnl.toFixed(2),
+        date: row.date,
+        trades: day.count,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  if (!points.length) return null;
+
+  return {
+    type: "scatter",
+    data: {
+      datasets: [
+        {
+          data: points,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBorderWidth: 1,
+          pointBorderColor: "rgba(255,255,255,0.22)",
+          pointBackgroundColor: points.map((p) => (p.y >= 0 ? SCATTER_POS : SCATTER_NEG)),
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => items[0]?.raw?.date || "",
+            label: (item) => {
+              const raw = item.raw;
+              return `Ready ${raw.x} | ${raw.y >= 0 ? "+" : "-"}$${Math.abs(raw.y).toFixed(2)} | ${raw.trades} trade${raw.trades === 1 ? "" : "s"}`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          min: 0,
+          max: 100,
+          title: {
+            display: true,
+            text: "Readiness",
+            color: TICK_COLOR,
+            font: CHART_FONT,
+          },
+          grid: { color: GRID_COLOR },
+          ticks: { color: TICK_COLOR, font: CHART_FONT, stepSize: 25 },
+          border: { display: false },
+        },
+        y: {
+          title: {
+            display: true,
+            text: "Daily P&L",
+            color: TICK_COLOR,
+            font: CHART_FONT,
+          },
+          grid: {
+            color: (ctx) => (ctx.tick.value === 0 ? ZERO_GRID : GRID_COLOR),
+          },
+          ticks: {
+            color: TICK_COLOR,
+            font: CHART_FONT,
+            callback: (v) => `$${v}`,
+          },
+          border: { display: false },
+        },
+      },
+    },
+  };
+}
+
+export function getChartConfigs(trades, readinessScores = []) {
   return {
     pnl: trades.length ? buildCumulativePnlConfig(trades) : null,
     daily: trades.length ? buildDailyPnlBarConfig(trades) : null,
     baskets: trades.length ? buildBasketsConfig(trades) : null,
     dow: trades.length ? buildDayOfWeekConfig(trades) : null,
+    readinessPnl: trades.length ? buildReadinessPnlScatterConfig(trades, readinessScores) : null,
   };
 }

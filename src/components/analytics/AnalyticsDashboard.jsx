@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { fetchAnalyticsTrades, fetchCloseLoopSummaries, filterTradesByAccounts } from "../../lib/analytics-data";
+import {
+  fetchAnalyticsTrades,
+  fetchCloseLoopSummaries,
+  fetchReadinessScores,
+  filterTradesByAccounts,
+} from "../../lib/analytics-data";
 import {
   resolveDateRangePreset,
   loadPlaybookTrackingStartDate,
@@ -34,6 +39,7 @@ export default function AnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [trades, setTrades] = useState([]);
+  const [readinessScores, setReadinessScores] = useState([]);
   const [sessionSummaries, setSessionSummaries] = useState([]);
   const [settings, setSettings] = useState(null);
   const [activePreset, setActivePreset] = useState("10d");
@@ -48,14 +54,16 @@ export default function AnalyticsDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const [traderSettings, rawTrades, rawSummaries] = await Promise.all([
+      const [traderSettings, rawTrades, rawSummaries, rawReadinessScores] = await Promise.all([
         loadTraderSettings(),
         fetchAnalyticsTrades({ dateFrom: from, dateTo: to }),
         fetchCloseLoopSummaries({ dateFrom: from, dateTo: to }),
+        fetchReadinessScores({ dateFrom: from, dateTo: to }),
       ]);
       setSettings(traderSettings);
       const filteredTrades = filterTradesByAccounts(rawTrades, traderSettings.accounts);
       setTrades(filteredTrades);
+      setReadinessScores(rawReadinessScores);
       const detailedDates = new Set(filteredTrades.map((trade) => String(trade.date).slice(0, 10)));
       setSessionSummaries(rawSummaries.filter((summary) => !detailedDates.has(summary.date)));
     } catch (e) {
@@ -118,7 +126,7 @@ export default function AnalyticsDashboard() {
     [trades, playbookTrackingStart]
   );
   const untaggedCount = useMemo(() => countUntaggedTrades(playbookTrades), [playbookTrades]);
-  const charts = useMemo(() => getChartConfigs(trades), [trades]);
+  const charts = useMemo(() => getChartConfigs(trades, readinessScores), [trades, readinessScores]);
   const selectedTrade = useMemo(
     () => trades.find((t) => t.id === selectedTradeId) || null,
     [trades, selectedTradeId]
@@ -253,24 +261,46 @@ export default function AnalyticsDashboard() {
             <SessionAnalyticsGrid trades={trades} variant="time-only" />
           </div>
 
-          <section className="an-card an-trades-card an-trades-card--wide">
-            <div className="an-card-head">
-              <div className="an-card-title">Recent Trades</div>
-              <button
-                type="button"
-                className="an-link-all"
-                onClick={() => setListPanel("recent-trades")}
-              >
-                View All
-              </button>
-            </div>
-            <RecentTradesTable
-              trades={trades}
-              limit={8}
-              compact
-              onTradeSelect={(t) => setSelectedTradeId(t.id)}
-            />
-          </section>
+          <div className="an-bottom-insight-row">
+            <section className="an-card an-trades-card an-trades-card--wide">
+              <div className="an-card-head">
+                <div className="an-card-title">Recent Trades</div>
+                <button
+                  type="button"
+                  className="an-link-all"
+                  onClick={() => setListPanel("recent-trades")}
+                >
+                  View All
+                </button>
+              </div>
+              <RecentTradesTable
+                trades={trades}
+                limit={8}
+                compact
+                onTradeSelect={(t) => setSelectedTradeId(t.id)}
+              />
+            </section>
+
+            <section className="an-card an-readiness-pnl-card">
+              <div className="an-card-head">
+                <div>
+                  <div className="an-card-title">Readiness vs P&amp;L</div>
+                  <p className="an-card-subtitle">One dot per session day</p>
+                </div>
+                <div className="an-readiness-legend">
+                  <span><i className="pos" /> Profit</span>
+                  <span><i className="neg" /> Loss</span>
+                </div>
+              </div>
+              <div className="an-readiness-pnl-chart">
+                {charts.readinessPnl ? (
+                  <AnalyticsChart config={charts.readinessPnl} height={220} />
+                ) : (
+                  <div className="analytics-empty">No readiness + P&amp;L overlap yet</div>
+                )}
+              </div>
+            </section>
+          </div>
         </div>
       </div>
 
