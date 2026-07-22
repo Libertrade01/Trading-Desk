@@ -11980,7 +11980,7 @@ input.pm-slider:active::-moz-range-thumb {
 
 .an-bottom-insight-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
+  grid-template-columns: minmax(280px, 3fr) minmax(0, 7fr);
   gap: 16px;
   align-items: stretch;
 }
@@ -12487,12 +12487,20 @@ input.pm-slider:active::-moz-range-thumb {
 }
 
 .an-readiness-pnl-card {
+  display: flex;
+  flex-direction: column;
   min-height: 280px;
 }
 
 .an-readiness-pnl-chart {
-  height: 220px;
-  margin-top: 6px;
+  flex: 1;
+  min-height: 0;
+  margin-top: 0;
+}
+
+.an-readiness-pnl-chart .analytics-chart-wrap {
+  height: 100%;
+  min-height: 250px;
 }
 
 .an-readiness-legend {

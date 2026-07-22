@@ -294,7 +294,7 @@ export default function AnalyticsDashboard() {
               </div>
               <div className="an-readiness-pnl-chart">
                 {charts.readinessPnl ? (
-                  <AnalyticsChart config={charts.readinessPnl} height={220} />
+                  <AnalyticsChart config={charts.readinessPnl} height="100%" />
                 ) : (
                   <div className="analytics-empty">No readiness + P&amp;L overlap yet</div>
                 )}
