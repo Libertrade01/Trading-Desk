@@ -6,7 +6,11 @@ import { getDemoBundle } from "@/lib/demo-data";
 
 const DEMO_ROUTES = {
   home: "/demo",
+  premarket: "/demo/premarket",
+  dailyplan: "/demo/plan",
+  postmarket: "/demo/postmarket",
   analytics: "/demo/stats",
+  propeconomics: "/demo/prop-economics",
 };
 
 export default function DemoHomePage() {

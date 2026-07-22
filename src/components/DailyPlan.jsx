@@ -132,13 +132,22 @@ const COMMITMENT_MESSAGE = "Confirm all commitments before saving the plan.";
 const BIAS_GUIDANCE =
   "This is the bias of my plan — where is price in relation to these levels? Where is volume building and where does price not want to go?";
 
-export default function DailyPlan({ onBack }) {
-  const [form, setForm] = useState(DEFAULT_DAILY_PLAN);
+export default function DailyPlan({
+  onBack,
+  demoMode = false,
+  initialForm = null,
+  demoProfile = null,
+}) {
+  const [form, setForm] = useState(() =>
+    demoMode && initialForm
+      ? { ...DEFAULT_DAILY_PLAN, ...initialForm }
+      : DEFAULT_DAILY_PLAN
+  );
   const [quickAdds, setQuickAdds] = useState(DEFAULT_KEY_LEVEL_QUICK_ADDS);
   const [editingQuickAdds, setEditingQuickAdds] = useState(false);
   const [newQuickAdd, setNewQuickAdd] = useState("");
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(demoMode ? demoProfile : null);
+  const [loading, setLoading] = useState(!demoMode);
   const [saved, setSaved] = useState(false);
   const [recoveryStatus, setRecoveryStatus] = useState(null);
   const [dllSettings, setDllSettings] = useState(DEFAULT_DLL_SETTINGS);
@@ -156,6 +165,29 @@ export default function DailyPlan({ onBack }) {
   const isLastStep = activeStep === PLAN_STEPS.length - 1;
 
   useEffect(() => {
+    if (demoMode) {
+      const traderProfile = demoProfile || null;
+      setProfile(traderProfile);
+      setQuickAdds(normalizeKeyLevelQuickAdds(traderProfile?.keyLevelQuickAdds));
+      let next = migratePlanCommitments(
+        { ...DEFAULT_DAILY_PLAN, ...(initialForm || {}) },
+        traderProfile
+      );
+      next = {
+        ...next,
+        directionalBias: normalizeDirectionalBias(next.directionalBias),
+        sessionOpenVsValue: normalizeSessionOpenVsValue(next.sessionOpenVsValue),
+        expectedVolatility: normalizeExpectedVolatility(next.expectedVolatility),
+        keyLevels: (next.keyLevels || []).map((level) => ({
+          ...level,
+          type: normalizeLevelType(level.type),
+        })),
+      };
+      next = applyPlanRailDefaults(next, traderProfile);
+      setForm(next);
+      setLoading(false);
+      return undefined;
+    }
     (async () => {
       const [data, recoveryState, settings, traderProfile, checkin] = await Promise.all([
         loadData(`daily-plan-${todayKey()}`, null),
@@ -204,9 +236,10 @@ export default function DailyPlan({ onBack }) {
       setForm(next);
       setLoading(false);
     })();
-  }, []);
+  }, [demoMode, demoProfile, initialForm]);
 
   useEffect(() => {
+    if (demoMode) return undefined;
     const refreshProfile = () => {
       loadTraderProfile({ force: true })
         .then((nextProfile) => {
@@ -217,9 +250,10 @@ export default function DailyPlan({ onBack }) {
     };
     window.addEventListener(PROFILE_UPDATED_EVENT, refreshProfile);
     return () => window.removeEventListener(PROFILE_UPDATED_EVENT, refreshProfile);
-  }, []);
+  }, [demoMode]);
 
   const persistPlan = useCallback(async (formData, recoveryActive = recoveryStatus?.active) => {
+    if (demoMode) return;
     await saveData(`daily-plan-${todayKey()}`, {
       date: todayKey(),
       ...formData,
@@ -227,9 +261,10 @@ export default function DailyPlan({ onBack }) {
       savedAt: new Date().toISOString(),
     });
     notifySessionSaved();
-  }, [recoveryStatus]);
+  }, [recoveryStatus, demoMode]);
 
   const handleSave = async () => {
+    if (demoMode) return false;
     if (!riskRailsReady(form, profile)) {
       setShowRiskRailsWarning(true);
       return false;
@@ -263,7 +298,7 @@ export default function DailyPlan({ onBack }) {
   const persistQuickAdds = useCallback(async (nextQuickAdds) => {
     const normalized = normalizeKeyLevelQuickAdds(nextQuickAdds);
     setQuickAdds(normalized);
-    if (!profile) return;
+    if (demoMode || !profile) return;
     try {
       const saved = await saveTraderProfile({
         ...profile,
@@ -273,7 +308,7 @@ export default function DailyPlan({ onBack }) {
     } catch {
       /* profile save best-effort */
     }
-  }, [profile]);
+  }, [profile, demoMode]);
 
   const addLevel = (label = "") => {
     const key = String(label).trim().toUpperCase();
@@ -902,7 +937,16 @@ export default function DailyPlan({ onBack }) {
                 </button>
               ) : (
                 <div className="pm-closeout-finish-actions-right">
-                  <button type="button" className="pm-btn-primary-sm" onClick={handleSave}>
+                  {demoMode ? (
+                    <p className="demo-readonly-hint">Demo sample — create an account to save your own plan.</p>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="pm-btn-primary-sm"
+                    onClick={handleSave}
+                    disabled={demoMode}
+                    title={demoMode ? "Create an account to save" : undefined}
+                  >
                     Save plan
                   </button>
                 </div>

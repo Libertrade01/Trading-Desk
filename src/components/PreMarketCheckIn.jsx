@@ -95,12 +95,21 @@ function ProtectiveDayBanner({ recoveryDay, meditationDay, acknowledged, onAckno
   );
 }
 
-export default function PreMarketCheckIn({ onBack }) {
-  const [form, setForm] = useState(DEFAULT_PREMARKET_FORM);
-  const [profile, setProfile] = useState(null);
+export default function PreMarketCheckIn({
+  onBack,
+  demoMode = false,
+  initialForm = null,
+  demoProfile = null,
+}) {
+  const [form, setForm] = useState(() =>
+    demoMode && initialForm
+      ? { ...DEFAULT_PREMARKET_FORM, ...initialForm }
+      : DEFAULT_PREMARKET_FORM
+  );
+  const [profile, setProfile] = useState(demoMode ? demoProfile : null);
   const [yesterdaySleepDebtMinutes, setYesterdaySleepDebtMinutes] = useState(null);
   const [previousMeditationValues, setPreviousMeditationValues] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!demoMode);
   const [saved, setSaved] = useState(false);
   const [activeSection, setActiveSection] = useState(0);
 
@@ -141,6 +150,20 @@ export default function PreMarketCheckIn({ onBack }) {
   }, []);
 
   useEffect(() => {
+    if (demoMode) {
+      const traderProfile = demoProfile || null;
+      setProfile(traderProfile);
+      if (initialForm) {
+        setForm(
+          migratePremarketDeskChecks(
+            { ...DEFAULT_PREMARKET_FORM, ...initialForm },
+            traderProfile
+          )
+        );
+      }
+      setLoading(false);
+      return undefined;
+    }
     (async () => {
       const dateKey = todayKey();
       const yesterdayKey = offsetDateKey(dateKey, -1);
@@ -168,15 +191,16 @@ export default function PreMarketCheckIn({ onBack }) {
       );
       setLoading(false);
     })();
-  }, []);
+  }, [demoMode, demoProfile, initialForm]);
 
   useEffect(() => {
+    if (demoMode) return undefined;
     const refreshProfile = () => {
       loadTraderProfile({ force: true }).then(setProfile).catch(() => {});
     };
     window.addEventListener(PROFILE_UPDATED_EVENT, refreshProfile);
     return () => window.removeEventListener(PROFILE_UPDATED_EVENT, refreshProfile);
-  }, []);
+  }, [demoMode]);
 
   const buildSavePayload = useCallback((formData, scoreData, statusData) => ({
     date: todayKey(),
@@ -210,6 +234,7 @@ export default function PreMarketCheckIn({ onBack }) {
   ]);
 
   const persistCheckin = useCallback(async (formData, scoreData, statusData) => {
+    if (demoMode) return buildSavePayload(formData, scoreData, statusData);
     const payload = buildSavePayload(formData, scoreData, statusData);
     if (payload.standDownAcknowledged && !formData.standDownAcknowledgedAt) {
       payload.standDownAcknowledgedAt = new Date().toISOString();
@@ -217,9 +242,10 @@ export default function PreMarketCheckIn({ onBack }) {
     await saveData(`premarket-checkin-${todayKey()}`, payload);
     notifySessionSaved();
     return payload;
-  }, [buildSavePayload]);
+  }, [buildSavePayload, demoMode]);
 
   const handleSave = async () => {
+    if (demoMode) return;
     await persistCheckin(form, scores, status);
     setSaved(true);
     onBack();
@@ -234,6 +260,7 @@ export default function PreMarketCheckIn({ onBack }) {
     };
     setForm(nextForm);
     setSaved(false);
+    if (demoMode) return;
     await persistCheckin(nextForm, scores, status);
     if (checked) setSaved(true);
   };
@@ -534,10 +561,15 @@ export default function PreMarketCheckIn({ onBack }) {
 
               <div className="checkin-finish-actions">
                 <div className="checkin-finish-actions-right">
+                  {demoMode ? (
+                    <p className="demo-readonly-hint">Demo sample — create an account to save your own check-in.</p>
+                  ) : null}
                   <button
                     type="button"
                     className="pm-btn-primary-sm"
                     onClick={handleSave}
+                    disabled={demoMode}
+                    title={demoMode ? "Create an account to save" : undefined}
                   >
                     Save check-in
                   </button>

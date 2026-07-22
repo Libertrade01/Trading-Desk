@@ -107,23 +107,37 @@ function CloseoutMetrics({ form, netPnl, winRate, setupAdherence, adherenceLabel
   );
 }
 
-export default function PostMarketReview({ onBack }) {
-  const [form, setForm] = useState(DEFAULT_POSTMARKET);
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [saved, setSaved] = useState(false);
+export default function PostMarketReview({
+  onBack,
+  demoMode = false,
+  initialForm = null,
+  initialTrades = null,
+  morningThesis: demoMorningThesis = "",
+  demoProfile = null,
+  demoSettings = null,
+}) {
+  const [form, setForm] = useState(() =>
+    demoMode && initialForm
+      ? { ...DEFAULT_POSTMARKET, ...initialForm }
+      : DEFAULT_POSTMARKET
+  );
+  const [profile, setProfile] = useState(demoMode ? demoProfile : null);
+  const [loading, setLoading] = useState(!demoMode);
+  const [saved, setSaved] = useState(!!demoMode);
   const [showHelp, setShowHelp] = useState(false);
   const [importPreview, setImportPreview] = useState(null);
-  const [importMsg, setImportMsg] = useState("");
-  const [dayTrades, setDayTrades] = useState([]);
-  const [traderSettings, setTraderSettings] = useState(null);
+  const [importMsg, setImportMsg] = useState(demoMode ? "Demo sample session" : "");
+  const [dayTrades, setDayTrades] = useState(() =>
+    demoMode && Array.isArray(initialTrades) ? initialTrades : []
+  );
+  const [traderSettings, setTraderSettings] = useState(demoMode ? demoSettings : null);
   const [performanceMode, setPerformanceMode] = useState("csv");
   const [csvBroker, setCsvBroker] = useState("rtrader");
   const [recoveryStatus, setRecoveryStatus] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
   const [dragActive, setDragActive] = useState(false);
   const [importDropExpanded, setImportDropExpanded] = useState(false);
-  const [morningThesis, setMorningThesis] = useState("");
+  const [morningThesis, setMorningThesis] = useState(demoMode ? demoMorningThesis || "" : "");
   const [showThesis, setShowThesis] = useState(false);
   const fileRef = useRef(null);
   const dragCounter = useRef(0);
@@ -163,17 +177,27 @@ export default function PostMarketReview({ onBack }) {
   const adherenceLabel = useMemo(() => playbookAdherenceLabel(setupAdherence), [setupAdherence]);
 
   const hasImportedSession =
+    demoMode ||
     dayTrades.some((trade) => trade.platform !== "manual") ||
     !!form.lastImportAt ||
     !!String(form.lastImportFile || "").trim();
   const importError = importMsg.startsWith("Error");
-  const showImportDrop = !hasImportedSession || importDropExpanded || importError;
+  const showImportDrop = !demoMode && (!hasImportedSession || importDropExpanded || importError);
 
   const step = CLOSEOUT_STEPS[activeStep];
   const isFirstStep = activeStep === 0;
   const isLastStep = activeStep === CLOSEOUT_STEPS.length - 1;
 
   const reloadDayTrades = useCallback(async (dateKey = todayKey()) => {
+    if (demoMode) {
+      const trades = Array.isArray(initialTrades) ? initialTrades : [];
+      setDayTrades(trades);
+      setForm((f) => {
+        const perf = performanceFromDbOrImport(f, trades);
+        return perf ? { ...f, ...perf } : f;
+      });
+      return trades;
+    }
     const trades = await fetchTradesForDate(dateKey);
     setDayTrades(trades);
     setForm((f) => {
@@ -181,9 +205,28 @@ export default function PostMarketReview({ onBack }) {
       return perf ? { ...f, ...perf } : f;
     });
     return trades;
-  }, []);
+  }, [demoMode, initialTrades]);
 
   const hydrateDay = useCallback(async () => {
+    if (demoMode) {
+      const trades = Array.isArray(initialTrades) ? initialTrades : [];
+      const savedReview = initialForm || {};
+      setProfile(demoProfile ?? createCustomerDefaultProfile());
+      setTraderSettings(demoSettings);
+      setDayTrades(trades);
+      let next = { ...DEFAULT_POSTMARKET, ...normalizePostmarketFlags(savedReview) };
+      if (next.riskPlanFollowed == null && next.planProcessFollowed != null) {
+        next.riskPlanFollowed = next.planProcessFollowed;
+      }
+      const perf = performanceFromDbOrImport(savedReview ?? next, trades);
+      if (perf) next = { ...next, ...perf };
+      next.performanceEntryMode = "csv";
+      setPerformanceMode("csv");
+      setForm(next);
+      setMorningThesis(String(demoMorningThesis || savedReview.whyBias || "").trim());
+      setLoading(false);
+      return;
+    }
     try {
       const dateKey = todayKey();
       const [reviewRes, dbTrades, traderProfile, loadedSettings] = await Promise.all([
@@ -231,9 +274,10 @@ export default function PostMarketReview({ onBack }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [demoMode, initialForm, initialTrades, demoProfile, demoSettings, demoMorningThesis]);
 
   useEffect(() => {
+    if (demoMode) return undefined;
     let cancelled = false;
     (async () => {
       try {
@@ -249,7 +293,7 @@ export default function PostMarketReview({ onBack }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [demoMode]);
 
   useEffect(() => {
     if (!showThesis) return undefined;
@@ -278,11 +322,12 @@ export default function PostMarketReview({ onBack }) {
   }, [refreshRecoveryStatus]);
 
   useEffect(() => {
-    setLoading(true);
+    if (!demoMode) setLoading(true);
     hydrateDay();
-  }, [hydrateDay]);
+  }, [hydrateDay, demoMode]);
 
   useEffect(() => {
+    if (demoMode) return undefined;
     const onVisible = () => {
       if (document.visibilityState === "visible") {
         hydrateDay().catch(() => {});
@@ -290,15 +335,16 @@ export default function PostMarketReview({ onBack }) {
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [hydrateDay]);
+  }, [hydrateDay, demoMode]);
 
   useEffect(() => {
+    if (demoMode) return undefined;
     const onTradesChanged = () => {
       hydrateDay().catch(() => {});
     };
     window.addEventListener(TRADES_CHANGED_EVENT, onTradesChanged);
     return () => window.removeEventListener(TRADES_CHANGED_EVENT, onTradesChanged);
-  }, [hydrateDay]);
+  }, [hydrateDay, demoMode]);
 
   const persistReview = useCallback(async (formData) => {
     await loadTraderSettings().catch(() => {});
@@ -355,6 +401,7 @@ export default function PostMarketReview({ onBack }) {
   }, [winRate, dayTrades, maybeEvaluateRecovery, profile, closeoutHabits]);
 
   const handleSave = async () => {
+    if (demoMode) return false;
     if (!form.noTradeToday && form.riskPlanFollowed == null) {
       window.alert("Choose Yes or No for Risk plan followed before closing the LOOP.");
       setActiveStep(CLOSEOUT_STEPS.findIndex((item) => item.id === "process"));
@@ -642,6 +689,8 @@ export default function PostMarketReview({ onBack }) {
                 type="button"
                 className="pm-import-reupload-btn"
                 onClick={() => setImportDropExpanded(true)}
+                disabled={demoMode}
+                title={demoMode ? "Create an account to import your own trades" : undefined}
               >
                 Re-upload
               </button>
@@ -673,6 +722,8 @@ export default function PostMarketReview({ onBack }) {
                 <button
                   type="button"
                   className="pm-btn-primary-sm pm-closeout-no-trade-save"
+                  disabled={demoMode}
+                  title={demoMode ? "Create an account to save" : undefined}
                   onClick={async () => {
                     const ok = await handleSave();
                     if (ok !== false) onBack();
@@ -998,9 +1049,14 @@ export default function PostMarketReview({ onBack }) {
                 </button>
               ) : (
                 <div className="pm-closeout-finish-actions-right">
+                  {demoMode ? (
+                    <p className="demo-readonly-hint">Demo sample — create an account to close your own LOOP.</p>
+                  ) : null}
                   <button
                     type="button"
                     className="pm-btn-primary-sm"
+                    disabled={demoMode}
+                    title={demoMode ? "Create an account to save" : undefined}
                     onClick={async () => {
                       const ok = await handleSave();
                       if (ok !== false) onBack();

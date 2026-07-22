@@ -163,9 +163,19 @@ function TrashButton({ onClick, label = "Delete" }) {
   );
 }
 
-export default function PropEconomics() {
-  const [ledger, setLedger] = useState(EMPTY_LEDGER);
-  const [loading, setLoading] = useState(true);
+export default function PropEconomics({
+  demoMode = false,
+  initialLedger = null,
+}) {
+  const [ledger, setLedger] = useState(() =>
+    demoMode && initialLedger
+      ? {
+          firms: Array.isArray(initialLedger.firms) ? [...initialLedger.firms] : [...DEFAULT_FIRMS],
+          entries: Array.isArray(initialLedger.entries) ? [...initialLedger.entries] : [],
+        }
+      : EMPTY_LEDGER
+  );
+  const [loading, setLoading] = useState(!demoMode);
   const [formMode, setFormMode] = useState(null);
   const [form, setForm] = useState(emptyForm());
   const [editingId, setEditingId] = useState(null);
@@ -173,11 +183,29 @@ export default function PropEconomics() {
   const [addingFirm, setAddingFirm] = useState(false);
   const [newFirmName, setNewFirmName] = useState("");
 
-  const persist = useCallback(async (next) => { setLedger(next); await saveLedger(next); }, []);
+  const persist = useCallback(async (next) => {
+    setLedger(next);
+    if (demoMode) return;
+    await saveLedger(next);
+  }, [demoMode]);
 
   useEffect(() => {
-    (async () => { const data = await loadLedger(); setLedger(data); setLoading(false); })();
-  }, []);
+    if (demoMode) {
+      if (initialLedger) {
+        setLedger({
+          firms: Array.isArray(initialLedger.firms) ? [...initialLedger.firms] : [...DEFAULT_FIRMS],
+          entries: Array.isArray(initialLedger.entries) ? [...initialLedger.entries] : [],
+        });
+      }
+      setLoading(false);
+      return undefined;
+    }
+    (async () => {
+      const data = await loadLedger();
+      setLedger(data);
+      setLoading(false);
+    })();
+  }, [demoMode, initialLedger]);
 
   const { totalPayouts, totalSpend, net } = useMemo(() => computeTotals(ledger.entries), [ledger.entries]);
   const filterFirms = useMemo(() => {
@@ -198,8 +226,12 @@ export default function PropEconomics() {
     return [...totals.entries()].map(([firm, amount]) => ({ firm, amount })).sort((a, b) => b.amount - a.amount);
   }, [ledger.entries]);
 
-  const openForm = (mode) => { setFormMode(mode); setEditingId(null); setForm(emptyForm(mode)); setAddingFirm(false); setNewFirmName(""); };
+  const openForm = (mode) => {
+    if (demoMode) return;
+    setFormMode(mode); setEditingId(null); setForm(emptyForm(mode)); setAddingFirm(false); setNewFirmName("");
+  };
   const openEdit = (entry) => {
+    if (demoMode) return;
     setFormMode(entryMode(entry)); setEditingId(entry.id);
     setForm({ date: entry.date, type: entry.type, firm: entry.firm, amount: String(entry.amount), category: entry.category || "eval", note: entry.note || "" });
     setAddingFirm(false); setNewFirmName("");
@@ -217,6 +249,7 @@ export default function PropEconomics() {
   };
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (demoMode) return;
     const amount = parseFloat(form.amount);
     if (!form.date || !form.firm || !amount || amount <= 0) { window.alert("Enter a valid date, firm, and positive amount."); return; }
     const firms = ledger.firms.includes(form.firm) ? ledger.firms : [...ledger.firms, form.firm];
@@ -227,6 +260,7 @@ export default function PropEconomics() {
     await persist({ firms, entries }); closeForm();
   };
   const handleDelete = async (id) => {
+    if (demoMode) return;
     if (!window.confirm("Delete this entry?")) return;
     await persist({ ...ledger, entries: ledger.entries.filter((entry) => entry.id !== id) });
     if (editingId === id) closeForm();
@@ -245,7 +279,11 @@ export default function PropEconomics() {
         <div className={styles.topbar}>{headerDate()}</div>
         <header className={styles.header}>
           <div><p className={styles.eyebrow}>Prop profit tracker</p><h1>Prop profits<span className={styles.titleStop} aria-hidden="true" /></h1><p className={styles.intro}>Track evaluation fees, resets, and payouts across prop firms. Know exactly where you stand before the next challenge.</p></div>
-          <div className={styles.actions}><button type="button" className={styles.secondaryAction} onClick={() => openForm("evaluation")}>Log evaluation <span>+</span></button><button type="button" className={styles.secondaryAction} onClick={() => openForm("reset")}>Log reset <span>+</span></button><button type="button" className={styles.primaryAction} onClick={() => openForm("payout")}>Log payout <span>↗</span></button></div>
+          <div className={styles.actions}>
+            <button type="button" className={styles.secondaryAction} onClick={() => openForm("evaluation")} disabled={demoMode} title={demoMode ? "Create an account to log entries" : undefined}>Log evaluation <span>+</span></button>
+            <button type="button" className={styles.secondaryAction} onClick={() => openForm("reset")} disabled={demoMode} title={demoMode ? "Create an account to log entries" : undefined}>Log reset <span>+</span></button>
+            <button type="button" className={styles.primaryAction} onClick={() => openForm("payout")} disabled={demoMode} title={demoMode ? "Create an account to log entries" : undefined}>Log payout <span>↗</span></button>
+          </div>
         </header>
 
         <section className={styles.positionGrid} aria-label="Prop economics summary">
@@ -289,7 +327,8 @@ export default function PropEconomics() {
 
         <section className={styles.ledgerSection} aria-labelledby="ledger-heading">
           <div className={styles.sectionHeader}><div><p className={styles.eyebrow}>LEDGER</p><h2 id="ledger-heading">Every dollar accounted for.</h2><p>All evaluations, resets, and payouts in one clean record.</p></div><div className={styles.ledgerTools}><span>{filteredEntries.length} entries</span><select id="prop-firm-filter" value={firmFilter} onChange={(event) => setFirmFilter(event.target.value)} aria-label="Filter by firm"><option value="all">All firms</option>{filterFirms.map((firm) => <option key={firm} value={firm}>{firm}</option>)}</select></div></div>
-          {filteredEntries.length === 0 ? <div className={styles.emptyLedger}>{firmFilter === "all" ? "No entries yet. Log your first evaluation, reset, or payout above." : `No entries for ${firmFilter}.`}</div> : <div className={styles.tableWrap}><table><thead><tr><th>Date</th><th>Type</th><th>Firm</th><th>Category</th><th>Note</th><th>Amount</th><th aria-label="Actions" /></tr></thead><tbody>{filteredEntries.map((entry) => { const typeLabel = entryTypeLabel(entry); return <tr key={entry.id}><td>{formatRowDate(entry.date)}</td><td><span className={`${styles.typePill} ${entry.type === "payout" ? styles.payoutPill : typeLabel === "reset" ? styles.resetPill : ""}`}>{typeLabel}</span></td><td><span className={styles.firmCell}><i>{entry.firm.slice(0, 1).toUpperCase()}</i>{entry.firm}</span></td><td>{entry.type === "spend" ? entry.category : "—"}</td><td className={styles.noteCell}>{entry.note || "—"}</td><td className={entry.type === "payout" ? styles.positiveAmount : styles.negativeAmount}>{entry.type === "payout" ? "+" : "−"}{formatAmount(entry.amount)}</td><td><div className={styles.rowActions}><button type="button" onClick={() => openEdit(entry)}>Edit ↗</button><TrashButton onClick={() => handleDelete(entry.id)} /></div></td></tr>; })}</tbody></table></div>}
+          {filteredEntries.length === 0 ? <div className={styles.emptyLedger}>{firmFilter === "all" ? "No entries yet. Log your first evaluation, reset, or payout above." : `No entries for ${firmFilter}.`}</div> : <div className={styles.tableWrap}><table><thead><tr><th>Date</th><th>Type</th><th>Firm</th><th>Category</th><th>Note</th><th>Amount</th>{!demoMode ? <th aria-label="Actions" /> : null}</tr></thead><tbody>{filteredEntries.map((entry) => { const typeLabel = entryTypeLabel(entry); return <tr key={entry.id}><td>{formatRowDate(entry.date)}</td><td><span className={`${styles.typePill} ${entry.type === "payout" ? styles.payoutPill : typeLabel === "reset" ? styles.resetPill : ""}`}>{typeLabel}</span></td><td><span className={styles.firmCell}><i>{entry.firm.slice(0, 1).toUpperCase()}</i>{entry.firm}</span></td><td>{entry.type === "spend" ? entry.category : "—"}</td><td className={styles.noteCell}>{entry.note || "—"}</td><td className={entry.type === "payout" ? styles.positiveAmount : styles.negativeAmount}>{entry.type === "payout" ? "+" : "−"}{formatAmount(entry.amount)}</td>{!demoMode ? <td><div className={styles.rowActions}><button type="button" onClick={() => openEdit(entry)}>Edit ↗</button><TrashButton onClick={() => handleDelete(entry.id)} /></div></td> : null}</tr>; })}</tbody></table></div>}
+          {demoMode ? <p className="demo-readonly-hint" style={{ marginTop: 16 }}>Demo ledger — create an account to track your own prop economics.</p> : null}
         </section>
       </div>
     </WorkflowPageLayout>

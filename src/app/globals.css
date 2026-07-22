@@ -19599,6 +19599,14 @@ input.pm-slider:active::-moz-range-thumb {
   color: #dce8f6;
 }
 
+.demo-readonly-hint {
+  margin: 0 0 10px;
+  color: rgba(180, 200, 220, 0.85);
+  font-size: 12px;
+  line-height: 1.4;
+  max-width: 280px;
+}
+
 @media (max-width: 900px) {
   .demo-banner {
     padding: 8px 14px 8px 52px;
